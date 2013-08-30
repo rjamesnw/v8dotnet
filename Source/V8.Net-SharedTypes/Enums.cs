@@ -183,6 +183,7 @@ namespace V8.Net
     /// </summary>
     public enum ProxyObjectType
     {
+        Undefined,
         ObjectTemplateProxyClass,
         FunctionTemplateProxyClass,
         V8EngineProxyClass,

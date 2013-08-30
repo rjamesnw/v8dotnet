@@ -11,7 +11,7 @@ namespace V8.Net
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public unsafe struct NativeV8EngineProxy
     {
-        public ProxyObjectType Type;
+        public ProxyObjectType NativeClassType;
         public Int32 ID;
     }
 
@@ -20,7 +20,7 @@ namespace V8.Net
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public unsafe struct NativeObjectTemplateProxy
     {
-        public ProxyObjectType Type;
+        public ProxyObjectType NativeClassType;
         public void* NativeEngineProxy;
         public Int32 EngineID;
         public Int32 ObjectID;
@@ -32,7 +32,7 @@ namespace V8.Net
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public unsafe struct NativeFunctionTemplateProxy
     {
-        public ProxyObjectType Type;
+        public ProxyObjectType NativeClassType;
         public void* NativeEngineProxy;
         public Int32 EngineID;
         public void* NativeFucntionTemplate;
@@ -57,7 +57,7 @@ namespace V8.Net
         // Native Fields 
 
         [FieldOffset(0), MarshalAs(UnmanagedType.I4)]
-        public ProxyObjectType _NativeClassType;
+        public ProxyObjectType NativeClassType;
         
         [FieldOffset(4), MarshalAs(UnmanagedType.I4)]
         public Int32 ID; // The native ID (index) of this handle proxy.
@@ -92,7 +92,7 @@ namespace V8.Net
         public void* NativeEngineProxy; // Pointer to the native V8 engine proxy object associated with this proxy handle instance (used native side to free the handle upon destruction).
 
         [FieldOffset(56)]
-        public void* Handle; // The native V8 persistent object handle (not used on the managed side).
+        public void* NativeV8Handle; // The native V8 persistent object handle (not used on the managed side).
 
         // --------------------------------------------------------------------------------------------------------------------
         // Properties for interpretation of fields.

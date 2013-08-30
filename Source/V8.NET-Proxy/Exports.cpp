@@ -326,34 +326,42 @@ extern "C"
 
     EXPORT HandleProxy* STDCALL CreateHandleProxyTest()
     {
-        byte* hp = new byte[sizeof(HandleProxy)];
-        for (int i=0; i<sizeof(HandleProxy); i++)
-            hp[i] = i;
-        return reinterpret_cast<HandleProxy*>(hp);
+        byte* data = new byte[sizeof(HandleProxy)];
+        for (byte i=0; i<sizeof(HandleProxy); i++)
+            data[i] = i;
+        TProxyObjectType* pType = (TProxyObjectType*)data;
+        *pType = HandleProxyClass;
+        return reinterpret_cast<HandleProxy*>(data);
     }
 
     EXPORT V8EngineProxy* STDCALL CreateV8EngineProxyTest()
     {
-        byte* hp = new byte[sizeof(V8EngineProxy)];
-        for (int i=0; i<sizeof(V8EngineProxy); i++)
-            hp[i] = i;
-        return reinterpret_cast<V8EngineProxy*>(hp);
+        byte* data = new byte[sizeof(V8EngineProxy)];
+        for (byte i=0; i<sizeof(V8EngineProxy); i++)
+            data[i] = i;
+        TProxyObjectType* pType = (TProxyObjectType*)data;
+        *pType = V8EngineProxyClass;
+        return reinterpret_cast<V8EngineProxy*>(data);
     }
 
     EXPORT ObjectTemplateProxy* STDCALL CreateObjectTemplateProxyTest()
     { 
-        byte* hp = new byte[sizeof(ObjectTemplateProxy)];
-        for (int i=0; i<sizeof(ObjectTemplateProxy); i++)
-            hp[i] = i;
-        return reinterpret_cast<ObjectTemplateProxy*>(hp);
+        byte* data = new byte[sizeof(ObjectTemplateProxy)];
+        for (byte i=0; i<sizeof(ObjectTemplateProxy); i++)
+            data[i] = i;
+        TProxyObjectType* pType = (TProxyObjectType*)data;
+        *pType = ObjectTemplateProxyClass;
+        return reinterpret_cast<ObjectTemplateProxy*>(data);
     }
 
     EXPORT FunctionTemplateProxy* STDCALL CreateFunctionTemplateProxyTest()
     { 
-        byte* hp = new byte[sizeof(FunctionTemplateProxy)];
-        for (int i=0; i<sizeof(FunctionTemplateProxy); i++)
-            hp[i] = i;
-        return reinterpret_cast<FunctionTemplateProxy*>(hp);
+        byte* data = new byte[sizeof(FunctionTemplateProxy)];
+        for (byte i=0; i<sizeof(FunctionTemplateProxy); i++)
+            data[i] = i;
+        TProxyObjectType* pType = (TProxyObjectType*)data;
+        *pType = FunctionTemplateProxyClass;
+        return reinterpret_cast<FunctionTemplateProxy*>(data);
     }
 
     EXPORT void STDCALL DeleteTestData(byte* data)

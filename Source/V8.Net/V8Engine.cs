@@ -481,7 +481,7 @@ namespace V8.Net
         /// <param name="objectID">You can associate arbitrary NEGATIVE numbers with objects to use for tracking purposes.  The numbers have to be less than or
         /// equal to -2. Values greater or equal to 0 are used for internal tracking of V8NativeObject instances. -1 is a default value that is set automatically
         /// when new objects are created (which simply means "no ID is set").</param>
-        public InternalHandle CreateObject(Int64 objectID = -2)
+        public InternalHandle CreateObject(Int32 objectID = -2)
         {
             if (objectID > -2) throw new InvalidOperationException("Object IDs must be <= -2.");
             return V8NetProxy.CreateObject(_NativeV8EngineProxy, objectID);

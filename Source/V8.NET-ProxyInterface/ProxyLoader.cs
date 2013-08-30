@@ -503,7 +503,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-        public static extern HandleProxy* CreateObject(NativeV8EngineProxy* engine, Int64 managedObjectID);
+        public static extern HandleProxy* CreateObject(NativeV8EngineProxy* engine, Int32 managedObjectID);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86")]

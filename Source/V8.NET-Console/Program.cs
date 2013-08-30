@@ -23,20 +23,21 @@ namespace V8.Net
 
             try
             {
-                Console.Title = "V8.Net Console (" + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode)";
+                Console.Title = "V8.Net Console";
 
                 Console.Write(Environment.NewLine + "Creating a V8Engine instance ...");
-
                 _JSServer = new V8Engine();
-                _JSServer.RunMarshallingTests();
+                Console.WriteLine(" Done!");
 
-                Console.WriteLine(Environment.NewLine + "... Done!");
+                Console.Write("Testing marshalling compatibility...");
+                _JSServer.RunMarshallingTests();
+                Console.WriteLine(" Pass!");
 
                 _TitleUpdateTimer = new Timer(500);
                 _TitleUpdateTimer.AutoReset = true;
                 _TitleUpdateTimer.Elapsed += (_o, _e) =>
                 {
-                    Console.Title = "V8.Net Console (Handles: " + _JSServer.TotalHandles
+                    Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
                         + " / Pending Native GC: " + _JSServer.TotalHandlesPendingDisposal
                         + " / Cached: " + _JSServer.TotalHandlesCached
                         + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
