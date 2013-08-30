@@ -442,7 +442,7 @@ namespace V8.Net
             var defaultAttribute = _DefaultMemberAttributes != V8PropertyAttributes.Undefined ? (ScriptMemberSecurity)_DefaultMemberAttributes
                 : scriptObjectAttribute != null ? scriptObjectAttribute.Security : ScriptMemberSecurity.ReadWrite;
 
-            int mi, ai;
+            int mi;
             string memberName;
             ScriptMemberSecurity attributes;
             ScriptMember scriptMemberAttrib;

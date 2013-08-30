@@ -104,6 +104,7 @@ namespace v8 { namespace internal {
 
 enum  TProxyObjectType
 {
+    Undefined,
     ObjectTemplateProxyClass,
     FunctionTemplateProxyClass,
     V8EngineProxyClass,
