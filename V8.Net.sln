@@ -1,12 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-Console", "V8.NET-Console\V8.Net-Console.csproj", "{33E19C30-D103-45B3-8A89-5986F195F605}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-Console", "Source\V8.NET-Console\V8.Net-Console.csproj", "{33E19C30-D103-45B3-8A89-5986F195F605}"
 	ProjectSection(ProjectDependencies) = postProject
 		{FDC82668-D6B8-43DE-B287-80B4F295BAFA} = {FDC82668-D6B8-43DE-B287-80B4F295BAFA}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net", "V8.Net\V8.Net.csproj", "{8D612C41-7D95-499C-A82D-C5C3C82225B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net", "Source\V8.Net\V8.Net.csproj", "{8D612C41-7D95-499C-A82D-C5C3C82225B3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BAEB5060-C5E5-4EC9-BB9D-30400835CF39} = {BAEB5060-C5E5-4EC9-BB9D-30400835CF39}
 		{8BFB50C4-51E7-4DA4-873B-B79F123A9723} = {8BFB50C4-51E7-4DA4-873B-B79F123A9723}
@@ -14,24 +14,24 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net", "V8.Net\V8.Net.csp
 		{C6ABB6D8-97A2-4ECF-889F-823E891D798B} = {C6ABB6D8-97A2-4ECF-889F-823E891D798B}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-SharedTypes", "V8.Net-SharedTypes\V8.Net-SharedTypes.csproj", "{EF90724B-3893-4ACF-BFEE-88532485B11A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-SharedTypes", "Source\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj", "{EF90724B-3893-4ACF-BFEE-88532485B11A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "V8.Net-Proxy-x86", "V8.NET-Proxy\V8.Net-Proxy.vcxproj", "{8BFB50C4-51E7-4DA4-873B-B79F123A9723}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "V8.Net-Proxy-x86", "Source\V8.NET-Proxy\V8.Net-Proxy.vcxproj", "{8BFB50C4-51E7-4DA4-873B-B79F123A9723}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface", "V8.NET-ProxyInterface\V8.Net-ProxyInterface.csproj", "{81752B54-1391-44CB-A1F5-ECCF7279DB71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface", "Source\V8.NET-ProxyInterface\V8.Net-ProxyInterface.csproj", "{81752B54-1391-44CB-A1F5-ECCF7279DB71}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8BFB50C4-51E7-4DA4-873B-B79F123A9723} = {8BFB50C4-51E7-4DA4-873B-B79F123A9723}
 		{0B7EC0CC-5AD6-47CA-9FE1-37E612FFE25D} = {0B7EC0CC-5AD6-47CA-9FE1-37E612FFE25D}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x64", "V8.NET-ProxyInterface\V8.Net-ProxyInterface-x64.csproj", "{C6ABB6D8-97A2-4ECF-889F-823E891D798B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x64", "Source\V8.NET-ProxyInterface\V8.Net-ProxyInterface-x64.csproj", "{C6ABB6D8-97A2-4ECF-889F-823E891D798B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0B7EC0CC-5AD6-47CA-9FE1-37E612FFE25D} = {0B7EC0CC-5AD6-47CA-9FE1-37E612FFE25D}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "V8.Net-Proxy-x64", "V8.NET-Proxy\V8.Net-Proxy-x64.vcxproj", "{0B7EC0CC-5AD6-47CA-9FE1-37E612FFE25D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "V8.Net-Proxy-x64", "Source\V8.NET-Proxy\V8.Net-Proxy-x64.vcxproj", "{0B7EC0CC-5AD6-47CA-9FE1-37E612FFE25D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x86", "V8.NET-ProxyInterface\V8.Net-ProxyInterface-x86.csproj", "{BAEB5060-C5E5-4EC9-BB9D-30400835CF39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x86", "Source\V8.NET-ProxyInterface\V8.Net-ProxyInterface-x86.csproj", "{BAEB5060-C5E5-4EC9-BB9D-30400835CF39}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8BFB50C4-51E7-4DA4-873B-B79F123A9723} = {8BFB50C4-51E7-4DA4-873B-B79F123A9723}
 	EndProjectSection
@@ -40,79 +40,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET 4.0", ".NET 4.0", "{4C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET 3.5", ".NET 3.5", "{8030D6BC-ED8A-4F0D-85F4-EA20A1B0F90F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-3.5", "V8.Net\V8.Net-3.5.csproj", "{FDC82668-D6B8-43DE-B287-80B4F295BAFA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-3.5", "Source\V8.Net\V8.Net-3.5.csproj", "{FDC82668-D6B8-43DE-B287-80B4F295BAFA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{19A8A72C-9105-4A50-AB54-94B13F2AED78} = {19A8A72C-9105-4A50-AB54-94B13F2AED78}
 		{5C5D7C6B-52D4-408C-BB02-32110D118111} = {5C5D7C6B-52D4-408C-BB02-32110D118111}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-3.5", "V8.NET-ProxyInterface\V8.Net-ProxyInterface-3.5.csproj", "{77D833F3-5B79-4EC2-AA45-08C05B952465}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-3.5", "Source\V8.NET-ProxyInterface\V8.Net-ProxyInterface-3.5.csproj", "{77D833F3-5B79-4EC2-AA45-08C05B952465}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x64-3.5", "V8.NET-ProxyInterface\V8.Net-ProxyInterface-x64-3.5.csproj", "{19A8A72C-9105-4A50-AB54-94B13F2AED78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x64-3.5", "Source\V8.NET-ProxyInterface\V8.Net-ProxyInterface-x64-3.5.csproj", "{19A8A72C-9105-4A50-AB54-94B13F2AED78}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x86-3.5", "V8.NET-ProxyInterface\V8.Net-ProxyInterface-x86-3.5.csproj", "{5C5D7C6B-52D4-408C-BB02-32110D118111}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x86-3.5", "Source\V8.NET-ProxyInterface\V8.Net-ProxyInterface-x86-3.5.csproj", "{5C5D7C6B-52D4-408C-BB02-32110D118111}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-SharedTypes-3.5", "V8.Net-SharedTypes\V8.Net-SharedTypes-3.5.csproj", "{EB32BBCC-6DEF-4F34-807B-E81273BF0275}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-SharedTypes-3.5", "Source\V8.Net-SharedTypes\V8.Net-SharedTypes-3.5.csproj", "{EB32BBCC-6DEF-4F34-807B-E81273BF0275}"
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 14
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs23
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = V8.Net\\V8.Net.csproj
-		SccProjectTopLevelParentUniqueName1 = V8.Net.sln
-		SccProjectName1 = V8.Net
-		SccLocalPath1 = V8.Net
-		SccProjectUniqueName2 = V8.Net-SharedTypes\\V8.Net-SharedTypes.csproj
-		SccProjectTopLevelParentUniqueName2 = V8.Net.sln
-		SccProjectName2 = V8.Net-SharedTypes
-		SccLocalPath2 = V8.Net-SharedTypes
-		SccProjectUniqueName3 = V8.NET-Proxy\\V8.Net-Proxy.vcxproj
-		SccProjectTopLevelParentUniqueName3 = V8.Net.sln
-		SccProjectName3 = V8.NET-Proxy
-		SccLocalPath3 = V8.NET-Proxy
-		SccProjectUniqueName4 = V8.NET-Proxy\\V8.Net-Proxy-x64.vcxproj
-		SccProjectTopLevelParentUniqueName4 = V8.Net.sln
-		SccProjectName4 = V8.NET-Proxy
-		SccLocalPath4 = V8.NET-Proxy
-		SccProjectUniqueName5 = V8.NET-ProxyInterface\\V8.Net-ProxyInterface.csproj
-		SccProjectTopLevelParentUniqueName5 = V8.Net.sln
-		SccProjectName5 = V8.NET-ProxyInterface
-		SccLocalPath5 = V8.NET-ProxyInterface
-		SccProjectUniqueName6 = V8.NET-ProxyInterface\\V8.Net-ProxyInterface-x86.csproj
-		SccProjectTopLevelParentUniqueName6 = V8.Net.sln
-		SccProjectName6 = V8.NET-ProxyInterface
-		SccLocalPath6 = V8.NET-ProxyInterface
-		SccProjectUniqueName7 = V8.NET-ProxyInterface\\V8.Net-ProxyInterface-x64.csproj
-		SccProjectTopLevelParentUniqueName7 = V8.Net.sln
-		SccProjectName7 = V8.NET-ProxyInterface
-		SccLocalPath7 = V8.NET-ProxyInterface
-		SccProjectUniqueName8 = V8.Net-SharedTypes\\V8.Net-SharedTypes-3.5.csproj
-		SccProjectTopLevelParentUniqueName8 = V8.Net.sln
-		SccProjectName8 = V8.Net-SharedTypes
-		SccLocalPath8 = V8.Net-SharedTypes
-		SccProjectUniqueName9 = V8.NET-ProxyInterface\\V8.Net-ProxyInterface-3.5.csproj
-		SccProjectTopLevelParentUniqueName9 = V8.Net.sln
-		SccProjectName9 = V8.NET-ProxyInterface
-		SccLocalPath9 = V8.NET-ProxyInterface
-		SccProjectUniqueName10 = V8.NET-ProxyInterface\\V8.Net-ProxyInterface-x64-3.5.csproj
-		SccProjectTopLevelParentUniqueName10 = V8.Net.sln
-		SccProjectName10 = V8.NET-ProxyInterface
-		SccLocalPath10 = V8.NET-ProxyInterface
-		SccProjectUniqueName11 = V8.NET-ProxyInterface\\V8.Net-ProxyInterface-x86-3.5.csproj
-		SccProjectTopLevelParentUniqueName11 = V8.Net.sln
-		SccProjectName11 = V8.NET-ProxyInterface
-		SccLocalPath11 = V8.NET-ProxyInterface
-		SccProjectUniqueName12 = V8.Net\\V8.Net-3.5.csproj
-		SccProjectTopLevelParentUniqueName12 = V8.Net.sln
-		SccProjectName12 = V8.Net
-		SccLocalPath12 = V8.Net
-		SccProjectUniqueName13 = V8.NET-Console\\V8.Net-Console.csproj
-		SccProjectTopLevelParentUniqueName13 = V8.Net.sln
-		SccProjectName13 = V8.NET-Console
-		SccLocalPath13 = V8.NET-Console
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|Mixed Platforms = Debug|Mixed Platforms
