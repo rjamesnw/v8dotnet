@@ -19,6 +19,7 @@ namespace V8.Net
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
+
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             try
