@@ -394,7 +394,7 @@ namespace V8.Net
                 if (_ScriptObjectAttribute != null)
                     _DefaultMemberAttributes = (V8PropertyAttributes)_ScriptObjectAttribute.Security;
                 else
-                    _DefaultMemberAttributes = V8PropertyAttributes.None;
+                    _DefaultMemberAttributes = (V8PropertyAttributes)Engine.DefaultMemberBindingSecurity;
             }
 
             if (className.IsNullOrWhiteSpace())
@@ -435,13 +435,6 @@ namespace V8.Net
 
             var members = BoundType.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 
-            var scriptObjectAttribute = (from a in BoundType.GetCustomAttributes(true) where a is ScriptObject select (ScriptObject)a).FirstOrDefault();
-
-            string objectScriptName = scriptObjectAttribute != null && !string.IsNullOrEmpty(scriptObjectAttribute.TypeName) ? scriptObjectAttribute.TypeName : BoundType.Name;
-
-            var defaultAttribute = _DefaultMemberAttributes != V8PropertyAttributes.Undefined ? (ScriptMemberSecurity)_DefaultMemberAttributes
-                : scriptObjectAttribute != null ? scriptObjectAttribute.Security : ScriptMemberSecurity.ReadWrite;
-
             int mi;
             string memberName;
             ScriptMemberSecurity attributes;
@@ -454,7 +447,7 @@ namespace V8.Net
                 //??if (member.IsDefined(typeof(NoScriptAccess), true)) continue; // (don't allow access, skip)
 
                 memberName = member.Name;
-                attributes = defaultAttribute;
+                attributes = (ScriptMemberSecurity)_DefaultMemberAttributes;
 
                 scriptMemberAttrib = (from a in member.GetCustomAttributes(true) where a is ScriptMember select (ScriptMember)a).LastOrDefault();
 
@@ -742,7 +735,7 @@ namespace V8.Net
                     try
                     {
                         if (_this.IsBinder)
-                            return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive, _DefaultMemberAttributes);
+                            return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
                         else
                             return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
                     }
@@ -752,7 +745,7 @@ namespace V8.Net
                 return (InternalHandle _this, string propertyName) =>
                 {
                     if (_this.IsBinder)
-                        return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive, _DefaultMemberAttributes);
+                        return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
                     else
                         return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
                 };
@@ -913,7 +906,7 @@ namespace V8.Net
                         try
                         {
                             if (_this.IsBinder)
-                                return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive, _DefaultMemberAttributes);
+                                return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive);
                             else
                                 return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
                         }
@@ -927,7 +920,7 @@ namespace V8.Net
                     if (propertyInfo.CanRead)
                     {
                         if (_this.IsBinder)
-                            return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive, _DefaultMemberAttributes);
+                            return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive);
                         else
                             return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
                     }
@@ -1077,7 +1070,7 @@ namespace V8.Net
                                     return InternalHandle.Empty;
                             }
                             var result = boundMethod.Invoke(_this.BoundObject, convertedArguments);
-                            return boundMethod.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive, _DefaultMemberAttributes);
+                            return boundMethod.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
                         }
                         else // ... more than one method exists (overloads) ..
                         {
@@ -1085,7 +1078,7 @@ namespace V8.Net
                             var methodInfo = Type.DefaultBinder.BindToMethod(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy,
                                 methods, ref convertedArguments, null, null, null, out state) as MethodInfo;
                             var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
-                            return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive, _DefaultMemberAttributes);
+                            return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
                         }
                     }
                     else
@@ -1352,6 +1345,13 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
+        /// This is a global setting for this engine instance for binding members of types that do not have one of the 'ScriptObject' or 'ScriptMember' security attributes.
+        /// Using this default security, if you call a function in script that returns an unregistered managed type, the type will be available by reference only,
+        /// and no members will be bound (no properties will exist).
+        /// </summary>
+        public ScriptMemberSecurity DefaultMemberBindingSecurity = ScriptMemberSecurity.NoAcccess;
+
+        /// <summary>
         /// Holds a list of all binders that can operate on an instance of a given type.
         /// </summary>
         internal readonly Dictionary<Type, TypeBinder> _Binders = new Dictionary<Type, TypeBinder>();
@@ -1431,7 +1431,7 @@ namespace V8.Net
         /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
         /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
         /// If true, then nested object references are included.</param>
-        public InternalHandle CreateBinding(Type type, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.None)
+        public InternalHandle CreateBinding(Type type, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             var typeBinder = RegisterType(type, className, recursive, memberAttributes);
             return typeBinder.TypeFunction;
@@ -1444,7 +1444,7 @@ namespace V8.Net
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object type is instantiate within JavaScript, only the object itself is bound. If true, then nested object based properties are included.</param>
         /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public InternalHandle CreateBinding<T>(string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.None)
+        public InternalHandle CreateBinding<T>(string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             return CreateBinding(typeof(T), className, recursive, memberAttributes);
         }

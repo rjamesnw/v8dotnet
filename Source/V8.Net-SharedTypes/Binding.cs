@@ -15,7 +15,7 @@ namespace V8.Net
         /// <summary>
         /// Used internally to prevent access to a script member.
         /// </summary>
-        NoAcccess = -1,
+        NoAcccess = -1, // (note: maps to 'V8PropertyAttributes.Undefined' [also -1]; Undefined members will be ignored.)
 
         /// <summary>
         /// If this flag is set, then the property can be read and/or written to.
