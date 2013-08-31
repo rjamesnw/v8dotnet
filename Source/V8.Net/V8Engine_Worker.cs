@@ -98,7 +98,9 @@ namespace V8.Net
             if (objID >= 0)
                 lock (_Objects)
                 {
-                    _Objects[objID].Object._MakeWeak();
+                    var obj = _Objects[objID].Object;
+                    if (obj != null)
+                        obj._MakeWeak();
                 }
 
             return _Worker_Index >= 0;
