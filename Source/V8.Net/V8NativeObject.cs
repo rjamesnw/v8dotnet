@@ -155,6 +155,18 @@ namespace V8.Net
             }
         }
 
+        public virtual InternalHandle this[int index]
+        {
+            get
+            {
+                return _Handle.GetProperty(index);
+            }
+            set
+            {
+                _Handle.SetProperty(index, value);
+            }
+        }
+        
         // --------------------------------------------------------------------------------------------------------------------
 
         public V8NativeObject()

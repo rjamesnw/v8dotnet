@@ -219,7 +219,8 @@ namespace V8.Net
         internal void _Initialize(V8Engine v8EngineProxy, bool registerPropertyInterceptors = true)
         {
             _Initialize(v8EngineProxy,
-                (NativeObjectTemplateProxy*)V8NetProxy.CreateObjectTemplateProxy(v8EngineProxy._NativeV8EngineProxy)// (create a corresponding native object)
+                (NativeObjectTemplateProxy*)V8NetProxy.CreateObjectTemplateProxy(v8EngineProxy._NativeV8EngineProxy), // (create a corresponding native object)
+                registerPropertyInterceptors
             );
         }
 
@@ -236,7 +237,10 @@ namespace V8.Net
             _NativeObjectTemplateProxy = nativeObjectTemplateProxy;
 
             if (registerPropertyInterceptors)
-                RegisterPropertyInterceptors();
+            {
+                RegisterNamedPropertyInterceptors();
+                RegisterIndexedPropertyInterceptors();
+            }
 
             OnInitialized();
         }
@@ -269,16 +273,21 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Returns true if this function template has any interceptors (callbacks) registered.
+        /// Returns true if this function template has any name-based interceptors (callbacks) registered.
         /// </summary>
-        public bool PropertyInterceptorsRegistered { get; internal set; }
+        public bool NamedPropertyInterceptorsRegistered { get; internal set; }
+
+        /// Returns true if this function template has any index-based interceptors (callbacks) registered.
+        /// <para>Note: This is numerical indexes only.</para>
+        /// </summary>
+        public bool IndexedPropertyInterceptorsRegistered { get; internal set; }
 
         /// <summary>
         /// Registers handlers that intercept access to properties on ALL objects created by this template.  The native V8 engine only supports this on 'ObjectTemplate's.
         /// </summary>
-        public void RegisterPropertyInterceptors()
+        public void RegisterNamedPropertyInterceptors()
         {
-            if (!PropertyInterceptorsRegistered)
+            if (!NamedPropertyInterceptorsRegistered)
             {
                 V8NetProxy.RegisterNamedPropertyHandlers(_NativeObjectTemplateProxy,
                     _SetDelegate<ManagedNamedPropertyGetter>(_NamedPropertyGetter),
@@ -287,6 +296,17 @@ namespace V8.Net
                     _SetDelegate<ManagedNamedPropertyDeleter>(_NamedPropertyDeleter),
                     _SetDelegate<ManagedNamedPropertyEnumerator>(_NamedPropertyEnumerator));
 
+                NamedPropertyInterceptorsRegistered = true;
+            }
+        }
+
+        /// <summary>
+        /// Registers handlers that intercept access to properties on ALL objects created by this template.  The native V8 engine only supports this on 'ObjectTemplate's.
+        /// </summary>
+        public void RegisterIndexedPropertyInterceptors()
+        {
+            if (!IndexedPropertyInterceptorsRegistered)
+            {
                 V8NetProxy.RegisterIndexedPropertyHandlers(_NativeObjectTemplateProxy,
                     _SetDelegate<ManagedIndexedPropertyGetter>(_IndexedPropertyGetter),
                     _SetDelegate<ManagedIndexedPropertySetter>(_IndexedPropertySetter),
@@ -294,7 +314,7 @@ namespace V8.Net
                     _SetDelegate<ManagedIndexedPropertyDeleter>(_IndexedPropertyDeleter),
                     _SetDelegate<ManagedIndexedPropertyEnumerator>(_IndexedPropertyEnumerator));
 
-                PropertyInterceptorsRegistered = true;
+                IndexedPropertyInterceptorsRegistered = true;
             }
         }
 
@@ -303,13 +323,13 @@ namespace V8.Net
         /// </summary>
         public void UnregisterPropertyInterceptors()
         {
-            if (PropertyInterceptorsRegistered)
+            if (NamedPropertyInterceptorsRegistered)
             {
                 V8NetProxy.UnregisterNamedPropertyHandlers(_NativeObjectTemplateProxy);
 
                 V8NetProxy.UnregisterIndexedPropertyHandlers(_NativeObjectTemplateProxy);
 
-                PropertyInterceptorsRegistered = false;
+                NamedPropertyInterceptorsRegistered = false;
             }
         }
 

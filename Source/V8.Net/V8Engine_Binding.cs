@@ -203,6 +203,11 @@ namespace V8.Net
         public readonly MemberDetails StaticMembers = new MemberDetails();
 
         /// <summary>
+        /// The indexer for this type, if applicable, otherwise this is null.
+        /// </summary>
+        public PropertyInfo Indexer { get; private set; }
+
+        /// <summary>
         /// The ScriptObject attribute if one exists for the underlying type, otherwise this is null.
         /// </summary>
         public ScriptObject ScriptObjectAttribute { get { return _ScriptObjectAttribute; } }
@@ -527,6 +532,14 @@ namespace V8.Net
             else if (memberInfo.MemberType == MemberTypes.Property)
             {
                 var propertyInfo = memberInfo as PropertyInfo;
+
+                if (propertyInfo.GetIndexParameters().Count() > 0) // (this property is an indexer ([#]), so skip - this will be supported another way)
+                {
+                    Indexer = propertyInfo;
+                    if (!InstanceTemplate.IndexedPropertyInterceptorsRegistered)
+                        InstanceTemplate.RegisterIndexedPropertyInterceptors();
+                    return;
+                }
 
                 if (!_Recursive && propertyInfo.PropertyType.IsClass && propertyInfo.PropertyType != typeof(string)) return; // (don't include nested objects, except strings)
 
@@ -1280,8 +1293,10 @@ namespace V8.Net
     /// <summary>
     /// 'ObjectBinder' instances represent JavaScript object properties that are bound to CLR objects or types.
     /// </summary>
-    public class ObjectBinder : V8NativeObject
+    public class ObjectBinder : V8ManagedObject
     {
+        // --------------------------------------------------------------------------------------------------------------------
+
         new public object Object
         {
             get { return _Object; }
@@ -1323,6 +1338,8 @@ namespace V8.Net
 
         public ObjectBinder() { _BindingMode = BindingMode.Instance; }
 
+        // --------------------------------------------------------------------------------------------------------------------
+
         public override void Initialize()
         {
             base.Initialize();
@@ -1330,6 +1347,35 @@ namespace V8.Net
             if (ObjectType == null && _Object != null)
                 ObjectType = _Object.GetType();
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        public override InternalHandle IndexedPropertyGetter(int index)
+        {
+            if (TypeBinder.Indexer != null && TypeBinder.Indexer.CanRead)
+                return Engine.CreateValue(TypeBinder.Indexer.GetValue(Object, new object[] { index }), TypeBinder._Recursive);
+            return InternalHandle.Empty;
+        }
+        public override InternalHandle IndexedPropertySetter(int index, InternalHandle value)
+        {
+            if (TypeBinder.Indexer != null && TypeBinder.Indexer.CanWrite)
+                TypeBinder.Indexer.SetValue(_Object, new TypeBinder.TypeInfo(value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
+            return IndexedPropertyGetter(index);
+        }
+        public override bool? IndexedPropertyDeleter(int index)
+        {
+            return false;
+        }
+        public override V8PropertyAttributes? IndexedPropertyQuery(int index)
+        {
+            return null;
+        }
+        public override InternalHandle IndexedPropertyEnumerator()
+        {
+            return InternalHandle.Empty;
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
     }
 
     public class ObjectBinder<T> : ObjectBinder where T : class, new()

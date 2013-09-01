@@ -20,11 +20,6 @@ namespace V8.Net
         /// 'V8PropertyAttributes' flags combined to describe the value, such as visibility, or what kind of access is allowed.
         /// </summary>
         V8PropertyAttributes Attributes { get; set; }
-
-        /// <summary>
-        /// Returns true if the instance represents a non-existent value.
-        /// </summary>
-        bool IsEmpty { get; }
     }
 
     /// <summary>
@@ -53,12 +48,6 @@ namespace V8.Net
         /// </summary>
         V8PropertyAttributes IJSProperty.Attributes { get { return _Attributes; } set { _Attributes = value; } }
         V8PropertyAttributes _Attributes;
-
-        /// <summary>
-        /// Returns true if this instance represents a NULL INSTANCE (such as JSProperty.Null).  If this is true, then setting the Value or Attribute properties will cause an error.
-        /// A "NULL" instance means nothing EXISTS. To set a null VALUE, you must replace a NULL instance with "new JSProperty()".
-        /// </summary>
-        bool IJSProperty.IsEmpty { get { return false; } }
 
         /// <summary>
         /// Create a new JSProperty instance to help keep track of JavaScript object properties on managed objects.
@@ -98,8 +87,7 @@ namespace V8.Net
         class _Empty : IJSProperty
         {
             InternalHandle IJSProperty.Value { get { return InternalHandle.Empty; } set { throw new InvalidOperationException("This JSProperty instance represents a NULL state and cannot be set."); } }
-            V8PropertyAttributes IJSProperty.Attributes { get { return V8PropertyAttributes.None; } set { throw new InvalidOperationException("This JSProperty instance represents a NULL state and cannot have attributes."); } }
-            bool IJSProperty.IsEmpty { get { return true; } }
+            V8PropertyAttributes IJSProperty.Attributes { get { return V8PropertyAttributes.Undefined; } set { throw new InvalidOperationException("This JSProperty instance represents a NULL state and cannot have attributes."); } }
         }
 
         /// <summary>

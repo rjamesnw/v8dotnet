@@ -34,6 +34,11 @@ namespace V8.Net
         /// </summary>
         new IJSProperty this[string propertyName] { get; set; }
 
+        /// <summary>
+        /// Returns the value/object handle associated with the specified property.
+        /// </summary>
+        new IJSProperty this[int index] { get; set; }
+
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
@@ -138,6 +143,8 @@ namespace V8.Net
         }
         protected IDictionary<string, IJSProperty> _Properties;
 
+        // --------------------------------------------------------------------------------------------------------------------
+
         IJSProperty IV8ManagedObject.this[string propertyName]
         {
             get
@@ -153,14 +160,26 @@ namespace V8.Net
             }
         }
 
-        public override InternalHandle this[string propertyName]
+        IJSProperty IV8ManagedObject.this[int index]
         {
             get
             {
                 IJSProperty value;
-                if (Properties.TryGetValue(propertyName, out value))
-                    return value.Value;
-                return InternalHandle.Empty;
+                if (Properties.TryGetValue(index.ToString(), out value))
+                    return value;
+                return JSProperty.Empty;
+            }
+            set
+            {
+                Properties[index.ToString()] = value;
+            }
+        }
+
+        public override InternalHandle this[string propertyName]
+        {
+            get
+            {
+                return NamedPropertyGetter(ref propertyName);
             }
             set
             {
@@ -168,6 +187,17 @@ namespace V8.Net
             }
         }
 
+        public override InternalHandle this[int index]
+        {
+            get
+            {
+                return IndexedPropertyGetter(index);
+            }
+            set
+            {
+                IndexedPropertySetter(index, value);
+            }
+        }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -204,7 +234,7 @@ namespace V8.Net
 
             var jsVal = ((IV8ManagedObject)this)[propertyName];
 
-            if (jsVal.IsEmpty)
+            if (jsVal.Value.IsEmpty)
                 ((IV8ManagedObject)this)[propertyName] = jsVal = new JSProperty(value, attributes != V8PropertyAttributes.Undefined ? attributes : V8PropertyAttributes.None);
             else
             {

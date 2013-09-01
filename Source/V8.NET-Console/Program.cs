@@ -464,6 +464,9 @@ public sealed class SealedObject
     public static TestEnum _StaticField = TestEnum.A;
     public static TestEnum StaticField { get { return _StaticField; } }
 
+    int _Value;
+    public int this[int index] { get { return _Value; } set { _Value = value; } }
+
     public Uri URI;
     public void SetURI(Uri uri) { URI = uri; }
 
