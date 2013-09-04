@@ -336,6 +336,18 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
+        /// Registers a invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
+        /// </summary>
+        /// <param name="callback">A callback that gets invoked </param>
+        public void RegisterInvokeHandler(ManagedJSFunctionCallback callback)
+        {
+            V8NetProxy.RegisterInvokeHandler(_NativeObjectTemplateProxy, callback);
+            _Engine._StoreAccessor<ManagedJSFunctionCallback>(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", callback);
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
         /// Creates an object of the specified type and returns it.  A V8 object is also created and associated with it.
         /// <para>Performance note: Creating 'V8NativeObject' type objects are allowed, but an object template is not needed for those.  If you create a
         /// 'V8NativeObject' object from a template, it simply wraps the native object create by the template, and property interceptors (call-backs) are still

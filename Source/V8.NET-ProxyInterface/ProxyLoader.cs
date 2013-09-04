@@ -188,6 +188,15 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
+        public static extern void RegisterInvokeHandler(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+
+#if x86
+        [DllImport("V8_Net_Proxy_x86")]
+#elif x64
+        [DllImport("V8_Net_Proxy_x64")]
+#else
+        [DllImport("V8_Net_Proxy")]
+#endif
         public static unsafe extern HandleProxy* CreateObjectFromTemplate(NativeObjectTemplateProxy* objectTemplateProxy, Int32 objID);
         // Return: HandleProxy*
 

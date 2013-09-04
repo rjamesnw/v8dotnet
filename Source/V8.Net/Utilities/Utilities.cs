@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -12,17 +13,6 @@ namespace V8.Net
 
     public static class ExtensionMethods
     {
-        public static bool IsNullOrWhiteSpace(this string str)
-        {
-#if V2 || V3 || V3_5
-            if (str == null) return true;
-            for (var i = 0; i < str.Length; i++)
-                if (str[i] <= ' ') return true;
-            return false;
-#else
-            return string.IsNullOrWhiteSpace(str);
-#endif
-        }
     }
 
     // ========================================================================================================================
@@ -246,7 +236,310 @@ namespace V8.Net
         // ---------------------------------------------------------------------------------------------------------------------
     }
 
-    // ========================================================================================================================
+    // =========================================================================================================================
+
+    public static partial class Strings
+    {
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns true if the given object is null, or its string conversion results in an empty/null string.
+        /// </summary>
+        public static bool IsNullOrEmpty(object value) { return (value == null || string.IsNullOrEmpty(value.ToString())); }
+
+        /// <summary>
+        /// Returns true if the string value is null or contains white space (contains all characters less than or equal Unicode value 32).
+        /// </summary>
+        public static bool IsNullOrWhiteSpace(this string str)
+        {
+#if V2 || V3 || V3_5 // (this method exists in .NET 4.0+ as a method of the string class)
+            if (str == null || str.Length == 0) return true;
+            for (var i = 0; i < str.Length; i++)
+                if ((int)str[i] <= 32) return true;
+            return false;
+#else
+            return string.IsNullOrWhiteSpace(str);
+#endif
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Selects the first non-null/empty string found in the parameter order given, and returns a default value if
+        /// both are null/empty.
+        /// </summary>
+        public static string SelectNonEmptyString(string str1, string str2, string defaultValue)
+        {
+            return str1.IsNullOrWhiteSpace() ? (str2.IsNullOrWhiteSpace() ? defaultValue : str2) : str1;
+        }
+        public static string SelectNonEmptyString(string str1, string str2) { return SelectNonEmptyString(str1, str2, null); }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Convert a list of objects into strings and return the concatenated result.
+        /// </summary>
+        public static string Join(string separator, object[] objects)
+        {
+            string s = "";
+            foreach (object o in objects)
+            {
+                if (s.Length > 0) s += separator;
+                if (o != null)
+                    s += o.ToString();
+            }
+            return s;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Join two strings arrays into one big array. The new array is returned.
+        /// </summary>
+        public static string[] Join(string[] sa1, string[] sa2)
+        {
+            string[] strings = new string[sa1.Length + sa2.Length];
+            CopyTo(sa1, strings, 0);
+            CopyTo(sa2, strings, sa1.Length);
+            return strings;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Copies a given source string array into another (destination), returning the destination array.
+        /// </summary>
+        /// <param name="src">The array to copy.</param>
+        /// <param name="dest">The target of the copy.</param>
+        /// <param name="destIndex">The array index into the destination in which copy starts.</param>
+        public static string[] CopyTo(string[] src, string[] dest, int destIndex)
+        {
+            for (int i = 0; i < src.Length; i++)
+                dest[destIndex + i] = src[i];
+            return dest;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Copies the given string and string array to a new array. The new array is returned.
+        /// </summary>
+        public static string[] Add(string s, string[] strings)
+        {
+            string[] newStringArray = new string[strings.Length + 1];
+            CopyTo(strings, newStringArray, 0);
+            newStringArray[strings.Length] = s;
+            return newStringArray;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        public static string FormatNumber(int n, string format)
+        {
+            return n.ToString(format);
+        }
+
+        public static string FormatNumber(double n, string format)
+        {
+            return n.ToString(format);
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns the singular or plural of a word based on a numerical value.
+        /// </summary>
+        /// <param name="value">Number value.</param>
+        /// <param name="word">Base word, singular.</param>
+        /// <param name="suffix_if_plural">Suffix to use if "value" is not 1.</param>
+        /// <param name="numberFormatting">The number format, if any (optional).</param>
+        public static string S(int value, string word, string suffix_if_plural, string numberFormatting)
+        {
+            if (value != 1) return (numberFormatting != null ? FormatNumber(value, numberFormatting) : value.ToString()) + " " + word + suffix_if_plural;
+            return value + " " + word;
+        }
+        public static string S(int value, string word, string suffix_if_plural) { return S(value, word, suffix_if_plural, null); }
+
+        /// <summary>
+        /// Returns the singular or plural of a word based on a numerical value.
+        /// </summary>
+        /// <param name="value">Number value.</param>
+        /// <param name="word">Base word, singular.</param>
+        /// <param name="suffix_if_plural">Suffix to use if "value" is not 1.</param>
+        /// <param name="numberFormatting">The number format, if any (optional).</param>
+        public static string S(double value, string word, string suffix_if_plural, string numberFormatting)
+        {
+            if (value != 1) return (numberFormatting != null ? FormatNumber(value, numberFormatting) : value.ToString()) + " " + word + suffix_if_plural;
+            return value + " " + word;
+        }
+        public static string S(double value, string word, string suffix_if_plural) { return S(value, word, suffix_if_plural, null); }
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Appends the source string to the target string and returns the result.
+        /// If 'target' and 'source' are both not empty, then the delimiter is inserted between them, and the resulting string returned.
+        /// </summary>
+        /// <param name="target">The string to append to.</param>
+        /// <param name="source">The string to append.</param>
+        /// <param name="delimiter">If specified, the delimiter is placed between the target and source if the target is NOT empty.</param>
+        /// <param name="onlyAddDelimiterIfMissing">Only inserts the delimiter if it is missing from the end of the target and beginning of the source.</param>
+        /// <returns>The new string.</returns>
+        public static string Append(string target, string source, string delimiter, bool onlyAddDelimiterIfMissing)
+        {
+            if (target == null) target = "";
+            else if (delimiter != null && !string.IsNullOrEmpty(target) && source != null)
+                if (!onlyAddDelimiterIfMissing || !target.EndsWith(delimiter) && !source.StartsWith(delimiter))
+                    target += delimiter;
+            if (source != null) target += source;
+            return target;
+        }
+        public static string Append(string target, string source) { return Append(target, source, null, false); }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns the number of occurrences of the given character in the given string.
+        /// </summary>
+        /// <param name="str">The string to look in.</param>
+        /// <param name="chr">The character to count.</param>
+        public static int CharCount(string str, char chr)
+        {
+            int count = 0;
+            if (!string.IsNullOrEmpty(str))
+                for (int i = 0; i < str.Length; i++)
+                    if (str[i] == chr) count++;
+            return count;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Performs a textual comparison, where the letter casing is ignored, and returns 'true' if the specified strings are a match.
+        /// </summary>
+        /// <param name="strA">The first string to compare.</param>
+        /// <param name="strB">The second string to compare.</param>
+        public static bool TextEqual(string strA, string strB)
+        {
+            return string.Compare(strA, strB, StringComparison.CurrentCultureIgnoreCase) == 0;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        public static int GetChecksum(string str)
+        {
+            int checksum = 0;
+            for (int i = 0; i < str.Length; i++)
+                checksum += str[i];
+            return checksum;
+        }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns the given string up to a maximum of 'maxlength' characters.
+        /// If more than 'maxlength' characters exist, an ellipse character is appended to the returned substring.
+        /// </summary>
+        public static string Limit(string text, uint maxLength, bool includeElipseInMaxLength)
+        {
+            if (maxLength == 0) return "";
+            if (text.Length <= maxLength) return text;
+            return text.Substring(0, (int)maxLength - (includeElipseInMaxLength ? 1 : 0)) + "…";
+        }
+        public static string Limit(string text, uint maxLength) { return Limit(text, maxLength, false); }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+    }
+
+    // =========================================================================================================================
+
+    public static partial class Arrays
+    {
+        /// <summary>
+        /// Concatenate a list of arrays. Specify one array for each parameter.
+        /// To concatenate one list of arrays, use Join().
+        /// </summary>
+        /// <typeparam name="T">Array type for each argument.</typeparam>
+        /// <param name="args">A concatenated array made form the specified arrays.</param>
+        /// <returns></returns>
+        public static T[] Concat<T>(params T[][] args)
+        {
+            return Join<T>(args);
+        }
+        /// <summary>
+        /// Concatenate a list of arrays.
+        /// </summary>
+        /// <typeparam name="T">Array type for each argument.</typeparam>
+        /// <param name="arrays">A concatenated array made form the specified arrays.</param>
+        /// <returns></returns>
+        public static T[] Join<T>(T[][] arrays)
+        {
+            if (arrays.Length == 0) return null;
+            Int32 newLength = 0, i;
+            for (i = 0; i < arrays.Length; i++)
+                newLength += arrays[i].Length;
+            T[] newArray = new T[newLength];
+            T[] array;
+            Int32 writeIndex = 0;
+            for (i = 0; i < arrays.Length; i++)
+            {
+                array = arrays[i];
+                Array.Copy(array, 0, newArray, writeIndex, array.Length);
+                writeIndex += array.Length;
+            }
+            return newArray;
+        }
+        public static string Join<T>(IEnumerable<T> list)
+        {
+            string s = "";
+            foreach (T item in list)
+                s += item != null ? item.ToString() : "";
+            return s;
+        }
+
+        public static T[] Convert<T>(IList array)
+        {
+            if (array == null) return null;
+            T[] convertedItems = new T[array.Count];
+            for (int i = 0; i < array.Count; i++)
+                convertedItems[i] = (T)System.Convert.ChangeType(array[i], typeof(T), System.Threading.Thread.CurrentThread.CurrentCulture);
+            return convertedItems;
+        }
+
+        public static T[] ConvertWithDefaults<T>(IList array)
+        {
+            if (array == null) return null;
+            T[] convertedItems = new T[array.Count];
+            for (int i = 0; i < array.Count; i++)
+            {
+                try { convertedItems[i] = (T)System.Convert.ChangeType(array[i], typeof(T), System.Threading.Thread.CurrentThread.CurrentCulture); }
+                catch { convertedItems[i] = default(T); }
+            }
+            return convertedItems;
+        }
+
+        /// <summary>
+        /// Select an item from the end of the array.
+        /// </summary>
+        /// <typeparam name="T">Array type.</typeparam>
+        /// <param name="items">The array.</param>
+        /// <param name="index">0, or a negative value, that is the offset of the item to retrieve.</param>
+        public static T FromEnd<T>(this T[] items, int index)
+        {
+            return items[items.Length - 1 + index];
+        }
+        /// <summary>
+        /// Select an item from the end of the list.
+        /// </summary>
+        /// <typeparam name="T">List type.</typeparam>
+        /// <param name="items">The list.</param>
+        /// <param name="index">0, or a negative value, that is the offset of the item to retrieve.</param>
+        public static T FromEnd<T>(this IList<T> items, int index)
+        {
+            return items[items.Count - 1 + index];
+        }
+    }
+
+    // =========================================================================================================================
 
     /// <summary>
     /// Provides utility methods for types.

@@ -47,7 +47,8 @@ namespace V8.Net
                 _JSServer.WithContextScope = () =>
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
-                    _JSServer.GlobalObject.SetProperty(typeof(System.IO.File), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Type), "CLRString", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(String), "CLRString", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Int32), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Int64), null, true, V8PropertyAttributes.Locked);
@@ -55,6 +56,7 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(Array), "CLRArray", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Enumerable), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(System.IO.File), null, true, V8PropertyAttributes.Locked);
 
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), null, true, V8PropertyAttributes.Locked);
@@ -476,6 +478,9 @@ public sealed class SealedObject
     public string PropB { get { return FieldB; } }
 
     public string Test(int a, string b) { FieldA = a; FieldB = b; return a + "_" + b; }
+
+    public void Test<t2, t>(t2 a, string b) { }
+    public void Test<t2, t>(t a, string b) { }
 
     public string Test(string b, int a = 1) { FieldA = a; FieldB = b; return b + "_" + a; }
 

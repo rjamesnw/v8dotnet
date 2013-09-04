@@ -68,6 +68,9 @@ extern "C"
     EXPORT void STDCALL UnregisterIndexedPropertyHandlers(ObjectTemplateProxy *proxy)
     { proxy->UnregisterIndexedPropertyHandlers(); }
 
+    EXPORT void STDCALL RegisterInvokeHandler(ObjectTemplateProxy *proxy, ManagedJSFunctionCallback callback)
+    { proxy->RegisterInvokeHandler(callback); }
+
     EXPORT HandleProxy* STDCALL CreateObjectFromTemplate(ObjectTemplateProxy *proxy, int32_t managedObjectID) { return proxy->CreateObject(managedObjectID); }
 
     // This function connects objects that are created internally by V8, but are based on custom templates (such as new instances created by functions where V8

@@ -47,24 +47,24 @@ namespace V8.Net
     // ========================================================================================================================
 
     /// <summary>
-    /// Keeps track of values (usually object references) based on an array of one or more related types.
+    /// Keeps track of object references based on an array of one or more related types.
     /// The object references are stored based on a tree of nested types for fast dictionary-tree-style lookup.
     /// Currently, this class is used to cache new generic types in the type binder.
     /// </summary>
-    public class TypeLibrary<T>
+    public class TypeLibrary<T> where T : class
     {
         public readonly Dictionary<Type, TypeLibrary<T>> SubTypes = new Dictionary<Type, TypeLibrary<T>>();
         public T Object;
 
-        public void Set(T value, params Type[] types) { Set(types, value); }
-        public void Set(Type[] types, T value)
+        public T Set(T value, params Type[] types) { return Set(types, value); }
+        public T Set(Type[] types, T value)
         {
             if (types == null) types = new Type[0];
-            _Set(types, value);
+            return _Set(types, value);
         }
-        void _Set(Type[] types, T value, int depth = 0)
+        T _Set(Type[] types, T value, int depth = 0)
         {
-            if (depth >= types.Length) { Object = value; return; }
+            if (depth >= types.Length) return (Object = value);
             Type type = types[depth];
             TypeLibrary<T> _typeLibrary;
             if (!SubTypes.TryGetValue(type, out _typeLibrary))
@@ -73,7 +73,7 @@ namespace V8.Net
                 _typeLibrary = new TypeLibrary<T>();
                 SubTypes[type] = _typeLibrary;
             }
-            _typeLibrary._Set(types, value, depth + 1);
+            return _typeLibrary._Set(types, value, depth + 1);
         }
 
         public T Get(params Type[] types)
@@ -87,24 +87,153 @@ namespace V8.Net
             Type type = types[depth];
             TypeLibrary<T> _typeLibrary;
             if (!SubTypes.TryGetValue(type, out _typeLibrary))
-                return default(T); // (nothing found)
+                return null; // (nothing found)
             return _typeLibrary._Get(types, depth + 1);
         }
 
         public bool Exists(params Type[] types)
         {
-            if (types == null) types = new Type[0];
-            return _Exists(types);
+            return Get(types) == null;
         }
-        bool _Exists(Type[] types, int depth = 0)
+
+        public IEnumerable<TypeLibrary<T>> Items { get { return _GetItems(); } }
+
+        IEnumerable<TypeLibrary<T>> _GetItems()
         {
-            if (depth >= types.Length) return true;
-            Type type = types[depth];
-            TypeLibrary<T> _typeLibrary;
-            if (!SubTypes.TryGetValue(type, out _typeLibrary))
-                return false; // (not found)
-            return _typeLibrary._Exists(types, depth + 1);
+            if (Object != null) yield return this;
+            foreach (var kv in SubTypes)
+                foreach (var item in kv.Value._GetItems())
+                    yield return item;
         }
+    }
+
+    // ========================================================================================================================
+
+    /// <summary>
+    /// Keeps track of object references based on an array of one or more related strings.
+    /// The object references are stored based on a tree of nested string characters for lightning-fast indexed-based lookup.
+    /// This nested index tree is designed to only take the space needed for the given character ranges, and nothing more.
+    /// Currently, this class is used to cache type members in the type binder based on their names for fast lookup when the named indexer is invoked.
+    /// </summary>
+    public class CharIndexLibrary<T> where T : class
+    {
+        public CharIndexLibrary<T> Parent;
+        public readonly char Char;
+
+        CharIndexLibrary<T>[] _SubChars = new CharIndexLibrary<T>[0];
+        List<int> _ValidIndexes = new List<int>(); // (holds a series of valid indexes for the sub chars for quick enumeration)
+        int _LowerCharOffset = ((int)char.MaxValue) + 1; // The lower char offset is subtracted from the name characters (since the full character range is usually not required).
+
+        public T Object;
+
+        public CharIndexLibrary() { }
+        public CharIndexLibrary(CharIndexLibrary<T> parent, char character) { Parent = parent; Char = character; }
+
+        public T Set(string name, T value)
+        {
+            if (name == null) name = "";
+            var entry = this;
+            int i = 0, ofs, endDiff, oldLen;
+            char c;
+
+            while (i < name.Length)
+            {
+                c = name[i];
+                ofs = c - entry._LowerCharOffset;
+
+                if (ofs < 0)
+                {
+                    if (entry._SubChars.Length == 0)
+                    {
+                        Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, 1); // (first time there is nothing to move, and 'entry._LowerCharOffset' is invalid anyway)
+                    }
+                    else
+                    {
+                        // ... need to reduce the lower offset to store this character - which means bumping everything up ...
+                        oldLen = entry._SubChars.Length;
+                        Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, entry._SubChars.Length + -ofs); // (extend end)
+                        Array.Copy(entry._SubChars, 0, entry._SubChars, -ofs, oldLen); // (bump up)
+                        Array.Clear(entry._SubChars, 0, Math.Min(-ofs, oldLen));
+                        // ... move up the valid indexes ...
+                        for (var vi = 0; vi < entry._ValidIndexes.Count; vi++)
+                            entry._ValidIndexes[vi] += -ofs;
+                    }
+
+                    entry._LowerCharOffset += ofs; // (moved down lower offset)
+                    entry._ValidIndexes.Add(0);
+                    entry = entry._SubChars[0] = new CharIndexLibrary<T>(entry, c);
+                }
+                else if (ofs >= entry._SubChars.Length)
+                {
+                    endDiff = 1 + (ofs - entry._SubChars.Length);
+                    Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, entry._SubChars.Length + endDiff); // (extend end)
+                    entry._ValidIndexes.Add(ofs);
+                    entry = entry._SubChars[ofs] = new CharIndexLibrary<T>(entry, c);
+                }
+                else
+                {
+                    var _entry = entry._SubChars[ofs];
+                    if (_entry == null)
+                        entry._SubChars[ofs] = _entry = new CharIndexLibrary<T>(entry, c);
+                    entry = _entry;
+                }
+
+                i++;
+            }
+
+            entry.Object = value;
+
+            return value;
+        }
+
+        public T Get(string name)
+        {
+            if (name == null) name = "";
+            var entry = this;
+            int i = 0, ofs;
+            char c;
+
+            while (i < name.Length)
+            {
+                c = name[i];
+                ofs = c - entry._LowerCharOffset;
+
+                if (ofs < 0)
+                {
+                    return null;
+                }
+                else if (ofs >= entry._SubChars.Length)
+                {
+                    return null;
+                }
+                else
+                {
+                    entry = entry._SubChars[ofs];
+                    if (entry == null)
+                        return null;
+                }
+                i++;
+            }
+
+            return entry.Object;
+        }
+
+        public bool Exists(string name)
+        {
+            return Get(name) != null;
+        }
+
+        public IEnumerable<CharIndexLibrary<T>> Items { get { return _GetItems(); } }
+
+        IEnumerable<CharIndexLibrary<T>> _GetItems()
+        {
+            if (Object != null) yield return this;
+            for (var i = 0; i < _ValidIndexes.Count; i++)
+                foreach (var item in _SubChars[_ValidIndexes[i]]._GetItems())
+                    yield return item;
+        }
+
+        public string Name { get { return (Parent != null && Parent.Parent != null ? Parent.Name : "") + Char; } }
     }
 
     // ========================================================================================================================
@@ -171,37 +300,6 @@ namespace V8.Net
         public V8PropertyAttributes DefaultMemberAttributes { get { return _DefaultMemberAttributes; } }
         internal V8PropertyAttributes _DefaultMemberAttributes = V8PropertyAttributes.Undefined;
 
-        public class MemberDetails
-        {
-            /// <summary>
-            /// The methods found that will be bound to new object instances.
-            /// </summary>
-            public IEnumerable<KeyValuePair<string, List<MethodInfo>>> Methods { get { return _Methods; } }
-            internal Dictionary<string, List<MethodInfo>> _Methods = new Dictionary<string, List<MethodInfo>>();
-
-            /// <summary>
-            /// The properties found that will be bound to new object instances.
-            /// </summary>
-            public IEnumerable<KeyValuePair<string, PropertyInfo>> Propeties { get { return _Propeties; } }
-            internal Dictionary<string, PropertyInfo> _Propeties = new Dictionary<string, PropertyInfo>();
-
-            /// <summary>
-            /// The fields found that will be bound to new object instances.
-            /// </summary>
-            public IEnumerable<KeyValuePair<string, FieldInfo>> Fields { get { return _Fields; } }
-            internal Dictionary<string, FieldInfo> _Fields = new Dictionary<string, FieldInfo>();
-        }
-
-        /// <summary>
-        /// Instance based (non-static) member details.
-        /// </summary>
-        public readonly MemberDetails InstanceMembers = new MemberDetails();
-
-        /// <summary>
-        /// Static based (non-instance) member details.
-        /// </summary>
-        public readonly MemberDetails StaticMembers = new MemberDetails();
-
         /// <summary>
         /// The indexer for this type, if applicable, otherwise this is null.
         /// </summary>
@@ -213,7 +311,35 @@ namespace V8.Net
         public ScriptObject ScriptObjectAttribute { get { return _ScriptObjectAttribute; } }
         ScriptObject _ScriptObjectAttribute;
 
-        public readonly TypeLibrary<V8Function> CachedGenericMethods = new TypeLibrary<V8Function>();
+        //??public readonly TypeLibrary<V8Function> CachedGenericMethods = new TypeLibrary<V8Function>();
+
+        internal class _MemberDetails
+        {
+            public MemberInfo FirstMember; // (this is a quick cached reference to the first member in 'Members', which is faster for fields and properties)
+            public readonly TypeLibrary<MemberInfo> Members = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this represents a method or property (indexer) overload)
+            public IEnumerable<MethodInfo> MethodMembers { get { return from i in Members.Items where i.Object.MemberType == MemberTypes.Method select (MethodInfo)i.Object; } }
+            public TypeLibrary<TypeLibrary<MethodInfo>> ConstructedMethods; // (if this member is a generic type, then this is the cache of constructed generic definitions)
+            public uint TotalMembers = 1; // (if > 1 then this member is overloaded)
+            public string MemberName; // (might be different from MemberInfo!)
+            public MemberTypes MemberType; // (might be different from MemberInfo!)
+            public V8PropertyAttributes Attributes;
+            public BindingMode BindingMode;
+            public V8NativeObjectPropertyGetter Getter;
+            public V8NativeObjectPropertySetter Setter;
+            public V8Function Method;
+            public TypeLibrary<V8Function> Methods; // (overloads ['SingleMethod' should be null])
+            public Handle ValueOverride; // (the value override is a user value that, if exists, overrides the bindings)
+        }
+        internal readonly CharIndexLibrary<_MemberDetails> _Members = new CharIndexLibrary<_MemberDetails>(null, default(char));
+
+        IEnumerable<_MemberDetails> _FieldDetails(BindingMode bindingMode)
+        { return from md in _Members.Items where (bindingMode == BindingMode.None || md.Object.BindingMode == bindingMode) && md.Object.MemberType == MemberTypes.Field select md.Object; }
+
+        IEnumerable<_MemberDetails> _PropertyDetails(BindingMode bindingMode)
+        { return from md in _Members.Items where (bindingMode == BindingMode.None || md.Object.BindingMode == bindingMode) && md.Object.MemberType == MemberTypes.Property select md.Object; }
+
+        IEnumerable<_MemberDetails> _MethodDetails(BindingMode bindingMode)
+        { return from md in _Members.Items where (bindingMode == BindingMode.None || md.Object.BindingMode == bindingMode) && md.Object.MemberType == MemberTypes.Method select md.Object; }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -335,14 +461,15 @@ namespace V8.Net
             /// <summary>
             /// Returns an array of TypeInfo values for the given handles.
             /// </summary>
-            public static TypeInfo[] GetArguments(InternalHandle[] handles, ParameterInfo[] expectedParameters = null)
+            public static TypeInfo[] GetArguments(InternalHandle[] handles, uint handlesOffset = 0, ParameterInfo[] expectedParameters = null)
             {
-                var length = expectedParameters != null ? expectedParameters.Length : handles.Length;
+                var handlesLength = handles.Length - handlesOffset;
+                var length = expectedParameters != null ? expectedParameters.Length : handlesLength;
 
                 TypeInfo[] typeInfoItems = new TypeInfo[length];
 
                 for (var i = 0; i < length; i++)
-                    typeInfoItems[i] = new TypeInfo(i < handles.Length ? handles[i] : InternalHandle.Empty, expectedParameters != null ? expectedParameters[i] : null);
+                    typeInfoItems[i] = new TypeInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters != null ? expectedParameters[i] : null);
 
                 return typeInfoItems;
             }
@@ -350,14 +477,15 @@ namespace V8.Net
             /// <summary>
             /// Returns an array of TypeInfo values for the expected types.
             /// </summary>
-            public static TypeInfo[] GetTypes(InternalHandle[] handles, Type[] expectedTypes = null)
+            public static TypeInfo[] GetTypes(InternalHandle[] handles, uint handlesOffset = 0, Type[] expectedTypes = null)
             {
-                var length = expectedTypes != null ? expectedTypes.Length : handles.Length;
+                var handlesLength = handles.Length - handlesOffset;
+                var length = expectedTypes != null ? expectedTypes.Length : handlesLength;
 
                 TypeInfo[] typeInfoItems = new TypeInfo[length];
 
-                for (var i = 0; i < expectedTypes.Length; i++)
-                    typeInfoItems[i] = new TypeInfo(i < handles.Length ? handles[i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
+                for (var i = 0; i < length; i++)
+                    typeInfoItems[i] = new TypeInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
 
                 return typeInfoItems;
             }
@@ -376,6 +504,14 @@ namespace V8.Net
                     types[i++] = enumerator.Current.Type;
                 }
                 return types;
+            }
+
+            public static InternalHandle[] GetHandles(TypeInfo[] typeInfoArgs)
+            {
+                InternalHandle[] handles = new InternalHandle[typeInfoArgs.Length];
+                for (int i = 0; i < typeInfoArgs.Length; i++)
+                    handles[i] = typeInfoArgs[i].TypeInfoSource;
+                return handles;
             }
         }
 
@@ -444,6 +580,7 @@ namespace V8.Net
             string memberName;
             ScriptMemberSecurity attributes;
             ScriptMember scriptMemberAttrib;
+            _MemberDetails memberDetails, existingMemberDetails;
 
             for (mi = 0; mi < members.Length; mi++)
             {
@@ -467,67 +604,46 @@ namespace V8.Net
 
                 if (attributes == ScriptMemberSecurity.NoAcccess) continue; // (skip this member)
 
-                attributes |= (ScriptMemberSecurity)V8PropertyAttributes.DontDelete;
+                //??attributes |= (ScriptMemberSecurity)V8PropertyAttributes.DontDelete;
 
-                _AddMember(memberName, (V8PropertyAttributes)attributes, member);
-            }
-
-            // ... members extracted, now register in the template ...
-            // (note: the member reflection includes static members, which is why '_BindTypeMembers()' must be called last) 
-
-            foreach (var kv in InstanceMembers._Fields)
-                _ApplyBindingToTemplateProperty(kv.Key, _Attributes[kv.Value], kv.Value);
-
-            foreach (var kv in InstanceMembers._Propeties)
-                _ApplyBindingToTemplateProperty(kv.Key, _Attributes[kv.Value], kv.Value);
-
-            V8PropertyAttributes methodAttributes;
-
-            foreach (var kv in InstanceMembers._Methods)
-            {
-                // ... for method overloads, combine all the attribute flags into one (just easier, and will result in the most restrictive taking precedence) ...
-
-                methodAttributes = V8PropertyAttributes.None;
-
-                foreach (var methodInfo in kv.Value)
-                    methodAttributes |= _Attributes[methodInfo];
-
-                // ... need to separate the normal methods from the generic ones and reflect the name difference so they can be accessed correctly ...
-
-                var normalMethods = (from m in kv.Value where !m.IsGenericMethodDefinition select m).ToArray();
-                if (normalMethods.Length > 0)
-                {
-                    memberName = kv.Key;
-                    _ApplyBindingToTemplateProperty(memberName, methodAttributes, normalMethods);
-                }
-
-                var genericMethods = (from m in kv.Value where m.IsGenericMethodDefinition select m).ToArray();
-                if (genericMethods.Length > 0)
-                    foreach (var method in genericMethods)
-                    {
-                        memberName = kv.Key + "$" + method.GetGenericArguments().Count();
-                        _ApplyBindingToTemplateProperty(memberName, methodAttributes, new MethodInfo[] { method });
-                    }
+                memberDetails = _CreateMemberDetails(memberName, (V8PropertyAttributes)attributes, member,
+                    s => _Members.Get(s),
+                    md => _Members.Set(md.MemberName, md));
             }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        internal void _AddMember(string memberName, V8PropertyAttributes attribute, MemberInfo memberInfo)
+        internal _MemberDetails _CreateMemberDetails(string memberName, V8PropertyAttributes attribute, MemberInfo memberInfo,
+            Func<string, _MemberDetails> getExisting, // (called to check if there's an existing member by the same name)
+            Action<_MemberDetails> set) // (called when no member exists and needs to be added [i.e. no existing member details were updated])
         {
+            if (memberName.IsNullOrWhiteSpace())
+                memberName = memberInfo.Name;
+
+            _MemberDetails memberDetails = null;
+
             if (memberInfo.MemberType == MemberTypes.Field)
             {
                 var fieldInfo = memberInfo as FieldInfo;
 
-                if (!_Recursive && fieldInfo.FieldType.IsClass && fieldInfo.FieldType != typeof(string)) return; // (don't include nested objects, except strings)
+                if (!_Recursive && fieldInfo.FieldType.IsClass && fieldInfo.FieldType != typeof(string)) return null; // (don't include nested objects, except strings)
 
                 if (fieldInfo.IsInitOnly)
                     attribute |= V8PropertyAttributes.ReadOnly;
 
-                var memberDetails = fieldInfo.IsStatic ? StaticMembers : InstanceMembers;
+                memberDetails = new _MemberDetails
+                {
+                    FirstMember = fieldInfo,
+                    MemberName = memberName,
+                    MemberType = MemberTypes.Field,
+                    Attributes = attribute,
+                    BindingMode = fieldInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
+                };
 
-                memberDetails._Fields[memberName] = fieldInfo;
-                _Attributes[fieldInfo] = attribute;
+                memberDetails.Members.Set(fieldInfo, fieldInfo.FieldType);
+
+                set(memberDetails);
             }
             else if (memberInfo.MemberType == MemberTypes.Property)
             {
@@ -538,104 +654,103 @@ namespace V8.Net
                     Indexer = propertyInfo;
                     if (!InstanceTemplate.IndexedPropertyInterceptorsRegistered)
                         InstanceTemplate.RegisterIndexedPropertyInterceptors();
-                    return;
+                    return null;
                 }
 
-                if (!_Recursive && propertyInfo.PropertyType.IsClass && propertyInfo.PropertyType != typeof(string)) return; // (don't include nested objects, except strings)
+                if (!_Recursive && propertyInfo.PropertyType.IsClass && propertyInfo.PropertyType != typeof(string)) return null; // (don't include nested objects, except strings)
 
                 if (!propertyInfo.CanWrite)
                     attribute |= V8PropertyAttributes.ReadOnly;
 
                 var getMethod = propertyInfo.GetGetMethod();
                 var setMethod = propertyInfo.GetSetMethod();
-                var memberDetails = getMethod != null && getMethod.IsStatic || setMethod != null && setMethod.IsStatic ? StaticMembers : InstanceMembers;
+                var isStatic = getMethod != null && getMethod.IsStatic || setMethod != null && setMethod.IsStatic;
 
-                memberDetails._Propeties[memberName] = propertyInfo;
-                _Attributes[propertyInfo] = attribute;
+                memberDetails = new _MemberDetails
+                {
+                    FirstMember = propertyInfo,
+                    MemberName = memberName,
+                    MemberType = MemberTypes.Property,
+                    Attributes = attribute,
+                    BindingMode = isStatic ? BindingMode.Static : BindingMode.Instance
+                };
+
+                memberDetails.Members.Set(propertyInfo, propertyInfo.PropertyType);
+
+                set(memberDetails);
             }
             else if (memberInfo.MemberType == MemberTypes.Method)
             {
                 var methodInfo = memberInfo as MethodInfo;
                 if (!methodInfo.IsSpecialName)
                 {
-                    List<MethodInfo> methodInfoList;
+                    if (methodInfo.IsGenericMethodDefinition)
+                        memberName = memberName + "$" + methodInfo.GetGenericArguments().Count();
 
-                    var memberDetails = methodInfo.IsStatic ? StaticMembers : InstanceMembers;
+                    var existingMemberDetails = getExisting != null ? getExisting(memberName) : null;
 
-                    if (!memberDetails._Methods.TryGetValue(memberName, out methodInfoList))
-                        memberDetails._Methods[memberName] = methodInfoList = new List<MethodInfo>();
+                    memberDetails = existingMemberDetails ?? new _MemberDetails
+                   {
+                       FirstMember = methodInfo,
+                       MemberName = memberName,
+                       MemberType = MemberTypes.Method,
+                       BindingMode = methodInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
+                   };
 
-                    methodInfoList.Add(methodInfo);
-                    _Attributes[methodInfo] = attribute;
+                    memberDetails.Attributes |= attribute; // (combine all security attributes for all overloaded members, if any)
+
+                    // ... register the method based on number and type of expected parameters ...
+
+                    var types = Arrays.Concat(methodInfo.GetGenericArguments(), methodInfo.GetParameters().Select(p => p.ParameterType).ToArray());
+
+                    memberDetails.Members.Set(methodInfo, types);
+
+                    if (memberDetails.Methods == null)
+                        memberDetails.Methods = new TypeLibrary<V8Function>();
+                    // ('Methods' will be populated when accessed for the first time)
+
+                    if (existingMemberDetails == null)
+                        set(memberDetails);
+                    else
+                        memberDetails.TotalMembers++;
                 }
             }
-        }
 
-        // --------------------------------------------------------------------------------------------------------------------
-
-        void _ApplyBindingToTemplateProperty(string memberName, V8PropertyAttributes attributes, FieldInfo fieldInfo)
-        {
-            V8NativeObjectPropertyGetter getter;
-            V8NativeObjectPropertySetter setter;
-
-            if (_GetBindingForMember(memberName, out getter, out setter, fieldInfo))
-            {
-                InstanceTemplate.SetAccessor(memberName, getter, setter, attributes); // TODO: Investigate need to add access control value.
-            }
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        void _ApplyBindingToTemplateProperty(string memberName, V8PropertyAttributes attributes, PropertyInfo propInfo)
-        {
-            V8NativeObjectPropertyGetter getter;
-            V8NativeObjectPropertySetter setter;
-
-            if (_GetBindingForMember(memberName, out getter, out setter, propInfo))
-            {
-                InstanceTemplate.SetAccessor(memberName, getter, setter, attributes); // TODO: Investigate need to add access control value.
-            }
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        void _ApplyBindingToTemplateProperty(string memberName, V8PropertyAttributes attributes, MethodInfo[] methods)
-        {
-            V8Function func;
-            if (_GetBindingForMember(memberName, out func, methods))
-            {
-                InstanceTemplate.SetProperty(memberName, func, attributes); // TODO: Investigate need to add access control value.
-            }
+            return memberDetails;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Binds a getter and setter to read and/or write to the specified data member.
+        /// Binds a getter and setter to read and/or write to the specified data member (field or property only).
         /// </summary>
         /// <param name="memberName">The name of a member on '{ObjectBinder}.Object', or a new in-script name if 'fieldInfo' is supplied.</param>
         /// <param name="getter">Returns the getter delegate to use for a native callback.</param>
         /// <param name="setter">Returns the setter delegate to use for a native callback.</param>
         /// <param name="fieldInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the field name.</param>
         /// <returns>An exception on error, or null on success.</returns>
-        bool _GetBindingForMember(string memberName,
-            out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter,
-            FieldInfo fieldInfo = null)
+        internal bool _GetBindingForDataMember(_MemberDetails memberDetails, out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter)
         {
+            if (memberDetails.MemberType == MemberTypes.Field)
+                return _GetBindingForField(memberDetails, out getter, out setter);
+            else if (memberDetails.MemberType == MemberTypes.Property)
+                return _GetBindingForProperty(memberDetails, out getter, out setter);
+            else
+            {
+                getter = null;
+                setter = null;
+                return false;
+            }
+        }
+
+        internal bool _GetBindingForField(_MemberDetails memberDetails, out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter)
+        {
+            string memberName = memberDetails.MemberName;
+            FieldInfo fieldInfo = (FieldInfo)memberDetails.FirstMember;
             getter = null;
             setter = null;
 
             if (TypeTemplate == null) throw new ArgumentNullException("'TypeTemplate' is null.");
-
-            if (fieldInfo == null)
-            {
-                if (BoundType == null) throw new InvalidOperationException("'BoundType' is null.");
-
-                fieldInfo = BoundType.GetField(memberName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-
-                if (fieldInfo == null)
-                    throw new ArgumentNullException("'fieldInfo' cannot be determined - the object field '" + memberName + "' cannot be found/accessed.");
-            }
 
             if (string.IsNullOrEmpty(memberName))
                 memberName = fieldInfo.Name;
@@ -774,24 +889,14 @@ namespace V8.Net
         /// <param name="setter">Returns the setter delegate to use for a native callback.</param>
         /// <param name="propInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the property name.</param>
         /// <returns>An exception on error, or null on success.</returns>
-        bool _GetBindingForMember(string memberName,
-            out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter,
-            PropertyInfo propInfo = null)
+        internal bool _GetBindingForProperty(_MemberDetails memberDetails, out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter)
         {
+            string memberName = memberDetails.MemberName;
+            PropertyInfo propInfo = (PropertyInfo)memberDetails.FirstMember;
             getter = null;
             setter = null;
 
             if (TypeTemplate == null) throw new ArgumentNullException("'TypeTemplate' is null.");
-
-            if (propInfo == null)
-            {
-                if (BoundType == null) throw new InvalidOperationException("'BoundType' is null.");
-
-                propInfo = BoundType.GetProperty(memberName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-
-                if (propInfo == null)
-                    throw new ArgumentNullException("'propInfo' cannot be determined - the object property '" + memberName + "' cannot be found/accessed.");
-            }
 
             if (string.IsNullOrEmpty(memberName))
                 memberName = propInfo.Name;
@@ -988,34 +1093,35 @@ namespace V8.Net
         /// <param name="className">An optional name to return when 'valueOf()' is called on a JS object (this defaults to the method's name).</param>
         /// <param name="genericTarget">Allows binding a specific handle to the 'this' of a callback (for static bindings).</param>
         /// <param name="genericInstanceTargetUpdater">Allows binding a specific instance to the 'this' of a callback (for static bindings).</param>
-        bool _GetBindingForMember(string memberName, out V8Function func, MethodInfo[] methods = null, string className = null,
-            Func<InternalHandle> genericTarget = null)
+        internal bool _GetBindingForMethod(_MemberDetails memberDetails, out V8Function func, string className = null, Func<InternalHandle> genericTarget = null)
         {
             func = null;
 
-            if (TypeTemplate == null) throw new ArgumentNullException("'TypeTemplate' is null.");
+            if (memberDetails == null) throw new ArgumentNullException("'memberDetails' is null or empty.");
+
+            if (TypeTemplate == null) throw new InvalidOperationException("'TypeTemplate' is null.");
             if (BoundType == null) throw new InvalidOperationException("'BoundType' is null.");
-            if (methods == null || methods.Length == 0) throw new ArgumentNullException("'methods' is null or empty.");
 
             if (string.IsNullOrEmpty(className))
-                if (string.IsNullOrEmpty(memberName))
-                    className = methods[0].Name;
-                else
-                    className = memberName;
+                className = memberDetails.MemberName;
 
-            bool[] hasVariableParams = new bool[methods.Length]; //?? Needed?
-            for (var mi = 0; mi < methods.Length; mi++)
-            {
-                var parameters = methods[mi].GetParameters();
-                hasVariableParams[mi] = parameters.Length > 0 && parameters[parameters.Length - 1].IsDefined(typeof(ParamArrayAttribute), false);
-            }
+            //??var methods = memberDetails.Members.Items.Select(i => i.Object).Cast<MethodInfo>().ToArray();
 
-            var boundMethod = methods.Length == 1 ? methods[0] : null;
-            var expectedParameters = boundMethod != null ? boundMethod.GetParameters() : null;
-            var expectedGenericTypes = boundMethod != null && boundMethod.IsGenericMethod ? boundMethod.GetGenericArguments() : null;
+            //??bool[] hasVariableParams = new bool[methods.Length]; //?? Needed?
+            //for (var mi = 0; mi < methods.Length; mi++)
+            //{
+            //    var parameters = methods[mi].GetParameters();
+            //    hasVariableParams[mi] = parameters.Length > 0 && parameters[parameters.Length - 1].IsDefined(typeof(ParamArrayAttribute), false);
+            //}
+
+            MethodInfo soloMethod = memberDetails.TotalMembers == 1 ? (MethodInfo)memberDetails.FirstMember : null;
+            var expectedParameters = soloMethod != null ? soloMethod.GetParameters() : null;
+            var expectedGenericTypes = soloMethod != null && soloMethod.IsGenericMethod ? soloMethod.GetGenericArguments() : null;
 
             Dictionary<int, object[]> convertedArgumentArrayCache = new Dictionary<int, object[]>(); // (a cache of argument arrays based on argument length to use for calling overloaded methods)
             object[] convertedArguments;
+
+            // ... if we know the number of parameters (only one method) then create the argument array now ...
             if (expectedParameters != null)
                 convertedArgumentArrayCache[expectedParameters.Length] = new object[expectedParameters.Length];
 
@@ -1025,18 +1131,109 @@ namespace V8.Net
 
             func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, InternalHandle _this, InternalHandle[] args) =>
             {
+                InternalHandle[] typeArgs;
+                TypeInfo[] genericTypeInfoArgs;
                 TypeInfo[] typeInfoArgs;
                 int paramIndex = -1;
+                uint argOffset = 0;
                 TypeInfo tInfo;
 
                 try
                 {
+                    if (!_this.IsBinder)
+                        return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberDetails.MemberName + ").", JSValueType.ExecutionError);
+
+                    if (soloMethod.IsGenericMethodDefinition)
+                    {
+                        // ... first argument should be an array of types ...
+                        if (args.Length == 0 || !args[0].IsArray || args[0].ArrayLength == 0)
+                            return Engine.CreateError("No types given: The first argument of a generic method must be an array of types.", JSValueType.ExecutionError);
+
+                        typeArgs = new InternalHandle[args[0].ArrayLength]; // TODO: Create a faster way to extract an array of internal handles.
+
+                        for (int i = 0; i < args[0].ArrayLength; i++)
+                            typeArgs[i] = args[0].GetProperty(i);
+
+                        genericTypeInfoArgs = TypeInfo.GetTypes(typeArgs, argOffset, expectedGenericTypes);
+                        var genericSystemTypes = TypeInfo.GetSystemTypes(genericTypeInfoArgs);
+
+                        TypeLibrary<MethodInfo> constructedMethodInfos = memberDetails.ConstructedMethods.Get(genericSystemTypes);
+
+                        if (constructedMethodInfos == null)
+                        {
+                            // ... there can be multiple generic methods (overloads) with different parameters types, so we need to generate and cache each one to see the affect on the parameters ...
+
+                            var genericMethodInfos = memberDetails.Members.Items.Cast<MethodInfo>().ToArray();
+                            constructedMethodInfos = new TypeLibrary<MethodInfo>();
+                            MethodInfo constructedMethod;
+
+                            for (int i = 0; i < genericMethodInfos.Length; i++)
+                            {
+                                constructedMethod = genericMethodInfos[i].MakeGenericMethod(genericSystemTypes);
+                                constructedMethodInfos.Set(constructedMethod, constructedMethod.GetParameters().Select(p => p.ParameterType).ToArray());
+                            }
+
+                            // ... cache the array of constructed generic methods (any overloads with the same generic parameters), which will exist in a type
+                            // library for quick lookup the next time this given types are supplied ...
+                            memberDetails.ConstructedMethods.Set(constructedMethodInfos, genericSystemTypes);
+                        }
+
+                        // ... at this point the 'constructedMethodInfos' will have an array of methods that match the types supplied for this generic method call.
+                        // Next, the arguments ????
+
+                        argOffset = 1;
+                    }
+
                     convertedArguments = null;
 
-                    if (boundMethod != null && boundMethod.IsGenericMethodDefinition)
-                        typeInfoArgs = TypeInfo.GetTypes(args, expectedGenericTypes); // (get type info values based on expected parameters to create a bound generic method function, if any)
+                    if (soloMethod != null && soloMethod.IsGenericMethodDefinition)
+                        typeInfoArgs = TypeInfo.GetTypes(args, argOffset, expectedGenericTypes); // (get type info values based on expected parameters to create a bound generic method function, if any)
                     else
-                        typeInfoArgs = TypeInfo.GetArguments(args, expectedParameters); // (get type info values based on expected parameters, if any)
+                        typeInfoArgs = TypeInfo.GetArguments(args, argOffset, expectedParameters); // (get type info values based on expected parameters, if any)
+
+                    if (genericTarget != null)
+                        _this = genericTarget(); // (call back into the closure to get the 'this' reference)
+
+                    if (((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition)
+                    {
+                        // ... this invocation is on a generic method definition, and not a solid actual method definition ...
+
+                        var genericSystemTypes = TypeInfo.GetSystemTypes(typeInfoArgs);
+                        V8Function genericFunction = memberDetails.Methods.Get(genericSystemTypes);
+
+                        if (genericFunction != null)
+                        {
+                            genericInstanceUpdater = () => { return _this; };
+                            genericFunction.SetProperty("$__types", Engine.CreateArray(TypeInfo.GetHandles(typeInfoArgs)));
+                            return genericFunction; // (this function will contain details needed to construct and invoke the generic method [need the parameters on next call])
+                        }
+                        else
+                        {
+                            var constructedDetails = memberDetails.ConstructedGenericMembers.Get(genericSystemTypes);
+                            V8Function genericFunction = constructedDetails != null ? constructedDetails.Method : null;
+
+                            var genericMethodConstruct = soloMethod.MakeGenericMethod(genericSystemTypes);
+                            var signatureTypes = Arrays.Concat(methodInfo.GetGenericArguments(), TypeInfo.GetSystemTypes(typeInfoArgs));
+                            memberDetails.Members.Set(genericMethodConstruct, genericSystemTypes);
+
+                            constructedDetails = _CreateMemberDetails(null, memberDetails.Attributes, genericMethodConstruct,
+                                s => memberDetails.ConstructedGenericMembers.Get(genericSystemTypes),
+                                md => memberDetails.ConstructedGenericMembers.Set(md, genericSystemTypes));
+
+                            if (_GetBindingForMethod(constructedDetails, out genericFunction, null,
+                               () => { return genericInstanceUpdater != null ? genericInstanceUpdater() : _this; }))
+                            {
+                                genericFunction.SetProperty("Type", Engine.CreateValue(GetMethodSignatureAsText(genericMethodConstruct)), V8PropertyAttributes.Locked);
+                                if (_this.BindingMode == BindingMode.Static)
+                                    genericFunction.SetProperty("$__StaticTarget", _this, V8PropertyAttributes.Locked); // (note: doesn't solve the instance based invocations, which has to be set EACH time; also, there can only be static or instance targets (not both) of the same method name and type configuration for a single bound type)
+                                constructedDetails.Method = genericFunction;
+                                constructedDetails.Methods.Set(genericFunction, genericMethodConstruct.GetParameters().Select(p => p.ParameterType).ToArray());
+                                return genericFunction; // (generic method calls return a function value bound to the strong-typed generic method info to use for invocation)
+                            }
+                            else
+                                return InternalHandle.Empty;
+                        }
+                    }
 
                     // ... create/grow the converted arguments array if necessary ...
                     if (!convertedArgumentArrayCache.TryGetValue(typeInfoArgs.Length, out convertedArguments) || convertedArguments.Length < typeInfoArgs.Length)
@@ -1053,61 +1250,35 @@ namespace V8.Net
 
                     paramIndex = -1;
 
-                    if (genericTarget != null)
-                        _this = genericTarget(); // (call back into the closure to get the 'this' reference)
-
-                    if (_this.IsBinder)
+                    if (soloMethod != null)
                     {
-                        if (boundMethod != null)
-                        {
-                            if (boundMethod.IsGenericMethodDefinition)
-                            {
-                                var systemTypes = TypeInfo.GetSystemTypes(typeInfoArgs);
-                                var boundGenericMethod = boundMethod.MakeGenericMethod(systemTypes);
-                                V8Function genericFunction = CachedGenericMethods.Get(systemTypes);
-                                if (genericFunction != null)
-                                {
-                                    genericInstanceUpdater = () => { return _this; };
-                                    return genericFunction;
-                                }
-                                else if (_GetBindingForMember(null, out genericFunction, new MethodInfo[] { boundGenericMethod }, null,
-                                    () => { return genericInstanceUpdater != null ? genericInstanceUpdater() : _this; }))
-                                {
-                                    genericFunction.SetProperty("Type", Engine.CreateValue(GetMethodSignatureAsText(boundGenericMethod)), V8PropertyAttributes.Locked);
-                                    if (_this.BindingMode == BindingMode.Static)
-                                        genericFunction.SetProperty("$__StaticTarget", _this, V8PropertyAttributes.Locked); // (note: doesn't solve the instance based invocations, which has to be set EACH time; also, there can only be static or instance targets (not both) of the same method name and type configuration for a single bound type)
-                                    CachedGenericMethods.Set(genericFunction, systemTypes);
-                                    return genericFunction; // (generic method calls return a function value bound to the strong-typed generic method info to use for invocation)
-                                }
-                                else
-                                    return InternalHandle.Empty;
-                            }
-                            var result = boundMethod.Invoke(_this.BoundObject, convertedArguments);
-                            return boundMethod.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
-                        }
-                        else // ... more than one method exists (overloads) ..
-                        {
-                            object state;
-                            var methodInfo = Type.DefaultBinder.BindToMethod(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy,
-                                methods, ref convertedArguments, null, null, null, out state) as MethodInfo;
-                            var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
-                            return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
-                        }
+                        var result = soloMethod.Invoke(_this.BoundObject, convertedArguments);
+                        return soloMethod.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
                     }
-                    else
-                        return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberName + ").", JSValueType.ExecutionError);
+                    else // ... more than one method exists (overloads) ..
+                    {
+                        var systemTypes = TypeInfo.GetSystemTypes(typeInfoArgs);
+                        var methodInfo = (MethodInfo)memberDetails.Members.Get(systemTypes);
+                        if (methodInfo == null)
+                            return Engine.CreateError("There is no overloaded method with that type signature.", JSValueType.ExecutionError);
+                        //??object state;
+                        //??var methodInfo = Type.DefaultBinder.BindToMethod(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy,
+                        //??    methods, ref convertedArguments, null, null, null, out state) as MethodInfo;
+                        var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
+                        return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
+                    }
                 }
                 catch (Exception ex)
                 {
                     var msg = "Failed to invoke method ";
                     if (expectedParameters != null)
                     {
-                        msg += GetMethodSignatureAsText(methods[0], paramIndex) + Environment.NewLine;
+                        msg += GetMethodSignatureAsText(soloMethod, paramIndex) + Environment.NewLine;
                     }
                     else
                     {
-                        msg = memberName + ":  No method was found matching the specified arguments.  These are the available parameter types:" + Environment.NewLine;
-                        foreach (var m in methods)
+                        msg = memberDetails.MemberName + ":  No method was found matching the specified arguments.  These are the available parameter types:" + Environment.NewLine;
+                        foreach (var m in memberDetails.MethodMembers)
                             msg += GetMethodSignatureAsText(m, paramIndex) + Environment.NewLine;
                         msg += Environment.NewLine;
                     }
@@ -1116,9 +1287,9 @@ namespace V8.Net
                 }
             });
 
-            var i = 1;
-            foreach (var m in methods)
-                func.SetProperty("$__Signature" + (i++), Engine.CreateValue(GetMethodSignatureAsText(m)), V8PropertyAttributes.Locked);
+            var sigCount = 1;
+            foreach (var m in memberDetails.MethodMembers)
+                func.SetProperty("$__Signature" + (sigCount++), Engine.CreateValue(GetMethodSignatureAsText(m)), V8PropertyAttributes.Locked);
 
             return true;
         }
@@ -1132,11 +1303,16 @@ namespace V8.Net
                 if (isConstructCall)
                     try
                     {
-                        var _args = new object[args.Length];
-                        for (var i = 0; i < args.Length; i++)
-                            _args[i] = args[i].Value;
+                        if (BoundType.IsAbstract)
+                            handle = Engine.CreateError("The CLR type '" + BoundType.Name + "' is abstract - you cannot create instances from abstract types.", JSValueType.ExecutionError);
+                        else
+                        {
+                            var _args = new object[args.Length];
+                            for (var i = 0; i < args.Length; i++)
+                                _args[i] = args[i].Value;
 
-                        handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, _args), null, _Recursive, _DefaultMemberAttributes);
+                            handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, _args), null, _Recursive, _DefaultMemberAttributes);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -1177,78 +1353,28 @@ namespace V8.Net
 
             // TODO: Consolidate the below with the template version above (see '_ApplyBindingToTemplate()').
 
-            foreach (var kv in StaticMembers._Fields)
-                _ApplyBindingToFunctionProperty(kv.Key, _Attributes[kv.Value], kv.Value);
+            V8NativeObjectPropertyGetter getter;
+            V8NativeObjectPropertySetter setter;
 
-            foreach (var kv in StaticMembers._Propeties)
-                _ApplyBindingToFunctionProperty(kv.Key, _Attributes[kv.Value], kv.Value);
-
-            string memberName;
-            V8PropertyAttributes attributes;
-
-            foreach (var kv in StaticMembers._Methods)
-            {
-                // ... for method overloads, combine all the attribute flags into one (just easier, and will result in the most restrictive taking precedence) ...
-
-                attributes = V8PropertyAttributes.None;
-
-                foreach (var methodInfo in kv.Value)
-                    attributes |= _Attributes[methodInfo];
-
-                // ... need to separate the normal methods from the generic ones and reflect the name difference so they can be accessed correctly ...
-
-                var normalMethods = (from m in kv.Value where !m.IsGenericMethodDefinition select m).ToArray();
-                if (normalMethods.Length > 0)
+            foreach (var details in _FieldDetails(BindingMode.Static))
+                if (_GetBindingForDataMember(details, out getter, out setter))
                 {
-                    memberName = kv.Key;
-                    _ApplyBindingToFunctionProperty(memberName, attributes, normalMethods);
+                    TypeFunction.SetAccessor(details.MemberName, getter, setter, details.Attributes); // TODO: Investigate need to add access control value.
                 }
 
-                var genericMethods = (from m in kv.Value where m.IsGenericMethodDefinition select m).ToArray();
-                if (genericMethods.Length > 0)
-                    foreach (var method in genericMethods)
-                    {
-                        memberName = kv.Key + "$" + method.GetGenericArguments().Count();
-                        _ApplyBindingToFunctionProperty(memberName, attributes, new MethodInfo[] { method });
-                    }
-            }
-        }
+            foreach (var details in _PropertyDetails(BindingMode.Static))
+                if (_GetBindingForDataMember(details, out getter, out setter))
+                {
+                    TypeFunction.SetAccessor(details.MemberName, getter, setter, details.Attributes); // TODO: Investigate need to add access control value.
+                }
 
-        // --------------------------------------------------------------------------------------------------------------------
-
-        void _ApplyBindingToFunctionProperty(string memberName, V8PropertyAttributes attributes, FieldInfo fieldInfo)
-        {
-            V8NativeObjectPropertyGetter getter;
-            V8NativeObjectPropertySetter setter;
-
-            if (_GetBindingForMember(memberName, out getter, out setter, fieldInfo))
-            {
-                TypeFunction.SetAccessor(memberName, getter, setter, attributes); // TODO: Investigate need to add access control value.
-            }
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        void _ApplyBindingToFunctionProperty(string memberName, V8PropertyAttributes attributes, PropertyInfo propInfo)
-        {
-            V8NativeObjectPropertyGetter getter;
-            V8NativeObjectPropertySetter setter;
-
-            if (_GetBindingForMember(memberName, out getter, out setter, propInfo))
-            {
-                TypeFunction.SetAccessor(memberName, getter, setter, attributes); // TODO: Investigate need to add access control value.
-            }
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        void _ApplyBindingToFunctionProperty(string memberName, V8PropertyAttributes attributes, MethodInfo[] methods)
-        {
             V8Function func;
-            if (_GetBindingForMember(memberName, out func, methods))
-            {
-                TypeFunction.SetProperty(memberName, func, attributes); // TODO: Investigate need to add access control value.
-            }
+
+            foreach (var details in _MethodDetails(BindingMode.Static))
+                if (_GetBindingForMethod(details, out func))
+                {
+                    TypeFunction.SetProperty(details.MemberName, func, details.Attributes); // TODO: Investigate need to add access control value.
+                }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1371,6 +1497,141 @@ namespace V8.Net
             return null;
         }
         public override InternalHandle IndexedPropertyEnumerator()
+        {
+            return InternalHandle.Empty;
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        public override InternalHandle NamedPropertyGetter(ref string propertyName)
+        {
+            var memberDetails = TypeBinder._Members.Get(propertyName);
+            if (memberDetails != null)
+            {
+                if (!memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
+
+                switch (memberDetails.MemberType)
+                {
+                    case MemberTypes.Field:
+                        {
+                            var fieldInfo = (FieldInfo)memberDetails.FirstMember;
+                            var getter = memberDetails.Getter;
+                            if (getter == null)
+                            {
+                                // .. first time access, create a binding ...
+                                V8NativeObjectPropertySetter setter;
+                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                memberDetails.Getter = getter;
+                                memberDetails.Setter = setter;
+                            }
+                            getter.Invoke(_Handle, propertyName);
+                            break;
+                        }
+                    case MemberTypes.Property:
+                        {
+                            var propertyInfo = (PropertyInfo)memberDetails.FirstMember;
+                            if (!propertyInfo.CanRead) break;
+                            var getter = memberDetails.Getter;
+                            if (getter == null)
+                            {
+                                // .. first time access, create a binding ...
+                                V8NativeObjectPropertySetter setter;
+                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                memberDetails.Getter = getter;
+                                memberDetails.Setter = setter;
+                            }
+                            getter.Invoke(_Handle, propertyName);
+                            break;
+                        }
+                    case MemberTypes.Method:
+                        {
+                            var method = memberDetails.Method;
+                            if (method == null)
+                            {
+                                TypeBinder._GetBindingForMethod(memberDetails, out method);
+                                memberDetails.Method = method;
+                            }
+                            return method;
+                        }
+                }
+            }
+            return InternalHandle.Empty;
+        }
+
+        public override InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        {
+            var memberDetails = TypeBinder._Members.Get(propertyName);
+            if (memberDetails != null)
+            {
+                if (!memberDetails.ValueOverride.IsUndefined)
+                {
+                    memberDetails.ValueOverride.Set(value);
+                    if (!memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
+                }
+
+                switch (memberDetails.MemberType)
+                {
+                    case MemberTypes.Field:
+                        {
+                            var fieldInfo = (FieldInfo)memberDetails.FirstMember;
+                            var setter = memberDetails.Setter;
+                            if (setter == null)
+                            {
+                                // .. first time access, create a binding ...
+                                V8NativeObjectPropertyGetter getter;
+                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                memberDetails.Getter = getter;
+                                memberDetails.Setter = setter;
+                            }
+                            setter.Invoke(_Handle, propertyName, value);
+                            break;
+                        }
+                    case MemberTypes.Property:
+                        {
+                            var propertyInfo = (PropertyInfo)memberDetails.FirstMember;
+                            if (!propertyInfo.CanWrite) break;
+                            var setter = memberDetails.Setter;
+                            if (setter == null)
+                            {
+                                // .. first time access, create a binding ...
+                                V8NativeObjectPropertyGetter getter;
+                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                memberDetails.Getter = getter;
+                                memberDetails.Setter = setter;
+                            }
+                            setter.Invoke(_Handle, propertyName, value);
+                            break;
+                        }
+                    case MemberTypes.Method:
+                        {
+                            if (value.IsUndefined)
+                            {
+                                var method = memberDetails.Method;
+                                if (method != null)
+                                {
+                                    TypeBinder._GetBindingForMethod(memberDetails, out method);
+                                    memberDetails.Method = method;
+                                }
+                                return method;
+                            }
+                            else return memberDetails.ValueOverride.Set(value);
+                        }
+                }
+            }
+            return InternalHandle.Empty;
+        }
+
+        public override bool? NamedPropertyDeleter(ref string propertyName)
+        {
+            return null;
+        }
+
+        public override V8PropertyAttributes? NamedPropertyQuery(ref string propertyName)
+        {
+            return null;
+        }
+
+        public override InternalHandle NamedPropertyEnumerator()
         {
             return InternalHandle.Empty;
         }
