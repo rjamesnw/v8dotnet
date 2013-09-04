@@ -47,19 +47,34 @@ void FunctionTemplateProxy::SetManagedCallback(ManagedJSFunctionCallback managed
 
 Handle<Value> FunctionTemplateProxy::InvocationCallbackProxy(const Arguments& args)
 {
-    auto funcTempProxy = (FunctionTemplateProxy*)args.Data().As<External>()->Value();
+    auto proxy = (ProxyBase*)args.Data().As<External>()->Value();
 
-    if (funcTempProxy->_ManagedCallback != nullptr)
+    V8EngineProxy *engine;
+    ManagedJSFunctionCallback callback;
+
+    if (proxy->GetType() == FunctionTemplateProxyClass)
+    {
+        engine = ((FunctionTemplateProxy*)proxy)->_EngineProxy;
+        callback = ((FunctionTemplateProxy*)proxy)->_ManagedCallback;
+    }
+    else if (proxy->GetType() == ObjectTemplateProxyClass)
+    {
+        engine = ((ObjectTemplateProxy*)proxy)->_EngineProxy;
+        callback = ((ObjectTemplateProxy*)proxy)->_ManagedCallback;
+    }
+    else throw exception("'args.Data()' is not recognized.");
+
+    if (callback != nullptr) // (note: '_ManagedCallback' may not be set on the proxy, and thus 'callback' may be null)
     {
         auto argLength = args.Length();
         auto _args = argLength > 0 ? new HandleProxy*[argLength] : nullptr;
 
         for (auto i = 0; i < argLength; i++)
-            _args[i] = funcTempProxy->_EngineProxy->GetHandleProxy(args[i]);
+            _args[i] = engine->GetHandleProxy(args[i]);
 
-        auto _this = funcTempProxy->_EngineProxy->GetHandleProxy(args.Holder());
+        auto _this = engine->GetHandleProxy(args.Holder());
 
-        auto result = funcTempProxy->_ManagedCallback(0, args.IsConstructCall(), _this, _args, argLength);
+        auto result = callback(0, args.IsConstructCall(), _this, _args, argLength);
 
         if (result != nullptr)
             if (result->IsError())

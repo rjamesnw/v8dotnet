@@ -373,6 +373,10 @@ typedef HandleProxy* (STDCALL *ManagedAccessorSetter)(HandleProxy *_this, uint16
 // managed weak reference to track the managed object.  Persisted object handles will be disposed when the managed objects are finalized.
 typedef bool (STDCALL *ManagedV8GarbageCollectionRequestCallback)(HandleProxy *hProxy);
 
+// ------------------------------------------------------------------------------------------------------------------------
+
+typedef HandleProxy* (STDCALL *ManagedJSFunctionCallback)(int32_t managedObjectID, bool isConstructCall, HandleProxy *_this, HandleProxy** args, uint32_t argCount);
+
 // ========================================================================================================================
 
 /**
@@ -400,6 +404,8 @@ protected:
     ManagedIndexedPropertyDeleter IndexedPropertyDeleter;
     ManagedIndexedPropertyEnumerator IndexedPropertyEnumerator;
 
+    ManagedJSFunctionCallback _ManagedCallback;
+
 public:
 
     // Called when created by V8EngineProxy.
@@ -423,6 +429,8 @@ public:
         ManagedIndexedPropertyQuery query, 
         ManagedIndexedPropertyDeleter deleter, 
         ManagedIndexedPropertyEnumerator enumerator);
+
+    void RegisterInvokeHandler(ManagedJSFunctionCallback callback);
 
     void UnregisterNamedPropertyHandlers();
     void UnregisterIndexedPropertyHandlers();
@@ -456,8 +464,6 @@ public:
 #pragma pack(pop)
 
 // ========================================================================================================================
-
-typedef HandleProxy* (STDCALL *ManagedJSFunctionCallback)(int32_t managedObjectID, bool isConstructCall, HandleProxy *_this, HandleProxy** args, uint32_t argCount);
 
 /**
 * A proxy class to encapsulate the call-back methods needed to resolve properties for representing a managed object.
@@ -495,6 +501,7 @@ public:
     void Set(const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes);
 
     friend V8EngineProxy;
+    friend ObjectTemplateProxy;
 };
 #pragma pack(pop)
 
