@@ -81,9 +81,6 @@ namespace V8.Net
                 return h;
             }
             else return _Set(handle._HandleProxy);
-
-            if (_CurrentObjectID < -1)
-                _CurrentObjectID = -1; // (allow this to be redetected!)
         }
 
         internal InternalHandle _Set(HandleProxy* hp, bool checkIfFirst = true)
@@ -120,9 +117,6 @@ namespace V8.Net
                     GC.AddMemoryPressure((Marshal.SizeOf(typeof(HandleProxy))));
                 }
             }
-
-            if (_CurrentObjectID < -1)
-                _CurrentObjectID = -1; // (allow this to be redetected!)
 
             return this;
         }

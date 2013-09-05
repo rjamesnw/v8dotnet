@@ -540,7 +540,7 @@ public class V8DotNetTester : V8ManagedObject
         Console.WriteLine("Creating test property 2 (adding new JSProperty using the IV8ManagedObject interface) ...");
 
         var myProperty2 = new JSProperty(Engine.CreateValue(true));
-        ((IV8ManagedObject)this)["testProperty2"] = myProperty2;
+        this["testProperty2"] = myProperty2;
 
         Console.WriteLine("Creating test property 3 (reusing JSProperty instance for property 1) ...");
 
@@ -553,7 +553,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("Creating test property 5 (test the 'this' overload in V8ManagedObject, which will set/update property 5 without calling into V8) ...");
 
-        this["testProperty5"] = Engine.CreateValue("Test property 5");
+        this["testProperty5"] = (JSProperty)Engine.CreateValue("Test property 5");
 
         Console.WriteLine("Creating test property 6 (using a dynamic property) ...");
 
