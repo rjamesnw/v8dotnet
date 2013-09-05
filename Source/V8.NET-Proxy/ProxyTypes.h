@@ -276,7 +276,25 @@ public:
     Local<Value> Data;
     Local<Object> This;
 
-    ManagedAccessorInfo(ObjectTemplateProxy* objectProxy, int32_t managedObjectID, const AccessorInfo& info)
+    ManagedAccessorInfo(ObjectTemplateProxy* objectProxy, int32_t managedObjectID, const PropertyCallbackInfo<Value>& info)
+        : _ObjectProxy(objectProxy), _ObjectID(managedObjectID)
+    {
+        Data = info.Data();
+        This = info.This();
+    }
+    ManagedAccessorInfo(ObjectTemplateProxy* objectProxy, int32_t managedObjectID, const PropertyCallbackInfo<Integer>& info)
+        : _ObjectProxy(objectProxy), _ObjectID(managedObjectID)
+    {
+        Data = info.Data();
+        This = info.This();
+    }
+    ManagedAccessorInfo(ObjectTemplateProxy* objectProxy, int32_t managedObjectID, const PropertyCallbackInfo<Boolean>& info)
+        : _ObjectProxy(objectProxy), _ObjectID(managedObjectID)
+    {
+        Data = info.Data();
+        This = info.This();
+    }
+    ManagedAccessorInfo(ObjectTemplateProxy* objectProxy, int32_t managedObjectID, const PropertyCallbackInfo<Array>& info)
         : _ObjectProxy(objectProxy), _ObjectID(managedObjectID)
     {
         Data = info.Data();
@@ -435,17 +453,17 @@ public:
     void UnregisterNamedPropertyHandlers();
     void UnregisterIndexedPropertyHandlers();
 
-    static Handle<Value> GetProperty(Local<String> hName, const AccessorInfo& info);
-    static Handle<Value> SetProperty(Local<String> hName, Local<Value> value, const AccessorInfo& info);
-    static Handle<Integer> GetPropertyAttributes(Local<String> hName, const AccessorInfo& info);
-    static Handle<Boolean> DeleteProperty(Local<String> hName, const AccessorInfo& info);
-    static Handle<Array> GetPropertyNames(const AccessorInfo& info);
+    static void GetProperty(Local<String> hName, const PropertyCallbackInfo<Value>& info);
+    static void SetProperty(Local<String> hName, Local<Value> value, const PropertyCallbackInfo<Value>& info);
+    static void GetPropertyAttributes(Local<String> hName, const PropertyCallbackInfo<Integer>& info);
+    static void DeleteProperty(Local<String> hName, const PropertyCallbackInfo<Boolean>& info);
+    static void GetPropertyNames(const PropertyCallbackInfo<Array>& info);
 
-    static Handle<Value> GetProperty(uint32_t index, const AccessorInfo& info);
-    static Handle<Value> SetProperty(uint32_t index, Local<Value> hValue, const AccessorInfo& info);
-    static Handle<Integer> GetPropertyAttributes(uint32_t index, const AccessorInfo& info);
-    static Handle<Boolean> DeleteProperty(uint32_t index, const AccessorInfo& info);
-    static Handle<Array> GetPropertyIndices(const AccessorInfo& info);
+    static void GetProperty(uint32_t index, const PropertyCallbackInfo<Value>& info);
+    static void SetProperty(uint32_t index, Local<Value> hValue, const PropertyCallbackInfo<Value>& info);
+    static void GetPropertyAttributes(uint32_t index, const PropertyCallbackInfo<Integer>& info);
+    static void DeleteProperty(uint32_t index, const PropertyCallbackInfo<Boolean>& info);
+    static void GetPropertyIndices(const PropertyCallbackInfo<Array>& info);
 
     static void AccessorGetterCallbackProxy(Local<String> property, const PropertyCallbackInfo<Value>& info);
     static void AccessorSetterCallbackProxy(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void>& info);
@@ -488,7 +506,7 @@ public:
 
     void SetManagedCallback(ManagedJSFunctionCallback managedCallback);
 
-    static Handle<Value> InvocationCallbackProxy(const Arguments& args);
+    static void InvocationCallbackProxy(const FunctionCallbackInfo<Value>& args);
 
     ObjectTemplateProxy* GetInstanceTemplateProxy();
     ObjectTemplateProxy* GetPrototypeTemplateProxy();

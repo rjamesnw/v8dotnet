@@ -45,7 +45,7 @@ void FunctionTemplateProxy::SetManagedCallback(ManagedJSFunctionCallback managed
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Value> FunctionTemplateProxy::InvocationCallbackProxy(const Arguments& args)
+void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<Value>& args)
 {
     auto proxy = (ProxyBase*)args.Data().As<External>()->Value();
 
@@ -78,14 +78,19 @@ Handle<Value> FunctionTemplateProxy::InvocationCallbackProxy(const Arguments& ar
 
         if (result != nullptr)
             if (result->IsError())
-                return ThrowException(Exception::Error(result->Handle()->ToString()));
+			{
+                args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
+				return;
+			}
             else
-                return result->Handle(); // (note: the returned value was created via p/invoke calls from the managed side, so the managed side is expected to tracked and freed this handle when done)
+			{
+				args.GetReturnValue().Set(result->Handle()); // (note: the returned value was created via p/invoke calls from the managed side, so the managed side is expected to tracked and freed this handle when done)
+				return;
+			}
 
         // (result == null == undefined [which means the managed side didn't return anything])
     }
-
-    return Handle<Value>();
+	args.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

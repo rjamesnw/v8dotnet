@@ -97,7 +97,7 @@ void ObjectTemplateProxy::UnregisterIndexedPropertyHandlers()
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Value> ObjectTemplateProxy::GetProperty(Local<String> hName, const AccessorInfo& info)
+void ObjectTemplateProxy::GetProperty(Local<String> hName, const PropertyCallbackInfo<Value>& info)
 {
     auto obj = info.Holder();
 
@@ -117,20 +117,25 @@ Handle<Value> ObjectTemplateProxy::GetProperty(Local<String> hName, const Access
                 str.Dispose();
                 if (result != nullptr) 
                     if (result->IsError())
-                        return ThrowException(Exception::Error(result->Handle()->ToString()));
+					{
+						info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
+						return;
+					}
                     else
-                        return result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+					{
+						info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+						return;
+					}
                 // (result == null == undefined [which means the managed side didn't return anything])
             }
         }
     }
-
-    return Handle<Value>();
+	info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Value> ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, const AccessorInfo& info)
+void ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, const PropertyCallbackInfo<Value>& info)
 {
     auto obj = info.Holder();
 
@@ -151,20 +156,25 @@ Handle<Value> ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value>
                 str.Dispose();
                 if (result != nullptr)
                     if (result->IsError())
-                        return ThrowException(Exception::Error(result->Handle()->ToString()));
+					{
+                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
+						return;
+					}
                     else
-                        return result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+					{
+                        info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+						return;
+					}
                 // (result == null == undefined [which means the managed side didn't return anything])
             }
         }
     }
-
-    return Handle<Value>();
+	info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Integer> ObjectTemplateProxy::GetPropertyAttributes(Local<String> hName, const AccessorInfo& info)
+void ObjectTemplateProxy::GetPropertyAttributes(Local<String> hName, const PropertyCallbackInfo<Integer>& info)
 {
     auto obj = info.Holder();
 
@@ -183,17 +193,18 @@ Handle<Integer> ObjectTemplateProxy::GetPropertyAttributes(Local<String> hName, 
                 int result = proxy->NamedPropertyQuery(str.String, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 str.Dispose();
                 if (result >= 0)
-                    return Handle<v8::Integer>(v8::Integer::New(result));
+				{
+                    info.GetReturnValue().Set(Handle<v8::Integer>(v8::Integer::New(result)));
+					return;
+				}
             }
         }
     }
-
-    return Handle<Integer>();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Boolean> ObjectTemplateProxy::DeleteProperty(Local<String> hName, const AccessorInfo& info)
+void ObjectTemplateProxy::DeleteProperty(Local<String> hName, const PropertyCallbackInfo<Boolean>& info)
 {
     auto obj = info.Holder();
 
@@ -215,17 +226,18 @@ Handle<Boolean> ObjectTemplateProxy::DeleteProperty(Local<String> hName, const A
                 // if 'result' is < 0, then this represents an "undefined" return value, otherwise 0 == false, and > 0 is true.
 
                 if (result >= 0)
-                    return Handle<v8::Boolean>(v8::Boolean::New(result != 0 ? true : false));
+				{
+                    info.GetReturnValue().Set(Handle<v8::Boolean>(v8::Boolean::New(result != 0 ? true : false)));
+					return;
+				}
             }
         }
     }
-
-    return Handle<Boolean>();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Array> ObjectTemplateProxy::GetPropertyNames(const AccessorInfo& info) // (Note: consider HasOwnProperty)
+void ObjectTemplateProxy::GetPropertyNames(const PropertyCallbackInfo<Array>& info) // (Note: consider HasOwnProperty)
 {
     auto obj = info.Holder();
 
@@ -246,21 +258,23 @@ Handle<Array> ObjectTemplateProxy::GetPropertyNames(const AccessorInfo& info) //
                     {
                         auto array = Array::New(1);
                         array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString())));
-                        return array;
+                        info.GetReturnValue().Set(array);
+						return;
                     }
                     else
-                        return result->Handle().As<Array>(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+					{
+                        info.GetReturnValue().Set(result->Handle().As<Array>()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+						return;
+					}
                 // (result == null == undefined [which means the managed side didn't return anything])
             }
         }
     }
-
-    return Handle<Array>();
 }
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-Handle<Value> ObjectTemplateProxy::GetProperty(uint32_t index, const AccessorInfo& info)
+void ObjectTemplateProxy::GetProperty(uint32_t index, const PropertyCallbackInfo<Value>& info)
 {
     auto obj = info.Holder();
 
@@ -278,20 +292,25 @@ Handle<Value> ObjectTemplateProxy::GetProperty(uint32_t index, const AccessorInf
                 auto result = proxy->IndexedPropertyGetter(index, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 if (result != nullptr) 
                     if (result->IsError())
-                        return ThrowException(Exception::Error(result->Handle()->ToString()));
+					{
+                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
+						return;
+					}
                     else
-                        return result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+					{
+                        info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+						return;
+					}
                 // (result == null == undefined [which means the managed side didn't return anything])
             }
         }
     }
-
-    return Handle<Value>();
+	info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Value> ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> value, const AccessorInfo& info)
+void ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> value, const PropertyCallbackInfo<Value>& info)
 {
     auto obj = info.Holder();
 
@@ -310,20 +329,25 @@ Handle<Value> ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> valu
                 auto result = proxy->IndexedPropertySetter(index, val, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 if (result != nullptr) 
                     if (result->IsError())
-                        return ThrowException(Exception::Error(result->Handle()->ToString()));
+					{
+                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
+						return;
+					}
                     else
-                        return result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+					{
+                        info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+						return;
+					}
                 // (result == null == undefined [which means the managed side didn't return anything])
             }
         }
     }
-
-    return Handle<Value>();
+	info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Integer> ObjectTemplateProxy::GetPropertyAttributes(uint32_t index, const AccessorInfo& info)
+void ObjectTemplateProxy::GetPropertyAttributes(uint32_t index, const PropertyCallbackInfo<Integer>& info)
 {
     auto obj = info.Holder();
 
@@ -340,17 +364,18 @@ Handle<Integer> ObjectTemplateProxy::GetPropertyAttributes(uint32_t index, const
                 ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
                 int result = proxy->IndexedPropertyQuery(index, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 if (result >= 0)
-                    return Handle<v8::Integer>(v8::Integer::New(result));
+				{
+                    info.GetReturnValue().Set(Handle<v8::Integer>(v8::Integer::New(result)));
+					return;
+				}
             }
         }
     }
-
-    return Handle<Integer>();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Boolean> ObjectTemplateProxy::DeleteProperty(uint32_t index, const AccessorInfo& info)
+void ObjectTemplateProxy::DeleteProperty(uint32_t index, const PropertyCallbackInfo<Boolean>& info)
 {
     auto obj = info.Holder();
 
@@ -370,17 +395,18 @@ Handle<Boolean> ObjectTemplateProxy::DeleteProperty(uint32_t index, const Access
                 // if 'result' is < 0, then this represents an "undefined" return value, otherwise 0 == false, and > 0 is true.
 
                 if (result >= 0)
-                    return Handle<v8::Boolean>(v8::Boolean::New(result != 0 ? true : false));
+				{
+                    info.GetReturnValue().Set(Handle<v8::Boolean>(v8::Boolean::New(result != 0 ? true : false)));
+					return;
+				}
             }
         }
     }
-
-    return Handle<Boolean>();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Array> ObjectTemplateProxy::GetPropertyIndices(const AccessorInfo& info) // (Note: consider HasOwnProperty)
+void ObjectTemplateProxy::GetPropertyIndices(const PropertyCallbackInfo<Array>& info) // (Note: consider HasOwnProperty)
 {
     auto obj = info.Holder();
 
@@ -401,16 +427,18 @@ Handle<Array> ObjectTemplateProxy::GetPropertyIndices(const AccessorInfo& info) 
                     {
                         auto array = Array::New(1);
                         array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString())));
-                        return array;
+                        info.GetReturnValue().Set(array);
+						return;
                     }
                     else
-                        return result->Handle().As<Array>(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+					{
+                        info.GetReturnValue().Set(result->Handle().As<Array>()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
+						return;
+					}
                 // (result == null == undefined [which means the managed side didn't return anything])
             }
         }
     }
-
-    return Handle<Array>();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
