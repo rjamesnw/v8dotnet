@@ -30,18 +30,6 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Returns the value/object handle associated with the specified property.
-        /// </summary>
-        new IJSProperty this[string propertyName] { get; set; }
-
-        /// <summary>
-        /// Returns the value/object handle associated with the specified property.
-        /// </summary>
-        new IJSProperty this[int index] { get; set; }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        /// <summary>
         /// Intercepts JavaScript access for properties on the associated JavaScript object for retrieving a value.
         /// <para>To allow the V8 engine to perform the default get action, return "Handle.Empty".</para>
         /// </summary>
@@ -145,7 +133,7 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        IJSProperty IV8ManagedObject.this[string propertyName]
+        new public IJSProperty this[string propertyName]
         {
             get
             {
@@ -160,7 +148,7 @@ namespace V8.Net
             }
         }
 
-        IJSProperty IV8ManagedObject.this[int index]
+        new public IJSProperty this[int index]
         {
             get
             {
@@ -175,29 +163,29 @@ namespace V8.Net
             }
         }
 
-        public override InternalHandle this[string propertyName]
-        {
-            get
-            {
-                return NamedPropertyGetter(ref propertyName);
-            }
-            set
-            {
-                NamedPropertySetter(ref propertyName, value);
-            }
-        }
+        //??public override InternalHandle this[string propertyName]
+        //{
+        //    get
+        //    {
+        //        return NamedPropertyGetter(ref propertyName);
+        //    }
+        //    set
+        //    {
+        //        NamedPropertySetter(ref propertyName, value);
+        //    }
+        //}
 
-        public override InternalHandle this[int index]
-        {
-            get
-            {
-                return IndexedPropertyGetter(index);
-            }
-            set
-            {
-                IndexedPropertySetter(index, value);
-            }
-        }
+        //??public override InternalHandle this[int index]
+        //{
+        //    get
+        //    {
+        //        return IndexedPropertyGetter(index);
+        //    }
+        //    set
+        //    {
+        //        IndexedPropertySetter(index, value);
+        //    }
+        //}
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -221,7 +209,7 @@ namespace V8.Net
                 if (!result.IsUndefined) return result;
             }
 
-            return this[propertyName];
+            return this[propertyName].Value;
         }
 
         public virtual InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
@@ -232,10 +220,10 @@ namespace V8.Net
                 if (!result.IsUndefined) return result;
             }
 
-            var jsVal = ((IV8ManagedObject)this)[propertyName];
+            var jsVal = this[propertyName];
 
             if (jsVal.Value.IsEmpty)
-                ((IV8ManagedObject)this)[propertyName] = jsVal = new JSProperty(value, attributes != V8PropertyAttributes.Undefined ? attributes : V8PropertyAttributes.None);
+                this[propertyName] = jsVal = new JSProperty(value, attributes != V8PropertyAttributes.Undefined ? attributes : V8PropertyAttributes.None);
             else
             {
                 if (attributes != V8PropertyAttributes.Undefined)
@@ -258,7 +246,7 @@ namespace V8.Net
                 if (result != null) return result;
             }
 
-            return ((IV8ManagedObject)this)[propertyName].Attributes;
+            return this[propertyName].Attributes;
         }
 
         public virtual bool? NamedPropertyDeleter(ref string propertyName)
@@ -269,7 +257,7 @@ namespace V8.Net
                 if (result != null) return result;
             }
 
-            var jsVal = ((IV8ManagedObject)this)[propertyName];
+            var jsVal = this[propertyName];
 
             if ((jsVal.Attributes & V8PropertyAttributes.DontDelete) != 0)
                 return false;

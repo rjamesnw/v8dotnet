@@ -311,14 +311,12 @@ namespace V8.Net
         public ScriptObject ScriptObjectAttribute { get { return _ScriptObjectAttribute; } }
         ScriptObject _ScriptObjectAttribute;
 
-        //??public readonly TypeLibrary<V8Function> CachedGenericMethods = new TypeLibrary<V8Function>();
-
         internal class _MemberDetails
         {
             public MemberInfo FirstMember; // (this is a quick cached reference to the first member in 'Members', which is faster for fields and properties)
             public readonly TypeLibrary<MemberInfo> Members = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this represents a method or property (indexer) overload)
             public IEnumerable<MethodInfo> MethodMembers { get { return from i in Members.Items where i.Object.MemberType == MemberTypes.Method select (MethodInfo)i.Object; } }
-            public TypeLibrary<TypeLibrary<MethodInfo>> ConstructedMethods; // (if this member is a generic type, then this is the cache of constructed generic definitions)
+            public TypeLibrary<TypeLibrary<MemberInfo>> ConstructedMembers; // (if this member is a generic type, then this is the cache of constructed generic definitions)
             public uint TotalMembers = 1; // (if > 1 then this member is overloaded)
             public string MemberName; // (might be different from MemberInfo!)
             public MemberTypes MemberType; // (might be different from MemberInfo!)
@@ -327,7 +325,7 @@ namespace V8.Net
             public V8NativeObjectPropertyGetter Getter;
             public V8NativeObjectPropertySetter Setter;
             public V8Function Method;
-            public TypeLibrary<V8Function> Methods; // (overloads ['SingleMethod' should be null])
+            //??public TypeLibrary<V8Function> Methods; // (overloads ['SingleMethod' should be null])
             public Handle ValueOverride; // (the value override is a user value that, if exists, overrides the bindings)
         }
         internal readonly CharIndexLibrary<_MemberDetails> _Members = new CharIndexLibrary<_MemberDetails>(null, default(char));
@@ -580,13 +578,11 @@ namespace V8.Net
             string memberName;
             ScriptMemberSecurity attributes;
             ScriptMember scriptMemberAttrib;
-            _MemberDetails memberDetails, existingMemberDetails;
+            _MemberDetails memberDetails;
 
             for (mi = 0; mi < members.Length; mi++)
             {
                 var member = members[mi]; // (need to use 'var' for the lambda closures in 'SetAccessor()' below)
-
-                //??if (member.IsDefined(typeof(NoScriptAccess), true)) continue; // (don't allow access, skip)
 
                 memberName = member.Name;
                 attributes = (ScriptMemberSecurity)_DefaultMemberAttributes;
@@ -603,8 +599,6 @@ namespace V8.Net
                 }
 
                 if (attributes == ScriptMemberSecurity.NoAcccess) continue; // (skip this member)
-
-                //??attributes |= (ScriptMemberSecurity)V8PropertyAttributes.DontDelete;
 
                 memberDetails = _CreateMemberDetails(memberName, (V8PropertyAttributes)attributes, member,
                     s => _Members.Get(s),
@@ -705,9 +699,9 @@ namespace V8.Net
 
                     memberDetails.Members.Set(methodInfo, types);
 
-                    if (memberDetails.Methods == null)
-                        memberDetails.Methods = new TypeLibrary<V8Function>();
-                    // ('Methods' will be populated when accessed for the first time)
+                    //??if (memberDetails.Methods == null)
+                    //??    memberDetails.Methods = new TypeLibrary<V8Function>();
+                    //?? ('Methods' will be populated when accessed for the first time)
 
                     if (existingMemberDetails == null)
                         set(memberDetails);
@@ -1127,10 +1121,9 @@ namespace V8.Net
 
             var funcTemplate = Engine.CreateFunctionTemplate(className);
 
-            Func<InternalHandle> genericInstanceUpdater = null; // (this is updated for each call to a generic method on an INSTANCE object [to return the 'this' reference]; otherwise, this is null for static types or unrelated cases)
-
             func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, InternalHandle _this, InternalHandle[] args) =>
             {
+                bool isGenericInvocation = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
                 InternalHandle[] typeArgs;
                 TypeInfo[] genericTypeInfoArgs;
                 TypeInfo[] typeInfoArgs;
@@ -1140,10 +1133,12 @@ namespace V8.Net
 
                 try
                 {
+                    TypeLibrary<MemberInfo> members = memberDetails.Members;
+
                     if (!_this.IsBinder)
                         return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberDetails.MemberName + ").", JSValueType.ExecutionError);
 
-                    if (soloMethod.IsGenericMethodDefinition)
+                    if (isGenericInvocation)
                     {
                         // ... first argument should be an array of types ...
                         if (args.Length == 0 || !args[0].IsArray || args[0].ArrayLength == 0)
@@ -1157,14 +1152,17 @@ namespace V8.Net
                         genericTypeInfoArgs = TypeInfo.GetTypes(typeArgs, argOffset, expectedGenericTypes);
                         var genericSystemTypes = TypeInfo.GetSystemTypes(genericTypeInfoArgs);
 
-                        TypeLibrary<MethodInfo> constructedMethodInfos = memberDetails.ConstructedMethods.Get(genericSystemTypes);
+                        if (memberDetails.ConstructedMembers == null)
+                            memberDetails.ConstructedMembers = new TypeLibrary<TypeLibrary<MemberInfo>>();
+
+                        TypeLibrary<MemberInfo> constructedMethodInfos = memberDetails.ConstructedMembers.Get(genericSystemTypes);
 
                         if (constructedMethodInfos == null)
                         {
                             // ... there can be multiple generic methods (overloads) with different parameters types, so we need to generate and cache each one to see the affect on the parameters ...
 
                             var genericMethodInfos = memberDetails.Members.Items.Cast<MethodInfo>().ToArray();
-                            constructedMethodInfos = new TypeLibrary<MethodInfo>();
+                            constructedMethodInfos = new TypeLibrary<MemberInfo>();
                             MethodInfo constructedMethod;
 
                             for (int i = 0; i < genericMethodInfos.Length; i++)
@@ -1175,8 +1173,10 @@ namespace V8.Net
 
                             // ... cache the array of constructed generic methods (any overloads with the same generic parameters), which will exist in a type
                             // library for quick lookup the next time this given types are supplied ...
-                            memberDetails.ConstructedMethods.Set(constructedMethodInfos, genericSystemTypes);
+                            memberDetails.ConstructedMembers.Set(constructedMethodInfos, genericSystemTypes);
                         }
+
+                        members = constructedMethodInfos;
 
                         // ... at this point the 'constructedMethodInfos' will have an array of methods that match the types supplied for this generic method call.
                         // Next, the arguments ????
@@ -1184,71 +1184,29 @@ namespace V8.Net
                         argOffset = 1;
                     }
 
-                    convertedArguments = null;
-
-                    if (soloMethod != null && soloMethod.IsGenericMethodDefinition)
-                        typeInfoArgs = TypeInfo.GetTypes(args, argOffset, expectedGenericTypes); // (get type info values based on expected parameters to create a bound generic method function, if any)
-                    else
-                        typeInfoArgs = TypeInfo.GetArguments(args, argOffset, expectedParameters); // (get type info values based on expected parameters, if any)
-
-                    if (genericTarget != null)
-                        _this = genericTarget(); // (call back into the closure to get the 'this' reference)
-
-                    if (((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition)
+                    /* ... get the converted parameters ... */
                     {
-                        // ... this invocation is on a generic method definition, and not a solid actual method definition ...
+                        convertedArguments = null;
 
-                        var genericSystemTypes = TypeInfo.GetSystemTypes(typeInfoArgs);
-                        V8Function genericFunction = memberDetails.Methods.Get(genericSystemTypes);
+                        typeInfoArgs = TypeInfo.GetArguments(args, argOffset, expectedParameters);
 
-                        if (genericFunction != null)
+                        // ... create/grow the converted arguments array if necessary ...
+                        if (!convertedArgumentArrayCache.TryGetValue(typeInfoArgs.Length, out convertedArguments) || convertedArguments.Length < typeInfoArgs.Length)
+                            convertedArgumentArrayCache[typeInfoArgs.Length] = convertedArguments = new object[typeInfoArgs.Length]; // (array is too small, so discard
+
+                        for (paramIndex = 0; paramIndex < typeInfoArgs.Length; paramIndex++)
                         {
-                            genericInstanceUpdater = () => { return _this; };
-                            genericFunction.SetProperty("$__types", Engine.CreateArray(TypeInfo.GetHandles(typeInfoArgs)));
-                            return genericFunction; // (this function will contain details needed to construct and invoke the generic method [need the parameters on next call])
+                            tInfo = typeInfoArgs[paramIndex];
+
+                            if (tInfo.HasError) throw tInfo.Error;
+
+                            convertedArguments[paramIndex] = tInfo.ValueOrDefault;
                         }
-                        else
-                        {
-                            var constructedDetails = memberDetails.ConstructedGenericMembers.Get(genericSystemTypes);
-                            V8Function genericFunction = constructedDetails != null ? constructedDetails.Method : null;
 
-                            var genericMethodConstruct = soloMethod.MakeGenericMethod(genericSystemTypes);
-                            var signatureTypes = Arrays.Concat(methodInfo.GetGenericArguments(), TypeInfo.GetSystemTypes(typeInfoArgs));
-                            memberDetails.Members.Set(genericMethodConstruct, genericSystemTypes);
-
-                            constructedDetails = _CreateMemberDetails(null, memberDetails.Attributes, genericMethodConstruct,
-                                s => memberDetails.ConstructedGenericMembers.Get(genericSystemTypes),
-                                md => memberDetails.ConstructedGenericMembers.Set(md, genericSystemTypes));
-
-                            if (_GetBindingForMethod(constructedDetails, out genericFunction, null,
-                               () => { return genericInstanceUpdater != null ? genericInstanceUpdater() : _this; }))
-                            {
-                                genericFunction.SetProperty("Type", Engine.CreateValue(GetMethodSignatureAsText(genericMethodConstruct)), V8PropertyAttributes.Locked);
-                                if (_this.BindingMode == BindingMode.Static)
-                                    genericFunction.SetProperty("$__StaticTarget", _this, V8PropertyAttributes.Locked); // (note: doesn't solve the instance based invocations, which has to be set EACH time; also, there can only be static or instance targets (not both) of the same method name and type configuration for a single bound type)
-                                constructedDetails.Method = genericFunction;
-                                constructedDetails.Methods.Set(genericFunction, genericMethodConstruct.GetParameters().Select(p => p.ParameterType).ToArray());
-                                return genericFunction; // (generic method calls return a function value bound to the strong-typed generic method info to use for invocation)
-                            }
-                            else
-                                return InternalHandle.Empty;
-                        }
+                        paramIndex = -1;
                     }
 
-                    // ... create/grow the converted arguments array if necessary ...
-                    if (!convertedArgumentArrayCache.TryGetValue(typeInfoArgs.Length, out convertedArguments) || convertedArguments.Length < typeInfoArgs.Length)
-                        convertedArgumentArrayCache[typeInfoArgs.Length] = convertedArguments = new object[typeInfoArgs.Length]; // (array is too small, so discard
-
-                    for (paramIndex = 0; paramIndex < typeInfoArgs.Length; paramIndex++)
-                    {
-                        tInfo = typeInfoArgs[paramIndex];
-
-                        if (tInfo.HasError) throw tInfo.Error;
-
-                        convertedArguments[paramIndex] = tInfo.ValueOrDefault;
-                    }
-
-                    paramIndex = -1;
+                    // ... invoke the method ...
 
                     if (soloMethod != null)
                     {
@@ -1258,12 +1216,9 @@ namespace V8.Net
                     else // ... more than one method exists (overloads) ..
                     {
                         var systemTypes = TypeInfo.GetSystemTypes(typeInfoArgs);
-                        var methodInfo = (MethodInfo)memberDetails.Members.Get(systemTypes);
+                        var methodInfo = (MethodInfo)members.Get(systemTypes);
                         if (methodInfo == null)
                             return Engine.CreateError("There is no overloaded method with that type signature.", JSValueType.ExecutionError);
-                        //??object state;
-                        //??var methodInfo = Type.DefaultBinder.BindToMethod(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy,
-                        //??    methods, ref convertedArguments, null, null, null, out state) as MethodInfo;
                         var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
                         return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
                     }
@@ -1614,7 +1569,7 @@ namespace V8.Net
                                 }
                                 return method;
                             }
-                            else return memberDetails.ValueOverride.Set(value);
+                            else return memberDetails.ValueOverride = new Handle(value);
                         }
                 }
             }

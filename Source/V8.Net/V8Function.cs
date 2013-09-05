@@ -84,7 +84,7 @@ namespace V8.Net
         /// <summary>
         /// If the function object has a function property in itself (usually considered a static property in theory), you can use this to invoke it.
         /// </summary>
-        public InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
+        new public InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
         {
             if (functionName.IsNullOrWhiteSpace()) throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
             return _Handle.Call(functionName, _this, args); // (if a function name exists, then it is a request to get a property name on the object as a function [and not to use this function object itself])
