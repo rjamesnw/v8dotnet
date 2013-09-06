@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 
 #if !(V1_1 || V2 || V3 || V3_5)
 using System.Dynamic;
+using System.Diagnostics;
 #endif
 
 namespace V8.Net
@@ -51,6 +52,9 @@ namespace V8.Net
     /// The object references are stored based on a tree of nested types for fast dictionary-tree-style lookup.
     /// Currently, this class is used to cache new generic types in the type binder.
     /// </summary>
+#if !(V1_1 || V2 || V3 || V3_5)
+    [DebuggerDisplay("{Object}")]
+#endif
     public class TypeLibrary<T> where T : class
     {
         public readonly Dictionary<Type, TypeLibrary<T>> SubTypes = new Dictionary<Type, TypeLibrary<T>>();
@@ -115,6 +119,9 @@ namespace V8.Net
     /// This nested index tree is designed to only take the space needed for the given character ranges, and nothing more.
     /// Currently, this class is used to cache type members in the type binder based on their names for fast lookup when the named indexer is invoked.
     /// </summary>
+#if !(V1_1 || V2 || V3 || V3_5)
+    [DebuggerDisplay("{Object}")]
+#endif
     public class CharIndexLibrary<T> where T : class
     {
         public CharIndexLibrary<T> Parent;
@@ -174,7 +181,10 @@ namespace V8.Net
                 {
                     var _entry = entry._SubChars[ofs];
                     if (_entry == null)
+                    {
+                        entry._ValidIndexes.Add(ofs);
                         entry._SubChars[ofs] = _entry = new CharIndexLibrary<T>(entry, c);
+                    }
                     entry = _entry;
                 }
 
@@ -311,13 +321,17 @@ namespace V8.Net
         public ScriptObject ScriptObjectAttribute { get { return _ScriptObjectAttribute; } }
         ScriptObject _ScriptObjectAttribute;
 
+#if !(V1_1 || V2 || V3 || V3_5)
+        [DebuggerDisplay("{MemberName}X{TotalMembers}")]
+#endif
         internal class _MemberDetails
         {
             public MemberInfo FirstMember; // (this is a quick cached reference to the first member in 'Members', which is faster for fields and properties)
             public readonly TypeLibrary<MemberInfo> Members = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this represents a method or property (indexer) overload)
+            public uint TotalMembers = 1; // (if > 1 then this member is overloaded)
             public IEnumerable<MethodInfo> MethodMembers { get { return from i in Members.Items where i.Object.MemberType == MemberTypes.Method select (MethodInfo)i.Object; } }
             public TypeLibrary<TypeLibrary<MemberInfo>> ConstructedMembers; // (if this member is a generic type, then this is the cache of constructed generic definitions)
-            public uint TotalMembers = 1; // (if > 1 then this member is overloaded)
+            public uint TotalConstructedMembers = 0; // (if > 1 then this member is overloaded)
             public string MemberName; // (might be different from MemberInfo!)
             public MemberTypes MemberType; // (might be different from MemberInfo!)
             public V8PropertyAttributes Attributes;
@@ -420,13 +434,15 @@ namespace V8.Net
                 {
                     // ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
 
-                    InternalHandle hProp = handle.GetProperty("TypeID");
+                    InternalHandle hProp = handle.GetProperty("$__TypeID");
                     if (hProp.IsInt32) { TypeID = hProp.AsInt32; _IsSourceFromTypeInfo = true; } else TypeID = -1;
 
-                    ValueSource = handle.GetProperty("Value");
-                    if (ValueSource.IsUndefined) { ValueSource = TypeInfoSource; _IsSourceFromTypeInfo = false; }
+                    if (TypeID >= 0)
+                        ValueSource = handle.GetProperty("$__Value");
+                    else
+                        ValueSource = TypeInfoSource;
 
-                    Value = ValueSource.Value;
+                    Value = ValueSource.IsUndefined ? null : ValueSource.Value;
 
                     // (type is set last, as it is used as the flag to determine if the info is valid)
                     Type = TypeID >= 0 ? handle.Engine._RegisteredTypes[TypeID] : null; // (this will return 'null' if the index is invalid)
@@ -598,8 +614,6 @@ namespace V8.Net
                         memberName = scriptMemberAttrib.InScriptName;
                 }
 
-                if (attributes == ScriptMemberSecurity.NoAcccess) continue; // (skip this member)
-
                 memberDetails = _CreateMemberDetails(memberName, (V8PropertyAttributes)attributes, member,
                     s => _Members.Get(s),
                     md => _Members.Set(md.MemberName, md));
@@ -622,9 +636,6 @@ namespace V8.Net
                 var fieldInfo = memberInfo as FieldInfo;
 
                 if (!_Recursive && fieldInfo.FieldType.IsClass && fieldInfo.FieldType != typeof(string)) return null; // (don't include nested objects, except strings)
-
-                if (fieldInfo.IsInitOnly)
-                    attribute |= V8PropertyAttributes.ReadOnly;
 
                 memberDetails = new _MemberDetails
                 {
@@ -652,9 +663,6 @@ namespace V8.Net
                 }
 
                 if (!_Recursive && propertyInfo.PropertyType.IsClass && propertyInfo.PropertyType != typeof(string)) return null; // (don't include nested objects, except strings)
-
-                if (!propertyInfo.CanWrite)
-                    attribute |= V8PropertyAttributes.ReadOnly;
 
                 var getMethod = propertyInfo.GetGetMethod();
                 var setMethod = propertyInfo.GetSetMethod();
@@ -691,7 +699,10 @@ namespace V8.Net
                        BindingMode = methodInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
                    };
 
-                    memberDetails.Attributes |= attribute; // (combine all security attributes for all overloaded members, if any)
+                    if (attribute >= 0 && memberDetails.Attributes >= 0)
+                        memberDetails.Attributes |= attribute; // (combine all security attributes for all overloaded members, if any)
+                    else
+                        memberDetails.Attributes = attribute;
 
                     // ... register the method based on number and type of expected parameters ...
 
@@ -1149,7 +1160,7 @@ namespace V8.Net
                         for (int i = 0; i < args[0].ArrayLength; i++)
                             typeArgs[i] = args[0].GetProperty(i);
 
-                        genericTypeInfoArgs = TypeInfo.GetTypes(typeArgs, argOffset, expectedGenericTypes);
+                        genericTypeInfoArgs = TypeInfo.GetTypes(typeArgs, 0, expectedGenericTypes);
                         var genericSystemTypes = TypeInfo.GetSystemTypes(genericTypeInfoArgs);
 
                         if (memberDetails.ConstructedMembers == null)
@@ -1161,19 +1172,28 @@ namespace V8.Net
                         {
                             // ... there can be multiple generic methods (overloads) with different parameters types, so we need to generate and cache each one to see the affect on the parameters ...
 
-                            var genericMethodInfos = memberDetails.Members.Items.Cast<MethodInfo>().ToArray();
+                            var genericMethodInfos = memberDetails.Members.Items.Select(i => (MethodInfo)i.Object).ToArray();
                             constructedMethodInfos = new TypeLibrary<MemberInfo>();
-                            MethodInfo constructedMethod;
+                            MethodInfo constructedMethod = null;
 
                             for (int i = 0; i < genericMethodInfos.Length; i++)
                             {
                                 constructedMethod = genericMethodInfos[i].MakeGenericMethod(genericSystemTypes);
                                 constructedMethodInfos.Set(constructedMethod, constructedMethod.GetParameters().Select(p => p.ParameterType).ToArray());
+                                memberDetails.TotalConstructedMembers++;
                             }
 
                             // ... cache the array of constructed generic methods (any overloads with the same generic parameters), which will exist in a type
                             // library for quick lookup the next time this given types are supplied ...
                             memberDetails.ConstructedMembers.Set(constructedMethodInfos, genericSystemTypes);
+
+                            if (memberDetails.TotalConstructedMembers == 1)
+                            {
+                                // ... update the closure details for the solo method ...
+                                soloMethod = constructedMethod;
+                                expectedParameters = soloMethod.GetParameters();
+                            }
+
                         }
 
                         members = constructedMethodInfos;
@@ -1181,7 +1201,7 @@ namespace V8.Net
                         // ... at this point the 'constructedMethodInfos' will have an array of methods that match the types supplied for this generic method call.
                         // Next, the arguments ????
 
-                        argOffset = 1;
+                        argOffset = 1; // (skip first array argument)
                     }
 
                     /* ... get the converted parameters ... */
@@ -1216,9 +1236,10 @@ namespace V8.Net
                     else // ... more than one method exists (overloads) ..
                     {
                         var systemTypes = TypeInfo.GetSystemTypes(typeInfoArgs);
-                        var methodInfo = (MethodInfo)members.Get(systemTypes);
+                        var methodInfo = (MethodInfo)members.Get(systemTypes); // (note: this expects exact types matches!)
                         if (methodInfo == null)
-                            return Engine.CreateError("There is no overloaded method with that type signature.", JSValueType.ExecutionError);
+                            throw new TargetInvocationException("There is no overloaded method with the given parameter types ("
+                                + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
                         var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
                         return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
                     }
@@ -1291,9 +1312,9 @@ namespace V8.Net
                             return Engine.CreateError("You cannot pass more than one argument.", JSValueType.ExecutionError);
 
                         handle = Engine.CreateObject(Int32.MinValue + TypeID);
-                        handle.SetProperty("Type", Engine.CreateValue(BoundType.AssemblyQualifiedName), V8PropertyAttributes.Locked);
-                        handle.SetProperty("TypeID", Engine.CreateValue(TypeID), V8PropertyAttributes.Locked);
-                        handle.SetProperty("Value", args.Length > 0 ? args[0] : InternalHandle.Empty, V8PropertyAttributes.DontDelete);
+                        handle.SetProperty("$__Type", Engine.CreateValue(BoundType.AssemblyQualifiedName), V8PropertyAttributes.Locked);
+                        handle.SetProperty("$__TypeID", Engine.CreateValue(TypeID), V8PropertyAttributes.Locked);
+                        handle.SetProperty("$__Value", args.Length > 0 ? args[0] : InternalHandle.Empty, V8PropertyAttributes.DontDelete);
                     }
                     catch (Exception ex)
                     {
@@ -1312,13 +1333,13 @@ namespace V8.Net
             V8NativeObjectPropertySetter setter;
 
             foreach (var details in _FieldDetails(BindingMode.Static))
-                if (_GetBindingForDataMember(details, out getter, out setter))
+                if (_GetBindingForDataMember(details, out getter, out setter) && details.Attributes >= 0)
                 {
                     TypeFunction.SetAccessor(details.MemberName, getter, setter, details.Attributes); // TODO: Investigate need to add access control value.
                 }
 
             foreach (var details in _PropertyDetails(BindingMode.Static))
-                if (_GetBindingForDataMember(details, out getter, out setter))
+                if (_GetBindingForDataMember(details, out getter, out setter) && details.Attributes >= 0)
                 {
                     TypeFunction.SetAccessor(details.MemberName, getter, setter, details.Attributes); // TODO: Investigate need to add access control value.
                 }
@@ -1326,7 +1347,7 @@ namespace V8.Net
             V8Function func;
 
             foreach (var details in _MethodDetails(BindingMode.Static))
-                if (_GetBindingForMethod(details, out func))
+                if (_GetBindingForMethod(details, out func) && details.Attributes >= 0)
                 {
                     TypeFunction.SetProperty(details.MemberName, func, details.Attributes); // TODO: Investigate need to add access control value.
                 }
@@ -1445,7 +1466,7 @@ namespace V8.Net
         }
         public override bool? IndexedPropertyDeleter(int index)
         {
-            return false;
+            return null;
         }
         public override V8PropertyAttributes? IndexedPropertyQuery(int index)
         {
@@ -1461,7 +1482,7 @@ namespace V8.Net
         public override InternalHandle NamedPropertyGetter(ref string propertyName)
         {
             var memberDetails = TypeBinder._Members.Get(propertyName);
-            if (memberDetails != null)
+            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
             {
                 if (!memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
 
@@ -1516,7 +1537,7 @@ namespace V8.Net
         public override InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             var memberDetails = TypeBinder._Members.Get(propertyName);
-            if (memberDetails != null)
+            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
             {
                 if (!memberDetails.ValueOverride.IsUndefined)
                 {
@@ -1529,16 +1550,19 @@ namespace V8.Net
                     case MemberTypes.Field:
                         {
                             var fieldInfo = (FieldInfo)memberDetails.FirstMember;
-                            var setter = memberDetails.Setter;
-                            if (setter == null)
+                            if (!fieldInfo.IsInitOnly)
                             {
-                                // .. first time access, create a binding ...
-                                V8NativeObjectPropertyGetter getter;
-                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
-                                memberDetails.Getter = getter;
-                                memberDetails.Setter = setter;
+                                var setter = memberDetails.Setter;
+                                if (setter == null)
+                                {
+                                    // .. first time access, create a binding ...
+                                    V8NativeObjectPropertyGetter getter;
+                                    TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                    memberDetails.Getter = getter;
+                                    memberDetails.Setter = setter;
+                                }
+                                setter.Invoke(_Handle, propertyName, value);
                             }
-                            setter.Invoke(_Handle, propertyName, value);
                             break;
                         }
                     case MemberTypes.Property:
@@ -1569,7 +1593,13 @@ namespace V8.Net
                                 }
                                 return method;
                             }
-                            else return memberDetails.ValueOverride = new Handle(value);
+                            else
+                            {
+                                if (memberDetails.ValueOverride == null)
+                                    return memberDetails.ValueOverride = new Handle(value);
+                                else
+                                    return memberDetails.ValueOverride.Set(value);
+                            }
                         }
                 }
             }
@@ -1578,17 +1608,32 @@ namespace V8.Net
 
         public override bool? NamedPropertyDeleter(ref string propertyName)
         {
+            var memberDetails = TypeBinder._Members.Get(propertyName);
+            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
+            {
+                if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsEmpty)
+                {
+                    memberDetails.ValueOverride.Dispose();
+                    return true;
+                }
+            }
             return null;
         }
 
         public override V8PropertyAttributes? NamedPropertyQuery(ref string propertyName)
         {
+            var memberDetails = TypeBinder._Members.Get(propertyName);
+            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
+            {
+                return memberDetails.Attributes;
+            }
             return null;
         }
 
         public override InternalHandle NamedPropertyEnumerator()
         {
-            return InternalHandle.Empty;
+            string[] memberNames = TypeBinder._Members.Items.Select(i => i.Object.MemberName).ToArray();
+            return Engine.CreateValue(memberNames);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
