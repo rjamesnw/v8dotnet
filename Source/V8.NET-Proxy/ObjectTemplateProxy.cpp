@@ -130,7 +130,6 @@ void ObjectTemplateProxy::GetProperty(Local<String> hName, const PropertyCallbac
             }
         }
     }
-    info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -169,7 +168,6 @@ void ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, c
             }
         }
     }
-    info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -305,7 +303,6 @@ void ObjectTemplateProxy::GetProperty(uint32_t index, const PropertyCallbackInfo
             }
         }
     }
-    info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -342,7 +339,6 @@ void ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> value, const 
             }
         }
     }
-    info.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

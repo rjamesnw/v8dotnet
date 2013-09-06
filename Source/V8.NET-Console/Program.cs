@@ -43,7 +43,7 @@ namespace V8.Net
                         + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
                 };
                 _TitleUpdateTimer.Start();
-                
+
                 _JSServer.WithContextScope = () =>
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
@@ -71,7 +71,10 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"), null, true, V8PropertyAttributes.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
-                    _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined'; for (var p in o) s+='* '+(o.valueOf())+'.'+p+' = ('+o[p]+')\r\n'; return s; }");
+                    _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
+                        + @" if (typeof o.valueOf=='undefined') return ""'valueOf()' is missing on '""+(typeof o)+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
+                        + @" if (typeof o.toString=='undefined') return ""'toString()' is missing on '""+o.valueOf()+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
+                        + @" for (var p in o) try { s+='* '+(o.valueOf())+'.'+p+' = ('+o[p]+')\r\n'; } catch(e) { s+='* {valueOf() error!}.'+p+' = {'+dump(o[p])+'}\r\n'; } return s; }");
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'assert(msg, a,b)' function for property value assertion ...");
                     _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
