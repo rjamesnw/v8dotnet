@@ -78,19 +78,19 @@ void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<V
 
         if (result != nullptr)
             if (result->IsError())
-			{
+            {
                 args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
-				return;
-			}
+                return;
+            }
             else
-			{
-				args.GetReturnValue().Set(result->Handle()); // (note: the returned value was created via p/invoke calls from the managed side, so the managed side is expected to tracked and freed this handle when done)
-				return;
-			}
+            {
+                args.GetReturnValue().Set(result->Handle()); // (note: the returned value was created via p/invoke calls from the managed side, so the managed side is expected to tracked and freed this handle when done)
+                return;
+            }
 
         // (result == null == undefined [which means the managed side didn't return anything])
     }
-	args.GetReturnValue().SetUndefined();
+    args.GetReturnValue().SetUndefined();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
