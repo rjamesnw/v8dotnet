@@ -43,16 +43,23 @@ namespace V8.Net
                         + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
                 };
                 _TitleUpdateTimer.Start();
-
+                
                 _JSServer.WithContextScope = () =>
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
                     _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Type), "CLRString", true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Type), "Type", true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Object), "CLRObject", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(String), "CLRString", true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Boolean), "CLRBoolean", true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(char), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(int), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Int16), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Int32), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Int64), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Boolean), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(UInt16), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(UInt32), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(UInt64), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Array), "CLRArray", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Enumerable), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked);
@@ -89,8 +96,8 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
                     Console.WriteLine(Environment.NewLine + "r = Enumerable.Range(1,Int32('10'));");
                     _JSServer.ConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
-                    Console.WriteLine(Environment.NewLine + "a = CLRString.Join$1(Int32)(', ', r);");
-                    _JSServer.ConsoleExecute(@"a = CLRString.Join$1(Int32)(', ', r);");
+                    Console.WriteLine(Environment.NewLine + "a = CLRString.Join$1([Int32], ', ', r);");
+                    _JSServer.ConsoleExecute(@"a = CLRString.Join$1([Int32], ', ', r);");
                 };
 
                 Console.WriteLine(Environment.NewLine + Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
