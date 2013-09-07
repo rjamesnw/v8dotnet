@@ -47,26 +47,46 @@ namespace V8.Net
                 _JSServer.WithContextScope = () =>
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
+
+                    // (Note: It's not required to explicitly register a type, but it is recommended for efficiency.)
+
+                    _JSServer.RegisterType(typeof(Object), "Object", true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(Type), "Type", true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(String), "String", true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(Boolean), "Boolean", true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(Array), "Array", true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(char), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(int), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(Int16), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(Int32), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(Int64), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(UInt16), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(UInt32), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(UInt64), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(Enumerable), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.RegisterType(typeof(System.IO.File), null, true, V8PropertyAttributes.Locked);
+
                     var hSystem = _JSServer.CreateObject();
                     _JSServer.DynamicGlobalObject.System = hSystem;
-                    hSystem.SetProperty(typeof(Object), "Object", true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Type), "Type", true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
-                    hSystem.SetProperty(typeof(String), "String", true, V8PropertyAttributes.Locked);
-                    hSystem.SetProperty(typeof(Boolean), "Boolean", true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(char), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(int), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Int16), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Int32), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Int64), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(UInt16), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(UInt32), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(UInt64), null, true, V8PropertyAttributes.Locked);
-                    hSystem.SetProperty(typeof(Array), "Array", true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Enumerable), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(System.IO.File), null, true, V8PropertyAttributes.Locked);
+                    hSystem.SetProperty(typeof(Object)); // (Note: No optional parameters used, so this will simply lookup and apply the existing registered type details above.)
+                    _JSServer.GlobalObject.SetProperty(typeof(Type));
+                    hSystem.SetProperty(typeof(String));
+                    hSystem.SetProperty(typeof(Boolean));
+                    hSystem.SetProperty(typeof(Array));
+                    _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList));
+                    _JSServer.GlobalObject.SetProperty(typeof(char));
+                    _JSServer.GlobalObject.SetProperty(typeof(int));
+                    _JSServer.GlobalObject.SetProperty(typeof(Int16));
+                    _JSServer.GlobalObject.SetProperty(typeof(Int32));
+                    _JSServer.GlobalObject.SetProperty(typeof(Int64));
+                    _JSServer.GlobalObject.SetProperty(typeof(UInt16));
+                    _JSServer.GlobalObject.SetProperty(typeof(UInt32));
+                    _JSServer.GlobalObject.SetProperty(typeof(UInt64));
+                    _JSServer.GlobalObject.SetProperty(typeof(Enumerable));
+                    _JSServer.GlobalObject.SetProperty(typeof(System.IO.File));
 
-                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked); // (Note: Not yet registered, but will auto register!)
                     _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
 
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, V8PropertyAttributes.Locked);
@@ -76,7 +96,7 @@ namespace V8.Net
                     _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
                         + @" if (typeof o.valueOf=='undefined') return ""'valueOf()' is missing on '""+(typeof o)+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
                         + @" if (typeof o.toString=='undefined') return ""'toString()' is missing on '""+o.valueOf()+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
-                        + @" for (var p in o) try { s+='* '+(o.valueOf())+'.'+p+' = ('+o[p]+')\r\n'; } catch(e) { s+='* {valueOf() error!}.'+p+' = {'+dump(o[p])+'}\r\n'; } return s; }");
+                        + @" for (var p in o) {var ov='', pv=''; try{ov=o.valueOf();}catch(e){ov='{error: '+e.message+': '+dump(o)+'}';} try{pv=o[p];}catch(e){pv=e.message;} s+='* '+ov+'.'+p+' = ('+pv+')\r\n'; } return s; }");
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'assert(msg, a,b)' function for property value assertion ...");
                     _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
@@ -101,8 +121,14 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
                     Console.WriteLine(Environment.NewLine + "r = Enumerable.Range(1,Int32('10'));");
                     _JSServer.ConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
-                    Console.WriteLine(Environment.NewLine + "a = CLRString.Join$1([Int32], ', ', r);");
-                    _JSServer.ConsoleExecute(@"a = CLRString.Join$1([Int32], ', ', r);");
+                    Console.WriteLine(Environment.NewLine + "a = System.String.Join$1([Int32], ', ', r);");
+                    _JSServer.ConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
+
+                    Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
+                    _JSServer.RegisterType(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
+                    Console.WriteLine(Environment.NewLine + "System.String.Empty; ...");
+                    _JSServer.ConsoleExecute(@"System.String.Empty;");
+                    Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
                 };
 
                 Console.WriteLine(Environment.NewLine + Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
@@ -297,7 +323,7 @@ namespace V8.Net
 
                             for (i = 0; i < 3000 && internalHandle.ReferenceCount > 1; i++)
                                 System.Threading.Thread.Sleep(1); // (just wait for the worker)
-                            
+
                             if (internalHandle.ReferenceCount > 1)
                                 throw new Exception("Handle is still not ready for GC ... something is wrong.");
 
