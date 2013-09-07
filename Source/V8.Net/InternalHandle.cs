@@ -153,7 +153,7 @@ namespace V8.Net
                 {
                     // (if this handle directly references a managed object, then notify the object info that it is weak if the ref count is 1)
                     var weakRef = Engine._GetObjectWeakReference(_HandleProxy->_ObjectID);
-                    if (weakRef != null && weakRef.Object != null)
+                    if (weakRef != null)
                         weakRef.Object._TryDisposeNativeHandle();
                 }
                 else
@@ -318,7 +318,7 @@ namespace V8.Net
             {
                 return _HandleProxy == null ? -1
                     : _HandleProxy->_ObjectID < -1 || _HandleProxy->_ObjectID >= 0 ? _HandleProxy->_ObjectID
-                    : IsObjectType ? V8NetProxy.GetHandleManagedObjectID(_HandleProxy) : -1;
+                    : IsObjectType ? V8NetProxy.GetHandleManagedObjectID(_HandleProxy) : -1; // TODO: V8NetProxy.GetHandleManagedObjectID() is not really relevant anymore...but verify first.
             }
             internal set { if (_HandleProxy != null) _HandleProxy->_ObjectID = value; }
         }
@@ -358,6 +358,11 @@ namespace V8.Net
         public object BoundObject { get { return BindingMode == BindingMode.Instance ? ((ObjectBinder)Object).Object : null; } }
 
         /// <summary>
+        /// Returns the registered type ID for objects that represent registered CLR types.
+        /// </summary>
+        public Int32 CLRTypeID { get { return _HandleProxy != null ? _HandleProxy->_CLRTypeID : -1; } }
+
+        /// <summary>
         /// If this handle represents a type binder, then this returns the associated 'TypeBinder' instance.
         /// <para>Bound types are usually non-V8.NET types that are wrapped and exposed in the JavaScript environment for use with the 'new' operator.</para>
         /// </summary>
@@ -382,7 +387,7 @@ namespace V8.Net
                 if (_HandleProxy->_ObjectID >= -1 && IsObjectType && ObjectID >= 0)
                 {
                     var weakRef = Engine._GetObjectWeakReference(_CurrentObjectID);
-                    return weakRef != null && weakRef.Object != null;
+                    return weakRef != null;
                 }
                 else return false;
             }
@@ -400,11 +405,10 @@ namespace V8.Net
             {
                 if (IsBinder)
                     return BoundObject;
-                else if (IsObjectType)
+                else if (CLRTypeID >= 0)
                 {
                     var typeInfo = new TypeBinder.TypeInfo(this);
-                    if (typeInfo.IsSourceFromTypeInfo)
-                        return typeInfo.ValueOrDefault; // (this object represents a TypeInfo object, so return its value)
+                    return typeInfo.ValueOrDefault; // (this object represents a TypeInfo object, so return its value)
                 }
 
                 if (_HandleProxy != null)

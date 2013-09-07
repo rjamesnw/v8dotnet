@@ -206,10 +206,7 @@ namespace V8.Net
                 {
                     var weakRef = _Objects[persistedObjectHandle->_ObjectID];
                     if (weakRef != null)
-                    {
-                        var obj = weakRef.Object;
-                        if (obj != null) return obj._OnNativeGCRequested(); // (notify the object that a V8 GC is requested)
-                    }
+                        return weakRef.Object._OnNativeGCRequested(); // (notify the object that a V8 GC is requested)
                 }
             }
             return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])

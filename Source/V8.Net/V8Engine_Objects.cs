@@ -201,7 +201,7 @@ namespace V8.Net
         /// </summary>
         public V8NativeObject[] GetObjects(ITemplate template)
         {
-            lock (_Objects) { return (from o in _Objects where o.Object != null && o.Object.Template == template select o.Object).ToArray(); }
+            lock (_Objects) { return (from o in _Objects where o.Object.Template == template select o.Object).ToArray(); }
             // (note: cannot enumerate because '_Objects' needs to be thread-safe)
         }
 

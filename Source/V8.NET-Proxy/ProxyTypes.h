@@ -192,6 +192,7 @@ private:
     int32_t _ID; // The ID of this handle (handles are cached/recycled and not destroyed). The ID is also used on the managed side.
 
     int32_t _ObjectID; // The ID (index) of any associated managed object in V8.NET.  This is -1 by default, and is only update when 'GetManagedObjectID()' is called.
+    int32_t _CLRTypeID; // A special ID to an array of register types that this object represents.
 
     JSValueType _Type; // Note: a 32-bit type value (the managed code will expect 4 bytes).
 

@@ -127,7 +127,7 @@ namespace V8.Net
     /// Another benefit is that thread locking is required for heap memory allocation (for obvious reasons), so stack allocation is faster within a
     /// multi-threaded context.</para>
     /// </summary>
-    public unsafe class Handle : IHandleBased, IDynamicMetaObjectProvider, IDisposable, IConvertible
+    public unsafe class Handle : IHandleBased, IDynamicMetaObjectProvider, IDisposable, IConvertible, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -151,10 +151,21 @@ namespace V8.Net
 
         ~Handle()
         {
-            if (ReferenceCount == 1 && this._CurrentObjectID >= 0)
-                GC.ReRegisterForFinalize(this); // (there is ALWAYS at least one handle associated with an object, so this has to be kept)
-            else
-                _Handle._Dispose(true);
+            if (!((IFinalizable)this).CanFinalize && Engine != null)
+                lock (Engine._ObjectsToFinalize)
+                {
+                    var isLastHandleForObject = (_CurrentObjectID >= 0 && ReferenceCount == 1);
+                    if (!isLastHandleForObject) // (there should ALWAYS be at least one handle associated with an object)
+                        Engine._ObjectsToFinalize.Add(this);
+                    GC.ReRegisterForFinalize(this);
+                }
+        }
+
+        bool IFinalizable.CanFinalize { get { return IsEmpty; } set { } }
+
+        void IFinalizable.DoFinalize()
+        {
+            _Handle._Dispose(true); 
         }
 
         /// <summary>
@@ -353,6 +364,11 @@ namespace V8.Net
         /// Bound objects are usually custom user objects (non-V8.NET objects) wrapped in ObjectBinder instances.
         /// </summary>
         public object BoundObject { get { return _Handle.BoundObject; } }
+
+        /// <summary>
+        /// Returns the registered type ID for objects that represent registered CLR types.
+        /// </summary>
+        public Int32 CLRTypeID { get { return _Handle.CLRTypeID; } }
 
         /// <summary>
         /// If this handle represents a type binder, then this returns the associated 'TypeBinder' instance.

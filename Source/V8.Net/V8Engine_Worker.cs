@@ -17,6 +17,15 @@ namespace V8.Net
     // are called "weak" objects, and the worker calls the native side to also mark the native object as weak.  Once the V8 GC calls back, the managed object
     // will then complete it's finalization process.
 
+    /// <summary>
+    /// Applied to V8 related objects to take control of the finalization process from the GC so it can be better coordinated with the native V8 engine.
+    /// </summary>
+    internal interface IFinalizable
+    {
+        void DoFinalize(); // (proceed to finalize the object)
+        bool CanFinalize { get; set; } // (if this is true, the GC, when triggered again, can finally collect the instance)
+    }
+
     public unsafe partial class V8Engine
     {
         // --------------------------------------------------------------------------------------------------------------------
@@ -27,6 +36,10 @@ namespace V8.Net
         /// When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.
         /// </summary>
         internal readonly List<int> _WeakObjects = new List<int>(100);
+        int _WeakObjects_Index = -1;
+
+        internal readonly List<IFinalizable> _ObjectsToFinalize = new List<IFinalizable>(100);
+        int _ObjectsToFinalize_Index = -1;
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -50,7 +63,7 @@ namespace V8.Net
                 if (_PauseWorker == 1) _PauseWorker = 2;
                 else
                 {
-                    workPending = _WeakObjects.Count > 0;
+                    workPending = _WeakObjects.Count > 0 || _ObjectsToFinalize.Count > 0;
 
                     while (workPending && _PauseWorker == 0)
                     {
@@ -70,40 +83,60 @@ namespace V8.Net
             }
         }
 
-        int _Worker_Index = -1;
-
         /// <summary>
         /// Does one step in the work process (mostly garbage collection for freeing up unused handles).
         /// True is returned if more work is pending, and false otherwise.
         /// </summary>
         bool _DoWorkStep()
         {
+            // ... do one weak object ...
+
             int objID = -1;
 
             lock (_WeakObjects)
             {
-                if (_Worker_Index < 0)
-                    _Worker_Index = _WeakObjects.Count - 1;
+                if (_WeakObjects_Index < 0)
+                    _WeakObjects_Index = _WeakObjects.Count - 1;
 
-                if (_Worker_Index >= 0)
+                if (_WeakObjects_Index >= 0)
                 {
-                    objID = _WeakObjects[_Worker_Index];
+                    objID = _WeakObjects[_WeakObjects_Index];
 
-                    _WeakObjects.RemoveAt(_Worker_Index);
+                    _WeakObjects.RemoveAt(_WeakObjects_Index);
 
-                    _Worker_Index--;
+                    _WeakObjects_Index--;
                 }
             }
 
             if (objID >= 0)
                 lock (_Objects)
                 {
-                    var obj = _Objects[objID].Object;
-                    if (obj != null)
-                        obj._MakeWeak();
+                    _Objects[objID].Object._MakeWeak();
                 }
 
-            return _Worker_Index >= 0;
+            // ... and do one object ready to be finalized ...
+
+            IFinalizable objectToFinalize = null;
+
+            lock (_ObjectsToFinalize)
+            {
+                if (_ObjectsToFinalize_Index < 0)
+                    _ObjectsToFinalize_Index = _ObjectsToFinalize.Count - 1;
+
+                if (_ObjectsToFinalize_Index >= 0)
+                {
+                    objectToFinalize = _ObjectsToFinalize[_ObjectsToFinalize_Index];
+
+                    _ObjectsToFinalize.RemoveAt(_ObjectsToFinalize_Index);
+
+                    _ObjectsToFinalize_Index--;
+                }
+            }
+
+            if (objectToFinalize != null)
+                objectToFinalize.DoFinalize();
+
+            return _WeakObjects_Index >= 0 || _ObjectsToFinalize_Index >= 0;
         }
 
         /// <summary>
