@@ -580,7 +580,7 @@ namespace V8.Net
         /// <param name="memberAttributes">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         /// <returns>A native value that best represents the given managed value.</returns>
-        public InternalHandle CreateValue(object value, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public InternalHandle CreateValue(object value, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             if (value == null)
                 return CreateNullValue();

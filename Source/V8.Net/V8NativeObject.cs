@@ -364,7 +364,7 @@ namespace V8.Net
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="attributes">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(string name, object obj, string className = null, bool recursive = false, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             return _Handle._Handle.SetProperty(name, obj, className, recursive, attributes);
         }
@@ -379,7 +379,7 @@ namespace V8.Net
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="attributes">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool recursive = false, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(Type type, string className = null, bool? recursive = null, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             return _Handle._Handle.SetProperty(type, className, recursive, attributes);
         }
