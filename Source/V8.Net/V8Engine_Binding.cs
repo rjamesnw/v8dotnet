@@ -748,82 +748,88 @@ namespace V8.Net
                 memberName = fieldInfo.Name;
 
             if (fieldInfo.FieldType == typeof(bool))
-                getter = _CreateGetAccessor<bool>(fieldInfo);
+                getter = _CreateGetAccessor<bool>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(byte))
-                getter = _CreateGetAccessor<byte>(fieldInfo);
+                getter = _CreateGetAccessor<byte>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(sbyte))
-                getter = _CreateGetAccessor<sbyte>(fieldInfo);
+                getter = _CreateGetAccessor<sbyte>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(Int16))
-                getter = _CreateGetAccessor<Int16>(fieldInfo);
+                getter = _CreateGetAccessor<Int16>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(UInt16))
-                getter = _CreateGetAccessor<UInt16>(fieldInfo);
+                getter = _CreateGetAccessor<UInt16>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(Int32))
-                getter = _CreateGetAccessor<Int32>(fieldInfo);
+                getter = _CreateGetAccessor<Int32>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(UInt32))
-                getter = _CreateGetAccessor<UInt32>(fieldInfo);
+                getter = _CreateGetAccessor<UInt32>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(Int64))
-                getter = _CreateGetAccessor<Int64>(fieldInfo);
+                getter = _CreateGetAccessor<Int64>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(UInt64))
-                getter = _CreateGetAccessor<UInt64>(fieldInfo);
+                getter = _CreateGetAccessor<UInt64>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(Single))
-                getter = _CreateGetAccessor<Single>(fieldInfo);
+                getter = _CreateGetAccessor<Single>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(float))
-                getter = _CreateGetAccessor<float>(fieldInfo);
+                getter = _CreateGetAccessor<float>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(double))
-                getter = _CreateGetAccessor<double>(fieldInfo);
+                getter = _CreateGetAccessor<double>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(string))
-                getter = _CreateGetAccessor<string>(fieldInfo);
+                getter = _CreateGetAccessor<string>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(char))
-                getter = _CreateGetAccessor<char>(fieldInfo);
+                getter = _CreateGetAccessor<char>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(DateTime))
-                getter = _CreateGetAccessor<DateTime>(fieldInfo);
+                getter = _CreateGetAccessor<DateTime>(memberDetails, fieldInfo);
             else if (fieldInfo.FieldType == typeof(TimeSpan))
-                getter = _CreateGetAccessor<TimeSpan>(fieldInfo);
+                getter = _CreateGetAccessor<TimeSpan>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType.IsEnum)
-                getter = _CreateGetAccessor<Int32>(fieldInfo);
+                getter = _CreateGetAccessor<Int32>(memberDetails, fieldInfo);
 
             else if (_Recursive)
             {
                 // ... this type is unknown, but recursive is set, so register the type implicitly and continue ...
                 Engine.RegisterType(fieldInfo.FieldType);
-                getter = _CreateObjectGetAccessor(fieldInfo);
+                getter = _CreateObjectGetAccessor(memberDetails, fieldInfo);
             }
             else return false;
 
-            setter = _CreateSetAccessor(fieldInfo);
+            setter = _CreateSetAccessor(memberDetails, fieldInfo);
 
             return true;
         }
 
-        V8NativeObjectPropertySetter _CreateSetAccessor(FieldInfo fieldInfo)
+        V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
-                if (_this.IsBinder)
+                if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (!memberDetails.Attributes.HasFlag(V8PropertyAttributes.ReadOnly))
                 {
-                    fieldInfo.SetValue(_this.BoundObject, new TypeInfo(value, null, fieldInfo.FieldType).ValueOrDefault);
-                    return value;
+                    if (_this.IsBinder)
+                    {
+                        fieldInfo.SetValue(_this.BoundObject, new TypeInfo(value, null, fieldInfo.FieldType).ValueOrDefault);
+                        return value;
+                    }
+                    else
+                        return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
                 }
-                else
-                    return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
+                return value;
             };
         }
 
-        V8NativeObjectPropertyGetter _CreateGetAccessor<T>(FieldInfo fieldInfo)
+        V8NativeObjectPropertyGetter _CreateGetAccessor<T>(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
 
             if (isSystemType)
                 return (InternalHandle _this, string propertyName) =>
                 {
+                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                     try
                     {
@@ -837,6 +843,7 @@ namespace V8.Net
             else
                 return (InternalHandle _this, string propertyName) =>
                 {
+                    if (memberDetails.Attributes < 0) return InternalHandle.Empty;
                     if (_this.IsBinder)
                         return Engine.CreateValue((T)fieldInfo.GetValue(_this.BoundObject));
                     else
@@ -844,13 +851,14 @@ namespace V8.Net
                 };
         }
 
-        V8NativeObjectPropertyGetter _CreateObjectGetAccessor(FieldInfo fieldInfo)
+        V8NativeObjectPropertyGetter _CreateObjectGetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
 
             if (isSystemType)
                 return (InternalHandle _this, string propertyName) =>
                 {
+                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                     try
                     {
@@ -864,6 +872,7 @@ namespace V8.Net
             else
                 return (InternalHandle _this, string propertyName) =>
                 {
+                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (_this.IsBinder)
                         return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
                     else
@@ -894,68 +903,69 @@ namespace V8.Net
                 memberName = propInfo.Name;
 
             if (propInfo.PropertyType == typeof(bool))
-                getter = _CreateGetAccessor<bool>(propInfo);
+                getter = _CreateGetAccessor<bool>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(byte))
-                getter = _CreateGetAccessor<byte>(propInfo);
+                getter = _CreateGetAccessor<byte>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(sbyte))
-                getter = _CreateGetAccessor<sbyte>(propInfo);
+                getter = _CreateGetAccessor<sbyte>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(Int16))
-                getter = _CreateGetAccessor<Int16>(propInfo);
+                getter = _CreateGetAccessor<Int16>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(UInt16))
-                getter = _CreateGetAccessor<UInt16>(propInfo);
+                getter = _CreateGetAccessor<UInt16>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(Int32))
-                getter = _CreateGetAccessor<Int32>(propInfo);
+                getter = _CreateGetAccessor<Int32>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(UInt32))
-                getter = _CreateGetAccessor<UInt32>(propInfo);
+                getter = _CreateGetAccessor<UInt32>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(Int64))
-                getter = _CreateGetAccessor<Int64>(propInfo);
+                getter = _CreateGetAccessor<Int64>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(UInt64))
-                getter = _CreateGetAccessor<UInt64>(propInfo);
+                getter = _CreateGetAccessor<UInt64>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(Single))
-                getter = _CreateGetAccessor<Single>(propInfo);
+                getter = _CreateGetAccessor<Single>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(float))
-                getter = _CreateGetAccessor<float>(propInfo);
+                getter = _CreateGetAccessor<float>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(double))
-                getter = _CreateGetAccessor<double>(propInfo);
+                getter = _CreateGetAccessor<double>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(string))
-                getter = _CreateGetAccessor<string>(propInfo);
+                getter = _CreateGetAccessor<string>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(char))
-                getter = _CreateGetAccessor<char>(propInfo);
+                getter = _CreateGetAccessor<char>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(DateTime))
-                getter = _CreateGetAccessor<DateTime>(propInfo);
+                getter = _CreateGetAccessor<DateTime>(memberDetails, propInfo);
             else if (propInfo.PropertyType == typeof(TimeSpan))
-                getter = _CreateGetAccessor<TimeSpan>(propInfo);
+                getter = _CreateGetAccessor<TimeSpan>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType.IsEnum)
-                getter = _CreateGetAccessor<Int32>(propInfo);
+                getter = _CreateGetAccessor<Int32>(memberDetails, propInfo);
 
             else if (_Recursive)
             {
                 // ... this type is unknown, but recursive is set, so register the type implicitly and continue ...
                 Engine.RegisterType(propInfo.PropertyType);
-                getter = _CreateObjectGetAccessor(propInfo);
+                getter = _CreateObjectGetAccessor(memberDetails, propInfo);
             }
             else return false;
 
-            setter = _CreateSetAccessor(propInfo);
+            setter = _CreateSetAccessor(memberDetails, propInfo);
 
             return true;
         }
 
-        V8NativeObjectPropertySetter _CreateSetAccessor(PropertyInfo propertyInfo)
+        V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             //??var setMethod = propertyInfo.GetSetMethod();
 
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
-                if (propertyInfo.CanWrite)
+                if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (propertyInfo.CanWrite && !memberDetails.Attributes.HasFlag(V8PropertyAttributes.ReadOnly))
                 {
                     if (_this.IsBinder)
                         propertyInfo.SetValue(_this.BoundObject, new TypeInfo(value, null, propertyInfo.PropertyType).ValueOrDefault, null);
@@ -966,7 +976,7 @@ namespace V8.Net
             };
         }
 
-        V8NativeObjectPropertyGetter _CreateGetAccessor<T>(PropertyInfo propertyInfo)
+        V8NativeObjectPropertyGetter _CreateGetAccessor<T>(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
             //??var getMethod = propertyInfo.GetGetMethod();
@@ -974,6 +984,7 @@ namespace V8.Net
             if (isSystemType)
                 return (InternalHandle _this, string propertyName) =>
                 {
+                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (propertyInfo.CanRead)
                     {
                         // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
@@ -991,6 +1002,7 @@ namespace V8.Net
             else
                 return (InternalHandle _this, string propertyName) =>
                 {
+                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (propertyInfo.CanRead)
                     {
                         if (_this.IsBinder)
@@ -1002,7 +1014,7 @@ namespace V8.Net
                 };
         }
 
-        V8NativeObjectPropertyGetter _CreateObjectGetAccessor(PropertyInfo propertyInfo)
+        V8NativeObjectPropertyGetter _CreateObjectGetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
             //??var getMethod = propertyInfo.GetGetMethod();
@@ -1121,6 +1133,8 @@ namespace V8.Net
 
             func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, InternalHandle _this, InternalHandle[] args) =>
             {
+                if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+
                 bool isGenericInvocation = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
                 InternalHandle[] typeArgs;
                 TypeInfo[] genericTypeInfoArgs;
@@ -1372,6 +1386,42 @@ namespace V8.Net
         public ObjectBinder CreateObject(object obj)
         {
             return CreateObject<ObjectBinder, object>(obj);
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Changes the security of a specific member for the underlying type represented by this TypeBinder instance.
+        /// </summary>
+        /// <param name="member">A specific MemberInfo instance.  If this is not found/supported on the local type, an exception will be thrown.</param>
+        /// <param name="security">The new security to apply.</param>
+        public void ChangeMemberSecurity(MemberInfo member, ScriptMemberSecurity security)
+        {
+            var memberDetails = (from md in _Members.Items where md.Object.Members.Items.Select(i => i.Object).Contains(member) select md.Object).FirstOrDefault();
+
+            if (memberDetails == null) throw new MissingMemberException("The member '" + member.Name + "' was not found.");
+
+            if (security >= 0)
+                memberDetails.Attributes = (V8PropertyAttributes)security;
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Changes the security of a specific member for the underlying type represented by this TypeBinder instance.
+        /// </summary>
+        /// <param name="memberName">A specific member name.  If this is not found/supported on the local type, or the name has too many matches, an exception will be thrown.
+        /// <para>Note: The name you enter here is the in-script name, including any "${type #}" suffixes for generic types (for example, "Join$1", where '1' is the
+        /// number of expected generic types).  If a member has overloads, the security attribute will apply to all of them.</para></param>
+        /// <param name="security">The new security to apply.</param>
+        public void ChangeMemberSecurity(string memberName, ScriptMemberSecurity security)
+        {
+            var memberDetails = (from md in _Members.Items where md.Object.MemberName == memberName select md.Object).ToArray();
+
+            if (memberDetails.Length == 0) throw new MissingMemberException("The member '" + memberName + "' was not found.");
+            if (memberDetails.Length > 1) throw new MissingMemberException("Multiple matches were found.");
+
+            memberDetails[0].Attributes = (V8PropertyAttributes)security;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

@@ -10,6 +10,7 @@ namespace V8.Net
     /// <summary>
     /// Flags which Determine the script accessibility.
     /// </summary>
+    [Flags]
     public enum ScriptMemberSecurity
     {
         /// <summary>

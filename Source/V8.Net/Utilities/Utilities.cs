@@ -13,6 +13,9 @@ namespace V8.Net
 
     public static class ExtensionMethods
     {
+#if (V1_1 || V2 || V3 || V3_5)
+        public static bool HasFlag(this Enum value, Enum flag) { var f = Convert.ToInt32(flag); return (Convert.ToInt32(value) & f) == f; }
+#endif
     }
 
     // ========================================================================================================================

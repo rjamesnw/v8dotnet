@@ -10,6 +10,7 @@ namespace V8.Net
     /// <summary>
     /// Flags that describe JavaScript properties.  They must be 'OR'd together as needed.
     /// </summary>
+    [Flags]
     public enum V8PropertyAttributes
     {
         /// <summary>
@@ -54,6 +55,7 @@ namespace V8.Net
     /// V8 Access control specification flags.  If some accessors should be accessible across native V8 contexts, then these accessors need an explicit access
     /// control parameter set which specifies the kind of cross-context access that should be allowed.
     /// </summary>
+    [Flags]
     public enum V8AccessControl
     {
         /// <summary>
