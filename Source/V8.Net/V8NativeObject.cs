@@ -44,7 +44,7 @@ namespace V8.Net
     /// Represents a basic JavaScript object. This class wraps V8 functionality for operations required on any native V8 object (including managed ones).
     /// <para>This class implements 'DynamicObject' to make setting properties a bit easier.</para>
     /// </summary>
-    public unsafe class V8NativeObject : IHandleBased, IV8NativeObject, IDynamicMetaObjectProvider
+    public unsafe class V8NativeObject : IHandleBased, IV8NativeObject, IDynamicMetaObjectProvider, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -166,7 +166,7 @@ namespace V8.Net
                 _Handle.SetProperty(index, value);
             }
         }
-        
+
         // --------------------------------------------------------------------------------------------------------------------
 
         public V8NativeObject()
@@ -213,13 +213,27 @@ namespace V8.Net
         /// </summary>
         ~V8NativeObject()
         {
-            if (_ID != null)
+            if (_ID != null) // (if there's no ID, then let the instance die)
+            {
                 lock (Engine._Objects)
                 {
                     Engine._Objects[_ID.Value].DoFinalize(this); // (will re-register this object for finalization)
                     // (the native GC has not reported we can remove this yet, so just flag the collection attempt [note: if 'Engine._Objects[_ID.Value].CanCollect' is true here, then finalize will succeed])
                 }
+            }
 
+            if (!((IFinalizable)this).CanFinalize)
+                lock (_Engine._ObjectsToFinalize)
+                {
+                    _Engine._ObjectsToFinalize.Add(this);
+                    GC.ReRegisterForFinalize(this);
+                }
+        }
+
+        bool IFinalizable.CanFinalize { get { return _ID == null; } set { } }
+
+        void IFinalizable.DoFinalize()
+        {
             if (_Handle.IsWeakHandle) // (a handle is weak when there is only one reference [itself], which means this object is ready for the worker)
                 _TryDisposeNativeHandle();
         }
@@ -248,12 +262,6 @@ namespace V8.Net
             if (IsManagedObjectWeak && (_Handle.IsEmpty || _Handle.IsWeakHandle && !_Handle.IsInPendingDisposalQueue))
             {
                 _Handle.IsInPendingDisposalQueue = true; // (this also helps to make sure this method isn't called again)
-
-                /*//??if ((Template == null || !(this is V8ManagedObject) && !(this is V8Function)) && !Engine._HasAccessors(_ID.Value)) // ('V8NativeObject' type objects don't have callbacks, but they might have accessors!)
-                    _OnNativeGCRequested();
-                else if (Template is ObjectTemplate && !((ObjectTemplate)Template).PropertyInterceptorsRegistered) // (no callback will occur if there are no interceptors, so just delete the entry now)
-                    _OnNativeGCRequested();
-                else*/
 
                 lock (_Engine._WeakObjects)
                 {
@@ -291,7 +299,10 @@ namespace V8.Net
 
                 if (_ID != null)
                     _Engine._RemoveObjectWeakReference(_ID.Value);
+
                 _Handle.ObjectID = -1;
+
+                _ID = null;
             }
 
             return true; // ("true" means to "continue disposal of native handle" [if not already empty])

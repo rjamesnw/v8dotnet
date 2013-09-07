@@ -24,7 +24,7 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe class FunctionTemplate : TemplateBase<IV8Function>
+    public unsafe class FunctionTemplate : TemplateBase<IV8Function>, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -59,12 +59,22 @@ namespace V8.Net
 
         ~FunctionTemplate()
         {
-            if (((ITemplateInternal)this)._ReferenceCount > 0
-                || _Engine.GetObjects(this).Length > 0
-                || _Engine.GetObjects(PrototypeTemplate).Length > 0
-                || _Engine.GetObjects(InstanceTemplate).Length > 0)
-                GC.ReRegisterForFinalize(this);
-            else
+            if (!((IFinalizable)this).CanFinalize)
+                lock (_Engine._ObjectsToFinalize)
+                {
+                    _Engine._ObjectsToFinalize.Add(this);
+                    GC.ReRegisterForFinalize(this);
+                }
+        }
+
+        bool IFinalizable.CanFinalize { get; set; }
+
+        void IFinalizable.DoFinalize()
+        {
+            if (((ITemplateInternal)this)._ReferenceCount == 0
+                && _Engine.GetObjects(this).Length == 0
+                && _Engine.GetObjects(PrototypeTemplate).Length == 0
+                && _Engine.GetObjects(InstanceTemplate).Length == 0)
                 Dispose();
         }
 
@@ -81,6 +91,7 @@ namespace V8.Net
                 InstanceTemplate = null;
             }
 
+            ((IFinalizable)this).CanFinalize = true;
         }
 
         internal void _Initialize(V8Engine v8EngineProxy, string className)
@@ -155,14 +166,14 @@ namespace V8.Net
                         if (funcID >= 0)
                         {
                             weakRef = _Engine._GetObjectWeakReference(funcID);
-                            func = weakRef != null ? weakRef.Object as V8Function : null;
+                            func = weakRef != null ? (V8Function)weakRef.Object : null;
                             if (func != null && func.Callback != null)
                             {
                                 result = func.Callback(_Engine, isConstructCall, hThis, _args);
 
                                 if (!result.IsEmpty) break;
                             }
-                            else _FunctionsByType.Remove(callbackTypes[i]); // (was GC'd, or in the process, so remove it!)
+                            //??else return _Engine.CreateError(String.Format("FunctionTemplate._CallBack(): The function object '{0}' for ID {1} no longer exists.", callbackTypes[i].Name, funcID), JSValueType.ExecutionError); //??_FunctionsByType.Remove(callbackTypes[i]); // (was GC'd, or in the process, so remove it!)
                         }
                     }
                 }

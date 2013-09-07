@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace V8.Net
 {
@@ -34,10 +35,13 @@ namespace V8.Net
         /// <summary>
         /// Returns a reference to the object wrapped by this instance.
         /// This is a weak reference at first, but will return the strong reference when the object is being finalized.
+        /// <para>Note: The finalizer clears all weak references before running finalizers on all the objects, which means it's possible that main thread
+        /// code may attempt to read this property, which would end up being 'null'.  However, this would be invalid, due to the fact 'DoFinalize()' hasn't been
+        /// called yet.  To prevent this, this property is blocking if the target is set to null by the finalizer, until the finalizer triggers a call to
+        /// 'DoFinalize()'.  As such, this property never returns 'null'.</para>
         /// </summary>
-        public T Object { get { return (T)_ObjectRef.Target ?? NearDeathReference; } }
+        public T Object { get { T o; while ((o = (T)_ObjectRef.Target ?? NearDeathReference) == null) Thread.Sleep(0); return o; } }
 
-        T _Object { get { return (T)_ObjectRef.Target; } }
         WeakReference _ObjectRef;
 
         /// <summary>
@@ -69,14 +73,14 @@ namespace V8.Net
         /// </summary>
         public T Reset()
         {
+            var obj = Object; // (this is read first to cause blocking if the finalizer is working on the target object)
             if (_IsGCReady && NearDeathReference != null)
             {
-                var obj = NearDeathReference;
+                obj = NearDeathReference;
                 SetTarget(obj);
-                NearDeathReference = null; return obj;
+                NearDeathReference = null;
             }
-            else
-                return _Object;
+            return obj;
         }
     }
 }

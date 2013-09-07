@@ -116,6 +116,8 @@ namespace V8.Net
                 if ((Int32)hp->ID != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "ID", ofs, data, (byte*)&hp->ID);
                 ofs = (byte)((int)&hp->_ObjectID - (int)hp);
                 if ((Int32)hp->_ObjectID != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "_ObjectID", ofs, data, (byte*)&hp->_ObjectID);
+                ofs = (byte)((int)&hp->_CLRTypeID - (int)hp);
+                if ((Int32)hp->_CLRTypeID != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "_CLRTypeID", ofs, data, (byte*)&hp->_CLRTypeID);
                 ofs = (byte)((int)&hp->_ValueType - (int)hp);
                 if ((Int32)hp->_ValueType != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "_ValueType", ofs, data, (byte*)&hp->_ValueType);
                 // region ### HANDLE VALUE ### - Note: This is only valid upon calling 'UpdateValue()'.

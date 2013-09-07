@@ -202,7 +202,7 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>
+    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -251,11 +251,21 @@ namespace V8.Net
 
         ~ObjectTemplate()
         {
-            if (((ITemplateInternal)this)._ReferenceCount > 0
-                || _Engine.GetObjects(this).Length > 0
-                || Parent != null && _Engine.GetObjects(Parent).Length > 0)
-                GC.ReRegisterForFinalize(this);
-            else
+            if (!((IFinalizable)this).CanFinalize)
+                lock (_Engine._ObjectsToFinalize)
+                {
+                    _Engine._ObjectsToFinalize.Add(this);
+                    GC.ReRegisterForFinalize(this);
+                }
+        }
+
+        bool IFinalizable.CanFinalize { get; set; }
+
+        void IFinalizable.DoFinalize()
+        {
+            if (((ITemplateInternal)this)._ReferenceCount == 0
+            && _Engine.GetObjects(this).Length == 0
+            && Parent != null && _Engine.GetObjects(Parent).Length == 0)
                 Dispose();
         }
 
@@ -268,6 +278,8 @@ namespace V8.Net
                 V8NetProxy.DeleteObjectTemplateProxy(_NativeObjectTemplateProxy); // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
                 _NativeObjectTemplateProxy = null;
             }
+
+            ((IFinalizable)this).CanFinalize = true;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

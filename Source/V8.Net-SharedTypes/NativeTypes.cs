@@ -50,7 +50,7 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 64)]
+    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 68)]
     public unsafe struct HandleProxy
     {
         // --------------------------------------------------------------------------------------------------------------------
@@ -61,37 +61,40 @@ namespace V8.Net
         
         [FieldOffset(4), MarshalAs(UnmanagedType.I4)]
         public Int32 ID; // The native ID (index) of this handle proxy.
-
+        
         [FieldOffset(8), MarshalAs(UnmanagedType.I4)]
         public Int32 _ObjectID; // If set (>=0), then a managed object is associated with this handle. The default is -1.
 
         [FieldOffset(12), MarshalAs(UnmanagedType.I4)]
+        public Int32 _CLRTypeID; // If set (>=0), then this represents a registered type. The default is -1.
+
+        [FieldOffset(16), MarshalAs(UnmanagedType.I4)]
         public JSValueType _ValueType; // 32-bit value type, which is the type this handle represents.  This is not provided by default until 'GetType()' is called.
 
         #region ### HANDLE VALUE ### - Note: This is only valid upon calling 'UpdateValue()'.
-        [FieldOffset(16), MarshalAs(UnmanagedType.I1)]
+        [FieldOffset(20), MarshalAs(UnmanagedType.I1)]
         public Byte V8Boolean;
-        [FieldOffset(16), MarshalAs(UnmanagedType.I8)]
+        [FieldOffset(20), MarshalAs(UnmanagedType.I8)]
         public Int64 V8Integer; // (JavaScript only supports 32-bit integers, but this is needed to keep the expected marshalling size of the native union)
-        [FieldOffset(16)]
+        [FieldOffset(20)]
         public double V8Number; // (also used with Date milliseconds since epoch [Jan 1, 1970  00:00:00])
-        [FieldOffset(24)]
+        [FieldOffset(28)]
         public void* V8String; // (for strings and objects, this is the ToString() value [Unicode characters (2 bytes each)])
         #endregion
 
-        [FieldOffset(32), MarshalAs(UnmanagedType.I8)]
+        [FieldOffset(36), MarshalAs(UnmanagedType.I8)]
         public Int64 ManagedReferenceCount; // The number of references on the managed side.
 
-        [FieldOffset(40), MarshalAs(UnmanagedType.I4)]
+        [FieldOffset(44), MarshalAs(UnmanagedType.I4)]
         public Int32 Disposed; // (0 = in use, 1 = managed side ready to dispose, 2 = object is weak (if applicable), 3 = disposed/cached)
 
-        [FieldOffset(44), MarshalAs(UnmanagedType.I4)]
+        [FieldOffset(48), MarshalAs(UnmanagedType.I4)]
         public Int32 EngineID;
 
-        [FieldOffset(48)]
+        [FieldOffset(52)]
         public void* NativeEngineProxy; // Pointer to the native V8 engine proxy object associated with this proxy handle instance (used native side to free the handle upon destruction).
 
-        [FieldOffset(56)]
+        [FieldOffset(60)]
         public void* NativeV8Handle; // The native V8 persistent object handle (not used on the managed side).
 
         // --------------------------------------------------------------------------------------------------------------------

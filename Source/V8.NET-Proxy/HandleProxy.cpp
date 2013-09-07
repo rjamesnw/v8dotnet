@@ -7,7 +7,7 @@ Handle<Value> HandleProxy::Handle() { return _Handle; }
 // ------------------------------------------------------------------------------------------------------------------------
 
 HandleProxy::HandleProxy(V8EngineProxy* engineProxy, int32_t id)
-    : ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReferenceCount(0), _ObjectID(-1), __EngineProxy(0)
+    : ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReferenceCount(0), _ObjectID(-1), _CLRTypeID(-1), __EngineProxy(0)
 {
     _EngineProxy = engineProxy;
     _EngineID = _EngineProxy->_EngineID;
@@ -208,6 +208,22 @@ int32_t HandleProxy::GetManagedObjectID()
 
             if (_ObjectID == -1)
                 _ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // (must return something to associate accessor delegates, etc.)
+
+            // ... detect if this is a special "type" object ...
+
+            if (_ObjectID < -2)
+            {
+                // ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
+                auto hTypeID = obj->Get(String::New("$__TypeID"));
+                if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
+                {
+                    int32_t typeID = hTypeID->Int32Value();
+                    if (obj->Has(String::New("$__Value")))
+                    {
+                        _CLRTypeID = typeID;
+                    }
+                }
+            }
         }
     }
     return _ObjectID;

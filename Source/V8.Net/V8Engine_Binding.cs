@@ -382,8 +382,7 @@ namespace V8.Net
             /// <summary>
             /// Returns true if the information was taken from a native TypeInfo object.
             /// </summary>
-            public bool IsSourceFromTypeInfo { get { return _IsSourceFromTypeInfo; } }
-            bool _IsSourceFromTypeInfo;
+            public bool IsSourceFromTypeInfoObject { get { return TypeInfoSource.CLRTypeID >= 0; } }
 
             public object As(Type newtype) { return Types.ChangeType(Value, newtype); }
 
@@ -417,41 +416,30 @@ namespace V8.Net
                 TypeInfoSource = handle;
                 ExpectedParameter = paramInfo;
                 ExpectedType = expectedType ?? (paramInfo != null ? paramInfo.ParameterType : null);
-                _IsSourceFromTypeInfo = false;
                 Type = null;
                 TypeID = -1;
                 Value = null;
                 ValueSource = InternalHandle.Empty;
                 Error = null;
 
-                if (handle.IsBinder) // (type binders are supported for generic method parameters and types [so no need to invoke them as functions to get a strong type!])
+                if (handle.CLRTypeID >= 0) // (must be an object type with ID <= -2)
                 {
-                    ValueSource = TypeInfoSource;
-                    Value = ValueSource.Value;
-                    Type = ValueSource.TypeBinder.BoundType;
-                }
-                else if (handle.IsObjectType && handle.ObjectID <= -2) // (must be an object type with ID <= -2)
-                {
-                    // ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
+                    TypeID = handle.CLRTypeID;
 
-                    InternalHandle hProp = handle.GetProperty("$__TypeID");
-                    if (hProp.IsInt32) { TypeID = hProp.AsInt32; _IsSourceFromTypeInfo = true; } else TypeID = -1;
-
-                    if (TypeID >= 0)
-                        ValueSource = handle.GetProperty("$__Value");
-                    else
-                        ValueSource = TypeInfoSource;
+                    ValueSource = handle.GetProperty("$__Value");
 
                     Value = ValueSource.IsUndefined ? null : ValueSource.Value;
 
                     // (type is set last, as it is used as the flag to determine if the info is valid)
                     Type = TypeID >= 0 ? handle.Engine._RegisteredTypes[TypeID] : null; // (this will return 'null' if the index is invalid)
-
                 }
                 else
                 {
                     ValueSource = TypeInfoSource;
                     Value = ValueSource.Value;
+
+                    if (ValueSource.IsBinder) // (type binders are supported for generic method parameters and types [so no need to invoke them as functions to get a strong type!])
+                        Type = ValueSource.TypeBinder.BoundType;
                 }
 
                 OriginalValueType = Value != null ? Value.GetType() : typeof(object);

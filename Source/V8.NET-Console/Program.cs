@@ -267,19 +267,16 @@ namespace V8.Net
                             Console.WriteLine("\r\nTesting garbage collection ... ");
 
                             V8NativeObject tempObj;
-                            int tempObjID = -1;
-                            int tempHandleID;
                             InternalHandle internalHandle = InternalHandle.Empty;
+                            int i;
 
                             _JSServer.WithContextScope = () =>
                             {
                                 Console.WriteLine("Setting 'this.tempObj' to a new managed object ...");
 
                                 tempObj = _JSServer.CreateObject<V8NativeObject>();
-                                tempObjID = tempObj.ID;
                                 internalHandle = tempObj.Handle;
                                 Handle testHandle = internalHandle;
-                                tempHandleID = testHandle.ID;
                                 _JSServer.DynamicGlobalObject.tempObj = tempObj;
 
                                 // ... because we have a strong reference to the handle, the managed and native objects are safe; however,
@@ -296,6 +293,9 @@ namespace V8.Net
                             // (we wait for the 'testHandle' handle object to be collected, which will dispose the handle)
                             // (note: we do not call 'Set()' on 'internalHandle' because the "Handle" type takes care of the disposal)
 
+                            for (i = 0; i < 3000 && internalHandle.ReferenceCount > 1; i++)
+                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
+                            
                             if (internalHandle.ReferenceCount > 1)
                                 throw new Exception("Handle is still not ready for GC ... something is wrong.");
 
@@ -316,12 +316,17 @@ namespace V8.Net
                             GC.WaitForPendingFinalizers();
 
                             Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
-                            while (!internalHandle.IsNativelyWeak)
+
+                            for (i = 0; i < 6000 && !internalHandle.IsNativelyWeak; i++)
                                 System.Threading.Thread.Sleep(1);
+
+                            if (!internalHandle.IsNativelyWeak)
+                                throw new Exception("Object is not weak yet ... something is wrong.");
+
 
                             Console.WriteLine("Forcing V8 garbage collection ... ");
                             _JSServer.WithContextScope = () => { _JSServer.DynamicGlobalObject.tempObj = null; };
-                            for (var i = 0; i < 20 && !internalHandle.IsDisposed; i++)
+                            for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
                             {
                                 _JSServer.WithContextScope = _JSServer.ForceV8GarbageCollection;
                                 System.Threading.Thread.Sleep(1);
