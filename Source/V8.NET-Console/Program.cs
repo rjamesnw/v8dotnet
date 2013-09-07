@@ -47,6 +47,9 @@ namespace V8.Net
                 _JSServer.WithContextScope = () =>
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
+                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
+
                     _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Type), "Type", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Object), "CLRObject", true, V8PropertyAttributes.Locked);
@@ -62,13 +65,10 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(UInt64), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Array), "CLRArray", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Enumerable), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(System.IO.File), null, true, V8PropertyAttributes.Locked);
 
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), null, true, V8PropertyAttributes.Locked);
-
-                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"), null, true, V8PropertyAttributes.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
                     _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"

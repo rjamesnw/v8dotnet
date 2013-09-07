@@ -357,16 +357,16 @@ namespace V8.Net
 
         /// <summary>
         /// Wraps a script value with strong CLR type information for use with generics and method invocation.
+        /// <para>Warning: The TypeInfo struct only extracts information, and does not own the 'TypeInfoSource' handle. As such, the caller is still responsible to release it.</para>
         /// </summary>
         public unsafe struct TypeInfo
         {
-            public readonly InternalHandle TypeInfoSource;
+            public readonly InternalHandle TypeInfoSource; // (note: will not be released by this struct [nor can it be])
 
             public readonly Type Type;
             public readonly Int32 TypeID;
 
             public readonly object Value;
-            public readonly InternalHandle ValueSource;
             public readonly Type OriginalValueType;
 
             /// <summary>
@@ -377,7 +377,7 @@ namespace V8.Net
             /// <summary>
             /// Returns true if a valid value exists.  If false is returned, this usually means this is a type-only TypeInfo object.
             /// </summary>
-            public bool HasValue { get { return !ValueSource.IsUndefined; } }
+            public readonly bool HasValue;
 
             /// <summary>
             /// Returns true if the information was taken from a native TypeInfo object.
@@ -403,7 +403,7 @@ namespace V8.Net
                 get
                 {
                     if (Error != null) throw Error; // (error was not dealt with yet!)
-                    if ((ValueSource.IsEmpty || ValueSource.IsUndefined) && HasDefaultValue) return DefaultValue;
+                    if (!HasValue && HasDefaultValue) return DefaultValue;
                     return Value;
                 }
             }
@@ -419,27 +419,28 @@ namespace V8.Net
                 Type = null;
                 TypeID = -1;
                 Value = null;
-                ValueSource = InternalHandle.Empty;
                 Error = null;
 
                 if (handle.CLRTypeID >= 0) // (must be an object type with ID <= -2)
                 {
                     TypeID = handle.CLRTypeID;
 
-                    ValueSource = handle.GetProperty("$__Value");
-
-                    Value = ValueSource.IsUndefined ? null : ValueSource.Value;
+                    using (var hValue = handle.GetProperty("$__Value"))
+                    {
+                        HasValue = !hValue.IsUndefined;
+                        Value = HasValue ? hValue.Value : null;
+                    }
 
                     // (type is set last, as it is used as the flag to determine if the info is valid)
                     Type = TypeID >= 0 ? handle.Engine._RegisteredTypes[TypeID] : null; // (this will return 'null' if the index is invalid)
                 }
                 else
                 {
-                    ValueSource = TypeInfoSource;
-                    Value = ValueSource.Value;
+                    HasValue = !TypeInfoSource.IsUndefined;
+                    Value = HasValue ? TypeInfoSource.Value : null;
 
-                    if (ValueSource.IsBinder) // (type binders are supported for generic method parameters and types [so no need to invoke them as functions to get a strong type!])
-                        Type = ValueSource.TypeBinder.BoundType;
+                    if (TypeInfoSource.IsBinder) // (type binders are supported for generic method parameters and types [so no need to invoke them as functions to get a strong type!])
+                        Type = TypeInfoSource.TypeBinder.BoundType;
                 }
 
                 OriginalValueType = Value != null ? Value.GetType() : typeof(object);
@@ -562,6 +563,8 @@ namespace V8.Net
             Engine._Binders[type] = this;
 
             InstanceTemplate = Engine.CreateObjectTemplate<ObjectTemplate>(false);
+            InstanceTemplate.RegisterNamedPropertyInterceptors();
+
             TypeTemplate = Engine.CreateFunctionTemplate<FunctionTemplate>(ClassName);
 
             _BindInstanceMembers();
@@ -1472,7 +1475,7 @@ namespace V8.Net
             var memberDetails = TypeBinder._Members.Get(propertyName);
             if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
             {
-                if (!memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
+                if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
 
                 switch (memberDetails.MemberType)
                 {
@@ -1488,8 +1491,7 @@ namespace V8.Net
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
-                            getter.Invoke(_Handle, propertyName);
-                            break;
+                            return getter.Invoke(_Handle, propertyName);
                         }
                     case MemberTypes.Property:
                         {
@@ -1504,8 +1506,7 @@ namespace V8.Net
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
-                            getter.Invoke(_Handle, propertyName);
-                            break;
+                            return getter.Invoke(_Handle, propertyName);
                         }
                     case MemberTypes.Method:
                         {
@@ -1527,7 +1528,7 @@ namespace V8.Net
             var memberDetails = TypeBinder._Members.Get(propertyName);
             if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
             {
-                if (!memberDetails.ValueOverride.IsUndefined)
+                if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsUndefined)
                 {
                     memberDetails.ValueOverride.Set(value);
                     if (!memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
@@ -1549,7 +1550,7 @@ namespace V8.Net
                                     memberDetails.Getter = getter;
                                     memberDetails.Setter = setter;
                                 }
-                                setter.Invoke(_Handle, propertyName, value);
+                                return setter.Invoke(_Handle, propertyName, value);
                             }
                             break;
                         }
@@ -1566,8 +1567,7 @@ namespace V8.Net
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
-                            setter.Invoke(_Handle, propertyName, value);
-                            break;
+                            return setter.Invoke(_Handle, propertyName, value);
                         }
                     case MemberTypes.Method:
                         {
@@ -1671,14 +1671,22 @@ namespace V8.Net
         /// <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object is bound, only the object instance itself is bound (and not any reference members). If true, then nested object references are included.</param>
         /// <param name="defaultMemberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public TypeBinder RegisterType(Type type, string className = null, bool recursive = false, V8PropertyAttributes defaultMemberAttributes = V8PropertyAttributes.Undefined)
+        public TypeBinder RegisterType(Type type, string className = null, bool? recursive = null, V8PropertyAttributes defaultMemberAttributes = V8PropertyAttributes.Undefined)
         {
             TypeBinder binder = null;
             lock (_Binders) { _Binders.TryGetValue(type, out binder); }
-            if (binder != null && binder._Recursive == recursive && binder._DefaultMemberAttributes == defaultMemberAttributes)
+            if (binder != null)
+            {
+                if (recursive != null)
+                    binder._Recursive = recursive.Value;
+
+                if (defaultMemberAttributes != V8PropertyAttributes.Undefined)
+                    binder._DefaultMemberAttributes = defaultMemberAttributes;
+
                 return binder;
+            }
             else
-                return new TypeBinder(this, type, className, recursive, defaultMemberAttributes);
+                return new TypeBinder(this, type, className, recursive ?? false, defaultMemberAttributes);
         }
 
         //public TypeBinder RenameTypeMember(string newName, MemberInfo memberInfo)
@@ -1712,7 +1720,7 @@ namespace V8.Net
         /// <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object is bound, only the object instance itself is bound (and not any reference members). If true, then nested object references are included.</param>
         /// <param name="defaultMemberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public TypeBinder RegisterType<T>(string className = null, bool recursive = false, V8PropertyAttributes defaultMemberAttributes = V8PropertyAttributes.Undefined)
+        public TypeBinder RegisterType<T>(string className = null, bool? recursive = null, V8PropertyAttributes defaultMemberAttributes = V8PropertyAttributes.Undefined)
         { return RegisterType(typeof(T), className, recursive, defaultMemberAttributes); }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1724,9 +1732,9 @@ namespace V8.Net
         /// </summary>
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
-        /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
         /// If true, then nested object references are included.</param>
-        public InternalHandle CreateBinding(Type type, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        public InternalHandle CreateBinding(Type type, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             var typeBinder = RegisterType(type, className, recursive, memberAttributes);
             return typeBinder.TypeFunction;
@@ -1737,9 +1745,10 @@ namespace V8.Net
         /// The type returned is a function that can be used to create the underlying type.
         /// <para>Note: Creating bindings is a much slower process than creating your own function templates.</para>
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
-        /// <param name="recursive">When an object type is instantiate within JavaScript, only the object itself is bound. If true, then nested object based properties are included.</param>
+        /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
+        /// If true, then nested object references are included.</param>
         /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public InternalHandle CreateBinding<T>(string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public InternalHandle CreateBinding<T>(string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             return CreateBinding(typeof(T), className, recursive, memberAttributes);
         }
@@ -1751,9 +1760,10 @@ namespace V8.Net
         /// </summary>
         /// <param name="obj">The object to create a binder for.</param>
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
-        /// <param name="recursive">For object types, if true, then nested objects are included, otherwise only the object itself is bound and returned.</param>
+        /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
+        /// If true, then nested object references are included.</param>
         /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public InternalHandle CreateBinding(object obj, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public InternalHandle CreateBinding(object obj, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             var objType = obj != null ? obj.GetType() : null;
 

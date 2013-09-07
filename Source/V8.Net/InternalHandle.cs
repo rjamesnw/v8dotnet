@@ -863,7 +863,7 @@ namespace V8.Net
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberAttributes">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
-        public bool SetProperty(string name, object obj, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
@@ -874,7 +874,11 @@ namespace V8.Net
                 return SetProperty(name, Engine.CreateValue(obj), memberAttributes);
 
             var nObj = Engine.CreateBinding(obj, className, recursive, memberAttributes);
-            return SetProperty(name, nObj, memberAttributes);
+
+            if (memberAttributes != V8PropertyAttributes.Undefined)
+                return SetProperty(name, nObj, memberAttributes);
+            else
+                return SetProperty(name, nObj);
         }
 
         /// <summary>
@@ -888,12 +892,16 @@ namespace V8.Net
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberAttributes">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(Type type, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
             var func = (V8Function)Engine.CreateBinding(type, className, recursive, memberAttributes).Object;
-            return SetProperty(func.FunctionTemplate.ClassName, func, memberAttributes);
+
+            if (memberAttributes != V8PropertyAttributes.Undefined)
+                return SetProperty(func.FunctionTemplate.ClassName, func, memberAttributes);
+            else
+                return SetProperty(func.FunctionTemplate.ClassName, func);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

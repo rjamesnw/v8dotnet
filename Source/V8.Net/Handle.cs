@@ -631,7 +631,7 @@ namespace V8.Net
         /// <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">For object types, if true, then nested objects are included, otherwise only the object itself is bound and returned.</param>
         /// <param name="memberAttributes">Default flags that describe JavaScript properties for all members that don't have any 'ScriptMember' attribute.  They must be 'OR'd together as needed.</param>
-        bool SetProperty(string name, object obj, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.None);
+        bool SetProperty(string name, object obj, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.None);
 
         /// <summary>
         /// Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
@@ -641,7 +641,7 @@ namespace V8.Net
         /// <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">If true, then nested objects are wrapped as properties are accessed, otherwise only the object itself is bound when created.</param>
         /// <param name="memberAttributes">Default flags that describe JavaScript properties for all members that don't have any 'ScriptMember' attribute.  They must be 'OR'd together as needed.</param>
-        bool SetProperty(Type type, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.None);
+        bool SetProperty(Type type, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.None);
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -780,7 +780,7 @@ namespace V8.Net
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberAttributes">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(string name, object obj, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             return _Handle.SetProperty(name, obj, className, recursive, memberAttributes);
         }
@@ -795,7 +795,7 @@ namespace V8.Net
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberAttributes">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool recursive = false, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(Type type, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
         {
             return _Handle.SetProperty(type, className, recursive, memberAttributes);
         }
@@ -1002,7 +1002,7 @@ namespace V8.Net
                 args[2] = Expression.Constant(null, typeof(string));
                 args[3] = Expression.Constant(true);
                 args[4] = Expression.Constant(V8PropertyAttributes.None);
-                methodInfo = ((Func<string, object, string, bool, V8PropertyAttributes, bool>)_Handle.SetProperty).Method;
+                methodInfo = ((Func<string, object, string, bool?, V8PropertyAttributes, bool>)_Handle.SetProperty).Method;
             }
 
             Expression self = Expression.Convert(Expression, LimitType);
