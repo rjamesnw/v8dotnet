@@ -550,12 +550,8 @@ namespace V8.Net
                 {
                     ClassName = BoundType.Name;
 
-                    if (BoundType.IsGenericType)
-                    {
-                        ClassName = ClassName.Substring(0, ClassName.LastIndexOf('`'));
-                        foreach (var genArgType in BoundType.GetGenericArguments())
-                            ClassName += "_" + genArgType.Name;
-                    }
+                    if (ClassName == "Object" || ClassName == "Function" || ClassName == "Boolean" || ClassName == "String" || ClassName == "RegExp" || ClassName == "Number" || ClassName == "Math" || ClassName == "Array" || ClassName == "Date")
+                        ClassName = "CLR" + ClassName;
                 }
             }
             else ClassName = className;
@@ -1675,7 +1671,7 @@ namespace V8.Net
         {
             TypeBinder binder = null;
             lock (_Binders) { _Binders.TryGetValue(type, out binder); }
-            if (binder != null)
+            if (binder != null && (className == null || className == binder.ClassName)) // (note: if the class name changes, we have no choice but to create a new type binder with new templates)
             {
                 if (recursive != null)
                     binder._Recursive = recursive.Value;

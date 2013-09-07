@@ -47,14 +47,13 @@ namespace V8.Net
                 _JSServer.WithContextScope = () =>
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
-                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
-
-                    _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
+                    var hSystem = _JSServer.CreateObject();
+                    _JSServer.DynamicGlobalObject.System = hSystem;
+                    hSystem.SetProperty(typeof(Object), "Object", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Type), "Type", true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Object), "CLRObject", true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(String), "CLRString", true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Boolean), "CLRBoolean", true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
+                    hSystem.SetProperty(typeof(String), "String", true, V8PropertyAttributes.Locked);
+                    hSystem.SetProperty(typeof(Boolean), "Boolean", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(char), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(int), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Int16), null, true, V8PropertyAttributes.Locked);
@@ -63,9 +62,12 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(UInt16), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(UInt32), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(UInt64), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Array), "CLRArray", true, V8PropertyAttributes.Locked);
+                    hSystem.SetProperty(typeof(Array), "Array", true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(Enumerable), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(System.IO.File), null, true, V8PropertyAttributes.Locked);
+
+                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
 
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, V8PropertyAttributes.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), null, true, V8PropertyAttributes.Locked);
