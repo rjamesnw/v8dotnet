@@ -648,6 +648,7 @@ namespace V8.Net
         {
             try
             {
+                if (IsEmpty) return "empty";
                 if (IsUndefined) return "undefined";
 
                 if (IsBinder)
@@ -868,10 +869,10 @@ namespace V8.Net
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
             if (obj is IV8NativeObject || obj is Handle || obj is InternalHandle)
-                return SetProperty(name, (InternalHandle)obj, (V8PropertyAttributes)memberSecurity);
+                return SetProperty(name, (InternalHandle)obj, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
 
             if (obj == null || obj is string || obj.GetType().IsValueType) // TODO: Check enum support.
-                return SetProperty(name, Engine.CreateValue(obj), (V8PropertyAttributes)memberSecurity);
+                return SetProperty(name, Engine.CreateValue(obj), (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
 
             var nObj = Engine.CreateBinding(obj, className, recursive, memberSecurity);
 
@@ -899,7 +900,7 @@ namespace V8.Net
             var func = (V8Function)Engine.CreateBinding(type, className, recursive, memberSecurity).Object;
 
             if (memberSecurity != null)
-                return SetProperty(func.FunctionTemplate.ClassName, func, (V8PropertyAttributes)memberSecurity);
+                return SetProperty(func.FunctionTemplate.ClassName, func, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
             else
                 return SetProperty(func.FunctionTemplate.ClassName, func);
         }

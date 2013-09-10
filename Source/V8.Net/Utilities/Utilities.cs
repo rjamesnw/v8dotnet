@@ -25,6 +25,19 @@ namespace V8.Net
             else
                 return defaultValue;
         }
+
+        /// <summary>
+        /// '{Type}.IsConstructedGenericType' is only supported in .NET 4.5+, so this is a cross-version supported implementation.
+        /// </summary>
+        public static bool IsConstructedGenericType(this Type type)
+        {
+#if (V1_1 || V2 || V3 || V3_5 || V4)
+            if (!type.IsGenericType) return false;
+            return (from a in type.GetGenericArguments() where a.IsGenericParameter select a).Count() == 0;
+#else
+            return type.IsConstructedGenericType;
+#endif
+        }
     }
 
     // ========================================================================================================================
