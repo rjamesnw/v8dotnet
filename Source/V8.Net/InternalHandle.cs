@@ -407,8 +407,8 @@ namespace V8.Net
                     return BoundObject;
                 else if (CLRTypeID >= 0)
                 {
-                    var typeInfo = new TypeBinder.TypeInfo(this);
-                    return typeInfo.ValueOrDefault; // (this object represents a TypeInfo object, so return its value)
+                    var argInfo = new ArgInfo(this);
+                    return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
                 }
 
                 if (_HandleProxy != null)
@@ -861,22 +861,22 @@ namespace V8.Net
         /// <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-        /// <param name="memberAttributes">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+        /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
-        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
             if (obj is IV8NativeObject || obj is Handle || obj is InternalHandle)
-                return SetProperty(name, (InternalHandle)obj, memberAttributes);
+                return SetProperty(name, (InternalHandle)obj, (V8PropertyAttributes)memberSecurity);
 
             if (obj == null || obj is string || obj.GetType().IsValueType) // TODO: Check enum support.
-                return SetProperty(name, Engine.CreateValue(obj), memberAttributes);
+                return SetProperty(name, Engine.CreateValue(obj), (V8PropertyAttributes)memberSecurity);
 
-            var nObj = Engine.CreateBinding(obj, className, recursive, memberAttributes);
+            var nObj = Engine.CreateBinding(obj, className, recursive, memberSecurity);
 
-            if (memberAttributes != V8PropertyAttributes.Undefined)
-                return SetProperty(name, nObj, memberAttributes);
+            if (memberSecurity != null)
+                return SetProperty(name, nObj, (V8PropertyAttributes)memberSecurity);
             else
                 return SetProperty(name, nObj);
         }
@@ -890,16 +890,16 @@ namespace V8.Net
         /// <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-        /// <param name="memberAttributes">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+        /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public bool SetProperty(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            var func = (V8Function)Engine.CreateBinding(type, className, recursive, memberAttributes).Object;
+            var func = (V8Function)Engine.CreateBinding(type, className, recursive, memberSecurity).Object;
 
-            if (memberAttributes != V8PropertyAttributes.Undefined)
-                return SetProperty(func.FunctionTemplate.ClassName, func, memberAttributes);
+            if (memberSecurity != null)
+                return SetProperty(func.FunctionTemplate.ClassName, func, (V8PropertyAttributes)memberSecurity);
             else
                 return SetProperty(func.FunctionTemplate.ClassName, func);
         }

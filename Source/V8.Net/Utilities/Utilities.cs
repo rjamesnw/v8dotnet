@@ -16,6 +16,15 @@ namespace V8.Net
 #if (V1_1 || V2 || V3 || V3_5)
         public static bool HasFlag(this Enum value, Enum flag) { var f = Convert.ToInt32(flag); return (Convert.ToInt32(value) & f) == f; }
 #endif
+
+        public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
+        {
+            TValue value;
+            if (dictionary.TryGetValue(key, out value))
+                return value;
+            else
+                return defaultValue;
+        }
     }
 
     // ========================================================================================================================

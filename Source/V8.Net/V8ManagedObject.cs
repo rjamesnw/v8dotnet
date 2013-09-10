@@ -229,10 +229,10 @@ namespace V8.Net
                 if (attributes != V8PropertyAttributes.Undefined)
                 {
                     jsVal.Attributes = attributes;
-                    jsVal.Value.Set(value); // (note: updating attributes automatically assumes writable access)
+                    jsVal.Value = value; // (note: updating attributes automatically assumes writable access)
                 }
                 else if ((jsVal.Attributes & V8PropertyAttributes.ReadOnly) == 0)
-                    jsVal.Value.Set(value);
+                    jsVal.Value = value;
             }
 
             return jsVal.Value;

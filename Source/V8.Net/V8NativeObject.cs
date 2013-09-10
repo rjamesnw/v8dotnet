@@ -363,10 +363,10 @@ namespace V8.Net
         /// <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-        /// <param name="attributes">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        /// <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
+        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
-            return _Handle._Handle.SetProperty(name, obj, className, recursive, attributes);
+            return _Handle._Handle.SetProperty(name, obj, className, recursive, memberSecurity);
         }
 
         /// <summary>
@@ -378,10 +378,10 @@ namespace V8.Net
         /// <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-        /// <param name="attributes">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool? recursive = null, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
+        /// <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
+        public bool SetProperty(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
-            return _Handle._Handle.SetProperty(type, className, recursive, attributes);
+            return _Handle._Handle.SetProperty(type, className, recursive, memberSecurity);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

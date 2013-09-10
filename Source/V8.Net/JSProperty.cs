@@ -13,6 +13,7 @@ namespace V8.Net
         /// <summary>
         /// A JavaScript associated value.
         /// Call one of the "Create???()" methods to create/build a required type for the JavaScript value that represents 'Source'.
+        /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
         /// </summary>
         InternalHandle Value { get; set; }
 
@@ -39,6 +40,7 @@ namespace V8.Net
         /// <summary>
         /// A JavaScript associated value.  By default, this returns 'Handle.Empty' (which means 'Value' is 'null' internally).
         /// Call one of the "V8Engine.Create???()" methods to create/build a required type for the JavaScript value that represents 'Source'.
+        /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
         /// </summary>
         InternalHandle IJSProperty.Value { get { return _Value; } set { _Value.Set(value); } }
         InternalHandle _Value;
