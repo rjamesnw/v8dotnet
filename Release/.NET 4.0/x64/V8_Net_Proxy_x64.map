@@ -1,0 +1,1451 @@
+ V8_Net_Proxy_x64
+
+ Timestamp is 522ea9e1 (Tue Sep 10 01:10:57 2013)
+
+ Preferred load address is 0000000180000000
+
+ Start         Length     Name                   Class
+ 0001:00000000 00006eeaH .text                   CODE
+ 0001:00006ef0 000006fcH .text$x                 CODE
+ 0001:000075f0 000000daH .text$yc                CODE
+ 0001:000076d0 00000058H .text$yd                CODE
+ 0002:00000000 00000550H .idata$5                DATA
+ 0002:00000550 00000008H .CRT$XCA                DATA
+ 0002:00000558 00000008H .CRT$XCU                DATA
+ 0002:00000560 00000008H .CRT$XCZ                DATA
+ 0002:00000568 00000008H .CRT$XIA                DATA
+ 0002:00000570 00000008H .CRT$XIAA               DATA
+ 0002:00000578 00000008H .CRT$XIC                DATA
+ 0002:00000580 00000008H .CRT$XIZ                DATA
+ 0002:00000590 000008c0H .rdata                  DATA
+ 0002:00000e50 0000007cH .rdata$debug            DATA
+ 0002:00000ed0 00000074H .rdata$r                DATA
+ 0002:00000f48 00000008H .rtc$IAA                DATA
+ 0002:00000f50 00000008H .rtc$IZZ                DATA
+ 0002:00000f58 00000008H .rtc$TAA                DATA
+ 0002:00000f60 00000008H .rtc$TZZ                DATA
+ 0002:00000f68 00001474H .xdata                  DATA
+ 0002:000023e0 00000054H .xdata$x                DATA
+ 0002:00002434 00000050H .idata$2                DATA
+ 0002:00002484 00000014H .idata$3                DATA
+ 0002:00002498 00000550H .idata$4                DATA
+ 0002:000029e8 0000221cH .idata$6                DATA
+ 0002:00004c10 0000079bH .edata                  DATA
+ 0003:00000000 00000060H .data                   DATA
+ 0003:00000060 00000608H .bss                    DATA
+ 0004:00000000 00000990H .pdata                  DATA
+ 0005:00000000 000000a0H .rsrc$01                DATA
+ 0005:000000a0 00000500H .rsrc$02                DATA
+
+  Address         Publics by Value              Rva+Base               Lib:Object
+
+ 0000:00000000       ___safe_se_handler_count   0000000000000000     <absolute>
+ 0000:00000000       ___safe_se_handler_table   0000000000000000     <absolute>
+ 0000:00000000       __ImageBase                0000000180000000     <linker-defined>
+ 0001:00000000       CreateV8EngineProxy        0000000180001000 f   Exports.obj
+ 0001:00000040       DestroyV8EngineProxy       0000000180001040 f   Exports.obj
+ 0001:00000070       WithV8IsolateScope         0000000180001070 f   Exports.obj
+ 0001:000000f0       WithV8ContextScope         00000001800010f0 f   Exports.obj
+ 0001:00000100       WithHandleScope            0000000180001100 f   Exports.obj
+ 0001:00000160       RegisterGCCallback         0000000180001160 f   Exports.obj
+ 0001:00000170       ForceGC                    0000000180001170 f   Exports.obj
+ 0001:000001a0       DoIdleNotification         00000001800011a0 f   Exports.obj
+ 0001:000001b0       V8Execute                  00000001800011b0 f   Exports.obj
+ 0001:000001c0       CreateObjectTemplateProxy  00000001800011c0 f   Exports.obj
+ 0001:00000200       DeleteObjectTemplateProxy  0000000180001200 f   Exports.obj
+ 0001:00000230       SetGlobalObjectTemplate    0000000180001230 f   Exports.obj
+ 0001:00000240       RegisterNamedPropertyHandlers 0000000180001240 f   Exports.obj
+ 0001:000002b0       RegisterIndexedPropertyHandlers 00000001800012b0 f   Exports.obj
+ 0001:00000320       UnregisterNamedPropertyHandlers 0000000180001320 f   Exports.obj
+ 0001:00000350       UnregisterIndexedPropertyHandlers 0000000180001350 f   Exports.obj
+ 0001:00000380       RegisterInvokeHandler      0000000180001380 f   Exports.obj
+ 0001:000003c0       CreateObjectFromTemplate   00000001800013c0 f   Exports.obj
+ 0001:00000430       ConnectObject              0000000180001430 f   Exports.obj
+ 0001:00000510       GetObjectPrototype         0000000180001510 f   Exports.obj
+ 0001:00000590       Call                       0000000180001590 f   Exports.obj
+ 0001:00000800       SetObjectPropertyByName    0000000180001800 f   Exports.obj
+ 0001:000008e0       SetObjectPropertyByIndex   00000001800018e0 f   Exports.obj
+ 0001:00000980       GetObjectPropertyByName    0000000180001980 f   Exports.obj
+ 0001:00000a30       GetObjectPropertyByIndex   0000000180001a30 f   Exports.obj
+ 0001:00000ac0       DeleteObjectPropertyByName 0000000180001ac0 f   Exports.obj
+ 0001:00000b50       DeleteObjectPropertyByIndex 0000000180001b50 f   Exports.obj
+ 0001:00000bc0       SetObjectAccessor          0000000180001bc0 f   Exports.obj
+ 0001:00000d70       SetObjectTemplateAccessor  0000000180001d70 f   Exports.obj
+ 0001:00000d80       SetObjectTemplateProperty  0000000180001d80 f   Exports.obj
+ 0001:00000df0       GetPropertyNames           0000000180001df0 f   Exports.obj
+ 0001:00000e70       GetOwnPropertyNames        0000000180001e70 f   Exports.obj
+ 0001:00000ef0       GetPropertyAttributes      0000000180001ef0 f   Exports.obj
+ 0001:00000f80       GetArrayLength             0000000180001f80 f   Exports.obj
+ 0001:00000fe0       CreateFunctionTemplateProxy 0000000180001fe0 f   Exports.obj
+ 0001:00001040       DeleteFunctionTemplateProxy 0000000180002040 f   Exports.obj
+ 0001:00001070       GetFunctionInstanceTemplateProxy 0000000180002070 f   Exports.obj
+ 0001:00001080       GetFunctionPrototypeTemplateProxy 0000000180002080 f   Exports.obj
+ 0001:00001090       GetFunction                0000000180002090 f   Exports.obj
+ 0001:000010c0       CreateFunctionInstance     00000001800020c0 f   Exports.obj
+ 0001:000010d0       SetFunctionTemplateProperty 00000001800020d0 f   Exports.obj
+ 0001:00001140       CreateBoolean              0000000180002140 f   Exports.obj
+ 0001:00001190       CreateInteger              0000000180002190 f   Exports.obj
+ 0001:000011c0       CreateNumber               00000001800021c0 f   Exports.obj
+ 0001:000011f0       CreateString               00000001800021f0 f   Exports.obj
+ 0001:00001240       CreateDate                 0000000180002240 f   Exports.obj
+ 0001:00001270       CreateObject               0000000180002270 f   Exports.obj
+ 0001:000012d0       CreateArray                00000001800022d0 f   Exports.obj
+ 0001:000012e0       CreateStringArray          00000001800022e0 f   Exports.obj
+ 0001:000012f0       CreateNullValue            00000001800022f0 f   Exports.obj
+ 0001:00001320       CreateError                0000000180002320 f   Exports.obj
+ 0001:00001330       MakeWeakHandle             0000000180002330 f   Exports.obj
+ 0001:00001370       MakeStrongHandle           0000000180002370 f   Exports.obj
+ 0001:000013a0       DisposeHandleProxy         00000001800023a0 f   Exports.obj
+ 0001:000013b0       UpdateHandleValue          00000001800023b0 f   Exports.obj
+ 0001:000013c0       GetHandleManagedObjectID   00000001800023c0 f   Exports.obj
+ 0001:000013d0       CreateHandleProxyTest      00000001800023d0 f   Exports.obj
+ 0001:00001400       CreateV8EngineProxyTest    0000000180002400 f   Exports.obj
+ 0001:00001430       CreateObjectTemplateProxyTest 0000000180002430 f   Exports.obj
+ 0001:00001460       CreateFunctionTemplateProxyTest 0000000180002460 f   Exports.obj
+ 0001:00001490       DeleteTestData             0000000180002490 f   Exports.obj
+ 0001:00001560       ??1Scope@Context@v8@@QEAA@XZ 0000000180002560 f i FunctionTemplateProxy.obj
+ 0001:00001570       ??0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z 0000000180002570 f   FunctionTemplateProxy.obj
+ 0001:000016c0       ??1FunctionTemplateProxy@@QEAA@XZ 00000001800026c0 f   FunctionTemplateProxy.obj
+ 0001:000017b0       ?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 00000001800027b0 f   FunctionTemplateProxy.obj
+ 0001:00001990       ?CreateInstance@FunctionTemplateProxy@@QEAAPEAUHandleProxy@@HHPEAPEAU2@@Z 0000000180002990 f   FunctionTemplateProxy.obj
+ 0001:00001b20       ?_Dispose@HandleProxy@@IEAA_N_N@Z 0000000180002b20 f   HandleProxy.obj
+ 0001:00001c30       ?SetHandle@HandleProxy@@IEAAPEAU1@V?$Handle@VValue@v8@@@v8@@@Z 0000000180002c30 f   HandleProxy.obj
+ 0001:00001f40       ?GetManagedObjectID@HandleProxy@@QEAAHXZ 0000000180002f40 f   HandleProxy.obj
+ 0001:00002100       ?_RevivableCallback@HandleProxy@@CAXPEAVIsolate@v8@@PEAV?$Persistent@VValue@v8@@@3@PEAU1@@Z 0000000180003100 f   HandleProxy.obj
+ 0001:00002150       ?UpdateValue@HandleProxy@@QEAAXXZ 0000000180003150 f   HandleProxy.obj
+ 0001:00002290       ??1?$lock_guard@Vrecursive_mutex@std@@@std@@QEAA@XZ 0000000180003290 f i HandleProxy.obj
+ 0001:000022c0       ??0ObjectTemplateProxy@@QEAA@PEAVV8EngineProxy@@@Z 00000001800032c0 f   ObjectTemplateProxy.obj
+ 0001:00002360       ??0ObjectTemplateProxy@@QEAA@PEAVV8EngineProxy@@V?$Local@VObjectTemplate@v8@@@v8@@@Z 0000000180003360 f   ObjectTemplateProxy.obj
+ 0001:00002400       ??1ObjectTemplateProxy@@QEAA@XZ 0000000180003400 f   ObjectTemplateProxy.obj
+ 0001:000024e0       ?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 00000001800034e0 f   ObjectTemplateProxy.obj
+ 0001:000026e0       ?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 00000001800036e0 f   ObjectTemplateProxy.obj
+ 0001:000028e0       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 00000001800038e0 f   ObjectTemplateProxy.obj
+ 0001:00002a90       ?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 0000000180003a90 f   ObjectTemplateProxy.obj
+ 0001:00002c60       ?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 0000000180003c60 f   ObjectTemplateProxy.obj
+ 0001:00002e20       ?GetProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 0000000180003e20 f   ObjectTemplateProxy.obj
+ 0001:00002fe0       ?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180003fe0 f   ObjectTemplateProxy.obj
+ 0001:000031b0       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 00000001800041b0 f   ObjectTemplateProxy.obj
+ 0001:00003320       ?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 0000000180004320 f   ObjectTemplateProxy.obj
+ 0001:000034a0       ?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 00000001800044a0 f   ObjectTemplateProxy.obj
+ 0001:00003660       ?AccessorGetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180004660 f   ObjectTemplateProxy.obj
+ 0001:00003810       ?AccessorSetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@X@3@@Z 0000000180004810 f   ObjectTemplateProxy.obj
+ 0001:00003990       ?SetAccessor@ObjectTemplateProxy@@QEAAXHPEBGP6APEAUHandleProxy@@PEAU2@PEAG@ZP6APEAU2@121@ZW4AccessControl@v8@@W4PropertyAttribute@4@@Z 0000000180004990 f   ObjectTemplateProxy.obj
+ 0001:00003aa0       ??3@YAXPEAX0@Z             0000000180004aa0 f i V8EngineProxy.obj
+ 0001:00003aa0       ?_Destroy@?$vector@IV?$allocator@_N@std@@@std@@IEAAXPEAI0@Z 0000000180004aa0 f i V8EngineProxy.obj
+ 0001:00003ab0       ??1_Mutex_base@std@@QEAA@XZ 0000000180004ab0 f i V8EngineProxy.obj
+ 0001:00003ac0       ?IsDisposed@V8EngineProxy@@SA_NH@Z 0000000180004ac0 f   V8EngineProxy.obj
+ 0001:00003b40       ??0V8EngineProxy@@QEAA@_NP6AXXZH@Z 0000000180004b40 f   V8EngineProxy.obj
+ 0001:00003d50       ??1recursive_mutex@std@@QEAA@XZ 0000000180004d50 f i V8EngineProxy.obj
+ 0001:00003d70       ??1V8EngineProxy@@QEAA@XZ  0000000180004d70 f   V8EngineProxy.obj
+ 0001:00004020       ?GetNativeString@V8EngineProxy@@QEAA?AU_StringItem@@PEAVString@v8@@@Z 0000000180005020 f   V8EngineProxy.obj
+ 0001:00004150       ?GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 0000000180005150 f   V8EngineProxy.obj
+ 0001:00004330       ?DisposeHandleProxy@V8EngineProxy@@QEAAXPEAUHandleProxy@@@Z 0000000180005330 f   V8EngineProxy.obj
+ 0001:000043c0       ?SetGlobalObjectTemplate@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAVObjectTemplateProxy@@@Z 00000001800053c0 f   V8EngineProxy.obj
+ 0001:000044e0       ?WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z 00000001800054e0 f   V8EngineProxy.obj
+ 0001:00004580       ?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 0000000180005580 f   V8EngineProxy.obj
+ 0001:00004960       ?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 0000000180005960 f   V8EngineProxy.obj
+ 0001:00004ae0       ?CreateError@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAGW4JSValueType@@@Z 0000000180005ae0 f   V8EngineProxy.obj
+ 0001:00004b70       ?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z 0000000180005b70 f   V8EngineProxy.obj
+ 0001:00004d90       ?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAGG@Z 0000000180005d90 f   V8EngineProxy.obj
+ 0001:00004e40       ?resize@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K_N@Z 0000000180005e40 f i V8EngineProxy.obj
+ 0001:00004fc0       ??1?$vector@IV?$allocator@_N@std@@@std@@QEAA@XZ 0000000180005fc0 f i V8EngineProxy.obj
+ 0001:00004fc0       ??1?$vector@HV?$allocator@H@std@@@std@@QEAA@XZ 0000000180005fc0 f i V8EngineProxy.obj
+ 0001:00004fc0       ??1?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAA@XZ 0000000180005fc0 f i V8EngineProxy.obj
+ 0001:00004fc0       ??1?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAA@XZ 0000000180005fc0 f i V8EngineProxy.obj
+ 0001:00004ff0       ?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z 0000000180005ff0 f i V8EngineProxy.obj
+ 0001:000050c0       ?push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z 00000001800060c0 f i V8EngineProxy.obj
+ 0001:00005150       ?erase@?$vector@_NV?$allocator@_N@std@@@std@@QEAA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@0@Z 0000000180006150 f i V8EngineProxy.obj
+ 0001:000053e0       ?_Insert_n@?$vector@_NV?$allocator@_N@std@@@std@@QEAA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_KAEB_N@Z 00000001800063e0 f i V8EngineProxy.obj
+ 0001:000055a0       ?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K@Z 00000001800065a0 f i V8EngineProxy.obj
+ 0001:00005650       ??1?$_Vb_val@V?$allocator@_N@std@@@std@@QEAA@XZ 0000000180006650 f i V8EngineProxy.obj
+ 0001:000056a0       ?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 00000001800066a0 f i V8EngineProxy.obj
+ 0001:00005730       ?_Reserve@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 0000000180006730 f i V8EngineProxy.obj
+ 0001:00005800       ?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 0000000180006800 f i V8EngineProxy.obj
+ 0001:000058a0       ?_Reserve@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 00000001800068a0 f i V8EngineProxy.obj
+ 0001:00005930       ?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 0000000180006930 f i V8EngineProxy.obj
+ 0001:000059d0       ?_Reserve@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 00000001800069d0 f i V8EngineProxy.obj
+ 0001:00005a60       ?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 0000000180006a60 f i V8EngineProxy.obj
+ 0001:00005cf0       ?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 0000000180006cf0 f i V8EngineProxy.obj
+ 0001:00005dd0       ?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 0000000180006dd0 f i V8EngineProxy.obj
+ 0001:00005ea0       ?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 0000000180006ea0 f i V8EngineProxy.obj
+ 0001:00005f70       ?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 0000000180006f70 f i V8EngineProxy.obj
+ 0001:00006040       ?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 0000000180007040 f i V8EngineProxy.obj
+ 0001:000063a0       ??0?$_Wrap_alloc@V?$allocator@I@std@@@std@@QEAA@XZ 00000001800073a0 f i V8EngineProxy.obj
+ 0001:000063b0       ??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 00000001800073b0 f i V8EngineProxy.obj
+ 0001:00006400       ??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 0000000180007400 f i V8EngineProxy.obj
+ 0001:00006460       ??1HandleValue@@QEAA@XZ    0000000180007460 f   ValueProxy.obj
+ 0001:00006494       ??_U@YAPEAX_K@Z            0000000180007494 f   msvcprt:newaop_s.obj
+ 0001:000064b0       __security_check_cookie    00000001800074b0 f   MSVCRT:amdsecgs.obj
+ 0001:000064d0       ??1exception@std@@UEAA@XZ  00000001800074d0 f   MSVCRT:MSVCR110.dll
+ 0001:000064d6       ??0exception@std@@QEAA@AEBV01@@Z 00000001800074d6 f   MSVCRT:MSVCR110.dll
+ 0001:000064dc       ??3@YAXPEAX@Z              00000001800074dc f   MSVCRT:MSVCR110.dll
+ 0001:000064e4       ??_Etype_info@@UEAAPEAXI@Z 00000001800074e4 f i MSVCRT:ti_inst.obj
+ 0001:0000654e       ??2@YAPEAX_K@Z             000000018000754e f   MSVCRT:MSVCR110.dll
+ 0001:00006554       __atonexitinit             0000000180007554 f   MSVCRT:atonexit.obj
+ 0001:000065a4       _onexit                    00000001800075a4 f   MSVCRT:atonexit.obj
+ 0001:00006654       atexit                     0000000180007654 f   MSVCRT:atonexit.obj
+ 0001:000066cc       _CRT_INIT                  00000001800076cc f   MSVCRT:crtdll.obj
+ 0001:00006918       _DllMainCRTStartup         0000000180007918 f   MSVCRT:crtdll.obj
+ 0001:00006a90       __raise_securityfailure    0000000180007a90 f   MSVCRT:gs_report.obj
+ 0001:00006adc       __report_gsfailure         0000000180007adc f   MSVCRT:gs_report.obj
+ 0001:00006bb0       ??_M@YAXPEAX_KHP6AX0@Z@Z   0000000180007bb0 f   MSVCRT:ehvecdtr.obj
+ 0001:00006c10       ?__ArrayUnwind@@YAXPEAX_KHP6AX0@Z@Z 0000000180007c10 f   MSVCRT:ehvecdtr.obj
+ 0001:00006c5a       _lock                      0000000180007c5a f   MSVCRT:MSVCR110.dll
+ 0001:00006c60       _unlock                    0000000180007c60 f   MSVCRT:MSVCR110.dll
+ 0001:00006c66       __dllonexit                0000000180007c66 f   MSVCRT:MSVCR110.dll
+ 0001:00006c6c       __C_specific_handler       0000000180007c6c f   MSVCRT:MSVCR110.dll
+ 0001:00006c72       __CppXcptFilter            0000000180007c72 f   MSVCRT:MSVCR110.dll
+ 0001:00006c78       _amsg_exit                 0000000180007c78 f   MSVCRT:MSVCR110.dll
+ 0001:00006c80       _FindPESection             0000000180007c80 f   MSVCRT:pesect.obj
+ 0001:00006cd0       _IsNonwritableInCurrentImage 0000000180007cd0 f   MSVCRT:pesect.obj
+ 0001:00006d20       _ValidateImageBase         0000000180007d20 f   MSVCRT:pesect.obj
+ 0001:00006d50       __security_init_cookie     0000000180007d50 f   MSVCRT:gs_support.obj
+ 0001:00006dfc       DllMain                    0000000180007dfc f   MSVCRT:dllmain.obj
+ 0001:00006e20       _RTC_Initialize            0000000180007e20 f   MSVCRT:initsect.obj
+ 0001:00006e58       _RTC_Terminate             0000000180007e58 f   MSVCRT:initsect.obj
+ 0001:00006e90       _initterm                  0000000180007e90 f   MSVCRT:MSVCR110.dll
+ 0001:00006e96       _initterm_e                0000000180007e96 f   MSVCRT:MSVCR110.dll
+ 0001:00006e9c       __clean_type_info_names    0000000180007e9c f   MSVCRT:tncleanup.obj
+ 0001:00006ea8       __crt_debugger_hook        0000000180007ea8 f   MSVCRT:MSVCR110.dll
+ 0001:00006eae       __crtUnhandledException    0000000180007eae f   MSVCRT:MSVCR110.dll
+ 0001:00006eb4       __crtTerminateProcess      0000000180007eb4 f   MSVCRT:MSVCR110.dll
+ 0001:00006eba       __crtCapturePreviousContext 0000000180007eba f   MSVCRT:MSVCR110.dll
+ 0001:00006ec0       ?terminate@@YAXXZ          0000000180007ec0 f   MSVCRT:MSVCR110.dll
+ 0001:00006ec6       ?_type_info_dtor_internal_method@type_info@@QEAAXXZ 0000000180007ec6 f   MSVCRT:MSVCR110.dll
+ 0001:00006ec6       ??1type_info@@UEAA@XZ      0000000180007ec6 f   MSVCRT:MSVCR110.dll
+ 0001:00006ecc       __clean_type_info_names_internal 0000000180007ecc f   MSVCRT:MSVCR110.dll
+ 0001:00006ed2       IsProcessorFeaturePresent  0000000180007ed2 f   kernel32:KERNEL32.dll
+ 0001:00006ed8       _CxxThrowException         0000000180007ed8 f   MSVCRT:MSVCR110.dll
+ 0001:00006ede       __CxxFrameHandler3         0000000180007ede f   MSVCRT:MSVCR110.dll
+ 0001:00006ee4       memset                     0000000180007ee4 f   MSVCRT:MSVCR110.dll
+ 0002:00000000       __imp_GlobalAlloc          0000000180009000     kernel32:KERNEL32.dll
+ 0002:00000008       __imp_GlobalReAlloc        0000000180009008     kernel32:KERNEL32.dll
+ 0002:00000010       __imp_DisableThreadLibraryCalls 0000000180009010     kernel32:KERNEL32.dll
+ 0002:00000018       __imp_GetSystemTimeAsFileTime 0000000180009018     kernel32:KERNEL32.dll
+ 0002:00000020       __imp_GetCurrentThreadId   0000000180009020     kernel32:KERNEL32.dll
+ 0002:00000028       __imp_GetCurrentProcessId  0000000180009028     kernel32:KERNEL32.dll
+ 0002:00000030       __imp_QueryPerformanceCounter 0000000180009030     kernel32:KERNEL32.dll
+ 0002:00000038       __imp_IsProcessorFeaturePresent 0000000180009038     kernel32:KERNEL32.dll
+ 0002:00000040       __imp_IsDebuggerPresent    0000000180009040     kernel32:KERNEL32.dll
+ 0002:00000048       __imp_DecodePointer        0000000180009048     kernel32:KERNEL32.dll
+ 0002:00000050       __imp_EncodePointer        0000000180009050     kernel32:KERNEL32.dll
+ 0002:00000058       __imp_GlobalFree           0000000180009058     kernel32:KERNEL32.dll
+ 0002:00000060       \177KERNEL32_NULL_THUNK_DATA 0000000180009060     kernel32:KERNEL32.dll
+ 0002:00000068       __imp_?_Throw_C_error@std@@YAXH@Z 0000000180009068     msvcprt:MSVCP110.dll
+ 0002:00000070       __imp__Mtx_lock            0000000180009070     msvcprt:MSVCP110.dll
+ 0002:00000078       __imp_?_Xbad_alloc@std@@YAXXZ 0000000180009078     msvcprt:MSVCP110.dll
+ 0002:00000080       __imp_?_Xout_of_range@std@@YAXPEBD@Z 0000000180009080     msvcprt:MSVCP110.dll
+ 0002:00000088       __imp_?_Xlength_error@std@@YAXPEBD@Z 0000000180009088     msvcprt:MSVCP110.dll
+ 0002:00000090       __imp__Mtx_destroy         0000000180009090     msvcprt:MSVCP110.dll
+ 0002:00000098       __imp__Mtx_init            0000000180009098     msvcprt:MSVCP110.dll
+ 0002:000000a0       __imp__Mtx_unlock          00000001800090a0     msvcprt:MSVCP110.dll
+ 0002:000000a8       \177MSVCP110_NULL_THUNK_DATA 00000001800090a8     msvcprt:MSVCP110.dll
+ 0002:000000b0       __imp_free                 00000001800090b0     MSVCRT:MSVCR110.dll
+ 0002:000000b8       __imp__amsg_exit           00000001800090b8     MSVCRT:MSVCR110.dll
+ 0002:000000c0       __imp___CppXcptFilter      00000001800090c0     MSVCRT:MSVCR110.dll
+ 0002:000000c8       __imp_?_type_info_dtor_internal_method@type_info@@QEAAXXZ 00000001800090c8     MSVCRT:MSVCR110.dll
+ 0002:000000d0       __imp___C_specific_handler 00000001800090d0     MSVCRT:MSVCR110.dll
+ 0002:000000d8       __imp___dllonexit          00000001800090d8     MSVCRT:MSVCR110.dll
+ 0002:000000e0       __imp__calloc_crt          00000001800090e0     MSVCRT:MSVCR110.dll
+ 0002:000000e8       __imp__unlock              00000001800090e8     MSVCRT:MSVCR110.dll
+ 0002:000000f0       __imp__malloc_crt          00000001800090f0     MSVCRT:MSVCR110.dll
+ 0002:000000f8       __imp_memmove              00000001800090f8     MSVCRT:MSVCR110.dll
+ 0002:00000100       __imp_?what@exception@std@@UEBAPEBDXZ 0000000180009100     MSVCRT:MSVCR110.dll
+ 0002:00000108       __imp_??2@YAPEAX_K@Z       0000000180009108     MSVCRT:MSVCR110.dll
+ 0002:00000110       __imp_??3@YAXPEAX@Z        0000000180009110     MSVCRT:MSVCR110.dll
+ 0002:00000118       __imp_??_V@YAXPEAX@Z       0000000180009118     MSVCRT:MSVCR110.dll
+ 0002:00000120       __imp_??0exception@std@@QEAA@AEBV01@@Z 0000000180009120     MSVCRT:MSVCR110.dll
+ 0002:00000128       __imp_??0exception@std@@QEAA@AEBQEBD@Z 0000000180009128     MSVCRT:MSVCR110.dll
+ 0002:00000130       __imp_??1exception@std@@UEAA@XZ 0000000180009130     MSVCRT:MSVCR110.dll
+ 0002:00000138       __imp__initterm            0000000180009138     MSVCRT:MSVCR110.dll
+ 0002:00000140       __imp__initterm_e          0000000180009140     MSVCRT:MSVCR110.dll
+ 0002:00000148       __imp___crt_debugger_hook  0000000180009148     MSVCRT:MSVCR110.dll
+ 0002:00000150       __imp___crtUnhandledException 0000000180009150     MSVCRT:MSVCR110.dll
+ 0002:00000158       __imp___crtTerminateProcess 0000000180009158     MSVCRT:MSVCR110.dll
+ 0002:00000160       __imp___crtCapturePreviousContext 0000000180009160     MSVCRT:MSVCR110.dll
+ 0002:00000168       __imp__lock                0000000180009168     MSVCRT:MSVCR110.dll
+ 0002:00000170       __imp_?terminate@@YAXXZ    0000000180009170     MSVCRT:MSVCR110.dll
+ 0002:00000178       __imp___clean_type_info_names_internal 0000000180009178     MSVCRT:MSVCR110.dll
+ 0002:00000180       __imp__CxxThrowException   0000000180009180     MSVCRT:MSVCR110.dll
+ 0002:00000188       __imp__onexit              0000000180009188     MSVCRT:MSVCR110.dll
+ 0002:00000190       __imp_memset               0000000180009190     MSVCRT:MSVCR110.dll
+ 0002:00000198       __imp___CxxFrameHandler3   0000000180009198     MSVCRT:MSVCR110.dll
+ 0002:000001a0       \177MSVCR110_NULL_THUNK_DATA 00000001800091a0     MSVCRT:MSVCR110.dll
+ 0002:000001a8       __imp_?Set@Template@v8@@QEAAXV?$Handle@VString@v8@@@2@V?$Handle@VData@v8@@@2@W4PropertyAttribute@2@@Z 00000001800091a8     v8-x64:v8-x64.dll
+ 0002:000001b0       __imp_?NewInstance@Function@v8@@QEBA?AV?$Local@VObject@v8@@@2@HQEAV?$Handle@VValue@v8@@@2@@Z 00000001800091b0     v8-x64:v8-x64.dll
+ 0002:000001b8       __imp_?Value@External@v8@@QEBAPEAXXZ 00000001800091b8     v8-x64:v8-x64.dll
+ 0002:000001c0       __imp_?ThrowException@v8@@YA?AV?$Handle@VValue@v8@@@1@V21@@Z 00000001800091c0     v8-x64:v8-x64.dll
+ 0002:000001c8       __imp_??1Scope@Isolate@v8@@QEAA@XZ 00000001800091c8     v8-x64:v8-x64.dll
+ 0002:000001d0       __imp_??0Scope@Isolate@v8@@QEAA@PEAV12@@Z 00000001800091d0     v8-x64:v8-x64.dll
+ 0002:000001d8       __imp_?ClearWeak@V8@v8@@CAXPEAPEAVObject@internal@2@@Z 00000001800091d8     v8-x64:v8-x64.dll
+ 0002:000001e0       __imp_?MakeWeak@V8@v8@@CAXPEAPEAVObject@internal@2@PEAXP6AXPEAVIsolate@2@PEAV?$Persistent@VValue@v8@@@2@1@Z@Z 00000001800091e0     v8-x64:v8-x64.dll
+ 0002:000001e8       __imp_?Int32Value@Value@v8@@QEBAHXZ 00000001800091e8     v8-x64:v8-x64.dll
+ 0002:000001f0       __imp_?NumberValue@Value@v8@@QEBANXZ 00000001800091f0     v8-x64:v8-x64.dll
+ 0002:000001f8       __imp_?BooleanValue@Value@v8@@QEBA_NXZ 00000001800091f8     v8-x64:v8-x64.dll
+ 0002:00000200       __imp_?IsRegExp@Value@v8@@QEBA_NXZ 0000000180009200     v8-x64:v8-x64.dll
+ 0002:00000208       __imp_?IsNativeError@Value@v8@@QEBA_NXZ 0000000180009208     v8-x64:v8-x64.dll
+ 0002:00000210       __imp_?IsStringObject@Value@v8@@QEBA_NXZ 0000000180009210     v8-x64:v8-x64.dll
+ 0002:00000218       __imp_?IsNumberObject@Value@v8@@QEBA_NXZ 0000000180009218     v8-x64:v8-x64.dll
+ 0002:00000220       __imp_?IsBooleanObject@Value@v8@@QEBA_NXZ 0000000180009220     v8-x64:v8-x64.dll
+ 0002:00000228       __imp_?IsDate@Value@v8@@QEBA_NXZ 0000000180009228     v8-x64:v8-x64.dll
+ 0002:00000230       __imp_?IsInt32@Value@v8@@QEBA_NXZ 0000000180009230     v8-x64:v8-x64.dll
+ 0002:00000238       __imp_?IsExternal@Value@v8@@QEBA_NXZ 0000000180009238     v8-x64:v8-x64.dll
+ 0002:00000240       __imp_?IsNumber@Value@v8@@QEBA_NXZ 0000000180009240     v8-x64:v8-x64.dll
+ 0002:00000248       __imp_?IsBoolean@Value@v8@@QEBA_NXZ 0000000180009248     v8-x64:v8-x64.dll
+ 0002:00000250       __imp_?IsFalse@Value@v8@@QEBA_NXZ 0000000180009250     v8-x64:v8-x64.dll
+ 0002:00000258       __imp_?IsTrue@Value@v8@@QEBA_NXZ 0000000180009258     v8-x64:v8-x64.dll
+ 0002:00000260       __imp_?CreateHandle@HandleScope@v8@@SAPEAPEAVObject@internal@2@PEAV342@@Z 0000000180009260     v8-x64:v8-x64.dll
+ 0002:00000268       __imp_?SlowGetInternalField@Object@v8@@AEAA?AV?$Local@VValue@v8@@@2@H@Z 0000000180009268     v8-x64:v8-x64.dll
+ 0002:00000270       __imp_?GetHiddenValue@Object@v8@@QEAA?AV?$Local@VValue@v8@@@2@V?$Handle@VString@v8@@@2@@Z 0000000180009270     v8-x64:v8-x64.dll
+ 0002:00000278       __imp_?Has@Object@v8@@QEAA_NV?$Handle@VValue@v8@@@2@@Z 0000000180009278     v8-x64:v8-x64.dll
+ 0002:00000280       __imp_?False@v8@@YA?AV?$Handle@VBoolean@v8@@@1@XZ 0000000180009280     v8-x64:v8-x64.dll
+ 0002:00000288       __imp_?SlowGetAlignedPointerFromInternalField@Object@v8@@AEAAPEAXH@Z 0000000180009288     v8-x64:v8-x64.dll
+ 0002:00000290       __imp_??0HandleScope@v8@@QEAA@XZ 0000000180009290     v8-x64:v8-x64.dll
+ 0002:00000298       __imp_?SetCallAsFunctionHandler@ObjectTemplate@v8@@QEAAXP6AXAEBV?$FunctionCallbackInfo@VValue@v8@@@2@@ZV?$Handle@VValue@v8@@@2@@Z 0000000180009298     v8-x64:v8-x64.dll
+ 0002:000002a0       __imp_?SetIndexedPropertyHandler@ObjectTemplate@v8@@QEAAXP6AXIAEBV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AXIV?$Local@VValue@v8@@@2@0@ZP6AXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@2@@ZP6AXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@2@@ZP6AXAEBV?$PropertyCallbackInfo@VArray@v8@@@2@@ZV?$Handle@VValue@v8@@@2@@Z 00000001800092a0     v8-x64:v8-x64.dll
+ 0002:000002a8       __imp_?SetNamedPropertyHandler@ObjectTemplate@v8@@QEAAXP6AXV?$Local@VString@v8@@@2@AEBV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AX0V?$Local@VValue@v8@@@2@1@ZP6AX0AEBV?$PropertyCallbackInfo@VInteger@v8@@@2@@ZP6AX0AEBV?$PropertyCallbackInfo@VBoolean@v8@@@2@@ZP6AXAEBV?$PropertyCallbackInfo@VArray@v8@@@2@@ZV?$Handle@VValue@v8@@@2@@Z 00000001800092a8     v8-x64:v8-x64.dll
+ 0002:000002b0       __imp_?SetAccessor@ObjectTemplate@v8@@QEAAXV?$Handle@VString@v8@@@2@P6AXV?$Local@VString@v8@@@2@AEBV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AX1V?$Local@VValue@v8@@@2@AEBV?$PropertyCallbackInfo@X@2@@ZV?$Handle@VValue@v8@@@2@W4AccessControl@2@W4PropertyAttribute@2@V?$Handle@VAccessorSignature@v8@@@2@@Z 00000001800092b0     v8-x64:v8-x64.dll
+ 0002:000002b8       __imp_?NewInstance@ObjectTemplate@v8@@QEAA?AV?$Local@VObject@v8@@@2@XZ 00000001800092b8     v8-x64:v8-x64.dll
+ 0002:000002c0       __imp_?New@ObjectTemplate@v8@@SA?AV?$Local@VObjectTemplate@v8@@@2@XZ 00000001800092c0     v8-x64:v8-x64.dll
+ 0002:000002c8       __imp_?GetReturnValue@?$PropertyCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$ReturnValue@VValue@v8@@@2@XZ 00000001800092c8     v8-x64:v8-x64.dll
+ 0002:000002d0       __imp_?Holder@?$PropertyCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$Local@VObject@v8@@@2@XZ 00000001800092d0     v8-x64:v8-x64.dll
+ 0002:000002d8       __imp_?This@?$PropertyCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$Local@VObject@v8@@@2@XZ 00000001800092d8     v8-x64:v8-x64.dll
+ 0002:000002e0       __imp_?Data@?$PropertyCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$Local@VValue@v8@@@2@XZ 00000001800092e0     v8-x64:v8-x64.dll
+ 0002:000002e8       __imp_?GetIsolate@?$PropertyCallbackInfo@VValue@v8@@@v8@@QEBAPEAVIsolate@2@XZ 00000001800092e8     v8-x64:v8-x64.dll
+ 0002:000002f0       __imp_?True@v8@@YA?AV?$Handle@VBoolean@v8@@@1@XZ 00000001800092f0     v8-x64:v8-x64.dll
+ 0002:000002f8       __imp_?Message@TryCatch@v8@@QEBA?AV?$Local@VMessage@v8@@@2@XZ 00000001800092f8     v8-x64:v8-x64.dll
+ 0002:00000300       __imp_?StackTrace@TryCatch@v8@@QEBA?AV?$Local@VValue@v8@@@2@XZ 0000000180009300     v8-x64:v8-x64.dll
+ 0002:00000308       __imp_?Exception@TryCatch@v8@@QEBA?AV?$Local@VValue@v8@@@2@XZ 0000000180009308     v8-x64:v8-x64.dll
+ 0002:00000310       __imp_?HasCaught@TryCatch@v8@@QEBA_NXZ 0000000180009310     v8-x64:v8-x64.dll
+ 0002:00000318       __imp_??1TryCatch@v8@@QEAA@XZ 0000000180009318     v8-x64:v8-x64.dll
+ 0002:00000320       __imp_??0TryCatch@v8@@QEAA@XZ 0000000180009320     v8-x64:v8-x64.dll
+ 0002:00000328       __imp_?GetStartColumn@Message@v8@@QEBAHXZ 0000000180009328     v8-x64:v8-x64.dll
+ 0002:00000330       __imp_?GetLineNumber@Message@v8@@QEBAHXZ 0000000180009330     v8-x64:v8-x64.dll
+ 0002:00000338       __imp_?New@Context@v8@@SA?AV?$Local@VContext@v8@@@2@PEAVIsolate@2@PEAVExtensionConfiguration@2@V?$Handle@VObjectTemplate@v8@@@2@V?$Handle@VValue@v8@@@2@@Z 0000000180009338     v8-x64:v8-x64.dll
+ 0002:00000340       __imp_?Global@Context@v8@@QEAA?AV?$Local@VObject@v8@@@2@XZ 0000000180009340     v8-x64:v8-x64.dll
+ 0002:00000348       __imp_?Null@v8@@YA?AV?$Handle@VPrimitive@v8@@@1@XZ 0000000180009348     v8-x64:v8-x64.dll
+ 0002:00000350       __imp_?New@Date@v8@@SA?AV?$Local@VValue@v8@@@2@N@Z 0000000180009350     v8-x64:v8-x64.dll
+ 0002:00000358       __imp_?Run@Script@v8@@QEAA?AV?$Local@VValue@v8@@@2@XZ 0000000180009358     v8-x64:v8-x64.dll
+ 0002:00000360       __imp_?Compile@Script@v8@@SA?AV?$Local@VScript@v8@@@2@V?$Handle@VString@v8@@@2@V?$Handle@VValue@v8@@@2@0@Z 0000000180009360     v8-x64:v8-x64.dll
+ 0002:00000368       __imp_?Initialize@V8@v8@@SA_NXZ 0000000180009368     v8-x64:v8-x64.dll
+ 0002:00000370       __imp_?Equals@Value@v8@@QEBA_NV?$Handle@VValue@v8@@@2@@Z 0000000180009370     v8-x64:v8-x64.dll
+ 0002:00000378       __imp_?ToObject@Value@v8@@QEBA?AV?$Local@VObject@v8@@@2@XZ 0000000180009378     v8-x64:v8-x64.dll
+ 0002:00000380       __imp_?Concat@String@v8@@SA?AV?$Local@VString@v8@@@2@V?$Handle@VString@v8@@@2@0@Z 0000000180009380     v8-x64:v8-x64.dll
+ 0002:00000388       __imp_?Write@String@v8@@QEBAHPEAGHHH@Z 0000000180009388     v8-x64:v8-x64.dll
+ 0002:00000390       __imp_?Length@String@v8@@QEBAHXZ 0000000180009390     v8-x64:v8-x64.dll
+ 0002:00000398       __imp_?New@Number@v8@@SA?AV?$Local@VNumber@v8@@@2@N@Z 0000000180009398     v8-x64:v8-x64.dll
+ 0002:000003a0       __imp_?New@Object@v8@@SA?AV?$Local@VObject@v8@@@2@XZ 00000001800093a0     v8-x64:v8-x64.dll
+ 0002:000003a8       __imp_?Dispose@Isolate@v8@@QEAAXXZ 00000001800093a8     v8-x64:v8-x64.dll
+ 0002:000003b0       __imp_?New@Isolate@v8@@SAPEAV12@XZ 00000001800093b0     v8-x64:v8-x64.dll
+ 0002:000003b8       __imp_??1HandleScope@v8@@QEAA@XZ 00000001800093b8     v8-x64:v8-x64.dll
+ 0002:000003c0       __imp_?Length@?$FunctionCallbackInfo@VValue@v8@@@v8@@QEBAHXZ 00000001800093c0     v8-x64:v8-x64.dll
+ 0002:000003c8       __imp_??A?$FunctionCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$Local@VValue@v8@@@1@H@Z 00000001800093c8     v8-x64:v8-x64.dll
+ 0002:000003d0       __imp_?Holder@?$FunctionCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$Local@VObject@v8@@@2@XZ 00000001800093d0     v8-x64:v8-x64.dll
+ 0002:000003d8       __imp_?IsConstructCall@?$FunctionCallbackInfo@VValue@v8@@@v8@@QEBA_NXZ 00000001800093d8     v8-x64:v8-x64.dll
+ 0002:000003e0       __imp_?Data@?$FunctionCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$Local@VValue@v8@@@2@XZ 00000001800093e0     v8-x64:v8-x64.dll
+ 0002:000003e8       __imp_?GetReturnValue@?$FunctionCallbackInfo@VValue@v8@@@v8@@QEBA?AV?$ReturnValue@VValue@v8@@@2@XZ 00000001800093e8     v8-x64:v8-x64.dll
+ 0002:000003f0       __imp_?Error@Exception@v8@@SA?AV?$Local@VValue@v8@@@2@V?$Handle@VString@v8@@@2@@Z 00000001800093f0     v8-x64:v8-x64.dll
+ 0002:000003f8       __imp_?New@FunctionTemplate@v8@@SA?AV?$Local@VFunctionTemplate@v8@@@2@P6AXAEBV?$FunctionCallbackInfo@VValue@v8@@@2@@ZV?$Handle@VValue@v8@@@2@V?$Handle@VSignature@v8@@@2@H@Z 00000001800093f8     v8-x64:v8-x64.dll
+ 0002:00000400       __imp_?GetFunction@FunctionTemplate@v8@@QEAA?AV?$Local@VFunction@v8@@@2@XZ 0000000180009400     v8-x64:v8-x64.dll
+ 0002:00000408       __imp_?InstanceTemplate@FunctionTemplate@v8@@QEAA?AV?$Local@VObjectTemplate@v8@@@2@XZ 0000000180009408     v8-x64:v8-x64.dll
+ 0002:00000410       __imp_?PrototypeTemplate@FunctionTemplate@v8@@QEAA?AV?$Local@VObjectTemplate@v8@@@2@XZ 0000000180009410     v8-x64:v8-x64.dll
+ 0002:00000418       __imp_?SetClassName@FunctionTemplate@v8@@QEAAXV?$Handle@VString@v8@@@2@@Z 0000000180009418     v8-x64:v8-x64.dll
+ 0002:00000420       __imp_?ToString@Value@v8@@QEBA?AV?$Local@VString@v8@@@2@XZ 0000000180009420     v8-x64:v8-x64.dll
+ 0002:00000428       __imp_?GlobalizeReference@V8@v8@@CAPEAPEAVObject@internal@2@PEAVIsolate@42@PEAPEAV342@@Z 0000000180009428     v8-x64:v8-x64.dll
+ 0002:00000430       __imp_?DisposeGlobal@V8@v8@@CAXPEAPEAVObject@internal@2@@Z 0000000180009430     v8-x64:v8-x64.dll
+ 0002:00000438       __imp_?Enter@Context@v8@@QEAAXXZ 0000000180009438     v8-x64:v8-x64.dll
+ 0002:00000440       __imp_?Exit@Context@v8@@QEAAXXZ 0000000180009440     v8-x64:v8-x64.dll
+ 0002:00000448       __imp_??1Locker@v8@@QEAA@XZ 0000000180009448     v8-x64:v8-x64.dll
+ 0002:00000450       __imp_?Initialize@Locker@v8@@AEAAXPEAVIsolate@2@@Z 0000000180009450     v8-x64:v8-x64.dll
+ 0002:00000458       __imp_?New@External@v8@@SA?AV?$Local@VExternal@v8@@@2@PEAX@Z 0000000180009458     v8-x64:v8-x64.dll
+ 0002:00000460       __imp_?GetCurrent@Isolate@v8@@SAPEAV12@XZ 0000000180009460     v8-x64:v8-x64.dll
+ 0002:00000468       __imp_?Call@Function@v8@@QEAA?AV?$Local@VValue@v8@@@2@V?$Handle@VObject@v8@@@2@HQEAV?$Handle@VValue@v8@@@2@@Z 0000000180009468     v8-x64:v8-x64.dll
+ 0002:00000470       __imp_?New@Integer@v8@@SA?AV?$Local@VInteger@v8@@@2@H@Z 0000000180009470     v8-x64:v8-x64.dll
+ 0002:00000478       __imp_?Set@Object@v8@@QEAA_NIV?$Handle@VValue@v8@@@2@@Z 0000000180009478     v8-x64:v8-x64.dll
+ 0002:00000480       __imp_?Set@Object@v8@@QEAA_NV?$Handle@VValue@v8@@@2@0W4PropertyAttribute@2@@Z 0000000180009480     v8-x64:v8-x64.dll
+ 0002:00000488       __imp_?Get@Object@v8@@QEAA?AV?$Local@VValue@v8@@@2@I@Z 0000000180009488     v8-x64:v8-x64.dll
+ 0002:00000490       __imp_?Get@Object@v8@@QEAA?AV?$Local@VValue@v8@@@2@V?$Handle@VValue@v8@@@2@@Z 0000000180009490     v8-x64:v8-x64.dll
+ 0002:00000498       __imp_?GetPropertyAttributes@Object@v8@@QEAA?AW4PropertyAttribute@2@V?$Handle@VValue@v8@@@2@@Z 0000000180009498     v8-x64:v8-x64.dll
+ 0002:000004a0       __imp_?Delete@Object@v8@@QEAA_NI@Z 00000001800094a0     v8-x64:v8-x64.dll
+ 0002:000004a8       __imp_?Delete@Object@v8@@QEAA_NV?$Handle@VValue@v8@@@2@@Z 00000001800094a8     v8-x64:v8-x64.dll
+ 0002:000004b0       __imp_?SetAccessor@Object@v8@@QEAA_NV?$Handle@VString@v8@@@2@P6AXV?$Local@VString@v8@@@2@AEBV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AX1V?$Local@VValue@v8@@@2@AEBV?$PropertyCallbackInfo@X@2@@ZV?$Handle@VValue@v8@@@2@W4AccessControl@2@W4PropertyAttribute@2@@Z 00000001800094b0     v8-x64:v8-x64.dll
+ 0002:000004b8       __imp_?GetPropertyNames@Object@v8@@QEAA?AV?$Local@VArray@v8@@@2@XZ 00000001800094b8     v8-x64:v8-x64.dll
+ 0002:000004c0       __imp_?GetOwnPropertyNames@Object@v8@@QEAA?AV?$Local@VArray@v8@@@2@XZ 00000001800094c0     v8-x64:v8-x64.dll
+ 0002:000004c8       __imp_?GetPrototype@Object@v8@@QEAA?AV?$Local@VValue@v8@@@2@XZ 00000001800094c8     v8-x64:v8-x64.dll
+ 0002:000004d0       __imp_?InternalFieldCount@Object@v8@@QEAAHXZ 00000001800094d0     v8-x64:v8-x64.dll
+ 0002:000004d8       __imp_?SetInternalField@Object@v8@@QEAAXHV?$Handle@VValue@v8@@@2@@Z 00000001800094d8     v8-x64:v8-x64.dll
+ 0002:000004e0       __imp_?SetAlignedPointerInInternalField@Object@v8@@QEAAXHPEAX@Z 00000001800094e0     v8-x64:v8-x64.dll
+ 0002:000004e8       __imp_?SetHiddenValue@Object@v8@@QEAA_NV?$Handle@VString@v8@@@2@V?$Handle@VValue@v8@@@2@@Z 00000001800094e8     v8-x64:v8-x64.dll
+ 0002:000004f0       __imp_?Undefined@v8@@YA?AV?$Handle@VPrimitive@v8@@@1@XZ 00000001800094f0     v8-x64:v8-x64.dll
+ 0002:000004f8       __imp_?Length@Array@v8@@QEBAIXZ 00000001800094f8     v8-x64:v8-x64.dll
+ 0002:00000500       __imp_?New@Array@v8@@SA?AV?$Local@VArray@v8@@@2@H@Z 0000000180009500     v8-x64:v8-x64.dll
+ 0002:00000508       __imp_?NewFromUtf8@String@v8@@SA?AV?$Local@VString@v8@@@2@PEAVIsolate@2@PEBDW4NewStringType@12@H@Z 0000000180009508     v8-x64:v8-x64.dll
+ 0002:00000510       __imp_?NewFromTwoByte@String@v8@@SA?AV?$Local@VString@v8@@@2@PEAVIsolate@2@PEBGW4NewStringType@12@H@Z 0000000180009510     v8-x64:v8-x64.dll
+ 0002:00000518       __imp_?IsFunction@Value@v8@@QEBA_NXZ 0000000180009518     v8-x64:v8-x64.dll
+ 0002:00000520       __imp_?IsArray@Value@v8@@QEBA_NXZ 0000000180009520     v8-x64:v8-x64.dll
+ 0002:00000528       __imp_?IsObject@Value@v8@@QEBA_NXZ 0000000180009528     v8-x64:v8-x64.dll
+ 0002:00000530       __imp_?IdleNotification@V8@v8@@SA_NH@Z 0000000180009530     v8-x64:v8-x64.dll
+ 0002:00000538       __imp_?SetInternalFieldCount@ObjectTemplate@v8@@QEAAXH@Z 0000000180009538     v8-x64:v8-x64.dll
+ 0002:00000540       __imp_?LowMemoryNotification@V8@v8@@SAXXZ 0000000180009540     v8-x64:v8-x64.dll
+ 0002:00000548       \177v8-x64_NULL_THUNK_DATA 0000000180009548     v8-x64:v8-x64.dll
+ 0002:00000550       __xc_a                     0000000180009550     MSVCRT:cinitexe.obj
+ 0002:00000560       __xc_z                     0000000180009560     MSVCRT:cinitexe.obj
+ 0002:00000568       __xi_a                     0000000180009568     MSVCRT:cinitexe.obj
+ 0002:00000580       __xi_z                     0000000180009580     MSVCRT:cinitexe.obj
+ 0002:000005d0       ??_7type_info@@6B@         00000001800095d0     MSVCRT:ti_inst.obj
+ 0002:000005d8       _pRawDllMain               00000001800095d8     MSVCRT:crtdll.obj
+ 0002:000005d8       _pDefaultRawDllMain        00000001800095d8     MSVCRT:crtdll.obj
+ 0002:000005f0       ??_C@_0BA@MLFILMMN@ManagedObjectID?$AA@ 00000001800095f0     Exports.obj
+ 0002:00000600       ??_C@_0CJ@MCOIAANP@The?5handle?5does?5not?5represent?5an@ 0000000180009600     Exports.obj
+ 0002:00000630       ??_C@_0EI@NBCEMGHA@Call?3?5The?5target?5instance?5handle@ 0000000180009630     Exports.obj
+ 0002:00000678       ??_C@_0DH@GEIHKHBI@Call?3?5The?5subject?5handle?5does?5no@ 0000000180009678     Exports.obj
+ 0002:000006b0       ??_C@_0DM@EFLNDFCL@Call?3?5The?5specified?5property?5doe@ 00000001800096b0     Exports.obj
+ 0002:000006f0       ??_C@_0DI@IBPEFPGB@Call?3?5The?5subject?5handle?5does?5no@ 00000001800096f0     Exports.obj
+ 0002:00000728       ??_C@_0CP@MICEEFHB@The?5handle?5does?5not?5represent?5an@ 0000000180009728     Exports.obj
+ 0002:00000760       ??_C@_0EE@OBNIJAJP@?8Data?8?5points?5to?5an?5invalid?5obje@ 0000000180009760     Exports.obj
+ 0002:000007a8       ??_C@_0CB@PFDHPICG@?8args?4Data?$CI?$CJ?8?5is?5not?5recognized?4@ 00000001800097a8     FunctionTemplateProxy.obj
+ 0002:000007d0       ??_C@_09JOONBBPD@$__TypeID?$AA@ 00000001800097d0     HandleProxy.obj
+ 0002:000007e0       ??_C@_08NKLFIIDP@$__Value?$AA@ 00000001800097e0     HandleProxy.obj
+ 0002:000007ec       ??_C@_02PCIJFNDE@?$AN?6?$AA@ 00000001800097ec     V8EngineProxy.obj
+ 0002:000007f0       ??_C@_08FIKDMAMC@?5?5Line?3?5?$AA@ 00000001800097f0     V8EngineProxy.obj
+ 0002:00000800       ??_C@_0L@KCLHICAK@?5?5Column?3?5?$AA@ 0000000180009800     V8EngineProxy.obj
+ 0002:00000810       ??_C@_09FPDCPDGD@?5?5Stack?3?5?$AA@ 0000000180009810     V8EngineProxy.obj
+ 0002:0000081c       ??_C@_11LOCGONAA@?$AA?$AA@ 000000018000981c     V8EngineProxy.obj
+ 0002:00000820       ??_C@_0BE@HBKMHPCH@Invalid?5error?5type?4?$AA@ 0000000180009820     V8EngineProxy.obj
+ 0002:00000838       ??_C@_0BM@NMJKDPPO@invalid?5vector?$DMT?$DO?5subscript?$AA@ 0000000180009838     V8EngineProxy.obj
+ 0002:00000858       ??_C@_0BG@EOMJEIFA@vector?$DMbool?$DO?5too?5long?$AA@ 0000000180009858     V8EngineProxy.obj
+ 0002:00000870       ??_C@_0BD@OLBABOEK@vector?$DMT?$DO?5too?5long?$AA@ 0000000180009870     V8EngineProxy.obj
+ 0002:00000de0       _load_config_used          0000000180009de0     MSVCRT:loadcfg.obj
+ 0002:00000ed0       ??_R4type_info@@6B@        0000000180009ed0     MSVCRT:ti_inst.obj
+ 0002:00000ef8       ??_R3type_info@@8          0000000180009ef8     MSVCRT:ti_inst.obj
+ 0002:00000f10       ??_R2type_info@@8          0000000180009f10     MSVCRT:ti_inst.obj
+ 0002:00000f20       ??_R1A@?0A@EA@type_info@@8 0000000180009f20     MSVCRT:ti_inst.obj
+ 0002:00000f48       __rtc_iaa                  0000000180009f48     MSVCRT:initsect.obj
+ 0002:00000f50       __rtc_izz                  0000000180009f50     MSVCRT:initsect.obj
+ 0002:00000f58       __rtc_taa                  0000000180009f58     MSVCRT:initsect.obj
+ 0002:00000f60       __rtc_tzz                  0000000180009f60     MSVCRT:initsect.obj
+ 0002:000023e0       _CT??_R0?AVexception@std@@@8??0exception@std@@QEAA@AEBV01@@Z24 000000018000b3e0     Exports.obj
+ 0002:00002408       _TI1?AVexception@std@@     000000018000b408     Exports.obj
+ 0002:00002428       _CTA1?AVexception@std@@    000000018000b428     Exports.obj
+ 0002:00002434       __IMPORT_DESCRIPTOR_v8-x64 000000018000b434     v8-x64:v8-x64.dll
+ 0002:00002448       __IMPORT_DESCRIPTOR_KERNEL32 000000018000b448     kernel32:KERNEL32.dll
+ 0002:0000245c       __IMPORT_DESCRIPTOR_MSVCP110 000000018000b45c     msvcprt:MSVCP110.dll
+ 0002:00002470       __IMPORT_DESCRIPTOR_MSVCR110 000000018000b470     MSVCRT:MSVCR110.dll
+ 0002:00002484       __NULL_IMPORT_DESCRIPTOR   000000018000b484     v8-x64:v8-x64.dll
+ 0003:00000000       ??_R0?AVtype_info@@@8      000000018000f000     MSVCRT:ti_inst.obj
+ 0003:00000020       __security_cookie          000000018000f020     MSVCRT:gs_cookie.obj
+ 0003:00000028       __security_cookie_complement 000000018000f028     MSVCRT:gs_cookie.obj
+ 0003:00000030       __native_dllmain_reason    000000018000f030     MSVCRT:natstart.obj
+ 0003:00000038       ??_R0?AVexception@std@@@8  000000018000f038     Exports.obj
+ 0003:0000005c       _fltused                   000000018000f05c     MSVCRT:dllsupp.obj
+ 0003:000005e8       ?__type_info_root_node@@3U__type_info_node@@A 000000018000f5e8     MSVCRT:tncleanup.obj
+ 0003:000005fc       ?_NextEngineID@V8EngineProxy@@1HA 000000018000f5fc     V8EngineProxy.obj
+ 0003:00000618       ?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A 000000018000f618     V8EngineProxy.obj
+ 0003:00000640       __native_startup_lock      000000018000f640     <common>
+ 0003:00000648       __native_startup_state     000000018000f648     <common>
+ 0003:00000650       __dyn_tls_init_callback    000000018000f650     <common>
+ 0003:00000658       __onexitend                000000018000f658     <common>
+ 0003:00000660       __onexitbegin              000000018000f660     <common>
+
+ entry point at        0001:00006918
+
+ Static symbols
+
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     MSVCRT:MSVCR110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     v8-x64:v8-x64.dll
+ 0000:fffed000       .debug$S                   0000000180000000     msvcprt:MSVCP110.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0000:fffed000       .debug$S                   0000000180000000     kernel32:KERNEL32.dll
+ 0001:0000225c       $LN88                      000000018000325c     * CIL library *:* CIL module *
+ 0001:000064a0       $$000000                   00000001800074a0     MSVCRT:amdsecgs.obj
+ 0001:0000666c       pre_c_init                 000000018000766c f   MSVCRT:crtdll.obj
+ 0001:00006958       __DllMainCRTStartup        0000000180007958 f   MSVCRT:crtdll.obj
+ 0001:00006ef0       _onexit$fin$0              0000000180007ef0 f   MSVCRT:atonexit.obj
+ 0001:00006f0b       __DllMainCRTStartup$filt$0 0000000180007f0b f   MSVCRT:crtdll.obj
+ 0001:00006f30       __DllMainCRTStartup$fin$1  0000000180007f30 f   MSVCRT:crtdll.obj
+ 0001:00006f4a       ?fin$0@?0???_M@YAXPEAX_KHP6AX0@Z@Z@4HA 0000000180007f4a f   MSVCRT:ehvecdtr.obj
+ 0001:00006f76       ?filt$0@?0??__ArrayUnwind@@YAXPEAX_KHP6AX0@Z@Z@4HA 0000000180007f76 f   MSVCRT:ehvecdtr.obj
+ 0001:00006fc0       _IsNonwritableInCurrentImage$filt$0 0000000180007fc0 f   MSVCRT:pesect.obj
+ 0001:00006fe0       CreateV8EngineProxy$dtor$0 0000000180007fe0 f   * CIL library *:* CIL module *
+ 0001:00006fe0       CreateFunctionTemplateProxy$dtor$0 0000000180007fe0 f   * CIL library *:* CIL module *
+ 0001:00006ff0       CreateObjectTemplateProxy$dtor$0 0000000180007ff0 f   * CIL library *:* CIL module *
+ 0001:00007000       WithHandleScope$dtor$0     0000000180008000 f   * CIL library *:* CIL module *
+ 0001:0000700e       WithHandleScope$dtor$1     000000018000800e f   * CIL library *:* CIL module *
+ 0001:00007020       WithV8IsolateScope$dtor$0  0000000180008020 f   * CIL library *:* CIL module *
+ 0001:0000702e       WithV8IsolateScope$dtor$1  000000018000802e f   * CIL library *:* CIL module *
+ 0001:0000703c       WithV8IsolateScope$dtor$2  000000018000803c f   * CIL library *:* CIL module *
+ 0001:00007050       ?dtor$0@?0???0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z@4HA 0000000180008050 f   * CIL library *:* CIL module *
+ 0001:0000705e       ?dtor$1@?0???0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z@4HA 000000018000805e f   * CIL library *:* CIL module *
+ 0001:00007070       ?dtor$0@?0??CreateInstance@FunctionTemplateProxy@@QEAAPEAUHandleProxy@@HHPEAPEAU2@@Z@4HA 0000000180008070 f   * CIL library *:* CIL module *
+ 0001:00007070       Call$dtor$0                0000000180008070 f   * CIL library *:* CIL module *
+ 0001:00007080       ?dtor$1@?0??_Dispose@HandleProxy@@IEAA_N_N@Z@4HA 0000000180008080 f   * CIL library *:* CIL module *
+ 0001:00007090       ?catch$0@?0???$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 0000000180008090 f   * CIL library *:* CIL module *
+ 0001:0000709d       __catch$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z$0 000000018000809d f   * CIL library *:* CIL module *
+ 0001:000070b0       ?dtor$0@?0???$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 00000001800080b0 f   * CIL library *:* CIL module *
+ 0001:000070cc       ?catch$0@?0???$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 00000001800080cc f   * CIL library *:* CIL module *
+ 0001:000070d9       __catch$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z$0 00000001800080d9 f   * CIL library *:* CIL module *
+ 0001:000070f0       ?dtor$0@?0???0V8EngineProxy@@QEAA@_NP6AXXZH@Z@4HA 00000001800080f0 f   * CIL library *:* CIL module *
+ 0001:00007100       ?dtor$1@?0???0V8EngineProxy@@QEAA@_NP6AXXZH@Z@4HA 0000000180008100 f   * CIL library *:* CIL module *
+ 0001:00007110       ?dtor$2@?0???0V8EngineProxy@@QEAA@_NP6AXXZH@Z@4HA 0000000180008110 f   * CIL library *:* CIL module *
+ 0001:00007120       ?dtor$4@?0???0V8EngineProxy@@QEAA@_NP6AXXZH@Z@4HA 0000000180008120 f   * CIL library *:* CIL module *
+ 0001:0000712c       ?dtor$3@?0???0V8EngineProxy@@QEAA@_NP6AXXZH@Z@4HA 000000018000812c f   * CIL library *:* CIL module *
+ 0001:00007140       ?dtor$0@?0???1?$_Vb_val@V?$allocator@_N@std@@@std@@QEAA@XZ@4HA 0000000180008140 f   * CIL library *:* CIL module *
+ 0001:00007150       ?dtor$0@?0???1V8EngineProxy@@QEAA@XZ@4HA 0000000180008150 f   * CIL library *:* CIL module *
+ 0001:00007160       ?dtor$1@?0???1V8EngineProxy@@QEAA@XZ@4HA 0000000180008160 f   * CIL library *:* CIL module *
+ 0001:00007170       ?dtor$2@?0???1V8EngineProxy@@QEAA@XZ@4HA 0000000180008170 f   * CIL library *:* CIL module *
+ 0001:00007180       ?dtor$3@?0???1V8EngineProxy@@QEAA@XZ@4HA 0000000180008180 f   * CIL library *:* CIL module *
+ 0001:00007193       ?dtor$4@?0???1V8EngineProxy@@QEAA@XZ@4HA 0000000180008193 f   * CIL library *:* CIL module *
+ 0001:0000719f       ?dtor$5@?0???1V8EngineProxy@@QEAA@XZ@4HA 000000018000819f f   * CIL library *:* CIL module *
+ 0001:000071ad       ?dtor$6@?0???1V8EngineProxy@@QEAA@XZ@4HA 00000001800081ad f   * CIL library *:* CIL module *
+ 0001:000071bb       ?dtor$7@?0???1V8EngineProxy@@QEAA@XZ@4HA 00000001800081bb f   * CIL library *:* CIL module *
+ 0001:000071c9       ?dtor$8@?0???1V8EngineProxy@@QEAA@XZ@4HA 00000001800081c9 f   * CIL library *:* CIL module *
+ 0001:000071e0       ?dtor$0@?0???1recursive_mutex@std@@QEAA@XZ@4HA 00000001800081e0 f   * CIL library *:* CIL module *
+ 0001:000071f0       ?dtor$1@?0???__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ@4HA 00000001800081f0 f   * CIL library *:* CIL module *
+ 0001:000071fc       ?dtor$0@?0???__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ@4HA 00000001800081fc f   * CIL library *:* CIL module *
+ 0001:00007210       ?dtor$0@?0???__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ@4HA 0000000180008210 f   * CIL library *:* CIL module *
+ 0001:0000721c       ?dtor$1@?0???__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ@4HA 000000018000821c f   * CIL library *:* CIL module *
+ 0001:00007230       ?dtor$0@?0??CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z@4HA 0000000180008230 f   * CIL library *:* CIL module *
+ 0001:0000723c       ?dtor$1@?0??CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z@4HA 000000018000823c f   * CIL library *:* CIL module *
+ 0001:0000724a       ?dtor$2@?0??CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z@4HA 000000018000824a f   * CIL library *:* CIL module *
+ 0001:0000725a       ?dtor$3@?0??CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z@4HA 000000018000825a f   * CIL library *:* CIL module *
+ 0001:00007280       ?dtor$0@?0??DisposeHandleProxy@V8EngineProxy@@QEAAXPEAUHandleProxy@@@Z@4HA 0000000180008280 f   * CIL library *:* CIL module *
+ 0001:00007290       ?dtor$0@?0??Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z@4HA 0000000180008290 f   * CIL library *:* CIL module *
+ 0001:0000729e       ?catch$0@?0??Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z@4HA 000000018000829e f   * CIL library *:* CIL module *
+ 0001:000072ac       __catch$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z$0 00000001800082ac f   * CIL library *:* CIL module *
+ 0001:0000731b       ?dtor$1@?0??Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z@4HA 000000018000831b f   * CIL library *:* CIL module *
+ 0001:00007330       ?dtor$0@?0??GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z@4HA 0000000180008330 f   * CIL library *:* CIL module *
+ 0001:0000733c       ?dtor$1@?0??GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z@4HA 000000018000833c f   * CIL library *:* CIL module *
+ 0001:0000734a       ?dtor$2@?0??GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z@4HA 000000018000834a f   * CIL library *:* CIL module *
+ 0001:0000735a       ?dtor$3@?0??GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z@4HA 000000018000835a f   * CIL library *:* CIL module *
+ 0001:00007380       ?dtor$0@?0??WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z@4HA 0000000180008380 f   * CIL library *:* CIL module *
+ 0001:00007380       ?dtor$0@?0???1ObjectTemplateProxy@@QEAA@XZ@4HA 0000000180008380 f   * CIL library *:* CIL module *
+ 0001:00007380       ?dtor$0@?0???1FunctionTemplateProxy@@QEAA@XZ@4HA 0000000180008380 f   * CIL library *:* CIL module *
+ 0001:0000738e       ?dtor$1@?0??WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z@4HA 000000018000838e f   * CIL library *:* CIL module *
+ 0001:0000738e       ?dtor$1@?0???1FunctionTemplateProxy@@QEAA@XZ@4HA 000000018000838e f   * CIL library *:* CIL module *
+ 0001:0000738e       ?dtor$1@?0???1ObjectTemplateProxy@@QEAA@XZ@4HA 000000018000838e f   * CIL library *:* CIL module *
+ 0001:0000739c       ?dtor$2@?0???1ObjectTemplateProxy@@QEAA@XZ@4HA 000000018000839c f   * CIL library *:* CIL module *
+ 0001:0000739c       ?dtor$2@?0???1FunctionTemplateProxy@@QEAA@XZ@4HA 000000018000839c f   * CIL library *:* CIL module *
+ 0001:0000739c       ?dtor$2@?0??WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z@4HA 000000018000839c f   * CIL library *:* CIL module *
+ 0001:000073aa       ?dtor$3@?0???1ObjectTemplateProxy@@QEAA@XZ@4HA 00000001800083aa f   * CIL library *:* CIL module *
+ 0001:000073aa       ?dtor$3@?0??WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z@4HA 00000001800083aa f   * CIL library *:* CIL module *
+ 0001:000073aa       ?dtor$3@?0???1FunctionTemplateProxy@@QEAA@XZ@4HA 00000001800083aa f   * CIL library *:* CIL module *
+ 0001:000073c0       ?catch$0@?0??_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z@4HA 00000001800083c0 f   * CIL library *:* CIL module *
+ 0001:000073ce       __catch$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z$0 00000001800083ce f   * CIL library *:* CIL module *
+ 0001:00007410       ?catch$0@?0??_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z@4HA 0000000180008410 f   * CIL library *:* CIL module *
+ 0001:0000741e       __catch$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z$0 000000018000841e f   * CIL library *:* CIL module *
+ 0001:00007460       ?catch$0@?0??_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z@4HA 0000000180008460 f   * CIL library *:* CIL module *
+ 0001:0000746e       __catch$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z$0 000000018000846e f   * CIL library *:* CIL module *
+ 0001:000074b0       ?catch$0@?0??_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z@4HA 00000001800084b0 f   * CIL library *:* CIL module *
+ 0001:000074be       __catch$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z$0 00000001800084be f   * CIL library *:* CIL module *
+ 0001:00007500       ?catch$0@?0??_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z@4HA 0000000180008500 f   * CIL library *:* CIL module *
+ 0001:0000750d       __catch$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z$0 000000018000850d f   * CIL library *:* CIL module *
+ 0001:00007524       ?catch$1@?0??_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z@4HA 0000000180008524 f   * CIL library *:* CIL module *
+ 0001:00007531       __catch$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z$2 0000000180008531 f   * CIL library *:* CIL module *
+ 0001:00007540       ?catch$0@?0??_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z@4HA 0000000180008540 f   * CIL library *:* CIL module *
+ 0001:0000754d       __catch$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z$0 000000018000854d f   * CIL library *:* CIL module *
+ 0001:00007570       ?catch$0@?0??_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z@4HA 0000000180008570 f   * CIL library *:* CIL module *
+ 0001:0000757d       __catch$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z$0 000000018000857d f   * CIL library *:* CIL module *
+ 0001:000075a0       ?catch$0@?0??_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z@4HA 00000001800085a0 f   * CIL library *:* CIL module *
+ 0001:000075ad       __catch$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z$0 00000001800085ad f   * CIL library *:* CIL module *
+ 0001:000075d0       ?dtor$0@?0??push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z@4HA 00000001800085d0 f   * CIL library *:* CIL module *
+ 0001:000075d0       ?dtor$0@?0??push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z@4HA 00000001800085d0 f   * CIL library *:* CIL module *
+ 0001:000075f0       ??__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 00000001800085f0 f   * CIL library *:* CIL module *
+ 0001:000076d0       ??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 00000001800086d0 f   * CIL library *:* CIL module *
+ 0002:00000558       ?_DisposedEngines$initializer$@V8EngineProxy@@1P6AXXZEA 0000000180009558     * CIL library *:* CIL module *
+ 0002:00000570       pcinit                     0000000180009570     MSVCRT:crtdll.obj
+ 0002:00000578       pinit                      0000000180009578     MSVCRT:atonexit.obj
+ 0002:000005e0       GS_ExceptionPointers       00000001800095e0     MSVCRT:gs_report.obj
+ 0002:00000888       $cppxdata$CreateFunctionTemplateProxy 0000000180009888     * CIL library *:* CIL module *
+ 0002:000008b0       $cppxdata$Call             00000001800098b0     * CIL library *:* CIL module *
+ 0002:000008d8       $cppxdata$CreateObjectTemplateProxy 00000001800098d8     * CIL library *:* CIL module *
+ 0002:00000900       $cppxdata$WithHandleScope  0000000180009900     * CIL library *:* CIL module *
+ 0002:00000928       $cppxdata$WithV8IsolateScope 0000000180009928     * CIL library *:* CIL module *
+ 0002:00000950       $cppxdata$CreateV8EngineProxy 0000000180009950     * CIL library *:* CIL module *
+ 0002:00000978       $cppxdata$??0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z 0000000180009978     * CIL library *:* CIL module *
+ 0002:000009a0       $cppxdata$?CreateInstance@FunctionTemplateProxy@@QEAAPEAUHandleProxy@@HHPEAPEAU2@@Z 00000001800099a0     * CIL library *:* CIL module *
+ 0002:000009c8       $cppxdata$??1FunctionTemplateProxy@@QEAA@XZ 00000001800099c8     * CIL library *:* CIL module *
+ 0002:000009f0       $cppxdata$?_Dispose@HandleProxy@@IEAA_N_N@Z 00000001800099f0     * CIL library *:* CIL module *
+ 0002:00000a18       $cppxdata$??1ObjectTemplateProxy@@QEAA@XZ 0000000180009a18     * CIL library *:* CIL module *
+ 0002:00000a40       $cppxdata$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 0000000180009a40     * CIL library *:* CIL module *
+ 0002:00000a68       $cppxdata$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 0000000180009a68     * CIL library *:* CIL module *
+ 0002:00000a90       $cppxdata$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 0000000180009a90     * CIL library *:* CIL module *
+ 0002:00000ab8       $cppxdata$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 0000000180009ab8     * CIL library *:* CIL module *
+ 0002:00000ae0       $cppxdata$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 0000000180009ae0     * CIL library *:* CIL module *
+ 0002:00000b08       $cppxdata$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 0000000180009b08     * CIL library *:* CIL module *
+ 0002:00000b30       $cppxdata$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 0000000180009b30     * CIL library *:* CIL module *
+ 0002:00000b58       $cppxdata$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 0000000180009b58     * CIL library *:* CIL module *
+ 0002:00000b80       $cppxdata$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 0000000180009b80     * CIL library *:* CIL module *
+ 0002:00000ba8       $cppxdata$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 0000000180009ba8     * CIL library *:* CIL module *
+ 0002:00000bd0       $cppxdata$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QEAA@XZ 0000000180009bd0     * CIL library *:* CIL module *
+ 0002:00000bf8       $cppxdata$?push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z 0000000180009bf8     * CIL library *:* CIL module *
+ 0002:00000c20       $cppxdata$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z 0000000180009c20     * CIL library *:* CIL module *
+ 0002:00000c48       $cppxdata$??1recursive_mutex@std@@QEAA@XZ 0000000180009c48     * CIL library *:* CIL module *
+ 0002:00000c70       $cppxdata$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 0000000180009c70     * CIL library *:* CIL module *
+ 0002:00000c98       $cppxdata$??__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 0000000180009c98     * CIL library *:* CIL module *
+ 0002:00000cc0       $cppxdata$?DisposeHandleProxy@V8EngineProxy@@QEAAXPEAUHandleProxy@@@Z 0000000180009cc0     * CIL library *:* CIL module *
+ 0002:00000ce8       $cppxdata$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z 0000000180009ce8     * CIL library *:* CIL module *
+ 0002:00000d10       $cppxdata$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 0000000180009d10     * CIL library *:* CIL module *
+ 0002:00000d38       $cppxdata$?WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z 0000000180009d38     * CIL library *:* CIL module *
+ 0002:00000d60       $cppxdata$?GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 0000000180009d60     * CIL library *:* CIL module *
+ 0002:00000d88       $cppxdata$??1V8EngineProxy@@QEAA@XZ 0000000180009d88     * CIL library *:* CIL module *
+ 0002:00000db0       $cppxdata$??0V8EngineProxy@@QEAA@_NP6AXXZH@Z 0000000180009db0     * CIL library *:* CIL module *
+ 0002:00000f68       $xdatasym                  0000000180009f68     MSVCRT:amdsecgs.obj
+ 0002:00000f6c       $unwind$_onexit            0000000180009f6c     MSVCRT:atonexit.obj
+ 0002:00000f8c       $unwind$_CRT_INIT          0000000180009f8c     MSVCRT:crtdll.obj
+ 0002:00000fa8       $unwind$__DllMainCRTStartup 0000000180009fa8     MSVCRT:crtdll.obj
+ 0002:00000fe4       $unwind$??_Etype_info@@UEAAPEAXI@Z 0000000180009fe4     MSVCRT:crtdll.obj
+ 0002:00000fe4       $unwind$_DllMainCRTStartup 0000000180009fe4     MSVCRT:crtdll.obj
+ 0002:00000ff4       $unwind$__report_gsfailure 0000000180009ff4     MSVCRT:gs_report.obj
+ 0002:00000ffc       $unwind$??_M@YAXPEAX_KHP6AX0@Z@Z 0000000180009ffc     MSVCRT:ehvecdtr.obj
+ 0002:00001024       $unwind$?__ArrayUnwind@@YAXPEAX_KHP6AX0@Z@Z 000000018000a024     MSVCRT:ehvecdtr.obj
+ 0002:0000104c       $unwind$_IsNonwritableInCurrentImage 000000018000a04c     MSVCRT:pesect.obj
+ 0002:00001070       $unwind$__security_init_cookie 000000018000a070     MSVCRT:gs_support.obj
+ 0002:0000107c       $unwind$_RTC_Initialize    000000018000a07c     MSVCRT:initsect.obj
+ 0002:0000107c       $unwind$CreateObject       000000018000a07c     MSVCRT:initsect.obj
+ 0002:0000107c       $unwind$_RTC_Terminate     000000018000a07c     MSVCRT:initsect.obj
+ 0002:00001088       $unwind$??1HandleValue@@QEAA@XZ 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$__raise_securityfailure 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$GetFunction        000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$pre_c_init         000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$CreateBoolean      000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$RegisterInvokeHandler 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$??1?$vector@IV?$allocator@_N@std@@@std@@QEAA@XZ 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$?_Reserve@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$??1?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAA@XZ 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$CreateInteger      000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$??1?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAA@XZ 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$CreateNumber       000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$CreateDate         000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$??1?$vector@HV?$allocator@H@std@@@std@@QEAA@XZ 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$CreateNullValue    000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$?_RevivableCallback@HandleProxy@@CAXPEAVIsolate@v8@@PEAV?$Persistent@VValue@v8@@@3@PEAU1@@Z 000000018000a088     * CIL library *:* CIL module *
+ 0002:00001088       $unwind$__atonexitinit     000000018000a088     * CIL library *:* CIL module *
+ 0002:00001090       $unwind$CreateString       000000018000a090     * CIL library *:* CIL module *
+ 0002:0000109c       $unwind$CreateFunctionTemplateProxy 000000018000a09c     * CIL library *:* CIL module *
+ 0002:000010b4       $ip2state$CreateFunctionTemplateProxy 000000018000a0b4     * CIL library *:* CIL module *
+ 0002:000010cc       $unwind$GetArrayLength     000000018000a0cc     * CIL library *:* CIL module *
+ 0002:000010cc       $unwind$DeleteTestData     000000018000a0cc     * CIL library *:* CIL module *
+ 0002:000010d4       $unwind$GetPropertyNames   000000018000a0d4     * CIL library *:* CIL module *
+ 0002:000010d4       $unwind$GetOwnPropertyNames 000000018000a0d4     * CIL library *:* CIL module *
+ 0002:000010e0       $unwind$SetFunctionTemplateProperty 000000018000a0e0     * CIL library *:* CIL module *
+ 0002:000010e0       $unwind$SetObjectTemplateProperty 000000018000a0e0     * CIL library *:* CIL module *
+ 0002:000010f4       $unwind$SetObjectAccessor  000000018000a0f4     * CIL library *:* CIL module *
+ 0002:00001104       $chain$0$SetObjectAccessor 000000018000a104     * CIL library *:* CIL module *
+ 0002:00001118       $chain$1$SetObjectAccessor 000000018000a118     * CIL library *:* CIL module *
+ 0002:00001128       $unwind$DeleteObjectPropertyByIndex 000000018000a128     * CIL library *:* CIL module *
+ 0002:00001128       $unwind$GetObjectPrototype 000000018000a128     * CIL library *:* CIL module *
+ 0002:00001134       $unwind$GetPropertyAttributes 000000018000a134     * CIL library *:* CIL module *
+ 0002:00001134       $unwind$DeleteObjectPropertyByName 000000018000a134     * CIL library *:* CIL module *
+ 0002:00001140       $unwind$GetObjectPropertyByIndex 000000018000a140     * CIL library *:* CIL module *
+ 0002:00001140       $unwind$SetObjectPropertyByIndex 000000018000a140     * CIL library *:* CIL module *
+ 0002:00001150       $unwind$GetObjectPropertyByName 000000018000a150     * CIL library *:* CIL module *
+ 0002:00001160       $unwind$?SetAccessor@ObjectTemplateProxy@@QEAAXHPEBGP6APEAUHandleProxy@@PEAU2@PEAG@ZP6APEAU2@121@ZW4AccessControl@v8@@W4PropertyAttribute@4@@Z 000000018000a160     * CIL library *:* CIL module *
+ 0002:00001160       $unwind$SetObjectPropertyByName 000000018000a160     * CIL library *:* CIL module *
+ 0002:00001174       $unwind$Call               000000018000a174     * CIL library *:* CIL module *
+ 0002:00001198       $stateUnwindMap$Call       000000018000a198     * CIL library *:* CIL module *
+ 0002:00001198       $stateUnwindMap$?CreateInstance@FunctionTemplateProxy@@QEAAPEAUHandleProxy@@HHPEAPEAU2@@Z 000000018000a198     * CIL library *:* CIL module *
+ 0002:000011a0       $ip2state$Call             000000018000a1a0     * CIL library *:* CIL module *
+ 0002:000011b8       $unwind$ConnectObject      000000018000a1b8     * CIL library *:* CIL module *
+ 0002:000011c4       $chain$0$ConnectObject     000000018000a1c4     * CIL library *:* CIL module *
+ 0002:000011d8       $chain$1$ConnectObject     000000018000a1d8     * CIL library *:* CIL module *
+ 0002:000011e8       $unwind$RegisterNamedPropertyHandlers 000000018000a1e8     * CIL library *:* CIL module *
+ 0002:000011e8       $unwind$UnregisterIndexedPropertyHandlers 000000018000a1e8     * CIL library *:* CIL module *
+ 0002:000011e8       $unwind$UnregisterNamedPropertyHandlers 000000018000a1e8     * CIL library *:* CIL module *
+ 0002:000011e8       $unwind$RegisterIndexedPropertyHandlers 000000018000a1e8     * CIL library *:* CIL module *
+ 0002:000011f0       $unwind$CreateObjectTemplateProxy 000000018000a1f0     * CIL library *:* CIL module *
+ 0002:00001200       $stateUnwindMap$CreateObjectTemplateProxy 000000018000a200     * CIL library *:* CIL module *
+ 0002:00001208       $ip2state$CreateObjectTemplateProxy 000000018000a208     * CIL library *:* CIL module *
+ 0002:00001220       $unwind$WithHandleScope    000000018000a220     * CIL library *:* CIL module *
+ 0002:00001230       $stateUnwindMap$WithHandleScope 000000018000a230     * CIL library *:* CIL module *
+ 0002:00001240       $ip2state$WithHandleScope  000000018000a240     * CIL library *:* CIL module *
+ 0002:00001268       $unwind$WithV8IsolateScope 000000018000a268     * CIL library *:* CIL module *
+ 0002:0000127c       $stateUnwindMap$WithV8IsolateScope 000000018000a27c     * CIL library *:* CIL module *
+ 0002:00001294       $ip2state$WithV8IsolateScope 000000018000a294     * CIL library *:* CIL module *
+ 0002:000012cc       $unwind$DeleteFunctionTemplateProxy 000000018000a2cc     * CIL library *:* CIL module *
+ 0002:000012cc       $unwind$DeleteObjectTemplateProxy 000000018000a2cc     * CIL library *:* CIL module *
+ 0002:000012cc       $unwind$MakeWeakHandle     000000018000a2cc     * CIL library *:* CIL module *
+ 0002:000012cc       $unwind$DestroyV8EngineProxy 000000018000a2cc     * CIL library *:* CIL module *
+ 0002:000012cc       $unwind$MakeStrongHandle   000000018000a2cc     * CIL library *:* CIL module *
+ 0002:000012d4       $unwind$CreateV8EngineProxy 000000018000a2d4     * CIL library *:* CIL module *
+ 0002:000012e4       $stateUnwindMap$CreateV8EngineProxy 000000018000a2e4     * CIL library *:* CIL module *
+ 0002:000012e4       $stateUnwindMap$CreateFunctionTemplateProxy 000000018000a2e4     * CIL library *:* CIL module *
+ 0002:000012ec       $ip2state$CreateV8EngineProxy 000000018000a2ec     * CIL library *:* CIL module *
+ 0002:00001304       $unwind$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a304     * CIL library *:* CIL module *
+ 0002:00001310       $chain$0$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a310     * CIL library *:* CIL module *
+ 0002:00001324       $chain$4$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a324     * CIL library *:* CIL module *
+ 0002:00001344       $chain$5$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a344     * CIL library *:* CIL module *
+ 0002:00001354       $chain$7$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a354     * CIL library *:* CIL module *
+ 0002:00001368       $chain$6$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a368     * CIL library *:* CIL module *
+ 0002:00001368       $chain$8$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a368     * CIL library *:* CIL module *
+ 0002:00001378       $unwind$??0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z 000000018000a378     * CIL library *:* CIL module *
+ 0002:00001394       $stateUnwindMap$??0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z 000000018000a394     * CIL library *:* CIL module *
+ 0002:000013a4       $ip2state$??0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z 000000018000a3a4     * CIL library *:* CIL module *
+ 0002:000013cc       $unwind$?CreateInstance@FunctionTemplateProxy@@QEAAPEAUHandleProxy@@HHPEAPEAU2@@Z 000000018000a3cc     * CIL library *:* CIL module *
+ 0002:000013f0       $ip2state$?CreateInstance@FunctionTemplateProxy@@QEAAPEAUHandleProxy@@HHPEAPEAU2@@Z 000000018000a3f0     * CIL library *:* CIL module *
+ 0002:00001408       $unwind$??1FunctionTemplateProxy@@QEAA@XZ 000000018000a408     * CIL library *:* CIL module *
+ 0002:0000141c       $stateUnwindMap$??1ObjectTemplateProxy@@QEAA@XZ 000000018000a41c     * CIL library *:* CIL module *
+ 0002:0000141c       $stateUnwindMap$??1FunctionTemplateProxy@@QEAA@XZ 000000018000a41c     * CIL library *:* CIL module *
+ 0002:0000141c       $stateUnwindMap$?WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z 000000018000a41c     * CIL library *:* CIL module *
+ 0002:0000143c       $ip2state$??1FunctionTemplateProxy@@QEAA@XZ 000000018000a43c     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$DllMain            000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$?_Reserve@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$CreateHandleProxyTest 000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$atexit             000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$??1?$lock_guard@Vrecursive_mutex@std@@@std@@QEAA@XZ 000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$CreateObjectTemplateProxyTest 000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$ForceGC            000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$?_Reserve@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$CreateV8EngineProxyTest 000000018000a484     * CIL library *:* CIL module *
+ 0002:00001484       $unwind$CreateFunctionTemplateProxyTest 000000018000a484     * CIL library *:* CIL module *
+ 0002:0000148c       $unwind$?SetHandle@HandleProxy@@IEAAPEAU1@V?$Handle@VValue@v8@@@v8@@@Z 000000018000a48c     * CIL library *:* CIL module *
+ 0002:00001498       $unwind$?_Dispose@HandleProxy@@IEAA_N_N@Z 000000018000a498     * CIL library *:* CIL module *
+ 0002:000014b0       $stateUnwindMap$?_Dispose@HandleProxy@@IEAA_N_N@Z 000000018000a4b0     * CIL library *:* CIL module *
+ 0002:000014b8       $ip2state$?_Dispose@HandleProxy@@IEAA_N_N@Z 000000018000a4b8     * CIL library *:* CIL module *
+ 0002:000014d0       $unwind$?UpdateValue@HandleProxy@@QEAAXXZ 000000018000a4d0     * CIL library *:* CIL module *
+ 0002:000014e4       $unwind$?GetManagedObjectID@HandleProxy@@QEAAHXZ 000000018000a4e4     * CIL library *:* CIL module *
+ 0002:000014ec       $chain$0$?GetManagedObjectID@HandleProxy@@QEAAHXZ 000000018000a4ec     * CIL library *:* CIL module *
+ 0002:00001500       $chain$1$?GetManagedObjectID@HandleProxy@@QEAAHXZ 000000018000a500     * CIL library *:* CIL module *
+ 0002:00001514       $chain$2$?GetManagedObjectID@HandleProxy@@QEAAHXZ 000000018000a514     * CIL library *:* CIL module *
+ 0002:00001524       $chain$3$?GetManagedObjectID@HandleProxy@@QEAAHXZ 000000018000a524     * CIL library *:* CIL module *
+ 0002:00001534       $chain$0$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a534     * CIL library *:* CIL module *
+ 0002:00001548       $chain$2$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a548     * CIL library *:* CIL module *
+ 0002:0000155c       $chain$3$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a55c     * CIL library *:* CIL module *
+ 0002:0000156c       $unwind$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 000000018000a56c     * CIL library *:* CIL module *
+ 0002:0000156c       $unwind$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 000000018000a56c     * CIL library *:* CIL module *
+ 0002:00001578       $chain$0$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 000000018000a578     * CIL library *:* CIL module *
+ 0002:0000158c       $chain$2$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 000000018000a58c     * CIL library *:* CIL module *
+ 0002:000015a0       $chain$3$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 000000018000a5a0     * CIL library *:* CIL module *
+ 0002:000015b0       $chain$0$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 000000018000a5b0     * CIL library *:* CIL module *
+ 0002:000015c4       $chain$2$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 000000018000a5c4     * CIL library *:* CIL module *
+ 0002:000015d8       $chain$3$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 000000018000a5d8     * CIL library *:* CIL module *
+ 0002:000015e8       $unwind$?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a5e8     * CIL library *:* CIL module *
+ 0002:000015f4       $chain$0$?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a5f4     * CIL library *:* CIL module *
+ 0002:00001608       $chain$1$?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a608     * CIL library *:* CIL module *
+ 0002:00001618       $unwind$?GetProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a618     * CIL library *:* CIL module *
+ 0002:00001624       $chain$0$?GetProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a624     * CIL library *:* CIL module *
+ 0002:00001638       $chain$1$?GetProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 000000018000a638     * CIL library *:* CIL module *
+ 0002:00001648       $unwind$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a648     * CIL library *:* CIL module *
+ 0002:00001648       $unwind$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a648     * CIL library *:* CIL module *
+ 0002:00001654       $chain$0$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a654     * CIL library *:* CIL module *
+ 0002:00001668       $chain$2$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a668     * CIL library *:* CIL module *
+ 0002:0000167c       $chain$3$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018000a67c     * CIL library *:* CIL module *
+ 0002:0000168c       $unwind$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 000000018000a68c     * CIL library *:* CIL module *
+ 0002:0000168c       $unwind$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 000000018000a68c     * CIL library *:* CIL module *
+ 0002:00001698       $chain$0$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 000000018000a698     * CIL library *:* CIL module *
+ 0002:000016ac       $chain$2$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 000000018000a6ac     * CIL library *:* CIL module *
+ 0002:000016c0       $chain$3$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 000000018000a6c0     * CIL library *:* CIL module *
+ 0002:000016d0       $chain$0$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 000000018000a6d0     * CIL library *:* CIL module *
+ 0002:000016e4       $chain$2$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 000000018000a6e4     * CIL library *:* CIL module *
+ 0002:000016f8       $chain$3$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 000000018000a6f8     * CIL library *:* CIL module *
+ 0002:00001708       $unwind$?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a708     * CIL library *:* CIL module *
+ 0002:00001714       $chain$0$?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a714     * CIL library *:* CIL module *
+ 0002:00001728       $chain$1$?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a728     * CIL library *:* CIL module *
+ 0002:00001738       $unwind$?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a738     * CIL library *:* CIL module *
+ 0002:00001744       $chain$0$?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a744     * CIL library *:* CIL module *
+ 0002:00001758       $chain$1$?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a758     * CIL library *:* CIL module *
+ 0002:00001768       $unwind$??0ObjectTemplateProxy@@QEAA@PEAVV8EngineProxy@@@Z 000000018000a768     * CIL library *:* CIL module *
+ 0002:00001768       $unwind$CreateObjectFromTemplate 000000018000a768     * CIL library *:* CIL module *
+ 0002:00001778       $unwind$??0ObjectTemplateProxy@@QEAA@PEAVV8EngineProxy@@V?$Local@VObjectTemplate@v8@@@v8@@@Z 000000018000a778     * CIL library *:* CIL module *
+ 0002:00001788       $unwind$?AccessorSetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@X@3@@Z 000000018000a788     * CIL library *:* CIL module *
+ 0002:0000179c       $unwind$?AccessorGetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018000a79c     * CIL library *:* CIL module *
+ 0002:000017ac       $unwind$??1ObjectTemplateProxy@@QEAA@XZ 000000018000a7ac     * CIL library *:* CIL module *
+ 0002:000017c0       $ip2state$??1ObjectTemplateProxy@@QEAA@XZ 000000018000a7c0     * CIL library *:* CIL module *
+ 0002:00001808       $unwind$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a808     * CIL library *:* CIL module *
+ 0002:00001818       $stateUnwindMap$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a818     * CIL library *:* CIL module *
+ 0002:00001830       $tryMap$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a830     * CIL library *:* CIL module *
+ 0002:00001844       $handlerMap$0$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a844     * CIL library *:* CIL module *
+ 0002:00001858       $ip2state$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a858     * CIL library *:* CIL module *
+ 0002:00001890       $unwind$?catch$0@?0???$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 000000018000a890     * CIL library *:* CIL module *
+ 0002:000018a0       $unwind$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a8a0     * CIL library *:* CIL module *
+ 0002:000018b0       $tryMap$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a8b0     * CIL library *:* CIL module *
+ 0002:000018c4       $handlerMap$0$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a8c4     * CIL library *:* CIL module *
+ 0002:000018d8       $ip2state$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000a8d8     * CIL library *:* CIL module *
+ 0002:00001900       $unwind$?catch$0@?0???$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 000000018000a900     * CIL library *:* CIL module *
+ 0002:00001910       $unwind$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 000000018000a910     * CIL library *:* CIL module *
+ 0002:00001930       $stateUnwindMap$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 000000018000a930     * CIL library *:* CIL module *
+ 0002:00001950       $tryMap$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 000000018000a950     * CIL library *:* CIL module *
+ 0002:00001978       $handlerMap$0$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 000000018000a978     * CIL library *:* CIL module *
+ 0002:0000198c       $handlerMap$1$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 000000018000a98c     * CIL library *:* CIL module *
+ 0002:000019a0       $ip2state$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 000000018000a9a0     * CIL library *:* CIL module *
+ 0002:000019e8       $unwind$?catch$0@?0??_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z@4HA 000000018000a9e8     * CIL library *:* CIL module *
+ 0002:000019e8       $unwind$?catch$1@?0??_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z@4HA 000000018000a9e8     * CIL library *:* CIL module *
+ 0002:000019f8       $unwind$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 000000018000a9f8     * CIL library *:* CIL module *
+ 0002:00001a14       $tryMap$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 000000018000aa14     * CIL library *:* CIL module *
+ 0002:00001a28       $handlerMap$0$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 000000018000aa28     * CIL library *:* CIL module *
+ 0002:00001a3c       $ip2state$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 000000018000aa3c     * CIL library *:* CIL module *
+ 0002:00001a64       $unwind$?catch$0@?0??_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z@4HA 000000018000aa64     * CIL library *:* CIL module *
+ 0002:00001a78       $unwind$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 000000018000aa78     * CIL library *:* CIL module *
+ 0002:00001a94       $tryMap$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 000000018000aa94     * CIL library *:* CIL module *
+ 0002:00001aa8       $handlerMap$0$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 000000018000aaa8     * CIL library *:* CIL module *
+ 0002:00001abc       $ip2state$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 000000018000aabc     * CIL library *:* CIL module *
+ 0002:00001ae4       $unwind$?catch$0@?0??_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z@4HA 000000018000aae4     * CIL library *:* CIL module *
+ 0002:00001af4       $unwind$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 000000018000aaf4     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b10       $stateUnwindMap$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 000000018000ab10     * CIL library *:* CIL module *
+ 0002:00001b20       $tryMap$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 000000018000ab20     * CIL library *:* CIL module *
+ 0002:00001b34       $handlerMap$0$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 000000018000ab34     * CIL library *:* CIL module *
+ 0002:00001b48       $ip2state$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 000000018000ab48     * CIL library *:* CIL module *
+ 0002:00001b70       $unwind$?catch$0@?0??_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z@4HA 000000018000ab70     * CIL library *:* CIL module *
+ 0002:00001b80       $unwind$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 000000018000ab80     * CIL library *:* CIL module *
+ 0002:00001b9c       $tryMap$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 000000018000ab9c     * CIL library *:* CIL module *
+ 0002:00001bb0       $handlerMap$0$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 000000018000abb0     * CIL library *:* CIL module *
+ 0002:00001bc4       $ip2state$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 000000018000abc4     * CIL library *:* CIL module *
+ 0002:00001bec       $unwind$?catch$0@?0??_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z@4HA 000000018000abec     * CIL library *:* CIL module *
+ 0002:00001bfc       $unwind$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 000000018000abfc     * CIL library *:* CIL module *
+ 0002:00001c0c       $chain$1$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 000000018000ac0c     * CIL library *:* CIL module *
+ 0002:00001c24       $chain$2$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 000000018000ac24     * CIL library *:* CIL module *
+ 0002:00001c34       $chain$3$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 000000018000ac34     * CIL library *:* CIL module *
+ 0002:00001c4c       $unwind$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 000000018000ac4c     * CIL library *:* CIL module *
+ 0002:00001c64       $tryMap$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 000000018000ac64     * CIL library *:* CIL module *
+ 0002:00001c78       $handlerMap$0$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 000000018000ac78     * CIL library *:* CIL module *
+ 0002:00001c8c       $ip2state$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 000000018000ac8c     * CIL library *:* CIL module *
+ 0002:00001cb4       $unwind$?catch$0@?0??_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z@4HA 000000018000acb4     * CIL library *:* CIL module *
+ 0002:00001cc8       $unwind$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 000000018000acc8     * CIL library *:* CIL module *
+ 0002:00001ce0       $tryMap$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 000000018000ace0     * CIL library *:* CIL module *
+ 0002:00001cf4       $handlerMap$0$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 000000018000acf4     * CIL library *:* CIL module *
+ 0002:00001d08       $ip2state$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 000000018000ad08     * CIL library *:* CIL module *
+ 0002:00001d30       $unwind$?catch$0@?0??_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z@4HA 000000018000ad30     * CIL library *:* CIL module *
+ 0002:00001d44       $unwind$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 000000018000ad44     * CIL library *:* CIL module *
+ 0002:00001d5c       $tryMap$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 000000018000ad5c     * CIL library *:* CIL module *
+ 0002:00001d70       $handlerMap$0$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 000000018000ad70     * CIL library *:* CIL module *
+ 0002:00001d84       $ip2state$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 000000018000ad84     * CIL library *:* CIL module *
+ 0002:00001dac       $unwind$?catch$0@?0??_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z@4HA 000000018000adac     * CIL library *:* CIL module *
+ 0002:00001dc0       $unwind$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QEAA@XZ 000000018000adc0     * CIL library *:* CIL module *
+ 0002:00001dd0       $stateUnwindMap$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QEAA@XZ 000000018000add0     * CIL library *:* CIL module *
+ 0002:00001dd8       $ip2state$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QEAA@XZ 000000018000add8     * CIL library *:* CIL module *
+ 0002:00001de0       $unwind$?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K@Z 000000018000ade0     * CIL library *:* CIL module *
+ 0002:00001dec       $chain$1$?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K@Z 000000018000adec     * CIL library *:* CIL module *
+ 0002:00001e00       $chain$2$?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K@Z 000000018000ae00     * CIL library *:* CIL module *
+ 0002:00001e10       $unwind$?_Insert_n@?$vector@_NV?$allocator@_N@std@@@std@@QEAA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_KAEB_N@Z 000000018000ae10     * CIL library *:* CIL module *
+ 0002:00001e28       $unwind$?erase@?$vector@_NV?$allocator@_N@std@@@std@@QEAA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@0@Z 000000018000ae28     * CIL library *:* CIL module *
+ 0002:00001e40       $unwind$?push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z 000000018000ae40     * CIL library *:* CIL module *
+ 0002:00001e54       $ip2state$?push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z 000000018000ae54     * CIL library *:* CIL module *
+ 0002:00001e6c       $unwind$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z 000000018000ae6c     * CIL library *:* CIL module *
+ 0002:00001e80       $stateUnwindMap$?push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z 000000018000ae80     * CIL library *:* CIL module *
+ 0002:00001e80       $stateUnwindMap$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z 000000018000ae80     * CIL library *:* CIL module *
+ 0002:00001e88       $ip2state$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z 000000018000ae88     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$?fin$0@?0???_M@YAXPEAX_KHP6AX0@Z@Z@4HA 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$?filt$0@?0??__ArrayUnwind@@YAXPEAX_KHP6AX0@Z@Z@4HA 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$?dtor$0@?0???$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$_onexit$fin$0      000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$_IsNonwritableInCurrentImage$filt$0 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$?dtor$0@?0??push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z@4HA 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$?dtor$3@?0??CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z@4HA 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$__DllMainCRTStartup$filt$0 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$__DllMainCRTStartup$fin$1 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$?dtor$0@?0??push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z@4HA 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea0       $unwind$?dtor$3@?0??GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z@4HA 000000018000aea0     * CIL library *:* CIL module *
+ 0002:00001ea8       $unwind$?resize@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K_N@Z 000000018000aea8     * CIL library *:* CIL module *
+ 0002:00001eb0       $unwind$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 000000018000aeb0     * CIL library *:* CIL module *
+ 0002:00001ec0       $chain$1$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 000000018000aec0     * CIL library *:* CIL module *
+ 0002:00001ed8       $chain$2$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 000000018000aed8     * CIL library *:* CIL module *
+ 0002:00001eec       $chain$3$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 000000018000aeec     * CIL library *:* CIL module *
+ 0002:00001f00       $chain$4$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 000000018000af00     * CIL library *:* CIL module *
+ 0002:00001f10       $chain$5$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 000000018000af10     * CIL library *:* CIL module *
+ 0002:00001f20       $chain$6$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 000000018000af20     * CIL library *:* CIL module *
+ 0002:00001f30       $unwind$??1recursive_mutex@std@@QEAA@XZ 000000018000af30     * CIL library *:* CIL module *
+ 0002:00001f40       $stateUnwindMap$??1recursive_mutex@std@@QEAA@XZ 000000018000af40     * CIL library *:* CIL module *
+ 0002:00001f48       $ip2state$??1recursive_mutex@std@@QEAA@XZ 000000018000af48     * CIL library *:* CIL module *
+ 0002:00001f50       $unwind$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 000000018000af50     * CIL library *:* CIL module *
+ 0002:00001f60       $stateUnwindMap$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 000000018000af60     * CIL library *:* CIL module *
+ 0002:00001f70       $ip2state$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 000000018000af70     * CIL library *:* CIL module *
+ 0002:00001f88       $unwind$??__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 000000018000af88     * CIL library *:* CIL module *
+ 0002:00001f9c       $stateUnwindMap$??__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 000000018000af9c     * CIL library *:* CIL module *
+ 0002:00001fac       $ip2state$??__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 000000018000afac     * CIL library *:* CIL module *
+ 0002:00001fcc       $unwind$?GetNativeString@V8EngineProxy@@QEAA?AU_StringItem@@PEAVString@v8@@@Z 000000018000afcc     * CIL library *:* CIL module *
+ 0002:00001fe4       $unwind$?DisposeHandleProxy@V8EngineProxy@@QEAAXPEAUHandleProxy@@@Z 000000018000afe4     * CIL library *:* CIL module *
+ 0002:00001ffc       $stateUnwindMap$?DisposeHandleProxy@V8EngineProxy@@QEAAXPEAUHandleProxy@@@Z 000000018000affc     * CIL library *:* CIL module *
+ 0002:00002004       $ip2state$?DisposeHandleProxy@V8EngineProxy@@QEAAXPEAUHandleProxy@@@Z 000000018000b004     * CIL library *:* CIL module *
+ 0002:0000201c       $unwind$?IsDisposed@V8EngineProxy@@SA_NH@Z 000000018000b01c     * CIL library *:* CIL module *
+ 0002:00002024       $unwind$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z 000000018000b024     * CIL library *:* CIL module *
+ 0002:0000203c       $stateUnwindMap$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z 000000018000b03c     * CIL library *:* CIL module *
+ 0002:0000205c       $ip2state$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z 000000018000b05c     * CIL library *:* CIL module *
+ 0002:000020a4       $unwind$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAGG@Z 000000018000b0a4     * CIL library *:* CIL module *
+ 0002:000020b4       $chain$0$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAGG@Z 000000018000b0b4     * CIL library *:* CIL module *
+ 0002:000020c8       $chain$1$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAGG@Z 000000018000b0c8     * CIL library *:* CIL module *
+ 0002:000020d8       $unwind$?CreateError@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAGW4JSValueType@@@Z 000000018000b0d8     * CIL library *:* CIL module *
+ 0002:000020e8       $unwind$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 000000018000b0e8     * CIL library *:* CIL module *
+ 0002:00002104       $stateUnwindMap$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 000000018000b104     * CIL library *:* CIL module *
+ 0002:00002124       $tryMap$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 000000018000b124     * CIL library *:* CIL module *
+ 0002:00002138       $handlerMap$0$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 000000018000b138     * CIL library *:* CIL module *
+ 0002:0000214c       $ip2state$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 000000018000b14c     * CIL library *:* CIL module *
+ 0002:00002194       $unwind$?catch$0@?0??Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z@4HA 000000018000b194     * CIL library *:* CIL module *
+ 0002:000021a8       $unwind$?SetGlobalObjectTemplate@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAVObjectTemplateProxy@@@Z 000000018000b1a8     * CIL library *:* CIL module *
+ 0002:000021b8       $unwind$?WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z 000000018000b1b8     * CIL library *:* CIL module *
+ 0002:000021cc       $ip2state$?WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z 000000018000b1cc     * CIL library *:* CIL module *
+ 0002:00002214       $unwind$?GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 000000018000b214     * CIL library *:* CIL module *
+ 0002:0000222c       $stateUnwindMap$?GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 000000018000b22c     * CIL library *:* CIL module *
+ 0002:0000224c       $ip2state$?GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 000000018000b24c     * CIL library *:* CIL module *
+ 0002:00002294       $unwind$??1V8EngineProxy@@QEAA@XZ 000000018000b294     * CIL library *:* CIL module *
+ 0002:000022b0       $stateUnwindMap$??1V8EngineProxy@@QEAA@XZ 000000018000b2b0     * CIL library *:* CIL module *
+ 0002:000022f8       $ip2state$??1V8EngineProxy@@QEAA@XZ 000000018000b2f8     * CIL library *:* CIL module *
+ 0002:00002368       $unwind$??0V8EngineProxy@@QEAA@_NP6AXXZH@Z 000000018000b368     * CIL library *:* CIL module *
+ 0002:00002384       $stateUnwindMap$??0V8EngineProxy@@QEAA@_NP6AXXZH@Z 000000018000b384     * CIL library *:* CIL module *
+ 0002:000023ac       $ip2state$??0V8EngineProxy@@QEAA@_NP6AXXZH@Z 000000018000b3ac     * CIL library *:* CIL module *
+ 0002:000047b6       .idata$6                   000000018000d7b6     v8-x64:v8-x64.dll
+ 0002:000047ee       .idata$6                   000000018000d7ee     kernel32:KERNEL32.dll
+ 0002:000048ae       .idata$6                   000000018000d8ae     msvcprt:MSVCP110.dll
+ 0002:00004980       .idata$6                   000000018000d980     MSVCRT:MSVCR110.dll
+ 0002:00004c10       .edata                     000000018000dc10     V8_Net_Proxy_x64.exp
+ 0002:00004c38       rgpv                       000000018000dc38     V8_Net_Proxy_x64.exp
+ 0002:00004d2c       rgszName                   000000018000dd2c     V8_Net_Proxy_x64.exp
+ 0002:00004e20       rgwOrd                     000000018000de20     V8_Net_Proxy_x64.exp
+ 0002:00004e9a       szName                     000000018000de9a     V8_Net_Proxy_x64.exp
+ 0002:00004eaf       $N00001                    000000018000deaf     V8_Net_Proxy_x64.exp
+ 0002:00004eb4       $N00002                    000000018000deb4     V8_Net_Proxy_x64.exp
+ 0002:00004ec2       $N00003                    000000018000dec2     V8_Net_Proxy_x64.exp
+ 0002:00004ece       $N00004                    000000018000dece     V8_Net_Proxy_x64.exp
+ 0002:00004edc       $N00005                    000000018000dedc     V8_Net_Proxy_x64.exp
+ 0002:00004ee7       $N00006                    000000018000dee7     V8_Net_Proxy_x64.exp
+ 0002:00004ef3       $N00007                    000000018000def3     V8_Net_Proxy_x64.exp
+ 0002:00004f0a       $N00008                    000000018000df0a     V8_Net_Proxy_x64.exp
+ 0002:00004f26       $N00009                    000000018000df26     V8_Net_Proxy_x64.exp
+ 0002:00004f46       $N00010                    000000018000df46     V8_Net_Proxy_x64.exp
+ 0002:00004f5c       $N00011                    000000018000df5c     V8_Net_Proxy_x64.exp
+ 0002:00004f6a       $N00012                    000000018000df6a     V8_Net_Proxy_x64.exp
+ 0002:00004f7a       $N00013                    000000018000df7a     V8_Net_Proxy_x64.exp
+ 0002:00004f87       $N00014                    000000018000df87     V8_Net_Proxy_x64.exp
+ 0002:00004f94       $N00015                    000000018000df94     V8_Net_Proxy_x64.exp
+ 0002:00004fad       $N00016                    000000018000dfad     V8_Net_Proxy_x64.exp
+ 0002:00004fc7       $N00017                    000000018000dfc7     V8_Net_Proxy_x64.exp
+ 0002:00004fe5       $N00018                    000000018000dfe5     V8_Net_Proxy_x64.exp
+ 0002:00004ff2       $N00019                    000000018000dff2     V8_Net_Proxy_x64.exp
+ 0002:00005004       $N00020                    000000018000e004     V8_Net_Proxy_x64.exp
+ 0002:00005018       $N00021                    000000018000e018     V8_Net_Proxy_x64.exp
+ 0002:00005030       $N00022                    000000018000e030     V8_Net_Proxy_x64.exp
+ 0002:0000504c       $N00023                    000000018000e04c     V8_Net_Proxy_x64.exp
+ 0002:00005068       $N00024                    000000018000e068     V8_Net_Proxy_x64.exp
+ 0002:00005083       $N00025                    000000018000e083     V8_Net_Proxy_x64.exp
+ 0002:0000509d       $N00026                    000000018000e09d     V8_Net_Proxy_x64.exp
+ 0002:000050ac       $N00027                    000000018000e0ac     V8_Net_Proxy_x64.exp
+ 0002:000050c1       $N00028                    000000018000e0c1     V8_Net_Proxy_x64.exp
+ 0002:000050d4       $N00029                    000000018000e0d4     V8_Net_Proxy_x64.exp
+ 0002:000050e7       $N00030                    000000018000e0e7     V8_Net_Proxy_x64.exp
+ 0002:000050ef       $N00031                    000000018000e0ef     V8_Net_Proxy_x64.exp
+ 0002:000050fe       $N00032                    000000018000e0fe     V8_Net_Proxy_x64.exp
+ 0002:0000510a       $N00033                    000000018000e10a     V8_Net_Proxy_x64.exp
+ 0002:0000512b       $N00034                    000000018000e12b     V8_Net_Proxy_x64.exp
+ 0002:0000514d       $N00035                    000000018000e14d     V8_Net_Proxy_x64.exp
+ 0002:00005166       $N00036                    000000018000e166     V8_Net_Proxy_x64.exp
+ 0002:0000517f       $N00037                    000000018000e17f     V8_Net_Proxy_x64.exp
+ 0002:00005197       $N00038                    000000018000e197     V8_Net_Proxy_x64.exp
+ 0002:000051aa       $N00039                    000000018000e1aa     V8_Net_Proxy_x64.exp
+ 0002:000051be       $N00040                    000000018000e1be     V8_Net_Proxy_x64.exp
+ 0002:000051d4       $N00041                    000000018000e1d4     V8_Net_Proxy_x64.exp
+ 0002:000051e5       $N00042                    000000018000e1e5     V8_Net_Proxy_x64.exp
+ 0002:000051f6       $N00043                    000000018000e1f6     V8_Net_Proxy_x64.exp
+ 0002:00005205       $N00044                    000000018000e205     V8_Net_Proxy_x64.exp
+ 0002:00005218       $N00045                    000000018000e218     V8_Net_Proxy_x64.exp
+ 0002:00005238       $N00046                    000000018000e238     V8_Net_Proxy_x64.exp
+ 0002:0000524e       $N00047                    000000018000e24e     V8_Net_Proxy_x64.exp
+ 0002:0000526c       $N00048                    000000018000e26c     V8_Net_Proxy_x64.exp
+ 0002:00005288       $N00049                    000000018000e288     V8_Net_Proxy_x64.exp
+ 0002:000052a0       $N00050                    000000018000e2a0     V8_Net_Proxy_x64.exp
+ 0002:000052b2       $N00051                    000000018000e2b2     V8_Net_Proxy_x64.exp
+ 0002:000052cb       $N00052                    000000018000e2cb     V8_Net_Proxy_x64.exp
+ 0002:000052e3       $N00053                    000000018000e2e3     V8_Net_Proxy_x64.exp
+ 0002:000052fd       $N00054                    000000018000e2fd     V8_Net_Proxy_x64.exp
+ 0002:00005317       $N00055                    000000018000e317     V8_Net_Proxy_x64.exp
+ 0002:00005339       $N00056                    000000018000e339     V8_Net_Proxy_x64.exp
+ 0002:00005359       $N00057                    000000018000e359     V8_Net_Proxy_x64.exp
+ 0002:0000536b       $N00058                    000000018000e36b     V8_Net_Proxy_x64.exp
+ 0002:00005375       $N00059                    000000018000e375     V8_Net_Proxy_x64.exp
+ 0002:00005385       $N00060                    000000018000e385     V8_Net_Proxy_x64.exp
+ 0002:00005398       $N00061                    000000018000e398     V8_Net_Proxy_x64.exp
+ 0003:00000060       __proc_attached            000000018000f060     MSVCRT:crtdll.obj
+ 0003:00000070       GS_ExceptionRecord         000000018000f070     MSVCRT:gs_report.obj
+ 0003:00000110       GS_ContextRecord           000000018000f110     MSVCRT:gs_report.obj
+ 0003:000005e0       DebuggerWasPresent         000000018000f5e0     MSVCRT:gs_report.obj
+ 0003:000005f8       _V8Initialized             000000018000f5f8     * CIL library *:* CIL module *
+ 0003:00000600       _Tuple_alloc               000000018000f600     * CIL library *:* CIL module *
+ 0003:00000601       ignore                     000000018000f601     * CIL library *:* CIL module *
+ 0003:00000602       allocator_arg              000000018000f602     * CIL library *:* CIL module *
+ 0003:00000603       piecewise_construct        000000018000f603     * CIL library *:* CIL module *
+ 0003:00000604       _Tuple_alloc               000000018000f604     * CIL library *:* CIL module *
+ 0003:00000605       ignore                     000000018000f605     * CIL library *:* CIL module *
+ 0003:00000606       allocator_arg              000000018000f606     * CIL library *:* CIL module *
+ 0003:00000607       piecewise_construct        000000018000f607     * CIL library *:* CIL module *
+ 0003:00000608       _Tuple_alloc               000000018000f608     * CIL library *:* CIL module *
+ 0003:00000609       ignore                     000000018000f609     * CIL library *:* CIL module *
+ 0003:0000060a       allocator_arg              000000018000f60a     * CIL library *:* CIL module *
+ 0003:0000060b       piecewise_construct        000000018000f60b     * CIL library *:* CIL module *
+ 0003:0000060c       _Tuple_alloc               000000018000f60c     * CIL library *:* CIL module *
+ 0003:0000060d       ignore                     000000018000f60d     * CIL library *:* CIL module *
+ 0003:0000060e       allocator_arg              000000018000f60e     * CIL library *:* CIL module *
+ 0003:0000060f       piecewise_construct        000000018000f60f     * CIL library *:* CIL module *
+ 0003:00000610       _Tuple_alloc               000000018000f610     * CIL library *:* CIL module *
+ 0003:00000611       ignore                     000000018000f611     * CIL library *:* CIL module *
+ 0003:00000612       allocator_arg              000000018000f612     * CIL library *:* CIL module *
+ 0003:00000613       piecewise_construct        000000018000f613     * CIL library *:* CIL module *
+ 0003:00000614       _Tuple_alloc               000000018000f614     * CIL library *:* CIL module *
+ 0003:00000615       ignore                     000000018000f615     * CIL library *:* CIL module *
+ 0003:00000616       allocator_arg              000000018000f616     * CIL library *:* CIL module *
+ 0003:00000617       piecewise_construct        000000018000f617     * CIL library *:* CIL module *
+ 0003:00000638       _Tuple_alloc               000000018000f638     * CIL library *:* CIL module *
+ 0003:00000639       ignore                     000000018000f639     * CIL library *:* CIL module *
+ 0003:0000063a       allocator_arg              000000018000f63a     * CIL library *:* CIL module *
+ 0003:0000063b       piecewise_construct        000000018000f63b     * CIL library *:* CIL module *
+ 0004:00000000       $pdata$CreateV8EngineProxy 0000000180010000     * CIL library *:* CIL module *
+ 0004:0000000c       $pdata$DestroyV8EngineProxy 000000018001000c     * CIL library *:* CIL module *
+ 0004:00000018       $pdata$WithV8IsolateScope  0000000180010018     * CIL library *:* CIL module *
+ 0004:00000024       $pdata$WithHandleScope     0000000180010024     * CIL library *:* CIL module *
+ 0004:00000030       $pdata$ForceGC             0000000180010030     * CIL library *:* CIL module *
+ 0004:0000003c       $pdata$CreateObjectTemplateProxy 000000018001003c     * CIL library *:* CIL module *
+ 0004:00000048       $pdata$DeleteObjectTemplateProxy 0000000180010048     * CIL library *:* CIL module *
+ 0004:00000054       $pdata$RegisterNamedPropertyHandlers 0000000180010054     * CIL library *:* CIL module *
+ 0004:00000060       $pdata$RegisterIndexedPropertyHandlers 0000000180010060     * CIL library *:* CIL module *
+ 0004:0000006c       $pdata$UnregisterNamedPropertyHandlers 000000018001006c     * CIL library *:* CIL module *
+ 0004:00000078       $pdata$UnregisterIndexedPropertyHandlers 0000000180010078     * CIL library *:* CIL module *
+ 0004:00000084       $pdata$RegisterInvokeHandler 0000000180010084     * CIL library *:* CIL module *
+ 0004:00000090       $pdata$CreateObjectFromTemplate 0000000180010090     * CIL library *:* CIL module *
+ 0004:0000009c       $pdata$ConnectObject       000000018001009c     * CIL library *:* CIL module *
+ 0004:000000a8       $pdata$0$ConnectObject     00000001800100a8     * CIL library *:* CIL module *
+ 0004:000000b4       $pdata$1$ConnectObject     00000001800100b4     * CIL library *:* CIL module *
+ 0004:000000c0       $pdata$GetObjectPrototype  00000001800100c0     * CIL library *:* CIL module *
+ 0004:000000cc       $pdata$Call                00000001800100cc     * CIL library *:* CIL module *
+ 0004:000000d8       $pdata$SetObjectPropertyByName 00000001800100d8     * CIL library *:* CIL module *
+ 0004:000000e4       $pdata$SetObjectPropertyByIndex 00000001800100e4     * CIL library *:* CIL module *
+ 0004:000000f0       $pdata$GetObjectPropertyByName 00000001800100f0     * CIL library *:* CIL module *
+ 0004:000000fc       $pdata$GetObjectPropertyByIndex 00000001800100fc     * CIL library *:* CIL module *
+ 0004:00000108       $pdata$DeleteObjectPropertyByName 0000000180010108     * CIL library *:* CIL module *
+ 0004:00000114       $pdata$DeleteObjectPropertyByIndex 0000000180010114     * CIL library *:* CIL module *
+ 0004:00000120       $pdata$SetObjectAccessor   0000000180010120     * CIL library *:* CIL module *
+ 0004:0000012c       $pdata$0$SetObjectAccessor 000000018001012c     * CIL library *:* CIL module *
+ 0004:00000138       $pdata$1$SetObjectAccessor 0000000180010138     * CIL library *:* CIL module *
+ 0004:00000144       $pdata$SetObjectTemplateProperty 0000000180010144     * CIL library *:* CIL module *
+ 0004:00000150       $pdata$GetPropertyNames    0000000180010150     * CIL library *:* CIL module *
+ 0004:0000015c       $pdata$GetOwnPropertyNames 000000018001015c     * CIL library *:* CIL module *
+ 0004:00000168       $pdata$GetPropertyAttributes 0000000180010168     * CIL library *:* CIL module *
+ 0004:00000174       $pdata$GetArrayLength      0000000180010174     * CIL library *:* CIL module *
+ 0004:00000180       $pdata$CreateFunctionTemplateProxy 0000000180010180     * CIL library *:* CIL module *
+ 0004:0000018c       $pdata$DeleteFunctionTemplateProxy 000000018001018c     * CIL library *:* CIL module *
+ 0004:00000198       $pdata$GetFunction         0000000180010198     * CIL library *:* CIL module *
+ 0004:000001a4       $pdata$SetFunctionTemplateProperty 00000001800101a4     * CIL library *:* CIL module *
+ 0004:000001b0       $pdata$CreateBoolean       00000001800101b0     * CIL library *:* CIL module *
+ 0004:000001bc       $pdata$CreateInteger       00000001800101bc     * CIL library *:* CIL module *
+ 0004:000001c8       $pdata$CreateNumber        00000001800101c8     * CIL library *:* CIL module *
+ 0004:000001d4       $pdata$CreateString        00000001800101d4     * CIL library *:* CIL module *
+ 0004:000001e0       $pdata$CreateDate          00000001800101e0     * CIL library *:* CIL module *
+ 0004:000001ec       $pdata$CreateObject        00000001800101ec     * CIL library *:* CIL module *
+ 0004:000001f8       $pdata$CreateNullValue     00000001800101f8     * CIL library *:* CIL module *
+ 0004:00000204       $pdata$MakeWeakHandle      0000000180010204     * CIL library *:* CIL module *
+ 0004:00000210       $pdata$MakeStrongHandle    0000000180010210     * CIL library *:* CIL module *
+ 0004:0000021c       $pdata$CreateHandleProxyTest 000000018001021c     * CIL library *:* CIL module *
+ 0004:00000228       $pdata$CreateV8EngineProxyTest 0000000180010228     * CIL library *:* CIL module *
+ 0004:00000234       $pdata$CreateObjectTemplateProxyTest 0000000180010234     * CIL library *:* CIL module *
+ 0004:00000240       $pdata$CreateFunctionTemplateProxyTest 0000000180010240     * CIL library *:* CIL module *
+ 0004:0000024c       $pdata$DeleteTestData      000000018001024c     * CIL library *:* CIL module *
+ 0004:00000258       $pdata$??0FunctionTemplateProxy@@QEAA@PEAVV8EngineProxy@@PEAGP6APEAUHandleProxy@@H_NPEAU2@PEAPEAU2@I@Z@Z 0000000180010258     * CIL library *:* CIL module *
+ 0004:00000264       $pdata$??1FunctionTemplateProxy@@QEAA@XZ 0000000180010264     * CIL library *:* CIL module *
+ 0004:00000270       $pdata$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 0000000180010270     * CIL library *:* CIL module *
+ 0004:0000027c       $pdata$0$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 000000018001027c     * CIL library *:* CIL module *
+ 0004:00000288       $pdata$4$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 0000000180010288     * CIL library *:* CIL module *
+ 0004:00000294       $pdata$5$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 0000000180010294     * CIL library *:* CIL module *
+ 0004:000002a0       $pdata$6$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 00000001800102a0     * CIL library *:* CIL module *
+ 0004:000002ac       $pdata$7$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 00000001800102ac     * CIL library *:* CIL module *
+ 0004:000002b8       $pdata$8$?InvocationCallbackProxy@FunctionTemplateProxy@@SAXAEBV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 00000001800102b8     * CIL library *:* CIL module *
+ 0004:000002c4       $pdata$?CreateInstance@FunctionTemplateProxy@@QEAAPEAUHandleProxy@@HHPEAPEAU2@@Z 00000001800102c4     * CIL library *:* CIL module *
+ 0004:000002d0       $pdata$?_Dispose@HandleProxy@@IEAA_N_N@Z 00000001800102d0     * CIL library *:* CIL module *
+ 0004:000002dc       $pdata$?SetHandle@HandleProxy@@IEAAPEAU1@V?$Handle@VValue@v8@@@v8@@@Z 00000001800102dc     * CIL library *:* CIL module *
+ 0004:000002e8       $pdata$?GetManagedObjectID@HandleProxy@@QEAAHXZ 00000001800102e8     * CIL library *:* CIL module *
+ 0004:000002f4       $pdata$0$?GetManagedObjectID@HandleProxy@@QEAAHXZ 00000001800102f4     * CIL library *:* CIL module *
+ 0004:00000300       $pdata$1$?GetManagedObjectID@HandleProxy@@QEAAHXZ 0000000180010300     * CIL library *:* CIL module *
+ 0004:0000030c       $pdata$2$?GetManagedObjectID@HandleProxy@@QEAAHXZ 000000018001030c     * CIL library *:* CIL module *
+ 0004:00000318       $pdata$3$?GetManagedObjectID@HandleProxy@@QEAAHXZ 0000000180010318     * CIL library *:* CIL module *
+ 0004:00000324       $pdata$?_RevivableCallback@HandleProxy@@CAXPEAVIsolate@v8@@PEAV?$Persistent@VValue@v8@@@3@PEAU1@@Z 0000000180010324     * CIL library *:* CIL module *
+ 0004:00000330       $pdata$?UpdateValue@HandleProxy@@QEAAXXZ 0000000180010330     * CIL library *:* CIL module *
+ 0004:0000033c       $pdata$??1?$lock_guard@Vrecursive_mutex@std@@@std@@QEAA@XZ 000000018001033c     * CIL library *:* CIL module *
+ 0004:00000348       $pdata$??0ObjectTemplateProxy@@QEAA@PEAVV8EngineProxy@@@Z 0000000180010348     * CIL library *:* CIL module *
+ 0004:00000354       $pdata$??0ObjectTemplateProxy@@QEAA@PEAVV8EngineProxy@@V?$Local@VObjectTemplate@v8@@@v8@@@Z 0000000180010354     * CIL library *:* CIL module *
+ 0004:00000360       $pdata$??1ObjectTemplateProxy@@QEAA@XZ 0000000180010360     * CIL library *:* CIL module *
+ 0004:0000036c       $pdata$?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018001036c     * CIL library *:* CIL module *
+ 0004:00000378       $pdata$0$?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180010378     * CIL library *:* CIL module *
+ 0004:00000384       $pdata$1$?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180010384     * CIL library *:* CIL module *
+ 0004:00000390       $pdata$?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180010390     * CIL library *:* CIL module *
+ 0004:0000039c       $pdata$0$?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018001039c     * CIL library *:* CIL module *
+ 0004:000003a8       $pdata$1$?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 00000001800103a8     * CIL library *:* CIL module *
+ 0004:000003b4       $pdata$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 00000001800103b4     * CIL library *:* CIL module *
+ 0004:000003c0       $pdata$0$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 00000001800103c0     * CIL library *:* CIL module *
+ 0004:000003cc       $pdata$2$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 00000001800103cc     * CIL library *:* CIL module *
+ 0004:000003d8       $pdata$3$?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 00000001800103d8     * CIL library *:* CIL module *
+ 0004:000003e4       $pdata$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 00000001800103e4     * CIL library *:* CIL module *
+ 0004:000003f0       $pdata$0$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 00000001800103f0     * CIL library *:* CIL module *
+ 0004:000003fc       $pdata$2$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 00000001800103fc     * CIL library *:* CIL module *
+ 0004:00000408       $pdata$3$?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 0000000180010408     * CIL library *:* CIL module *
+ 0004:00000414       $pdata$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 0000000180010414     * CIL library *:* CIL module *
+ 0004:00000420       $pdata$0$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 0000000180010420     * CIL library *:* CIL module *
+ 0004:0000042c       $pdata$2$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 000000018001042c     * CIL library *:* CIL module *
+ 0004:00000438       $pdata$3$?GetPropertyNames@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 0000000180010438     * CIL library *:* CIL module *
+ 0004:00000444       $pdata$?GetProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 0000000180010444     * CIL library *:* CIL module *
+ 0004:00000450       $pdata$0$?GetProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 0000000180010450     * CIL library *:* CIL module *
+ 0004:0000045c       $pdata$1$?GetProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 000000018001045c     * CIL library *:* CIL module *
+ 0004:00000468       $pdata$?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180010468     * CIL library *:* CIL module *
+ 0004:00000474       $pdata$0$?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180010474     * CIL library *:* CIL module *
+ 0004:00000480       $pdata$1$?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 0000000180010480     * CIL library *:* CIL module *
+ 0004:0000048c       $pdata$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 000000018001048c     * CIL library *:* CIL module *
+ 0004:00000498       $pdata$0$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 0000000180010498     * CIL library *:* CIL module *
+ 0004:000004a4       $pdata$2$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 00000001800104a4     * CIL library *:* CIL module *
+ 0004:000004b0       $pdata$3$?GetPropertyAttributes@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 00000001800104b0     * CIL library *:* CIL module *
+ 0004:000004bc       $pdata$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 00000001800104bc     * CIL library *:* CIL module *
+ 0004:000004c8       $pdata$0$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 00000001800104c8     * CIL library *:* CIL module *
+ 0004:000004d4       $pdata$2$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 00000001800104d4     * CIL library *:* CIL module *
+ 0004:000004e0       $pdata$3$?DeleteProperty@ObjectTemplateProxy@@SAXIAEBV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 00000001800104e0     * CIL library *:* CIL module *
+ 0004:000004ec       $pdata$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 00000001800104ec     * CIL library *:* CIL module *
+ 0004:000004f8       $pdata$0$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 00000001800104f8     * CIL library *:* CIL module *
+ 0004:00000504       $pdata$2$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 0000000180010504     * CIL library *:* CIL module *
+ 0004:00000510       $pdata$3$?GetPropertyIndices@ObjectTemplateProxy@@SAXAEBV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 0000000180010510     * CIL library *:* CIL module *
+ 0004:0000051c       $pdata$?AccessorGetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@AEBV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 000000018001051c     * CIL library *:* CIL module *
+ 0004:00000528       $pdata$?AccessorSetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@AEBV?$PropertyCallbackInfo@X@3@@Z 0000000180010528     * CIL library *:* CIL module *
+ 0004:00000534       $pdata$?SetAccessor@ObjectTemplateProxy@@QEAAXHPEBGP6APEAUHandleProxy@@PEAU2@PEAG@ZP6APEAU2@121@ZW4AccessControl@v8@@W4PropertyAttribute@4@@Z 0000000180010534     * CIL library *:* CIL module *
+ 0004:00000540       $pdata$?IsDisposed@V8EngineProxy@@SA_NH@Z 0000000180010540     * CIL library *:* CIL module *
+ 0004:0000054c       $pdata$??0V8EngineProxy@@QEAA@_NP6AXXZH@Z 000000018001054c     * CIL library *:* CIL module *
+ 0004:00000558       $pdata$??1recursive_mutex@std@@QEAA@XZ 0000000180010558     * CIL library *:* CIL module *
+ 0004:00000564       $pdata$??1V8EngineProxy@@QEAA@XZ 0000000180010564     * CIL library *:* CIL module *
+ 0004:00000570       $pdata$?GetNativeString@V8EngineProxy@@QEAA?AU_StringItem@@PEAVString@v8@@@Z 0000000180010570     * CIL library *:* CIL module *
+ 0004:0000057c       $pdata$?GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 000000018001057c     * CIL library *:* CIL module *
+ 0004:00000588       $pdata$?DisposeHandleProxy@V8EngineProxy@@QEAAXPEAUHandleProxy@@@Z 0000000180010588     * CIL library *:* CIL module *
+ 0004:00000594       $pdata$?SetGlobalObjectTemplate@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAVObjectTemplateProxy@@@Z 0000000180010594     * CIL library *:* CIL module *
+ 0004:000005a0       $pdata$?WithContextScope@V8EngineProxy@@QEAAXP6AXXZ@Z 00000001800105a0     * CIL library *:* CIL module *
+ 0004:000005ac       $pdata$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 00000001800105ac     * CIL library *:* CIL module *
+ 0004:000005b8       $pdata$1$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 00000001800105b8     * CIL library *:* CIL module *
+ 0004:000005c4       $pdata$2$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 00000001800105c4     * CIL library *:* CIL module *
+ 0004:000005d0       $pdata$3$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 00000001800105d0     * CIL library *:* CIL module *
+ 0004:000005dc       $pdata$4$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 00000001800105dc     * CIL library *:* CIL module *
+ 0004:000005e8       $pdata$5$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 00000001800105e8     * CIL library *:* CIL module *
+ 0004:000005f4       $pdata$6$?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AEAVTryCatch@2@@Z 00000001800105f4     * CIL library *:* CIL module *
+ 0004:00000600       $pdata$?Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z 0000000180010600     * CIL library *:* CIL module *
+ 0004:0000060c       $pdata$?CreateError@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAGW4JSValueType@@@Z 000000018001060c     * CIL library *:* CIL module *
+ 0004:00000618       $pdata$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z 0000000180010618     * CIL library *:* CIL module *
+ 0004:00000624       $pdata$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAGG@Z 0000000180010624     * CIL library *:* CIL module *
+ 0004:00000630       $pdata$0$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAGG@Z 0000000180010630     * CIL library *:* CIL module *
+ 0004:0000063c       $pdata$1$?CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAGG@Z 000000018001063c     * CIL library *:* CIL module *
+ 0004:00000648       $pdata$?resize@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K_N@Z 0000000180010648     * CIL library *:* CIL module *
+ 0004:00000654       $pdata$??1?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAA@XZ 0000000180010654     * CIL library *:* CIL module *
+ 0004:00000654       $pdata$??1?$vector@HV?$allocator@H@std@@@std@@QEAA@XZ 0000000180010654     * CIL library *:* CIL module *
+ 0004:00000654       $pdata$??1?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAA@XZ 0000000180010654     * CIL library *:* CIL module *
+ 0004:00000654       $pdata$??1?$vector@IV?$allocator@_N@std@@@std@@QEAA@XZ 0000000180010654     * CIL library *:* CIL module *
+ 0004:00000660       $pdata$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z 0000000180010660     * CIL library *:* CIL module *
+ 0004:0000066c       $pdata$?push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z 000000018001066c     * CIL library *:* CIL module *
+ 0004:00000678       $pdata$?erase@?$vector@_NV?$allocator@_N@std@@@std@@QEAA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@0@Z 0000000180010678     * CIL library *:* CIL module *
+ 0004:00000684       $pdata$?_Insert_n@?$vector@_NV?$allocator@_N@std@@@std@@QEAA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_KAEB_N@Z 0000000180010684     * CIL library *:* CIL module *
+ 0004:00000690       $pdata$?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K@Z 0000000180010690     * CIL library *:* CIL module *
+ 0004:0000069c       $pdata$1$?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K@Z 000000018001069c     * CIL library *:* CIL module *
+ 0004:000006a8       $pdata$2$?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QEAAX_K@Z 00000001800106a8     * CIL library *:* CIL module *
+ 0004:000006b4       $pdata$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QEAA@XZ 00000001800106b4     * CIL library *:* CIL module *
+ 0004:000006c0       $pdata$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z 00000001800106c0     * CIL library *:* CIL module *
+ 0004:000006cc       $pdata$?_Reserve@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 00000001800106cc     * CIL library *:* CIL module *
+ 0004:000006d8       $pdata$?_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z 00000001800106d8     * CIL library *:* CIL module *
+ 0004:000006e4       $pdata$?_Reserve@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 00000001800106e4     * CIL library *:* CIL module *
+ 0004:000006f0       $pdata$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z 00000001800106f0     * CIL library *:* CIL module *
+ 0004:000006fc       $pdata$?_Reserve@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 00000001800106fc     * CIL library *:* CIL module *
+ 0004:00000708       $pdata$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 0000000180010708     * CIL library *:* CIL module *
+ 0004:00000714       $pdata$1$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 0000000180010714     * CIL library *:* CIL module *
+ 0004:00000720       $pdata$2$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 0000000180010720     * CIL library *:* CIL module *
+ 0004:0000072c       $pdata$3$?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QEAA_KV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@_K@Z 000000018001072c     * CIL library *:* CIL module *
+ 0004:00000738       $pdata$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z 0000000180010738     * CIL library *:* CIL module *
+ 0004:00000744       $pdata$?_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z 0000000180010744     * CIL library *:* CIL module *
+ 0004:00000750       $pdata$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z 0000000180010750     * CIL library *:* CIL module *
+ 0004:0000075c       $pdata$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z 000000018001075c     * CIL library *:* CIL module *
+ 0004:00000768       $pdata$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z 0000000180010768     * CIL library *:* CIL module *
+ 0004:00000774       $pdata$??$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 0000000180010774     * CIL library *:* CIL module *
+ 0004:00000780       $pdata$??$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 0000000180010780     * CIL library *:* CIL module *
+ 0004:0000078c       $pdata$??1HandleValue@@QEAA@XZ 000000018001078c     * CIL library *:* CIL module *
+ 0004:000007a4       $pdata$??_Etype_info@@UEAAPEAXI@Z 00000001800107a4     MSVCRT:ti_inst.obj
+ 0004:000007b0       $pdata$__atonexitinit      00000001800107b0     MSVCRT:atonexit.obj
+ 0004:000007bc       $pdata$_onexit             00000001800107bc     MSVCRT:atonexit.obj
+ 0004:000007c8       $pdata$atexit              00000001800107c8     MSVCRT:atonexit.obj
+ 0004:000007d4       $pdata$pre_c_init          00000001800107d4     MSVCRT:crtdll.obj
+ 0004:000007e0       $pdata$_CRT_INIT           00000001800107e0     MSVCRT:crtdll.obj
+ 0004:000007ec       $pdata$_DllMainCRTStartup  00000001800107ec     MSVCRT:crtdll.obj
+ 0004:000007f8       $pdata$__DllMainCRTStartup 00000001800107f8     MSVCRT:crtdll.obj
+ 0004:00000804       $pdata$__raise_securityfailure 0000000180010804     MSVCRT:gs_report.obj
+ 0004:00000810       $pdata$__report_gsfailure  0000000180010810     MSVCRT:gs_report.obj
+ 0004:0000081c       $pdata$??_M@YAXPEAX_KHP6AX0@Z@Z 000000018001081c     MSVCRT:ehvecdtr.obj
+ 0004:00000828       $pdata$?__ArrayUnwind@@YAXPEAX_KHP6AX0@Z@Z 0000000180010828     MSVCRT:ehvecdtr.obj
+ 0004:00000834       $pdata$_IsNonwritableInCurrentImage 0000000180010834     MSVCRT:pesect.obj
+ 0004:00000840       $pdata$__security_init_cookie 0000000180010840     MSVCRT:gs_support.obj
+ 0004:0000084c       $pdata$DllMain             000000018001084c     MSVCRT:dllmain.obj
+ 0004:00000858       $pdata$_RTC_Initialize     0000000180010858     MSVCRT:initsect.obj
+ 0004:00000864       $pdata$_RTC_Terminate      0000000180010864     MSVCRT:initsect.obj
+ 0004:00000870       $pdata$_onexit$fin$0       0000000180010870     MSVCRT:atonexit.obj
+ 0004:0000087c       $pdata$__DllMainCRTStartup$filt$0 000000018001087c     MSVCRT:crtdll.obj
+ 0004:00000888       $pdata$__DllMainCRTStartup$fin$1 0000000180010888     MSVCRT:crtdll.obj
+ 0004:00000894       $pdata$?fin$0@?0???_M@YAXPEAX_KHP6AX0@Z@Z@4HA 0000000180010894     MSVCRT:ehvecdtr.obj
+ 0004:000008a0       $pdata$?filt$0@?0??__ArrayUnwind@@YAXPEAX_KHP6AX0@Z@Z@4HA 00000001800108a0     MSVCRT:ehvecdtr.obj
+ 0004:000008ac       $pdata$_IsNonwritableInCurrentImage$filt$0 00000001800108ac     MSVCRT:pesect.obj
+ 0004:000008b8       $pdata$?catch$0@?0???$_Uninit_fill_n@PEAU_StringItem@@_KU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPEAU_StringItem@@_KPEBU1@AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 00000001800108b8     * CIL library *:* CIL module *
+ 0004:000008c4       $pdata$?dtor$0@?0???$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 00000001800108c4     * CIL library *:* CIL module *
+ 0004:000008d0       $pdata$?catch$0@?0???$_Uninit_move@PEAU_StringItem@@PEAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPEAU_StringItem@@PEAU1@00AEAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z@4HA 00000001800108d0     * CIL library *:* CIL module *
+ 0004:000008dc       $pdata$?dtor$3@?0??CreateArray@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAPEAU2@G@Z@4HA 00000001800108dc     * CIL library *:* CIL module *
+ 0004:000008e8       $pdata$?catch$0@?0??Execute@V8EngineProxy@@QEAAPEAUHandleProxy@@PEAG0@Z@4HA 00000001800108e8     * CIL library *:* CIL module *
+ 0004:000008f4       $pdata$?dtor$3@?0??GetHandleProxy@V8EngineProxy@@QEAAPEAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z@4HA 00000001800108f4     * CIL library *:* CIL module *
+ 0004:00000900       $pdata$?catch$0@?0??_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QEAAX_KPEBH@Z@4HA 0000000180010900     * CIL library *:* CIL module *
+ 0004:0000090c       $pdata$?catch$0@?0??_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QEAAX_KPEBI@Z@4HA 000000018001090c     * CIL library *:* CIL module *
+ 0004:00000918       $pdata$?catch$0@?0??_Construct_n@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@QEAAX_KPEBQEAUHandleProxy@@@Z@4HA 0000000180010918     * CIL library *:* CIL module *
+ 0004:00000924       $pdata$?catch$0@?0??_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAX_KPEBU_StringItem@@@Z@4HA 0000000180010924     * CIL library *:* CIL module *
+ 0004:00000930       $pdata$?catch$0@?0??_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z@4HA 0000000180010930     * CIL library *:* CIL module *
+ 0004:0000093c       $pdata$?catch$1@?0??_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IEAA?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@_KAEBI@Z@4HA 000000018001093c     * CIL library *:* CIL module *
+ 0004:00000948       $pdata$?catch$0@?0??_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IEAAX_K@Z@4HA 0000000180010948     * CIL library *:* CIL module *
+ 0004:00000954       $pdata$?catch$0@?0??_Reallocate@?$vector@PEAUHandleProxy@@V?$allocator@PEAUHandleProxy@@@std@@@std@@IEAAX_K@Z@4HA 0000000180010954     * CIL library *:* CIL module *
+ 0004:00000960       $pdata$?catch$0@?0??_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IEAAX_K@Z@4HA 0000000180010960     * CIL library *:* CIL module *
+ 0004:0000096c       $pdata$?dtor$0@?0??push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QEAAXAEBU_StringItem@@@Z@4HA 000000018001096c     * CIL library *:* CIL module *
+ 0004:0000096c       $pdata$?dtor$0@?0??push_back@?$vector@HV?$allocator@H@std@@@std@@QEAAXAEBH@Z@4HA 000000018001096c     * CIL library *:* CIL module *
+ 0004:00000978       $pdata$??__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 0000000180010978     * CIL library *:* CIL module *
+ 0004:00000984       $pdata$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 0000000180010984     * CIL library *:* CIL module *
+ 0005:000000a0       $R000000                   00000001800110a0     V8.Net-Proxy-64.res
+ 0005:00000420       $R000380                   0000000180011420     V8.Net-Proxy-64.res
+
+ Exports
+
+  ordinal    name
+
+        1    Call
+        2    ConnectObject
+        3    CreateArray
+        4    CreateBoolean
+        5    CreateDate
+        6    CreateError
+        7    CreateFunctionInstance
+        8    CreateFunctionTemplateProxy
+        9    CreateFunctionTemplateProxyTest
+       10    CreateHandleProxyTest
+       11    CreateInteger
+       12    CreateNullValue
+       13    CreateNumber
+       14    CreateObject
+       15    CreateObjectFromTemplate
+       16    CreateObjectTemplateProxy
+       17    CreateObjectTemplateProxyTest
+       18    CreateString
+       19    CreateStringArray
+       20    CreateV8EngineProxy
+       21    CreateV8EngineProxyTest
+       22    DeleteFunctionTemplateProxy
+       23    DeleteObjectPropertyByIndex
+       24    DeleteObjectPropertyByName
+       25    DeleteObjectTemplateProxy
+       26    DeleteTestData
+       27    DestroyV8EngineProxy
+       28    DisposeHandleProxy
+       29    DoIdleNotification
+       30    ForceGC
+       31    GetArrayLength
+       32    GetFunction
+       33    GetFunctionInstanceTemplateProxy
+       34    GetFunctionPrototypeTemplateProxy
+       35    GetHandleManagedObjectID
+       36    GetObjectPropertyByIndex
+       37    GetObjectPropertyByName
+       38    GetObjectPrototype
+       39    GetOwnPropertyNames
+       40    GetPropertyAttributes
+       41    GetPropertyNames
+       42    MakeStrongHandle
+       43    MakeWeakHandle
+       44    RegisterGCCallback
+       45    RegisterIndexedPropertyHandlers
+       46    RegisterInvokeHandler
+       47    RegisterNamedPropertyHandlers
+       48    SetFunctionTemplateProperty
+       49    SetGlobalObjectTemplate
+       50    SetObjectAccessor
+       51    SetObjectPropertyByIndex
+       52    SetObjectPropertyByName
+       53    SetObjectTemplateAccessor
+       54    SetObjectTemplateProperty
+       55    UnregisterIndexedPropertyHandlers
+       56    UnregisterNamedPropertyHandlers
+       57    UpdateHandleValue
+       58    V8Execute
+       59    WithHandleScope
+       60    WithV8ContextScope
+       61    WithV8IsolateScope
