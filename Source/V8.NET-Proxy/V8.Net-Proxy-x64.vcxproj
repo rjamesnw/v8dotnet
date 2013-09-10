@@ -126,7 +126,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)Source\bin\3.5\$(Configuration)\x64\" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,7 +153,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)Source\bin\3.5\$(Configuration)\x64\" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -182,7 +182,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)Source\bin\3.5\$(Configuration)\x64\" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -211,7 +211,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)Source\bin\3.5\$(Configuration)\x64\" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

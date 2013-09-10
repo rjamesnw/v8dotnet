@@ -1,0 +1,1042 @@
+ V8_Net_Proxy_x86
+
+ Timestamp is 522ea9e1 (Tue Sep 10 01:10:57 2013)
+
+ Preferred load address is 10000000
+
+ Start         Length     Name                   Class
+ 0001:00000000 00006640H .text                   CODE
+ 0001:00006640 000005b0H .text$x                 CODE
+ 0001:00006bf0 00000023H .text$yc                CODE
+ 0001:00006c20 00000090H .text$yd                CODE
+ 0002:00000000 000002a4H .idata$5                DATA
+ 0002:000002a4 00000004H .CRT$XCA                DATA
+ 0002:000002a8 00000004H .CRT$XCU                DATA
+ 0002:000002ac 00000004H .CRT$XCZ                DATA
+ 0002:000002b0 00000004H .CRT$XIA                DATA
+ 0002:000002b4 00000004H .CRT$XIAA               DATA
+ 0002:000002b8 00000004H .CRT$XIC                DATA
+ 0002:000002bc 00000004H .CRT$XIZ                DATA
+ 0002:000002c0 00000300H .rdata                  DATA
+ 0002:000005c0 0000007cH .rdata$debug            DATA
+ 0002:0000063c 00000048H .rdata$r                DATA
+ 0002:00000690 00000078H .rdata$sxdata           DATA
+ 0002:00000708 00000004H .rtc$IAA                DATA
+ 0002:0000070c 00000004H .rtc$IZZ                DATA
+ 0002:00000710 00000004H .rtc$TAA                DATA
+ 0002:00000714 00000004H .rtc$TZZ                DATA
+ 0002:00000718 00000894H .xdata$x                DATA
+ 0002:00000fac 00000050H .idata$2                DATA
+ 0002:00000ffc 00000014H .idata$3                DATA
+ 0002:00001010 000002a4H .idata$4                DATA
+ 0002:000012b4 0000213cH .idata$6                DATA
+ 0002:000033f0 00000865H .edata                  DATA
+ 0003:00000000 00000040H .data                   DATA
+ 0003:00000040 00000378H .bss                    DATA
+ 0004:00000000 000000a0H .rsrc$01                DATA
+ 0004:000000a0 00000500H .rsrc$02                DATA
+
+  Address         Publics by Value              Rva+Base       Lib:Object
+
+ 0000:00000000       __except_list              00000000     <absolute>
+ 0000:0000001e       ___safe_se_handler_count   0000001e     <absolute>
+ 0000:00009876       __ldused                   00009876     <absolute>
+ 0000:00009876       __fltused                  00009876     <absolute>
+ 0000:00000000       ___ImageBase               10000000     <linker-defined>
+ 0001:00000000       _CreateV8EngineProxy@12    10001000 f   Exports.obj
+ 0001:00000080       _DestroyV8EngineProxy@4    10001080 f   Exports.obj
+ 0001:000000b0       _WithV8IsolateScope@8      100010b0 f   Exports.obj
+ 0001:00000150       _WithV8ContextScope@8      10001150 f   Exports.obj
+ 0001:00000170       _WithHandleScope@8         10001170 f   Exports.obj
+ 0001:000001f0       _RegisterGCCallback@8      100011f0 f   Exports.obj
+ 0001:00000200       _ForceGC@4                 10001200 f   Exports.obj
+ 0001:00000230       _DoIdleNotification@8      10001230 f   Exports.obj
+ 0001:00000250       _V8Execute@12              10001250 f   Exports.obj
+ 0001:00000270       _CreateObjectTemplateProxy@4 10001270 f   Exports.obj
+ 0001:000002f0       _DeleteObjectTemplateProxy@4 100012f0 f   Exports.obj
+ 0001:00000320       _SetGlobalObjectTemplate@8 10001320 f   Exports.obj
+ 0001:00000340       _RegisterNamedPropertyHandlers@24 10001340 f   Exports.obj
+ 0001:000003a0       _RegisterIndexedPropertyHandlers@24 100013a0 f   Exports.obj
+ 0001:00000400       _UnregisterNamedPropertyHandlers@4 10001400 f   Exports.obj
+ 0001:00000420       _UnregisterIndexedPropertyHandlers@4 10001420 f   Exports.obj
+ 0001:00000440       _RegisterInvokeHandler@8   10001440 f   Exports.obj
+ 0001:00000480       _CreateObjectFromTemplate@8 10001480 f   Exports.obj
+ 0001:000004d0       _ConnectObject@12          100014d0 f   Exports.obj
+ 0001:000005a0       _GetObjectPrototype@4      100015a0 f   Exports.obj
+ 0001:00000600       _Call@20                   10001600 f   Exports.obj
+ 0001:000007f0       _SetObjectPropertyByName@16 100017f0 f   Exports.obj
+ 0001:00000890       _SetObjectPropertyByIndex@12 10001890 f   Exports.obj
+ 0001:00000910       _GetObjectPropertyByName@8 10001910 f   Exports.obj
+ 0001:000009a0       _GetObjectPropertyByIndex@8 100019a0 f   Exports.obj
+ 0001:00000a10       _DeleteObjectPropertyByName@8 10001a10 f   Exports.obj
+ 0001:00000a90       _DeleteObjectPropertyByIndex@8 10001a90 f   Exports.obj
+ 0001:00000af0       _SetObjectAccessor@28      10001af0 f   Exports.obj
+ 0001:00000c30       _SetObjectTemplateAccessor@28 10001c30 f   Exports.obj
+ 0001:00000c60       _SetObjectTemplateProperty@16 10001c60 f   Exports.obj
+ 0001:00000ca0       _GetPropertyNames@4        10001ca0 f   Exports.obj
+ 0001:00000d10       _GetOwnPropertyNames@4     10001d10 f   Exports.obj
+ 0001:00000d80       _GetPropertyAttributes@8   10001d80 f   Exports.obj
+ 0001:00000e00       _GetArrayLength@4          10001e00 f   Exports.obj
+ 0001:00000e50       _CreateFunctionTemplateProxy@12 10001e50 f   Exports.obj
+ 0001:00000ed0       _DeleteFunctionTemplateProxy@4 10001ed0 f   Exports.obj
+ 0001:00000f00       _GetFunctionInstanceTemplateProxy@4 10001f00 f   Exports.obj
+ 0001:00000f10       _GetFunctionPrototypeTemplateProxy@4 10001f10 f   Exports.obj
+ 0001:00000f20       _GetFunction@4             10001f20 f   Exports.obj
+ 0001:00000f50       _CreateFunctionInstance@16 10001f50 f   Exports.obj
+ 0001:00000f70       _SetFunctionTemplateProperty@16 10001f70 f   Exports.obj
+ 0001:00000fb0       _CreateBoolean@8           10001fb0 f   Exports.obj
+ 0001:00000ff0       _CreateInteger@8           10001ff0 f   Exports.obj
+ 0001:00001020       _CreateNumber@12           10002020 f   Exports.obj
+ 0001:00001060       _CreateString@8            10002060 f   Exports.obj
+ 0001:000010a0       _CreateDate@12             100020a0 f   Exports.obj
+ 0001:000010e0       _CreateObject@8            100020e0 f   Exports.obj
+ 0001:00001130       _CreateArray@12            10002130 f   Exports.obj
+ 0001:00001150       _CreateStringArray@12      10002150 f   Exports.obj
+ 0001:00001170       _CreateNullValue@4         10002170 f   Exports.obj
+ 0001:000011a0       _CreateError@12            100021a0 f   Exports.obj
+ 0001:00001210       _MakeWeakHandle@4          10002210 f   Exports.obj
+ 0001:00001250       _MakeStrongHandle@4        10002250 f   Exports.obj
+ 0001:00001280       _DisposeHandleProxy@4      10002280 f   Exports.obj
+ 0001:000012a0       _UpdateHandleValue@4       100022a0 f   Exports.obj
+ 0001:000012c0       _GetHandleManagedObjectID@4 100022c0 f   Exports.obj
+ 0001:000012e0       _CreateHandleProxyTest@0   100022e0 f   Exports.obj
+ 0001:00001310       _CreateV8EngineProxyTest@0 10002310 f   Exports.obj
+ 0001:00001340       _CreateObjectTemplateProxyTest@0 10002340 f   Exports.obj
+ 0001:00001370       _CreateFunctionTemplateProxyTest@0 10002370 f   Exports.obj
+ 0001:000013a0       _DeleteTestData@4          100023a0 f   Exports.obj
+ 0001:00001430       ??1Scope@Context@v8@@QAE@XZ 10002430 f i FunctionTemplateProxy.obj
+ 0001:00001440       ??0FunctionTemplateProxy@@QAE@PAVV8EngineProxy@@PAGP6GPAUHandleProxy@@H_NPAU2@PAPAU2@I@Z@Z 10002440 f   FunctionTemplateProxy.obj
+ 0001:00001590       ??1FunctionTemplateProxy@@QAE@XZ 10002590 f   FunctionTemplateProxy.obj
+ 0001:000016e0       ?InvocationCallbackProxy@FunctionTemplateProxy@@SAXABV?$FunctionCallbackInfo@VValue@v8@@@v8@@@Z 100026e0 f   FunctionTemplateProxy.obj
+ 0001:00001850       ?CreateInstance@FunctionTemplateProxy@@QAEPAUHandleProxy@@HHPAPAU2@@Z 10002850 f   FunctionTemplateProxy.obj
+ 0001:000019c0       ??$Set@VValue@v8@@@?$ReturnValue@VValue@v8@@@v8@@QAEXV?$Handle@VValue@v8@@@1@@Z 100029c0 f i FunctionTemplateProxy.obj
+ 0001:000019e0       ??0HandleProxy@@IAE@PAVV8EngineProxy@@H@Z 100029e0 f   HandleProxy.obj
+ 0001:00001a90       ?_Dispose@HandleProxy@@IAE_N_N@Z 10002a90 f   HandleProxy.obj
+ 0001:00001ba0       ??_GHandleProxy@@IAEPAXI@Z 10002ba0 f i HandleProxy.obj
+ 0001:00001c40       ?SetHandle@HandleProxy@@IAEPAU1@V?$Handle@VValue@v8@@@v8@@@Z 10002c40 f   HandleProxy.obj
+ 0001:00001ee0       ?GetManagedObjectID@HandleProxy@@QAEHXZ 10002ee0 f   HandleProxy.obj
+ 0001:00002050       ?_RevivableCallback@HandleProxy@@CAXPAVIsolate@v8@@PAV?$Persistent@VValue@v8@@@3@PAU1@@Z 10003050 f   HandleProxy.obj
+ 0001:00002090       ?UpdateValue@HandleProxy@@QAEXXZ 10003090 f   HandleProxy.obj
+ 0001:000021e0       ??1?$lock_guard@Vrecursive_mutex@std@@@std@@QAE@XZ 100031e0 f i HandleProxy.obj
+ 0001:00002200       ??0ManagedAccessorInfo@@QAE@PAVObjectTemplateProxy@@HABV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 10003200 f i ObjectTemplateProxy.obj
+ 0001:00002250       ??0ObjectTemplateProxy@@QAE@PAVV8EngineProxy@@@Z 10003250 f   ObjectTemplateProxy.obj
+ 0001:000022e0       ??0ObjectTemplateProxy@@QAE@PAVV8EngineProxy@@V?$Local@VObjectTemplate@v8@@@v8@@@Z 100032e0 f   ObjectTemplateProxy.obj
+ 0001:00002370       ??1ObjectTemplateProxy@@QAE@XZ 10003370 f   ObjectTemplateProxy.obj
+ 0001:000024b0       ?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 100034b0 f   ObjectTemplateProxy.obj
+ 0001:00002630       ?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 10003630 f   ObjectTemplateProxy.obj
+ 0001:000027d0       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 100037d0 f   ObjectTemplateProxy.obj
+ 0001:00002920       ?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 10003920 f   ObjectTemplateProxy.obj
+ 0001:00002a80       ?GetPropertyNames@ObjectTemplateProxy@@SAXABV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 10003a80 f   ObjectTemplateProxy.obj
+ 0001:00002c00       ?GetProperty@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 10003c00 f   ObjectTemplateProxy.obj
+ 0001:00002d50       ?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 10003d50 f   ObjectTemplateProxy.obj
+ 0001:00002ec0       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 10003ec0 f   ObjectTemplateProxy.obj
+ 0001:00002ff0       ?DeleteProperty@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 10003ff0 f   ObjectTemplateProxy.obj
+ 0001:00003130       ?GetPropertyIndices@ObjectTemplateProxy@@SAXABV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 10004130 f   ObjectTemplateProxy.obj
+ 0001:000032b0       ?AccessorGetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 100042b0 f   ObjectTemplateProxy.obj
+ 0001:00003410       ?AccessorSetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@ABV?$PropertyCallbackInfo@X@3@@Z 10004410 f   ObjectTemplateProxy.obj
+ 0001:00003540       ?SetAccessor@ObjectTemplateProxy@@QAEXHPBGP6GPAUHandleProxy@@PAU2@PAG@ZP6GPAU2@121@ZW4AccessControl@v8@@W4PropertyAttribute@4@@Z 10004540 f   ObjectTemplateProxy.obj
+ 0001:00003600       ??3@YAXPAX0@Z              10004600 f i V8EngineProxy.obj
+ 0001:00003610       ??1_Mutex_base@std@@QAE@XZ 10004610 f i V8EngineProxy.obj
+ 0001:00003620       ??0_StringItem@@QAE@PAVV8EngineProxy@@PAVString@v8@@@Z 10004620 f   V8EngineProxy.obj
+ 0001:00003670       ??0V8EngineProxy@@QAE@_NP6AXXZH@Z 10004670 f   V8EngineProxy.obj
+ 0001:00003810       ??1recursive_mutex@std@@QAE@XZ 10004810 f i V8EngineProxy.obj
+ 0001:00003860       ??1V8EngineProxy@@QAE@XZ   10004860 f   V8EngineProxy.obj
+ 0001:00003b10       ?GetNativeString@V8EngineProxy@@QAE?AU_StringItem@@PAVString@v8@@@Z 10004b10 f   V8EngineProxy.obj
+ 0001:00003c00       ?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 10004c00 f   V8EngineProxy.obj
+ 0001:00003db0       ?DisposeHandleProxy@V8EngineProxy@@QAEXPAUHandleProxy@@@Z 10004db0 f   V8EngineProxy.obj
+ 0001:00003e60       ?SetGlobalObjectTemplate@V8EngineProxy@@QAEPAUHandleProxy@@PAVObjectTemplateProxy@@@Z 10004e60 f   V8EngineProxy.obj
+ 0001:00003f60       ?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z 10004f60 f   V8EngineProxy.obj
+ 0001:00004020       ?_GetErrorMessage@@YA?AV?$Local@VString@v8@@@v8@@AAVTryCatch@2@@Z 10005020 f   V8EngineProxy.obj
+ 0001:00004350       ?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z 10005350 f   V8EngineProxy.obj
+ 0001:00004510       ?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAU2@G@Z 10005510 f   V8EngineProxy.obj
+ 0001:00004710       ?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAGG@Z 10005710 f   V8EngineProxy.obj
+ 0001:00004790       ??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_N@Z 10005790 f i V8EngineProxy.obj
+ 0001:00004840       ?resize@?$vector@_NV?$allocator@_N@std@@@std@@QAEXI_N@Z 10005840 f i V8EngineProxy.obj
+ 0001:00004910       ?push_back@?$vector@_NV?$allocator@_N@std@@@std@@QAEXAB_N@Z 10005910 f i V8EngineProxy.obj
+ 0001:00004970       ?_Tidy@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXXZ 10005970 f i V8EngineProxy.obj
+ 0001:00004970       ??1?$vector@IV?$allocator@_N@std@@@std@@QAE@XZ 10005970 f i V8EngineProxy.obj
+ 0001:00004970       ??1?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAE@XZ 10005970 f i V8EngineProxy.obj
+ 0001:00004970       ??1?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAE@XZ 10005970 f i V8EngineProxy.obj
+ 0001:00004970       ?_Tidy@?$vector@IV?$allocator@_N@std@@@std@@IAEXXZ 10005970 f i V8EngineProxy.obj
+ 0001:00004970       ?_Tidy@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXXZ 10005970 f i V8EngineProxy.obj
+ 0001:00004970       ?_Tidy@?$vector@HV?$allocator@H@std@@@std@@IAEXXZ 10005970 f i V8EngineProxy.obj
+ 0001:00004970       ??1?$vector@HV?$allocator@H@std@@@std@@QAE@XZ 10005970 f i V8EngineProxy.obj
+ 0001:000049a0       ?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXABU_StringItem@@@Z 100059a0 f i V8EngineProxy.obj
+ 0001:00004a60       ?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z 10005a60 f i V8EngineProxy.obj
+ 0001:00004b00       ?end@?$vector@_NV?$allocator@_N@std@@@std@@QAE?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@XZ 10005b00 f i V8EngineProxy.obj
+ 0001:00004b70       ?erase@?$vector@_NV?$allocator@_N@std@@@std@@QAE?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@0@Z 10005b70 f i V8EngineProxy.obj
+ 0001:00004cf0       ?_Insert_n@?$vector@_NV?$allocator@_N@std@@@std@@QAE?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@V?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@IAB_N@Z 10005cf0 f i V8EngineProxy.obj
+ 0001:00004e00       ?_Trim@?$vector@_NV?$allocator@_N@std@@@std@@QAEXI@Z 10005e00 f i V8EngineProxy.obj
+ 0001:00004e90       ??1?$_Vb_val@V?$allocator@_N@std@@@std@@QAE@XZ 10005e90 f i V8EngineProxy.obj
+ 0001:00004f10       ?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXIPBU_StringItem@@@Z 10005f10 f i V8EngineProxy.obj
+ 0001:00004fd0       ?_Reserve@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z 10005fd0 f i V8EngineProxy.obj
+ 0001:00005060       ?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QAEXIPBH@Z 10006060 f i V8EngineProxy.obj
+ 0001:00005060       ?_Construct_n@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAEXIPBQAUHandleProxy@@@Z 10006060 f i V8EngineProxy.obj
+ 0001:00005130       ?_Reserve@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z 10006130 f i V8EngineProxy.obj
+ 0001:00005130       ?_Reserve@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z 10006130 f i V8EngineProxy.obj
+ 0001:000051a0       ??H?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@std@@QBE?AV01@H@Z 100061a0 f i V8EngineProxy.obj
+ 0001:00005200       ?_Insert_x@?$vector@_NV?$allocator@_N@std@@@std@@QAEIV?$_Vb_const_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@2@I@Z 10006200 f i V8EngineProxy.obj
+ 0001:000052e0       ?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z 100062e0 f i V8EngineProxy.obj
+ 0001:000053d0       ?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z 100063d0 f i V8EngineProxy.obj
+ 0001:000053d0       ?_Reallocate@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z 100063d0 f i V8EngineProxy.obj
+ 0001:000054b0       ?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QAEXIPBI@Z 100064b0 f i V8EngineProxy.obj
+ 0001:00005580       ?resize@?$vector@IV?$allocator@_N@std@@@std@@QAEXIABI@Z 10006580 f i V8EngineProxy.obj
+ 0001:000055f0       ?_Destroy@?$vector@IV?$allocator@_N@std@@@std@@IAEXPAI0@Z 100065f0 f i V8EngineProxy.obj
+ 0001:00005600       ?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z 10006600 f i V8EngineProxy.obj
+ 0001:00005890       ?_Ufill@?$vector@IV?$allocator@_N@std@@@std@@IAEPAIPAIIPBI@Z 10006890 f i V8EngineProxy.obj
+ 0001:000058c0       ?_Grow_to@?$vector@IV?$allocator@_N@std@@@std@@IBEII@Z 100068c0 f i V8EngineProxy.obj
+ 0001:00005900       ??0?$_Wrap_alloc@V?$allocator@I@std@@@std@@QAE@XZ 10006900 f i V8EngineProxy.obj
+ 0001:00005910       ??$_Umove@PAI@?$vector@IV?$allocator@_N@std@@@std@@IAEPAIPAI00@Z 10006910 f i V8EngineProxy.obj
+ 0001:00005940       ??$_Fill@V?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@std@@_N@std@@YAXV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@0@0AB_N@Z 10006940 f i V8EngineProxy.obj
+ 0001:00005990       ??$_Uninit_fill_n@PAU_StringItem@@IU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPAU_StringItem@@IPBU1@AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 10006990 f i V8EngineProxy.obj
+ 0001:00005a20       ??$_Copy_impl@V?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@std@@V12@@std@@YA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@0@V10@00U_Nonscalar_ptr_iterator_tag@0@@Z 10006a20 f i V8EngineProxy.obj
+ 0001:00005aa0       ??$_Copy_backward@V?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@std@@V12@@std@@YA?AV?$_Vb_iterator@U?$_Wrap_alloc@V?$allocator@I@std@@@std@@@0@V10@00U_Nonscalar_ptr_iterator_tag@0@@Z 10006aa0 f i V8EngineProxy.obj
+ 0001:00005b30       ??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 10006b30 f i V8EngineProxy.obj
+ 0001:00005bc0       ??1HandleValue@@QAE@XZ     10006bc0 f   ValueProxy.obj
+ 0001:00005be1       ??_U@YAPAXI@Z              10006be1 f   msvcprt:newaop_s.obj
+ 0001:00005bea       @__security_check_cookie@4 10006bea f   MSVCRT:secchk.obj
+ 0001:00005bfa       ??1exception@std@@UAE@XZ   10006bfa f   MSVCRT:MSVCR110.dll
+ 0001:00005c00       ??0exception@std@@QAE@ABV01@@Z 10006c00 f   MSVCRT:MSVCR110.dll
+ 0001:00005c06       ??3@YAXPAX@Z               10006c06 f   MSVCRT:MSVCR110.dll
+ 0001:00005c0c       ??_Etype_info@@UAEPAXI@Z   10006c0c f i MSVCRT:ti_inst.obj
+ 0001:00005c56       ??2@YAPAXI@Z               10006c56 f   MSVCRT:MSVCR110.dll
+ 0001:00005c5c       ___atonexitinit            10006c5c f   MSVCRT:atonexit.obj
+ 0001:00005c98       __onexit                   10006c98 f   MSVCRT:atonexit.obj
+ 0001:00005d3d       _atexit                    10006d3d f   MSVCRT:atonexit.obj
+ 0001:00005d9e       __CRT_INIT@12              10006d9e f   MSVCRT:crtdll.obj
+ 0001:00005f93       __DllMainCRTStartup@12     10006f93 f   MSVCRT:crtdll.obj
+ 0001:000060e9       ___raise_securityfailure   100070e9 f   MSVCRT:gs_report.obj
+ 0001:00006126       ___report_gsfailure        10007126 f   MSVCRT:gs_report.obj
+ 0001:0000621f       ??_M@YGXPAXIHP6EX0@Z@Z     1000721f f   MSVCRT:ehvecdtr.obj
+ 0001:0000628e       ?__ArrayUnwind@@YGXPAXIHP6EX0@Z@Z 1000728e f   MSVCRT:ehvecdtr.obj
+ 0001:000062ec       ??1type_info@@UAE@XZ       100072ec f   MSVCRT:MSVCR110.dll
+ 0001:000062f2       __lock                     100072f2 f   MSVCRT:MSVCR110.dll
+ 0001:000062f8       __unlock                   100072f8 f   MSVCRT:MSVCR110.dll
+ 0001:000062fe       ___dllonexit               100072fe f   MSVCRT:MSVCR110.dll
+ 0001:00006310       __SEH_prolog4              10007310 f   MSVCRT:sehprolg4.obj
+ 0001:00006355       __SEH_epilog4              10007355 f   MSVCRT:sehprolg4.obj
+ 0001:00006369       __except_handler4          10007369 f   MSVCRT:chandler4gs.obj
+ 0001:0000638c       ___CppXcptFilter           1000738c f   MSVCRT:MSVCR110.dll
+ 0001:00006392       __amsg_exit                10007392 f   MSVCRT:MSVCR110.dll
+ 0001:000063a0       __FindPESection            100073a0 f   MSVCRT:pesect.obj
+ 0001:000063f0       __IsNonwritableInCurrentImage 100073f0 f   MSVCRT:pesect.obj
+ 0001:000064b0       __ValidateImageBase        100074b0 f   MSVCRT:pesect.obj
+ 0001:000064e1       ___security_init_cookie    100074e1 f   MSVCRT:gs_support.obj
+ 0001:0000657b       _DllMain@12                1000757b f   MSVCRT:dllmain.obj
+ 0001:0000659d       __RTC_Initialize           1000759d f   MSVCRT:initsect.obj
+ 0001:000065bd       __RTC_Terminate            100075bd f   MSVCRT:initsect.obj
+ 0001:000065de       __initterm                 100075de f   MSVCRT:MSVCR110.dll
+ 0001:000065e4       __initterm_e               100075e4 f   MSVCRT:MSVCR110.dll
+ 0001:000065ea       ___clean_type_info_names   100075ea f   MSVCRT:tncleanup.obj
+ 0001:000065f6       __crt_debugger_hook        100075f6 f   MSVCRT:MSVCR110.dll
+ 0001:000065fc       ___crtUnhandledException   100075fc f   MSVCRT:MSVCR110.dll
+ 0001:00006602       ___crtTerminateProcess     10007602 f   MSVCRT:MSVCR110.dll
+ 0001:00006608       ?terminate@@YAXXZ          10007608 f   MSVCRT:MSVCR110.dll
+ 0001:0000660e       __except_handler4_common   1000760e f   MSVCRT:MSVCR110.dll
+ 0001:00006614       ___clean_type_info_names_internal 10007614 f   MSVCRT:MSVCR110.dll
+ 0001:0000661a       _IsProcessorFeaturePresent@4 1000761a f   kernel32:KERNEL32.dll
+ 0001:00006620       __CxxThrowException@8      10007620 f   MSVCRT:MSVCR110.dll
+ 0001:00006626       ___CxxFrameHandler3        10007626 f   MSVCRT:MSVCR110.dll
+ 0001:0000662c       _memset                    1000762c f   MSVCRT:MSVCR110.dll
+ 0002:00000000       __imp__GlobalAlloc@8       10008000     kernel32:KERNEL32.dll
+ 0002:00000004       __imp__GlobalReAlloc@12    10008004     kernel32:KERNEL32.dll
+ 0002:00000008       __imp__DisableThreadLibraryCalls@4 10008008     kernel32:KERNEL32.dll
+ 0002:0000000c       __imp__GetSystemTimeAsFileTime@4 1000800c     kernel32:KERNEL32.dll
+ 0002:00000010       __imp__GetCurrentThreadId@0 10008010     kernel32:KERNEL32.dll
+ 0002:00000014       __imp__GetCurrentProcessId@0 10008014     kernel32:KERNEL32.dll
+ 0002:00000018       __imp__QueryPerformanceCounter@4 10008018     kernel32:KERNEL32.dll
+ 0002:0000001c       __imp__IsProcessorFeaturePresent@4 1000801c     kernel32:KERNEL32.dll
+ 0002:00000020       __imp__IsDebuggerPresent@0 10008020     kernel32:KERNEL32.dll
+ 0002:00000024       __imp__DecodePointer@4     10008024     kernel32:KERNEL32.dll
+ 0002:00000028       __imp__EncodePointer@4     10008028     kernel32:KERNEL32.dll
+ 0002:0000002c       __imp__GlobalFree@4        1000802c     kernel32:KERNEL32.dll
+ 0002:00000030       \177KERNEL32_NULL_THUNK_DATA 10008030     kernel32:KERNEL32.dll
+ 0002:00000034       __imp_?_Throw_C_error@std@@YAXH@Z 10008034     msvcprt:MSVCP110.dll
+ 0002:00000038       __imp___Mtx_lock           10008038     msvcprt:MSVCP110.dll
+ 0002:0000003c       __imp_?_Xbad_alloc@std@@YAXXZ 1000803c     msvcprt:MSVCP110.dll
+ 0002:00000040       __imp_?_Xout_of_range@std@@YAXPBD@Z 10008040     msvcprt:MSVCP110.dll
+ 0002:00000044       __imp_?_Xlength_error@std@@YAXPBD@Z 10008044     msvcprt:MSVCP110.dll
+ 0002:00000048       __imp___Mtx_destroy        10008048     msvcprt:MSVCP110.dll
+ 0002:0000004c       __imp___Mtx_init           1000804c     msvcprt:MSVCP110.dll
+ 0002:00000050       __imp___Mtx_unlock         10008050     msvcprt:MSVCP110.dll
+ 0002:00000054       \177MSVCP110_NULL_THUNK_DATA 10008054     msvcprt:MSVCP110.dll
+ 0002:00000058       __imp____CppXcptFilter     10008058     MSVCRT:MSVCR110.dll
+ 0002:0000005c       __imp___onexit             1000805c     MSVCRT:MSVCR110.dll
+ 0002:00000060       __imp___except_handler4_common 10008060     MSVCRT:MSVCR110.dll
+ 0002:00000064       __imp___calloc_crt         10008064     MSVCRT:MSVCR110.dll
+ 0002:00000068       __imp___unlock             10008068     MSVCRT:MSVCR110.dll
+ 0002:0000006c       __imp___lock               1000806c     MSVCRT:MSVCR110.dll
+ 0002:00000070       __imp_??1type_info@@UAE@XZ 10008070     MSVCRT:MSVCR110.dll
+ 0002:00000074       __imp___amsg_exit          10008074     MSVCRT:MSVCR110.dll
+ 0002:00000078       __imp_?what@exception@std@@UBEPBDXZ 10008078     MSVCRT:MSVCR110.dll
+ 0002:0000007c       __imp_??2@YAPAXI@Z         1000807c     MSVCRT:MSVCR110.dll
+ 0002:00000080       __imp_??3@YAXPAX@Z         10008080     MSVCRT:MSVCR110.dll
+ 0002:00000084       __imp_??_V@YAXPAX@Z        10008084     MSVCRT:MSVCR110.dll
+ 0002:00000088       __imp_??0exception@std@@QAE@ABV01@@Z 10008088     MSVCRT:MSVCR110.dll
+ 0002:0000008c       __imp_??0exception@std@@QAE@ABQBD@Z 1000808c     MSVCRT:MSVCR110.dll
+ 0002:00000090       __imp_??1exception@std@@UAE@XZ 10008090     MSVCRT:MSVCR110.dll
+ 0002:00000094       __imp__free                10008094     MSVCRT:MSVCR110.dll
+ 0002:00000098       __imp___malloc_crt         10008098     MSVCRT:MSVCR110.dll
+ 0002:0000009c       __imp___initterm           1000809c     MSVCRT:MSVCR110.dll
+ 0002:000000a0       __imp___initterm_e         100080a0     MSVCRT:MSVCR110.dll
+ 0002:000000a4       __imp___crt_debugger_hook  100080a4     MSVCRT:MSVCR110.dll
+ 0002:000000a8       __imp____crtUnhandledException 100080a8     MSVCRT:MSVCR110.dll
+ 0002:000000ac       __imp____crtTerminateProcess 100080ac     MSVCRT:MSVCR110.dll
+ 0002:000000b0       __imp__memmove             100080b0     MSVCRT:MSVCR110.dll
+ 0002:000000b4       __imp_?terminate@@YAXXZ    100080b4     MSVCRT:MSVCR110.dll
+ 0002:000000b8       __imp____clean_type_info_names_internal 100080b8     MSVCRT:MSVCR110.dll
+ 0002:000000bc       __imp___CxxThrowException@8 100080bc     MSVCRT:MSVCR110.dll
+ 0002:000000c0       __imp____dllonexit         100080c0     MSVCRT:MSVCR110.dll
+ 0002:000000c4       __imp__memset              100080c4     MSVCRT:MSVCR110.dll
+ 0002:000000c8       __imp____CxxFrameHandler3  100080c8     MSVCRT:MSVCR110.dll
+ 0002:000000cc       \177MSVCR110_NULL_THUNK_DATA 100080cc     MSVCRT:MSVCR110.dll
+ 0002:000000d0       __imp_??1HandleScope@v8@@QAE@XZ 100080d0     v8-ia32:v8-ia32.dll
+ 0002:000000d4       __imp_??0HandleScope@v8@@QAE@XZ 100080d4     v8-ia32:v8-ia32.dll
+ 0002:000000d8       __imp_?Set@Template@v8@@QAEXV?$Handle@VString@v8@@@2@V?$Handle@VData@v8@@@2@W4PropertyAttribute@2@@Z 100080d8     v8-ia32:v8-ia32.dll
+ 0002:000000dc       __imp_?NewInstance@Function@v8@@QBE?AV?$Local@VObject@v8@@@2@HQAV?$Handle@VValue@v8@@@2@@Z 100080dc     v8-ia32:v8-ia32.dll
+ 0002:000000e0       __imp_?Value@External@v8@@QBEPAXXZ 100080e0     v8-ia32:v8-ia32.dll
+ 0002:000000e4       __imp_?ThrowException@v8@@YA?AV?$Handle@VValue@v8@@@1@V21@@Z 100080e4     v8-ia32:v8-ia32.dll
+ 0002:000000e8       __imp_??1Scope@Isolate@v8@@QAE@XZ 100080e8     v8-ia32:v8-ia32.dll
+ 0002:000000ec       __imp_??0Scope@Isolate@v8@@QAE@PAV12@@Z 100080ec     v8-ia32:v8-ia32.dll
+ 0002:000000f0       __imp_?ClearWeak@V8@v8@@CAXPAPAVObject@internal@2@@Z 100080f0     v8-ia32:v8-ia32.dll
+ 0002:000000f4       __imp_?MakeWeak@V8@v8@@CAXPAPAVObject@internal@2@PAXP6AXPAVIsolate@2@PAV?$Persistent@VValue@v8@@@2@1@Z@Z 100080f4     v8-ia32:v8-ia32.dll
+ 0002:000000f8       __imp_?Int32Value@Value@v8@@QBEHXZ 100080f8     v8-ia32:v8-ia32.dll
+ 0002:000000fc       __imp_?NumberValue@Value@v8@@QBENXZ 100080fc     v8-ia32:v8-ia32.dll
+ 0002:00000100       __imp_?BooleanValue@Value@v8@@QBE_NXZ 10008100     v8-ia32:v8-ia32.dll
+ 0002:00000104       __imp_?IsRegExp@Value@v8@@QBE_NXZ 10008104     v8-ia32:v8-ia32.dll
+ 0002:00000108       __imp_?IsNativeError@Value@v8@@QBE_NXZ 10008108     v8-ia32:v8-ia32.dll
+ 0002:0000010c       __imp_?IsStringObject@Value@v8@@QBE_NXZ 1000810c     v8-ia32:v8-ia32.dll
+ 0002:00000110       __imp_?IsNumberObject@Value@v8@@QBE_NXZ 10008110     v8-ia32:v8-ia32.dll
+ 0002:00000114       __imp_?IsBooleanObject@Value@v8@@QBE_NXZ 10008114     v8-ia32:v8-ia32.dll
+ 0002:00000118       __imp_?IsDate@Value@v8@@QBE_NXZ 10008118     v8-ia32:v8-ia32.dll
+ 0002:0000011c       __imp_?IsInt32@Value@v8@@QBE_NXZ 1000811c     v8-ia32:v8-ia32.dll
+ 0002:00000120       __imp_?IsExternal@Value@v8@@QBE_NXZ 10008120     v8-ia32:v8-ia32.dll
+ 0002:00000124       __imp_?IsNumber@Value@v8@@QBE_NXZ 10008124     v8-ia32:v8-ia32.dll
+ 0002:00000128       __imp_?IsBoolean@Value@v8@@QBE_NXZ 10008128     v8-ia32:v8-ia32.dll
+ 0002:0000012c       __imp_?IsFalse@Value@v8@@QBE_NXZ 1000812c     v8-ia32:v8-ia32.dll
+ 0002:00000130       __imp_?IsTrue@Value@v8@@QBE_NXZ 10008130     v8-ia32:v8-ia32.dll
+ 0002:00000134       __imp_?CreateHandle@HandleScope@v8@@SAPAPAVObject@internal@2@PAV342@@Z 10008134     v8-ia32:v8-ia32.dll
+ 0002:00000138       __imp_?SlowGetInternalField@Object@v8@@AAE?AV?$Local@VValue@v8@@@2@H@Z 10008138     v8-ia32:v8-ia32.dll
+ 0002:0000013c       __imp_?GetHiddenValue@Object@v8@@QAE?AV?$Local@VValue@v8@@@2@V?$Handle@VString@v8@@@2@@Z 1000813c     v8-ia32:v8-ia32.dll
+ 0002:00000140       __imp_?Has@Object@v8@@QAE_NV?$Handle@VValue@v8@@@2@@Z 10008140     v8-ia32:v8-ia32.dll
+ 0002:00000144       __imp_?False@v8@@YA?AV?$Handle@VBoolean@v8@@@1@XZ 10008144     v8-ia32:v8-ia32.dll
+ 0002:00000148       __imp_?Length@?$FunctionCallbackInfo@VValue@v8@@@v8@@QBEHXZ 10008148     v8-ia32:v8-ia32.dll
+ 0002:0000014c       __imp_?SetInternalFieldCount@ObjectTemplate@v8@@QAEXH@Z 1000814c     v8-ia32:v8-ia32.dll
+ 0002:00000150       __imp_?SetCallAsFunctionHandler@ObjectTemplate@v8@@QAEXP6AXABV?$FunctionCallbackInfo@VValue@v8@@@2@@ZV?$Handle@VValue@v8@@@2@@Z 10008150     v8-ia32:v8-ia32.dll
+ 0002:00000154       __imp_?SetIndexedPropertyHandler@ObjectTemplate@v8@@QAEXP6AXIABV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AXIV?$Local@VValue@v8@@@2@0@ZP6AXIABV?$PropertyCallbackInfo@VInteger@v8@@@2@@ZP6AXIABV?$PropertyCallbackInfo@VBoolean@v8@@@2@@ZP6AXABV?$PropertyCallbackInfo@VArray@v8@@@2@@ZV?$Handle@VValue@v8@@@2@@Z 10008154     v8-ia32:v8-ia32.dll
+ 0002:00000158       __imp_?SetNamedPropertyHandler@ObjectTemplate@v8@@QAEXP6AXV?$Local@VString@v8@@@2@ABV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AX0V?$Local@VValue@v8@@@2@1@ZP6AX0ABV?$PropertyCallbackInfo@VInteger@v8@@@2@@ZP6AX0ABV?$PropertyCallbackInfo@VBoolean@v8@@@2@@ZP6AXABV?$PropertyCallbackInfo@VArray@v8@@@2@@ZV?$Handle@VValue@v8@@@2@@Z 10008158     v8-ia32:v8-ia32.dll
+ 0002:0000015c       __imp_?SetAccessor@ObjectTemplate@v8@@QAEXV?$Handle@VString@v8@@@2@P6AXV?$Local@VString@v8@@@2@ABV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AX1V?$Local@VValue@v8@@@2@ABV?$PropertyCallbackInfo@X@2@@ZV?$Handle@VValue@v8@@@2@W4AccessControl@2@W4PropertyAttribute@2@V?$Handle@VAccessorSignature@v8@@@2@@Z 1000815c     v8-ia32:v8-ia32.dll
+ 0002:00000160       __imp_?NewInstance@ObjectTemplate@v8@@QAE?AV?$Local@VObject@v8@@@2@XZ 10008160     v8-ia32:v8-ia32.dll
+ 0002:00000164       __imp_?New@ObjectTemplate@v8@@SA?AV?$Local@VObjectTemplate@v8@@@2@XZ 10008164     v8-ia32:v8-ia32.dll
+ 0002:00000168       __imp_?GetReturnValue@?$PropertyCallbackInfo@VValue@v8@@@v8@@QBE?AV?$ReturnValue@VValue@v8@@@2@XZ 10008168     v8-ia32:v8-ia32.dll
+ 0002:0000016c       __imp_?Holder@?$PropertyCallbackInfo@VValue@v8@@@v8@@QBE?AV?$Local@VObject@v8@@@2@XZ 1000816c     v8-ia32:v8-ia32.dll
+ 0002:00000170       __imp_?This@?$PropertyCallbackInfo@VValue@v8@@@v8@@QBE?AV?$Local@VObject@v8@@@2@XZ 10008170     v8-ia32:v8-ia32.dll
+ 0002:00000174       __imp_?Data@?$PropertyCallbackInfo@VValue@v8@@@v8@@QBE?AV?$Local@VValue@v8@@@2@XZ 10008174     v8-ia32:v8-ia32.dll
+ 0002:00000178       __imp_?GetIsolate@?$PropertyCallbackInfo@VValue@v8@@@v8@@QBEPAVIsolate@2@XZ 10008178     v8-ia32:v8-ia32.dll
+ 0002:0000017c       __imp_?True@v8@@YA?AV?$Handle@VBoolean@v8@@@1@XZ 1000817c     v8-ia32:v8-ia32.dll
+ 0002:00000180       __imp_?Message@TryCatch@v8@@QBE?AV?$Local@VMessage@v8@@@2@XZ 10008180     v8-ia32:v8-ia32.dll
+ 0002:00000184       __imp_?StackTrace@TryCatch@v8@@QBE?AV?$Local@VValue@v8@@@2@XZ 10008184     v8-ia32:v8-ia32.dll
+ 0002:00000188       __imp_?Exception@TryCatch@v8@@QBE?AV?$Local@VValue@v8@@@2@XZ 10008188     v8-ia32:v8-ia32.dll
+ 0002:0000018c       __imp_?HasCaught@TryCatch@v8@@QBE_NXZ 1000818c     v8-ia32:v8-ia32.dll
+ 0002:00000190       __imp_??1TryCatch@v8@@QAE@XZ 10008190     v8-ia32:v8-ia32.dll
+ 0002:00000194       __imp_??0TryCatch@v8@@QAE@XZ 10008194     v8-ia32:v8-ia32.dll
+ 0002:00000198       __imp_?GetStartColumn@Message@v8@@QBEHXZ 10008198     v8-ia32:v8-ia32.dll
+ 0002:0000019c       __imp_?GetLineNumber@Message@v8@@QBEHXZ 1000819c     v8-ia32:v8-ia32.dll
+ 0002:000001a0       __imp_?New@Context@v8@@SA?AV?$Local@VContext@v8@@@2@PAVIsolate@2@PAVExtensionConfiguration@2@V?$Handle@VObjectTemplate@v8@@@2@V?$Handle@VValue@v8@@@2@@Z 100081a0     v8-ia32:v8-ia32.dll
+ 0002:000001a4       __imp_?Global@Context@v8@@QAE?AV?$Local@VObject@v8@@@2@XZ 100081a4     v8-ia32:v8-ia32.dll
+ 0002:000001a8       __imp_?Null@v8@@YA?AV?$Handle@VPrimitive@v8@@@1@XZ 100081a8     v8-ia32:v8-ia32.dll
+ 0002:000001ac       __imp_?New@Date@v8@@SA?AV?$Local@VValue@v8@@@2@N@Z 100081ac     v8-ia32:v8-ia32.dll
+ 0002:000001b0       __imp_?Run@Script@v8@@QAE?AV?$Local@VValue@v8@@@2@XZ 100081b0     v8-ia32:v8-ia32.dll
+ 0002:000001b4       __imp_?Compile@Script@v8@@SA?AV?$Local@VScript@v8@@@2@V?$Handle@VString@v8@@@2@V?$Handle@VValue@v8@@@2@0@Z 100081b4     v8-ia32:v8-ia32.dll
+ 0002:000001b8       __imp_?Initialize@V8@v8@@SA_NXZ 100081b8     v8-ia32:v8-ia32.dll
+ 0002:000001bc       __imp_?Equals@Value@v8@@QBE_NV?$Handle@VValue@v8@@@2@@Z 100081bc     v8-ia32:v8-ia32.dll
+ 0002:000001c0       __imp_?ToObject@Value@v8@@QBE?AV?$Local@VObject@v8@@@2@XZ 100081c0     v8-ia32:v8-ia32.dll
+ 0002:000001c4       __imp_?Concat@String@v8@@SA?AV?$Local@VString@v8@@@2@V?$Handle@VString@v8@@@2@0@Z 100081c4     v8-ia32:v8-ia32.dll
+ 0002:000001c8       __imp_?Write@String@v8@@QBEHPAGHHH@Z 100081c8     v8-ia32:v8-ia32.dll
+ 0002:000001cc       __imp_?Length@String@v8@@QBEHXZ 100081cc     v8-ia32:v8-ia32.dll
+ 0002:000001d0       __imp_?New@Number@v8@@SA?AV?$Local@VNumber@v8@@@2@N@Z 100081d0     v8-ia32:v8-ia32.dll
+ 0002:000001d4       __imp_?New@Object@v8@@SA?AV?$Local@VObject@v8@@@2@XZ 100081d4     v8-ia32:v8-ia32.dll
+ 0002:000001d8       __imp_?Dispose@Isolate@v8@@QAEXXZ 100081d8     v8-ia32:v8-ia32.dll
+ 0002:000001dc       __imp_?New@Isolate@v8@@SAPAV12@XZ 100081dc     v8-ia32:v8-ia32.dll
+ 0002:000001e0       __imp_??A?$FunctionCallbackInfo@VValue@v8@@@v8@@QBE?AV?$Local@VValue@v8@@@1@H@Z 100081e0     v8-ia32:v8-ia32.dll
+ 0002:000001e4       __imp_?Holder@?$FunctionCallbackInfo@VValue@v8@@@v8@@QBE?AV?$Local@VObject@v8@@@2@XZ 100081e4     v8-ia32:v8-ia32.dll
+ 0002:000001e8       __imp_?IsConstructCall@?$FunctionCallbackInfo@VValue@v8@@@v8@@QBE_NXZ 100081e8     v8-ia32:v8-ia32.dll
+ 0002:000001ec       __imp_?Data@?$FunctionCallbackInfo@VValue@v8@@@v8@@QBE?AV?$Local@VValue@v8@@@2@XZ 100081ec     v8-ia32:v8-ia32.dll
+ 0002:000001f0       __imp_?GetReturnValue@?$FunctionCallbackInfo@VValue@v8@@@v8@@QBE?AV?$ReturnValue@VValue@v8@@@2@XZ 100081f0     v8-ia32:v8-ia32.dll
+ 0002:000001f4       __imp_?Error@Exception@v8@@SA?AV?$Local@VValue@v8@@@2@V?$Handle@VString@v8@@@2@@Z 100081f4     v8-ia32:v8-ia32.dll
+ 0002:000001f8       __imp_?New@FunctionTemplate@v8@@SA?AV?$Local@VFunctionTemplate@v8@@@2@P6AXABV?$FunctionCallbackInfo@VValue@v8@@@2@@ZV?$Handle@VValue@v8@@@2@V?$Handle@VSignature@v8@@@2@H@Z 100081f8     v8-ia32:v8-ia32.dll
+ 0002:000001fc       __imp_?GetFunction@FunctionTemplate@v8@@QAE?AV?$Local@VFunction@v8@@@2@XZ 100081fc     v8-ia32:v8-ia32.dll
+ 0002:00000200       __imp_?InstanceTemplate@FunctionTemplate@v8@@QAE?AV?$Local@VObjectTemplate@v8@@@2@XZ 10008200     v8-ia32:v8-ia32.dll
+ 0002:00000204       __imp_?PrototypeTemplate@FunctionTemplate@v8@@QAE?AV?$Local@VObjectTemplate@v8@@@2@XZ 10008204     v8-ia32:v8-ia32.dll
+ 0002:00000208       __imp_?SetClassName@FunctionTemplate@v8@@QAEXV?$Handle@VString@v8@@@2@@Z 10008208     v8-ia32:v8-ia32.dll
+ 0002:0000020c       __imp_?ToString@Value@v8@@QBE?AV?$Local@VString@v8@@@2@XZ 1000820c     v8-ia32:v8-ia32.dll
+ 0002:00000210       __imp_?GlobalizeReference@V8@v8@@CAPAPAVObject@internal@2@PAVIsolate@42@PAPAV342@@Z 10008210     v8-ia32:v8-ia32.dll
+ 0002:00000214       __imp_?DisposeGlobal@V8@v8@@CAXPAPAVObject@internal@2@@Z 10008214     v8-ia32:v8-ia32.dll
+ 0002:00000218       __imp_?Enter@Context@v8@@QAEXXZ 10008218     v8-ia32:v8-ia32.dll
+ 0002:0000021c       __imp_?Exit@Context@v8@@QAEXXZ 1000821c     v8-ia32:v8-ia32.dll
+ 0002:00000220       __imp_??1Locker@v8@@QAE@XZ 10008220     v8-ia32:v8-ia32.dll
+ 0002:00000224       __imp_?Initialize@Locker@v8@@AAEXPAVIsolate@2@@Z 10008224     v8-ia32:v8-ia32.dll
+ 0002:00000228       __imp_?New@External@v8@@SA?AV?$Local@VExternal@v8@@@2@PAX@Z 10008228     v8-ia32:v8-ia32.dll
+ 0002:0000022c       __imp_?GetCurrent@Isolate@v8@@SAPAV12@XZ 1000822c     v8-ia32:v8-ia32.dll
+ 0002:00000230       __imp_?Call@Function@v8@@QAE?AV?$Local@VValue@v8@@@2@V?$Handle@VObject@v8@@@2@HQAV?$Handle@VValue@v8@@@2@@Z 10008230     v8-ia32:v8-ia32.dll
+ 0002:00000234       __imp_?New@Integer@v8@@SA?AV?$Local@VInteger@v8@@@2@H@Z 10008234     v8-ia32:v8-ia32.dll
+ 0002:00000238       __imp_?Set@Object@v8@@QAE_NIV?$Handle@VValue@v8@@@2@@Z 10008238     v8-ia32:v8-ia32.dll
+ 0002:0000023c       __imp_?Set@Object@v8@@QAE_NV?$Handle@VValue@v8@@@2@0W4PropertyAttribute@2@@Z 1000823c     v8-ia32:v8-ia32.dll
+ 0002:00000240       __imp_?Get@Object@v8@@QAE?AV?$Local@VValue@v8@@@2@I@Z 10008240     v8-ia32:v8-ia32.dll
+ 0002:00000244       __imp_?Get@Object@v8@@QAE?AV?$Local@VValue@v8@@@2@V?$Handle@VValue@v8@@@2@@Z 10008244     v8-ia32:v8-ia32.dll
+ 0002:00000248       __imp_?GetPropertyAttributes@Object@v8@@QAE?AW4PropertyAttribute@2@V?$Handle@VValue@v8@@@2@@Z 10008248     v8-ia32:v8-ia32.dll
+ 0002:0000024c       __imp_?Delete@Object@v8@@QAE_NI@Z 1000824c     v8-ia32:v8-ia32.dll
+ 0002:00000250       __imp_?Delete@Object@v8@@QAE_NV?$Handle@VValue@v8@@@2@@Z 10008250     v8-ia32:v8-ia32.dll
+ 0002:00000254       __imp_?SetAccessor@Object@v8@@QAE_NV?$Handle@VString@v8@@@2@P6AXV?$Local@VString@v8@@@2@ABV?$PropertyCallbackInfo@VValue@v8@@@2@@ZP6AX1V?$Local@VValue@v8@@@2@ABV?$PropertyCallbackInfo@X@2@@ZV?$Handle@VValue@v8@@@2@W4AccessControl@2@W4PropertyAttribute@2@@Z 10008254     v8-ia32:v8-ia32.dll
+ 0002:00000258       __imp_?GetPropertyNames@Object@v8@@QAE?AV?$Local@VArray@v8@@@2@XZ 10008258     v8-ia32:v8-ia32.dll
+ 0002:0000025c       __imp_?GetOwnPropertyNames@Object@v8@@QAE?AV?$Local@VArray@v8@@@2@XZ 1000825c     v8-ia32:v8-ia32.dll
+ 0002:00000260       __imp_?GetPrototype@Object@v8@@QAE?AV?$Local@VValue@v8@@@2@XZ 10008260     v8-ia32:v8-ia32.dll
+ 0002:00000264       __imp_?InternalFieldCount@Object@v8@@QAEHXZ 10008264     v8-ia32:v8-ia32.dll
+ 0002:00000268       __imp_?SetInternalField@Object@v8@@QAEXHV?$Handle@VValue@v8@@@2@@Z 10008268     v8-ia32:v8-ia32.dll
+ 0002:0000026c       __imp_?SetAlignedPointerInInternalField@Object@v8@@QAEXHPAX@Z 1000826c     v8-ia32:v8-ia32.dll
+ 0002:00000270       __imp_?SetHiddenValue@Object@v8@@QAE_NV?$Handle@VString@v8@@@2@V?$Handle@VValue@v8@@@2@@Z 10008270     v8-ia32:v8-ia32.dll
+ 0002:00000274       __imp_?Undefined@v8@@YA?AV?$Handle@VPrimitive@v8@@@1@XZ 10008274     v8-ia32:v8-ia32.dll
+ 0002:00000278       __imp_?Length@Array@v8@@QBEIXZ 10008278     v8-ia32:v8-ia32.dll
+ 0002:0000027c       __imp_?New@Array@v8@@SA?AV?$Local@VArray@v8@@@2@H@Z 1000827c     v8-ia32:v8-ia32.dll
+ 0002:00000280       __imp_?NewFromUtf8@String@v8@@SA?AV?$Local@VString@v8@@@2@PAVIsolate@2@PBDW4NewStringType@12@H@Z 10008280     v8-ia32:v8-ia32.dll
+ 0002:00000284       __imp_?NewFromTwoByte@String@v8@@SA?AV?$Local@VString@v8@@@2@PAVIsolate@2@PBGW4NewStringType@12@H@Z 10008284     v8-ia32:v8-ia32.dll
+ 0002:00000288       __imp_?IsFunction@Value@v8@@QBE_NXZ 10008288     v8-ia32:v8-ia32.dll
+ 0002:0000028c       __imp_?IsArray@Value@v8@@QBE_NXZ 1000828c     v8-ia32:v8-ia32.dll
+ 0002:00000290       __imp_?IsObject@Value@v8@@QBE_NXZ 10008290     v8-ia32:v8-ia32.dll
+ 0002:00000294       __imp_?IdleNotification@V8@v8@@SA_NH@Z 10008294     v8-ia32:v8-ia32.dll
+ 0002:00000298       __imp_?SlowGetAlignedPointerFromInternalField@Object@v8@@AAEPAXH@Z 10008298     v8-ia32:v8-ia32.dll
+ 0002:0000029c       __imp_?LowMemoryNotification@V8@v8@@SAXXZ 1000829c     v8-ia32:v8-ia32.dll
+ 0002:000002a0       \177v8-ia32_NULL_THUNK_DATA 100082a0     v8-ia32:v8-ia32.dll
+ 0002:000002a4       ___xc_a                    100082a4     MSVCRT:cinitexe.obj
+ 0002:000002ac       ___xc_z                    100082ac     MSVCRT:cinitexe.obj
+ 0002:000002b0       ___xi_a                    100082b0     MSVCRT:cinitexe.obj
+ 0002:000002bc       ___xi_z                    100082bc     MSVCRT:cinitexe.obj
+ 0002:000002fc       ??_7type_info@@6B@         100082fc     MSVCRT:ti_inst.obj
+ 0002:00000300       __pDefaultRawDllMain       10008300     MSVCRT:crtdll.obj
+ 0002:00000300       __pRawDllMain              10008300     MSVCRT:crtdll.obj
+ 0002:0000030c       ??_C@_0BA@MLFILMMN@ManagedObjectID?$AA@ 1000830c     Exports.obj
+ 0002:0000031c       ??_C@_0CJ@MCOIAANP@The?5handle?5does?5not?5represent?5an@ 1000831c     Exports.obj
+ 0002:00000348       ??_C@_0EI@NBCEMGHA@Call?3?5The?5target?5instance?5handle@ 10008348     Exports.obj
+ 0002:00000390       ??_C@_0DH@GEIHKHBI@Call?3?5The?5subject?5handle?5does?5no@ 10008390     Exports.obj
+ 0002:000003c8       ??_C@_0DM@EFLNDFCL@Call?3?5The?5specified?5property?5doe@ 100083c8     Exports.obj
+ 0002:00000404       ??_C@_0DI@IBPEFPGB@Call?3?5The?5subject?5handle?5does?5no@ 10008404     Exports.obj
+ 0002:0000043c       ??_C@_0CP@MICEEFHB@The?5handle?5does?5not?5represent?5an@ 1000843c     Exports.obj
+ 0002:00000470       ??_C@_0EE@OBNIJAJP@?8Data?8?5points?5to?5an?5invalid?5obje@ 10008470     Exports.obj
+ 0002:000004b4       ??_C@_0CB@PFDHPICG@?8args?4Data?$CI?$CJ?8?5is?5not?5recognized?4@ 100084b4     FunctionTemplateProxy.obj
+ 0002:000004d8       ??_C@_09JOONBBPD@$__TypeID?$AA@ 100084d8     HandleProxy.obj
+ 0002:000004e4       ??_C@_08NKLFIIDP@$__Value?$AA@ 100084e4     HandleProxy.obj
+ 0002:000004f0       ??_C@_02PCIJFNDE@?$AN?6?$AA@ 100084f0     V8EngineProxy.obj
+ 0002:000004f4       ??_C@_08FIKDMAMC@?5?5Line?3?5?$AA@ 100084f4     V8EngineProxy.obj
+ 0002:00000500       ??_C@_0L@KCLHICAK@?5?5Column?3?5?$AA@ 10008500     V8EngineProxy.obj
+ 0002:0000050c       ??_C@_09FPDCPDGD@?5?5Stack?3?5?$AA@ 1000850c     V8EngineProxy.obj
+ 0002:00000518       ??_C@_11LOCGONAA@?$AA?$AA@ 10008518     V8EngineProxy.obj
+ 0002:0000051c       ??_C@_0BE@HBKMHPCH@Invalid?5error?5type?4?$AA@ 1000851c     V8EngineProxy.obj
+ 0002:00000530       ??_C@_0BM@NMJKDPPO@invalid?5vector?$DMT?$DO?5subscript?$AA@ 10008530     V8EngineProxy.obj
+ 0002:0000054c       ??_C@_0BG@EOMJEIFA@vector?$DMbool?$DO?5too?5long?$AA@ 1000854c     V8EngineProxy.obj
+ 0002:00000564       ??_C@_0BD@OLBABOEK@vector?$DMT?$DO?5too?5long?$AA@ 10008564     V8EngineProxy.obj
+ 0002:00000578       __load_config_used         10008578     MSVCRT:loadcfg.obj
+ 0002:0000063c       ??_R4type_info@@6B@        1000863c     MSVCRT:ti_inst.obj
+ 0002:00000650       ??_R3type_info@@8          10008650     MSVCRT:ti_inst.obj
+ 0002:00000660       ??_R2type_info@@8          10008660     MSVCRT:ti_inst.obj
+ 0002:00000668       ??_R1A@?0A@EA@type_info@@8 10008668     MSVCRT:ti_inst.obj
+ 0002:00000690       ___safe_se_handler_table   10008690     <linker-defined>
+ 0002:00000708       ___rtc_iaa                 10008708     MSVCRT:initsect.obj
+ 0002:0000070c       ___rtc_izz                 1000870c     MSVCRT:initsect.obj
+ 0002:00000710       ___rtc_taa                 10008710     MSVCRT:initsect.obj
+ 0002:00000714       ___rtc_tzz                 10008714     MSVCRT:initsect.obj
+ 0002:000007bc       __CT??_R0?AVexception@std@@@8??0exception@std@@QAE@ABV01@@Z12 100087bc     Exports.obj
+ 0002:000007d8       __TI1?AVexception@std@@    100087d8     Exports.obj
+ 0002:000007e8       __CTA1?AVexception@std@@   100087e8     Exports.obj
+ 0002:00000fac       __IMPORT_DESCRIPTOR_v8-ia32 10008fac     v8-ia32:v8-ia32.dll
+ 0002:00000fc0       __IMPORT_DESCRIPTOR_KERNEL32 10008fc0     kernel32:KERNEL32.dll
+ 0002:00000fd4       __IMPORT_DESCRIPTOR_MSVCP110 10008fd4     msvcprt:MSVCP110.dll
+ 0002:00000fe8       __IMPORT_DESCRIPTOR_MSVCR110 10008fe8     MSVCRT:MSVCR110.dll
+ 0002:00000ffc       __NULL_IMPORT_DESCRIPTOR   10008ffc     v8-ia32:v8-ia32.dll
+ 0003:00000000       ??_R0?AVtype_info@@@8      1000c000     MSVCRT:ti_inst.obj
+ 0003:00000018       ___security_cookie         1000c018     MSVCRT:gs_cookie.obj
+ 0003:0000001c       ___security_cookie_complement 1000c01c     MSVCRT:gs_cookie.obj
+ 0003:00000020       ___native_dllmain_reason   1000c020     MSVCRT:natstart.obj
+ 0003:00000024       ??_R0?AVexception@std@@@8  1000c024     Exports.obj
+ 0003:00000368       ?__type_info_root_node@@3U__type_info_node@@A 1000c368     MSVCRT:tncleanup.obj
+ 0003:00000374       ?_NextEngineID@V8EngineProxy@@1HA 1000c374     V8EngineProxy.obj
+ 0003:00000390       ?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A 1000c390     V8EngineProxy.obj
+ 0003:000003a4       ___native_startup_lock     1000c3a4     <common>
+ 0003:000003a8       ___native_startup_state    1000c3a8     <common>
+ 0003:000003ac       ___dyn_tls_init_callback   1000c3ac     <common>
+ 0003:000003b0       ___onexitend               1000c3b0     <common>
+ 0003:000003b4       ___onexitbegin             1000c3b4     <common>
+
+ entry point at        0001:00005f93
+
+ Static symbols
+
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     kernel32:KERNEL32.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     msvcprt:MSVCP110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     MSVCRT:MSVCR110.dll
+ 0000:ffff0000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
+ 0001:000021ac       $LN83                      100031ac     * CIL library *:* CIL module *
+ 0001:0000449d       __catch$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z$0 1000549d f   * CIL library *:* CIL module *
+ 0001:00004fb3       __catch$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXIPBU_StringItem@@@Z$0 10005fb3 f i * CIL library *:* CIL module *
+ 0001:00005110       __catch$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QAEXIPBH@Z$0 10006110 f i * CIL library *:* CIL module *
+ 0001:00005110       __catch$?_Construct_n@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAEXIPBQAUHandleProxy@@@Z$0 10006110 f i * CIL library *:* CIL module *
+ 0001:000053b5       __catch$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z$0 100063b5 f i * CIL library *:* CIL module *
+ 0001:00005495       __catch$?_Reallocate@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z$0 10006495 f i * CIL library *:* CIL module *
+ 0001:00005495       __catch$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z$0 10006495 f i * CIL library *:* CIL module *
+ 0001:0000555d       __catch$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QAEXIPBI@Z$0 1000655d f i * CIL library *:* CIL module *
+ 0001:0000575a       __catch$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z$0 1000675a f i * CIL library *:* CIL module *
+ 0001:00005766       __catch$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z$2 10006766 f i * CIL library *:* CIL module *
+ 0001:00005a0b       __catch$??$_Uninit_fill_n@PAU_StringItem@@IU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPAU_StringItem@@IPBU1@AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z$0 10006a0b f i * CIL library *:* CIL module *
+ 0001:00005bac       __catch$??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z$0 10006bac f i * CIL library *:* CIL module *
+ 0001:00005d52       _pre_c_init                10006d52 f   MSVCRT:crtdll.obj
+ 0001:00005fb6       ___DllMainCRTStartup       10006fb6 f   MSVCRT:crtdll.obj
+ 0001:00006310       $$000000                   10007310     MSVCRT:sehprolg4.obj
+ 0001:00006640       __unwindfunclet$_Call@20$0 10007640 f   * CIL library *:* CIL module *
+ 0001:0000664c       __ehhandler$_Call@20       1000764c f   * CIL library *:* CIL module *
+ 0001:00006670       __unwindfunclet$_CreateFunctionTemplateProxy@12$0 10007670 f   * CIL library *:* CIL module *
+ 0001:00006670       __unwindfunclet$_CreateObjectTemplateProxy@4$0 10007670 f   * CIL library *:* CIL module *
+ 0001:00006670       __unwindfunclet$_CreateV8EngineProxy@12$0 10007670 f   * CIL library *:* CIL module *
+ 0001:0000667c       __ehhandler$_CreateV8EngineProxy@12 1000767c f   * CIL library *:* CIL module *
+ 0001:0000667c       __ehhandler$_CreateFunctionTemplateProxy@12 1000767c f   * CIL library *:* CIL module *
+ 0001:0000667c       __ehhandler$_CreateObjectTemplateProxy@4 1000767c f   * CIL library *:* CIL module *
+ 0001:000066a0       __unwindfunclet$_WithHandleScope@8$0 100076a0 f   * CIL library *:* CIL module *
+ 0001:000066a9       __unwindfunclet$_WithHandleScope@8$1 100076a9 f   * CIL library *:* CIL module *
+ 0001:000066b2       __ehhandler$_WithHandleScope@8 100076b2 f   * CIL library *:* CIL module *
+ 0001:000066d0       __unwindfunclet$_WithV8IsolateScope@8$0 100076d0 f   * CIL library *:* CIL module *
+ 0001:000066d9       __unwindfunclet$_WithV8IsolateScope@8$1 100076d9 f   * CIL library *:* CIL module *
+ 0001:000066e2       __unwindfunclet$_WithV8IsolateScope@8$2 100076e2 f   * CIL library *:* CIL module *
+ 0001:000066eb       __ehhandler$_WithV8IsolateScope@8 100076eb f   * CIL library *:* CIL module *
+ 0001:00006710       __unwindfunclet$??0FunctionTemplateProxy@@QAE@PAVV8EngineProxy@@PAGP6GPAUHandleProxy@@H_NPAU2@PAPAU2@I@Z@Z$0 10007710 f   * CIL library *:* CIL module *
+ 0001:0000671c       __unwindfunclet$??0FunctionTemplateProxy@@QAE@PAVV8EngineProxy@@PAGP6GPAUHandleProxy@@H_NPAU2@PAPAU2@I@Z@Z$1 1000771c f   * CIL library *:* CIL module *
+ 0001:00006728       __ehhandler$??0FunctionTemplateProxy@@QAE@PAVV8EngineProxy@@PAGP6GPAUHandleProxy@@H_NPAU2@PAPAU2@I@Z@Z 10007728 f   * CIL library *:* CIL module *
+ 0001:00006750       __unwindfunclet$??1ObjectTemplateProxy@@QAE@XZ$0 10007750 f   * CIL library *:* CIL module *
+ 0001:00006750       __unwindfunclet$??1FunctionTemplateProxy@@QAE@XZ$0 10007750 f   * CIL library *:* CIL module *
+ 0001:00006759       __unwindfunclet$??1ObjectTemplateProxy@@QAE@XZ$1 10007759 f   * CIL library *:* CIL module *
+ 0001:00006759       __unwindfunclet$??1FunctionTemplateProxy@@QAE@XZ$1 10007759 f   * CIL library *:* CIL module *
+ 0001:00006762       __unwindfunclet$??1FunctionTemplateProxy@@QAE@XZ$2 10007762 f   * CIL library *:* CIL module *
+ 0001:00006762       __unwindfunclet$??1ObjectTemplateProxy@@QAE@XZ$2 10007762 f   * CIL library *:* CIL module *
+ 0001:0000676b       __unwindfunclet$??1ObjectTemplateProxy@@QAE@XZ$3 1000776b f   * CIL library *:* CIL module *
+ 0001:0000676b       __unwindfunclet$??1FunctionTemplateProxy@@QAE@XZ$3 1000776b f   * CIL library *:* CIL module *
+ 0001:00006773       __ehhandler$??1FunctionTemplateProxy@@QAE@XZ 10007773 f   * CIL library *:* CIL module *
+ 0001:00006773       __ehhandler$??1ObjectTemplateProxy@@QAE@XZ 10007773 f   * CIL library *:* CIL module *
+ 0001:00006790       __unwindfunclet$?CreateInstance@FunctionTemplateProxy@@QAEPAUHandleProxy@@HHPAPAU2@@Z$0 10007790 f   * CIL library *:* CIL module *
+ 0001:0000679c       __ehhandler$?CreateInstance@FunctionTemplateProxy@@QAEPAUHandleProxy@@HHPAPAU2@@Z 1000779c f   * CIL library *:* CIL module *
+ 0001:000067c0       __unwindfunclet$??0HandleProxy@@IAE@PAVV8EngineProxy@@H@Z$0 100077c0 f   * CIL library *:* CIL module *
+ 0001:000067cb       __ehhandler$??0HandleProxy@@IAE@PAVV8EngineProxy@@H@Z 100077cb f   * CIL library *:* CIL module *
+ 0001:000067f0       __unwindfunclet$??_GHandleProxy@@IAEPAXI@Z$0 100077f0 f   * CIL library *:* CIL module *
+ 0001:000067fb       __ehhandler$??_GHandleProxy@@IAEPAXI@Z 100077fb f   * CIL library *:* CIL module *
+ 0001:00006820       __ehhandler$??$_Uninit_fill_n@PAU_StringItem@@IU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPAU_StringItem@@IPBU1@AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 10007820 f   * CIL library *:* CIL module *
+ 0001:00006840       __unwindfunclet$??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z$2 10007840 f   * CIL library *:* CIL module *
+ 0001:00006845       __ehhandler$??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 10007845 f   * CIL library *:* CIL module *
+ 0001:00006860       __unwindfunclet$??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_N@Z$1 10007860 f   * CIL library *:* CIL module *
+ 0001:00006868       __unwindfunclet$??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_N@Z$0 10007868 f   * CIL library *:* CIL module *
+ 0001:0000686d       __ehhandler$??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_N@Z 1000786d f   * CIL library *:* CIL module *
+ 0001:00006890       __unwindfunclet$??0V8EngineProxy@@QAE@_NP6AXXZH@Z$0 10007890 f   * CIL library *:* CIL module *
+ 0001:0000689b       __unwindfunclet$??0V8EngineProxy@@QAE@_NP6AXXZH@Z$1 1000789b f   * CIL library *:* CIL module *
+ 0001:000068a6       __unwindfunclet$??0V8EngineProxy@@QAE@_NP6AXXZH@Z$2 100078a6 f   * CIL library *:* CIL module *
+ 0001:000068b1       __unwindfunclet$??0V8EngineProxy@@QAE@_NP6AXXZH@Z$4 100078b1 f   * CIL library *:* CIL module *
+ 0001:000068b9       __unwindfunclet$??0V8EngineProxy@@QAE@_NP6AXXZH@Z$3 100078b9 f   * CIL library *:* CIL module *
+ 0001:000068c4       __ehhandler$??0V8EngineProxy@@QAE@_NP6AXXZH@Z 100078c4 f   * CIL library *:* CIL module *
+ 0001:000068e0       __unwindfunclet$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QAE@XZ$0 100078e0 f   * CIL library *:* CIL module *
+ 0001:000068e8       __ehhandler$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QAE@XZ 100078e8 f   * CIL library *:* CIL module *
+ 0001:00006910       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$0 10007910 f   * CIL library *:* CIL module *
+ 0001:0000691b       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$1 1000791b f   * CIL library *:* CIL module *
+ 0001:00006926       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$2 10007926 f   * CIL library *:* CIL module *
+ 0001:00006931       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$3 10007931 f   * CIL library *:* CIL module *
+ 0001:0000693c       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$4 1000793c f   * CIL library *:* CIL module *
+ 0001:00006944       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$5 10007944 f   * CIL library *:* CIL module *
+ 0001:0000694d       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$6 1000794d f   * CIL library *:* CIL module *
+ 0001:00006956       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$7 10007956 f   * CIL library *:* CIL module *
+ 0001:0000695f       __unwindfunclet$??1V8EngineProxy@@QAE@XZ$8 1000795f f   * CIL library *:* CIL module *
+ 0001:00006967       __ehhandler$??1V8EngineProxy@@QAE@XZ 10007967 f   * CIL library *:* CIL module *
+ 0001:00006990       __unwindfunclet$??1recursive_mutex@std@@QAE@XZ$0 10007990 f   * CIL library *:* CIL module *
+ 0001:00006998       __ehhandler$??1recursive_mutex@std@@QAE@XZ 10007998 f   * CIL library *:* CIL module *
+ 0001:000069c0       __unwindfunclet$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ$0 100079c0 f   * CIL library *:* CIL module *
+ 0001:000069c5       __unwindfunclet$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ$1 100079c5 f   * CIL library *:* CIL module *
+ 0001:000069cf       __ehhandler$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 100079cf f   * CIL library *:* CIL module *
+ 0001:000069f0       __unwindfunclet$?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAU2@G@Z$0 100079f0 f   * CIL library *:* CIL module *
+ 0001:000069f8       __unwindfunclet$?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAU2@G@Z$1 100079f8 f   * CIL library *:* CIL module *
+ 0001:00006a04       __unwindfunclet$?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAU2@G@Z$2 10007a04 f   * CIL library *:* CIL module *
+ 0001:00006a09       __ehhandler$?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAU2@G@Z 10007a09 f   * CIL library *:* CIL module *
+ 0001:00006a30       __unwindfunclet$?DisposeHandleProxy@V8EngineProxy@@QAEXPAUHandleProxy@@@Z$0 10007a30 f   * CIL library *:* CIL module *
+ 0001:00006a38       __ehhandler$?DisposeHandleProxy@V8EngineProxy@@QAEXPAUHandleProxy@@@Z 10007a38 f   * CIL library *:* CIL module *
+ 0001:00006a60       __unwindfunclet$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z$2 10007a60 f   * CIL library *:* CIL module *
+ 0001:00006a69       __unwindfunclet$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z$3 10007a69 f   * CIL library *:* CIL module *
+ 0001:00006a72       __ehhandler$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z 10007a72 f   * CIL library *:* CIL module *
+ 0001:00006a90       __unwindfunclet$?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z$0 10007a90 f   * CIL library *:* CIL module *
+ 0001:00006a98       __unwindfunclet$?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z$1 10007a98 f   * CIL library *:* CIL module *
+ 0001:00006aa4       __unwindfunclet$?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z$2 10007aa4 f   * CIL library *:* CIL module *
+ 0001:00006aa9       __ehhandler$?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 10007aa9 f   * CIL library *:* CIL module *
+ 0001:00006ad0       __unwindfunclet$?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z$0 10007ad0 f   * CIL library *:* CIL module *
+ 0001:00006ad9       __unwindfunclet$?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z$1 10007ad9 f   * CIL library *:* CIL module *
+ 0001:00006ae2       __unwindfunclet$?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z$2 10007ae2 f   * CIL library *:* CIL module *
+ 0001:00006aeb       __unwindfunclet$?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z$3 10007aeb f   * CIL library *:* CIL module *
+ 0001:00006af3       __ehhandler$?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z 10007af3 f   * CIL library *:* CIL module *
+ 0001:00006b10       __ehhandler$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QAEXIPBI@Z 10007b10 f   * CIL library *:* CIL module *
+ 0001:00006b30       __ehhandler$?_Construct_n@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAEXIPBQAUHandleProxy@@@Z 10007b30 f   * CIL library *:* CIL module *
+ 0001:00006b30       __ehhandler$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QAEXIPBH@Z 10007b30 f   * CIL library *:* CIL module *
+ 0001:00006b50       __ehhandler$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXIPBU_StringItem@@@Z 10007b50 f   * CIL library *:* CIL module *
+ 0001:00006b70       __ehhandler$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z 10007b70 f   * CIL library *:* CIL module *
+ 0001:00006b90       __ehhandler$?_Reallocate@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z 10007b90 f   * CIL library *:* CIL module *
+ 0001:00006b90       __ehhandler$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z 10007b90 f   * CIL library *:* CIL module *
+ 0001:00006bb0       __ehhandler$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z 10007bb0 f   * CIL library *:* CIL module *
+ 0001:00006bd0       __unwindfunclet$?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z$0 10007bd0 f   * CIL library *:* CIL module *
+ 0001:00006bd0       __unwindfunclet$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXABU_StringItem@@@Z$0 10007bd0 f   * CIL library *:* CIL module *
+ 0001:00006bd5       __ehhandler$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXABU_StringItem@@@Z 10007bd5 f   * CIL library *:* CIL module *
+ 0001:00006bd5       __ehhandler$?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z 10007bd5 f   * CIL library *:* CIL module *
+ 0001:00006bf0       ??__E?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 10007bf0 f   * CIL library *:* CIL module *
+ 0001:00006c20       ??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 10007c20 f   * CIL library *:* CIL module *
+ 0002:000002a8       ?_DisposedEngines$initializer$@V8EngineProxy@@1P6AXXZA 100082a8     * CIL library *:* CIL module *
+ 0002:000002b4       _pcinit                    100082b4     MSVCRT:crtdll.obj
+ 0002:000002b8       _pinit                     100082b8     MSVCRT:atonexit.obj
+ 0002:00000304       _GS_ExceptionPointers      10008304     MSVCRT:gs_report.obj
+ 0002:00000718       __sehtable$__onexit        10008718     MSVCRT:atonexit.obj
+ 0002:00000738       __sehtable$___DllMainCRTStartup 10008738     MSVCRT:crtdll.obj
+ 0002:00000760       __sehtable$??_M@YGXPAXIHP6EX0@Z@Z 10008760     MSVCRT:ehvecdtr.obj
+ 0002:00000780       __sehtable$?__ArrayUnwind@@YGXPAXIHP6EX0@Z@Z 10008780     MSVCRT:ehvecdtr.obj
+ 0002:000007a0       __sehtable$__IsNonwritableInCurrentImage 100087a0     MSVCRT:pesect.obj
+ 0002:000007f0       __ehfuncinfo$_Call@20      100087f0     * CIL library *:* CIL module *
+ 0002:00000814       __unwindtable$_Call@20     10008814     * CIL library *:* CIL module *
+ 0002:0000081c       __ehfuncinfo$_CreateFunctionTemplateProxy@12 1000881c     * CIL library *:* CIL module *
+ 0002:0000081c       __ehfuncinfo$_CreateObjectTemplateProxy@4 1000881c     * CIL library *:* CIL module *
+ 0002:0000081c       __ehfuncinfo$_CreateV8EngineProxy@12 1000881c     * CIL library *:* CIL module *
+ 0002:00000840       __unwindtable$_CreateObjectTemplateProxy@4 10008840     * CIL library *:* CIL module *
+ 0002:00000840       __unwindtable$_CreateFunctionTemplateProxy@12 10008840     * CIL library *:* CIL module *
+ 0002:00000840       __unwindtable$_CreateV8EngineProxy@12 10008840     * CIL library *:* CIL module *
+ 0002:00000848       __ehfuncinfo$_WithHandleScope@8 10008848     * CIL library *:* CIL module *
+ 0002:0000086c       __unwindtable$_WithHandleScope@8 1000886c     * CIL library *:* CIL module *
+ 0002:0000087c       __ehfuncinfo$_WithV8IsolateScope@8 1000887c     * CIL library *:* CIL module *
+ 0002:000008a0       __unwindtable$_WithV8IsolateScope@8 100088a0     * CIL library *:* CIL module *
+ 0002:000008b8       __ehfuncinfo$??0FunctionTemplateProxy@@QAE@PAVV8EngineProxy@@PAGP6GPAUHandleProxy@@H_NPAU2@PAPAU2@I@Z@Z 100088b8     * CIL library *:* CIL module *
+ 0002:000008dc       __unwindtable$??0FunctionTemplateProxy@@QAE@PAVV8EngineProxy@@PAGP6GPAUHandleProxy@@H_NPAU2@PAPAU2@I@Z@Z 100088dc     * CIL library *:* CIL module *
+ 0002:000008ec       __ehfuncinfo$?CreateInstance@FunctionTemplateProxy@@QAEPAUHandleProxy@@HHPAPAU2@@Z 100088ec     * CIL library *:* CIL module *
+ 0002:00000910       __unwindtable$?CreateInstance@FunctionTemplateProxy@@QAEPAUHandleProxy@@HHPAPAU2@@Z 10008910     * CIL library *:* CIL module *
+ 0002:00000918       __ehfuncinfo$??1ObjectTemplateProxy@@QAE@XZ 10008918     * CIL library *:* CIL module *
+ 0002:00000918       __ehfuncinfo$??1FunctionTemplateProxy@@QAE@XZ 10008918     * CIL library *:* CIL module *
+ 0002:0000093c       __unwindtable$??1FunctionTemplateProxy@@QAE@XZ 1000893c     * CIL library *:* CIL module *
+ 0002:0000093c       __unwindtable$??1ObjectTemplateProxy@@QAE@XZ 1000893c     * CIL library *:* CIL module *
+ 0002:0000095c       __ehfuncinfo$??_GHandleProxy@@IAEPAXI@Z 1000895c     * CIL library *:* CIL module *
+ 0002:00000980       __unwindtable$??_GHandleProxy@@IAEPAXI@Z 10008980     * CIL library *:* CIL module *
+ 0002:00000988       __ehfuncinfo$??0HandleProxy@@IAE@PAVV8EngineProxy@@H@Z 10008988     * CIL library *:* CIL module *
+ 0002:000009ac       __unwindtable$??0HandleProxy@@IAE@PAVV8EngineProxy@@H@Z 100089ac     * CIL library *:* CIL module *
+ 0002:000009b4       __ehfuncinfo$??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 100089b4     * CIL library *:* CIL module *
+ 0002:000009d8       __unwindtable$??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 100089d8     * CIL library *:* CIL module *
+ 0002:000009f0       __tryblocktable$??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 100089f0     * CIL library *:* CIL module *
+ 0002:00000a04       __catchsym$??$_Uninit_move@PAU_StringItem@@PAU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAPAU_StringItem@@PAU1@00AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z$3 10008a04     * CIL library *:* CIL module *
+ 0002:00000a14       __ehfuncinfo$??$_Uninit_fill_n@PAU_StringItem@@IU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPAU_StringItem@@IPBU1@AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 10008a14     * CIL library *:* CIL module *
+ 0002:00000a38       __unwindtable$??$_Uninit_fill_n@PAU_StringItem@@IU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPAU_StringItem@@IPBU1@AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 10008a38     * CIL library *:* CIL module *
+ 0002:00000a48       __tryblocktable$??$_Uninit_fill_n@PAU_StringItem@@IU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPAU_StringItem@@IPBU1@AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z 10008a48     * CIL library *:* CIL module *
+ 0002:00000a5c       __catchsym$??$_Uninit_fill_n@PAU_StringItem@@IU1@V?$allocator@U_StringItem@@@std@@U1@@std@@YAXPAU_StringItem@@IPBU1@AAU?$_Wrap_alloc@V?$allocator@U_StringItem@@@std@@@0@0U_Nonscalar_ptr_iterator_tag@0@@Z$2 10008a5c     * CIL library *:* CIL module *
+ 0002:00000a6c       __ehfuncinfo$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z 10008a6c     * CIL library *:* CIL module *
+ 0002:00000a90       __unwindtable$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z 10008a90     * CIL library *:* CIL module *
+ 0002:00000ab0       __tryblocktable$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z 10008ab0     * CIL library *:* CIL module *
+ 0002:00000ad8       __catchsym$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z$4 10008ad8     * CIL library *:* CIL module *
+ 0002:00000ae8       __catchsym$?_Insert_n@?$vector@IV?$allocator@_N@std@@@std@@IAE?AV?$_Vector_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@V?$_Vector_const_iterator@V?$_Vector_val@U?$_Simple_types@I@std@@@std@@@2@IABI@Z$5 10008ae8     * CIL library *:* CIL module *
+ 0002:00000af8       __ehfuncinfo$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QAEXIPBI@Z 10008af8     * CIL library *:* CIL module *
+ 0002:00000b1c       __unwindtable$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QAEXIPBI@Z 10008b1c     * CIL library *:* CIL module *
+ 0002:00000b2c       __tryblocktable$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QAEXIPBI@Z 10008b2c     * CIL library *:* CIL module *
+ 0002:00000b40       __catchsym$?_Construct_n@?$vector@IV?$allocator@_N@std@@@std@@QAEXIPBI@Z$2 10008b40     * CIL library *:* CIL module *
+ 0002:00000b50       __ehfuncinfo$?_Reallocate@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z 10008b50     * CIL library *:* CIL module *
+ 0002:00000b50       __ehfuncinfo$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z 10008b50     * CIL library *:* CIL module *
+ 0002:00000b74       __unwindtable$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z 10008b74     * CIL library *:* CIL module *
+ 0002:00000b74       __unwindtable$?_Reallocate@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z 10008b74     * CIL library *:* CIL module *
+ 0002:00000b84       __tryblocktable$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z 10008b84     * CIL library *:* CIL module *
+ 0002:00000b84       __tryblocktable$?_Reallocate@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z 10008b84     * CIL library *:* CIL module *
+ 0002:00000b98       __catchsym$?_Reallocate@?$vector@HV?$allocator@H@std@@@std@@IAEXI@Z$2 10008b98     * CIL library *:* CIL module *
+ 0002:00000b98       __catchsym$?_Reallocate@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@IAEXI@Z$2 10008b98     * CIL library *:* CIL module *
+ 0002:00000ba8       __ehfuncinfo$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z 10008ba8     * CIL library *:* CIL module *
+ 0002:00000bcc       __unwindtable$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z 10008bcc     * CIL library *:* CIL module *
+ 0002:00000bdc       __tryblocktable$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z 10008bdc     * CIL library *:* CIL module *
+ 0002:00000bf0       __catchsym$?_Reallocate@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@IAEXI@Z$2 10008bf0     * CIL library *:* CIL module *
+ 0002:00000c00       __ehfuncinfo$?_Construct_n@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAEXIPBQAUHandleProxy@@@Z 10008c00     * CIL library *:* CIL module *
+ 0002:00000c00       __ehfuncinfo$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QAEXIPBH@Z 10008c00     * CIL library *:* CIL module *
+ 0002:00000c24       __unwindtable$?_Construct_n@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAEXIPBQAUHandleProxy@@@Z 10008c24     * CIL library *:* CIL module *
+ 0002:00000c24       __unwindtable$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QAEXIPBH@Z 10008c24     * CIL library *:* CIL module *
+ 0002:00000c34       __tryblocktable$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QAEXIPBH@Z 10008c34     * CIL library *:* CIL module *
+ 0002:00000c34       __tryblocktable$?_Construct_n@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAEXIPBQAUHandleProxy@@@Z 10008c34     * CIL library *:* CIL module *
+ 0002:00000c48       __catchsym$?_Construct_n@?$vector@PAUHandleProxy@@V?$allocator@PAUHandleProxy@@@std@@@std@@QAEXIPBQAUHandleProxy@@@Z$2 10008c48     * CIL library *:* CIL module *
+ 0002:00000c48       __catchsym$?_Construct_n@?$vector@HV?$allocator@H@std@@@std@@QAEXIPBH@Z$2 10008c48     * CIL library *:* CIL module *
+ 0002:00000c58       __ehfuncinfo$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXIPBU_StringItem@@@Z 10008c58     * CIL library *:* CIL module *
+ 0002:00000c7c       __unwindtable$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXIPBU_StringItem@@@Z 10008c7c     * CIL library *:* CIL module *
+ 0002:00000c8c       __tryblocktable$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXIPBU_StringItem@@@Z 10008c8c     * CIL library *:* CIL module *
+ 0002:00000ca0       __catchsym$?_Construct_n@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXIPBU_StringItem@@@Z$2 10008ca0     * CIL library *:* CIL module *
+ 0002:00000cb0       __ehfuncinfo$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QAE@XZ 10008cb0     * CIL library *:* CIL module *
+ 0002:00000cd4       __unwindtable$??1?$_Vb_val@V?$allocator@_N@std@@@std@@QAE@XZ 10008cd4     * CIL library *:* CIL module *
+ 0002:00000cdc       __ehfuncinfo$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXABU_StringItem@@@Z 10008cdc     * CIL library *:* CIL module *
+ 0002:00000cdc       __ehfuncinfo$?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z 10008cdc     * CIL library *:* CIL module *
+ 0002:00000d00       __unwindtable$?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z 10008d00     * CIL library *:* CIL module *
+ 0002:00000d00       __unwindtable$?push_back@?$vector@U_StringItem@@V?$allocator@U_StringItem@@@std@@@std@@QAEXABU_StringItem@@@Z 10008d00     * CIL library *:* CIL module *
+ 0002:00000d08       __ehfuncinfo$??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_N@Z 10008d08     * CIL library *:* CIL module *
+ 0002:00000d2c       __unwindtable$??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_N@Z 10008d2c     * CIL library *:* CIL module *
+ 0002:00000d3c       __ehfuncinfo$??1recursive_mutex@std@@QAE@XZ 10008d3c     * CIL library *:* CIL module *
+ 0002:00000d60       __unwindtable$??1recursive_mutex@std@@QAE@XZ 10008d60     * CIL library *:* CIL module *
+ 0002:00000d68       __ehfuncinfo$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 10008d68     * CIL library *:* CIL module *
+ 0002:00000d8c       __unwindtable$??__F?_DisposedEngines@V8EngineProxy@@1V?$vector@_NV?$allocator@_N@std@@@std@@A@@YAXXZ 10008d8c     * CIL library *:* CIL module *
+ 0002:00000d9c       __ehfuncinfo$?DisposeHandleProxy@V8EngineProxy@@QAEXPAUHandleProxy@@@Z 10008d9c     * CIL library *:* CIL module *
+ 0002:00000dc0       __unwindtable$?DisposeHandleProxy@V8EngineProxy@@QAEXPAUHandleProxy@@@Z 10008dc0     * CIL library *:* CIL module *
+ 0002:00000dc8       __ehfuncinfo$?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAU2@G@Z 10008dc8     * CIL library *:* CIL module *
+ 0002:00000dec       __unwindtable$?CreateArray@V8EngineProxy@@QAEPAUHandleProxy@@PAPAU2@G@Z 10008dec     * CIL library *:* CIL module *
+ 0002:00000e04       __ehfuncinfo$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z 10008e04     * CIL library *:* CIL module *
+ 0002:00000e28       __unwindtable$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z 10008e28     * CIL library *:* CIL module *
+ 0002:00000e48       __tryblocktable$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z 10008e48     * CIL library *:* CIL module *
+ 0002:00000e5c       __catchsym$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PAG0@Z$4 10008e5c     * CIL library *:* CIL module *
+ 0002:00000e6c       __ehfuncinfo$?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z 10008e6c     * CIL library *:* CIL module *
+ 0002:00000e90       __unwindtable$?WithContextScope@V8EngineProxy@@QAEXP6GXXZ@Z 10008e90     * CIL library *:* CIL module *
+ 0002:00000eb0       __ehfuncinfo$?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 10008eb0     * CIL library *:* CIL module *
+ 0002:00000ed4       __unwindtable$?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 10008ed4     * CIL library *:* CIL module *
+ 0002:00000ef0       __ehfuncinfo$??1V8EngineProxy@@QAE@XZ 10008ef0     * CIL library *:* CIL module *
+ 0002:00000f18       __unwindtable$??1V8EngineProxy@@QAE@XZ 10008f18     * CIL library *:* CIL module *
+ 0002:00000f60       __ehfuncinfo$??0V8EngineProxy@@QAE@_NP6AXXZH@Z 10008f60     * CIL library *:* CIL module *
+ 0002:00000f84       __unwindtable$??0V8EngineProxy@@QAE@_NP6AXXZH@Z 10008f84     * CIL library *:* CIL module *
+ 0002:00002fec       .idata$6                   1000afec     v8-ia32:v8-ia32.dll
+ 0002:00003024       .idata$6                   1000b024     kernel32:KERNEL32.dll
+ 0002:000030e0       .idata$6                   1000b0e0     msvcprt:MSVCP110.dll
+ 0002:000031a6       .idata$6                   1000b1a6     MSVCRT:MSVCR110.dll
+ 0002:000033f0       .edata                     1000b3f0     V8_Net_Proxy_x86.exp
+ 0002:00003418       rgpv                       1000b418     V8_Net_Proxy_x86.exp
+ 0002:0000350c       rgszName                   1000b50c     V8_Net_Proxy_x86.exp
+ 0002:00003600       rgwOrd                     1000b600     V8_Net_Proxy_x86.exp
+ 0002:0000367a       szName                     1000b67a     V8_Net_Proxy_x86.exp
+ 0002:0000368f       $N00001                    1000b68f     V8_Net_Proxy_x86.exp
+ 0002:00003698       $N00002                    1000b698     V8_Net_Proxy_x86.exp
+ 0002:000036aa       $N00003                    1000b6aa     V8_Net_Proxy_x86.exp
+ 0002:000036ba       $N00004                    1000b6ba     V8_Net_Proxy_x86.exp
+ 0002:000036cb       $N00005                    1000b6cb     V8_Net_Proxy_x86.exp
+ 0002:000036da       $N00006                    1000b6da     V8_Net_Proxy_x86.exp
+ 0002:000036ea       $N00007                    1000b6ea     V8_Net_Proxy_x86.exp
+ 0002:00003705       $N00008                    1000b705     V8_Net_Proxy_x86.exp
+ 0002:00003725       $N00009                    1000b725     V8_Net_Proxy_x86.exp
+ 0002:00003748       $N00010                    1000b748     V8_Net_Proxy_x86.exp
+ 0002:00003761       $N00011                    1000b761     V8_Net_Proxy_x86.exp
+ 0002:00003772       $N00012                    1000b772     V8_Net_Proxy_x86.exp
+ 0002:00003785       $N00013                    1000b785     V8_Net_Proxy_x86.exp
+ 0002:00003796       $N00014                    1000b796     V8_Net_Proxy_x86.exp
+ 0002:000037a6       $N00015                    1000b7a6     V8_Net_Proxy_x86.exp
+ 0002:000037c2       $N00016                    1000b7c2     V8_Net_Proxy_x86.exp
+ 0002:000037df       $N00017                    1000b7df     V8_Net_Proxy_x86.exp
+ 0002:00003800       $N00018                    1000b800     V8_Net_Proxy_x86.exp
+ 0002:00003810       $N00019                    1000b810     V8_Net_Proxy_x86.exp
+ 0002:00003826       $N00020                    1000b826     V8_Net_Proxy_x86.exp
+ 0002:0000383e       $N00021                    1000b83e     V8_Net_Proxy_x86.exp
+ 0002:00003859       $N00022                    1000b859     V8_Net_Proxy_x86.exp
+ 0002:00003878       $N00023                    1000b878     V8_Net_Proxy_x86.exp
+ 0002:00003897       $N00024                    1000b897     V8_Net_Proxy_x86.exp
+ 0002:000038b5       $N00025                    1000b8b5     V8_Net_Proxy_x86.exp
+ 0002:000038d2       $N00026                    1000b8d2     V8_Net_Proxy_x86.exp
+ 0002:000038e4       $N00027                    1000b8e4     V8_Net_Proxy_x86.exp
+ 0002:000038fc       $N00028                    1000b8fc     V8_Net_Proxy_x86.exp
+ 0002:00003912       $N00029                    1000b912     V8_Net_Proxy_x86.exp
+ 0002:00003928       $N00030                    1000b928     V8_Net_Proxy_x86.exp
+ 0002:00003933       $N00031                    1000b933     V8_Net_Proxy_x86.exp
+ 0002:00003945       $N00032                    1000b945     V8_Net_Proxy_x86.exp
+ 0002:00003954       $N00033                    1000b954     V8_Net_Proxy_x86.exp
+ 0002:00003978       $N00034                    1000b978     V8_Net_Proxy_x86.exp
+ 0002:0000399d       $N00035                    1000b99d     V8_Net_Proxy_x86.exp
+ 0002:000039b9       $N00036                    1000b9b9     V8_Net_Proxy_x86.exp
+ 0002:000039d5       $N00037                    1000b9d5     V8_Net_Proxy_x86.exp
+ 0002:000039f0       $N00038                    1000b9f0     V8_Net_Proxy_x86.exp
+ 0002:00003a06       $N00039                    1000ba06     V8_Net_Proxy_x86.exp
+ 0002:00003a1d       $N00040                    1000ba1d     V8_Net_Proxy_x86.exp
+ 0002:00003a36       $N00041                    1000ba36     V8_Net_Proxy_x86.exp
+ 0002:00003a4a       $N00042                    1000ba4a     V8_Net_Proxy_x86.exp
+ 0002:00003a5e       $N00043                    1000ba5e     V8_Net_Proxy_x86.exp
+ 0002:00003a70       $N00044                    1000ba70     V8_Net_Proxy_x86.exp
+ 0002:00003a86       $N00045                    1000ba86     V8_Net_Proxy_x86.exp
+ 0002:00003aaa       $N00046                    1000baaa     V8_Net_Proxy_x86.exp
+ 0002:00003ac3       $N00047                    1000bac3     V8_Net_Proxy_x86.exp
+ 0002:00003ae5       $N00048                    1000bae5     V8_Net_Proxy_x86.exp
+ 0002:00003b05       $N00049                    1000bb05     V8_Net_Proxy_x86.exp
+ 0002:00003b20       $N00050                    1000bb20     V8_Net_Proxy_x86.exp
+ 0002:00003b36       $N00051                    1000bb36     V8_Net_Proxy_x86.exp
+ 0002:00003b53       $N00052                    1000bb53     V8_Net_Proxy_x86.exp
+ 0002:00003b6f       $N00053                    1000bb6f     V8_Net_Proxy_x86.exp
+ 0002:00003b8d       $N00054                    1000bb8d     V8_Net_Proxy_x86.exp
+ 0002:00003bab       $N00055                    1000bbab     V8_Net_Proxy_x86.exp
+ 0002:00003bd0       $N00056                    1000bbd0     V8_Net_Proxy_x86.exp
+ 0002:00003bf3       $N00057                    1000bbf3     V8_Net_Proxy_x86.exp
+ 0002:00003c08       $N00058                    1000bc08     V8_Net_Proxy_x86.exp
+ 0002:00003c16       $N00059                    1000bc16     V8_Net_Proxy_x86.exp
+ 0002:00003c29       $N00060                    1000bc29     V8_Net_Proxy_x86.exp
+ 0002:00003c3f       $N00061                    1000bc3f     V8_Net_Proxy_x86.exp
+ 0003:00000040       ___proc_attached           1000c040     MSVCRT:crtdll.obj
+ 0003:00000048       _GS_ExceptionRecord        1000c048     MSVCRT:gs_report.obj
+ 0003:00000098       _GS_ContextRecord          1000c098     MSVCRT:gs_report.obj
+ 0003:00000364       _DebuggerWasPresent        1000c364     MSVCRT:gs_report.obj
+ 0003:00000370       __V8Initialized            1000c370     * CIL library *:* CIL module *
+ 0003:00000378       __Tuple_alloc              1000c378     * CIL library *:* CIL module *
+ 0003:00000379       _ignore                    1000c379     * CIL library *:* CIL module *
+ 0003:0000037a       _allocator_arg             1000c37a     * CIL library *:* CIL module *
+ 0003:0000037b       _piecewise_construct       1000c37b     * CIL library *:* CIL module *
+ 0003:0000037c       __Tuple_alloc              1000c37c     * CIL library *:* CIL module *
+ 0003:0000037d       _ignore                    1000c37d     * CIL library *:* CIL module *
+ 0003:0000037e       _allocator_arg             1000c37e     * CIL library *:* CIL module *
+ 0003:0000037f       _piecewise_construct       1000c37f     * CIL library *:* CIL module *
+ 0003:00000380       __Tuple_alloc              1000c380     * CIL library *:* CIL module *
+ 0003:00000381       _ignore                    1000c381     * CIL library *:* CIL module *
+ 0003:00000382       _allocator_arg             1000c382     * CIL library *:* CIL module *
+ 0003:00000383       _piecewise_construct       1000c383     * CIL library *:* CIL module *
+ 0003:00000384       __Tuple_alloc              1000c384     * CIL library *:* CIL module *
+ 0003:00000385       _ignore                    1000c385     * CIL library *:* CIL module *
+ 0003:00000386       _allocator_arg             1000c386     * CIL library *:* CIL module *
+ 0003:00000387       _piecewise_construct       1000c387     * CIL library *:* CIL module *
+ 0003:00000388       __Tuple_alloc              1000c388     * CIL library *:* CIL module *
+ 0003:00000389       _ignore                    1000c389     * CIL library *:* CIL module *
+ 0003:0000038a       _allocator_arg             1000c38a     * CIL library *:* CIL module *
+ 0003:0000038b       _piecewise_construct       1000c38b     * CIL library *:* CIL module *
+ 0003:0000038c       __Tuple_alloc              1000c38c     * CIL library *:* CIL module *
+ 0003:0000038d       _ignore                    1000c38d     * CIL library *:* CIL module *
+ 0003:0000038e       _allocator_arg             1000c38e     * CIL library *:* CIL module *
+ 0003:0000038f       _piecewise_construct       1000c38f     * CIL library *:* CIL module *
+ 0003:000003a0       __Tuple_alloc              1000c3a0     * CIL library *:* CIL module *
+ 0003:000003a1       _ignore                    1000c3a1     * CIL library *:* CIL module *
+ 0003:000003a2       _allocator_arg             1000c3a2     * CIL library *:* CIL module *
+ 0003:000003a3       _piecewise_construct       1000c3a3     * CIL library *:* CIL module *
+ 0004:000000a0       $R000000                   1000d0a0     V8.Net-Proxy-32.res
+ 0004:00000420       $R000380                   1000d420     V8.Net-Proxy-32.res
+
+ Exports
+
+  ordinal    name
+
+        1    _Call@20
+        2    _ConnectObject@12
+        3    _CreateArray@12
+        4    _CreateBoolean@8
+        5    _CreateDate@12
+        6    _CreateError@12
+        7    _CreateFunctionInstance@16
+        8    _CreateFunctionTemplateProxy@12
+        9    _CreateFunctionTemplateProxyTest@0
+       10    _CreateHandleProxyTest@0
+       11    _CreateInteger@8
+       12    _CreateNullValue@4
+       13    _CreateNumber@12
+       14    _CreateObject@8
+       15    _CreateObjectFromTemplate@8
+       16    _CreateObjectTemplateProxy@4
+       17    _CreateObjectTemplateProxyTest@0
+       18    _CreateString@8
+       19    _CreateStringArray@12
+       20    _CreateV8EngineProxy@12
+       21    _CreateV8EngineProxyTest@0
+       22    _DeleteFunctionTemplateProxy@4
+       23    _DeleteObjectPropertyByIndex@8
+       24    _DeleteObjectPropertyByName@8
+       25    _DeleteObjectTemplateProxy@4
+       26    _DeleteTestData@4
+       27    _DestroyV8EngineProxy@4
+       28    _DisposeHandleProxy@4
+       29    _DoIdleNotification@8
+       30    _ForceGC@4
+       31    _GetArrayLength@4
+       32    _GetFunction@4
+       33    _GetFunctionInstanceTemplateProxy@4
+       34    _GetFunctionPrototypeTemplateProxy@4
+       35    _GetHandleManagedObjectID@4
+       36    _GetObjectPropertyByIndex@8
+       37    _GetObjectPropertyByName@8
+       38    _GetObjectPrototype@4
+       39    _GetOwnPropertyNames@4
+       40    _GetPropertyAttributes@8
+       41    _GetPropertyNames@4
+       42    _MakeStrongHandle@4
+       43    _MakeWeakHandle@4
+       44    _RegisterGCCallback@8
+       45    _RegisterIndexedPropertyHandlers@24
+       46    _RegisterInvokeHandler@8
+       47    _RegisterNamedPropertyHandlers@24
+       48    _SetFunctionTemplateProperty@16
+       49    _SetGlobalObjectTemplate@8
+       50    _SetObjectAccessor@28
+       51    _SetObjectPropertyByIndex@12
+       52    _SetObjectPropertyByName@16
+       53    _SetObjectTemplateAccessor@28
+       54    _SetObjectTemplateProperty@16
+       55    _UnregisterIndexedPropertyHandlers@4
+       56    _UnregisterNamedPropertyHandlers@4
+       57    _UpdateHandleValue@4
+       58    _V8Execute@12
+       59    _WithHandleScope@8
+       60    _WithV8ContextScope@8
+       61    _WithV8IsolateScope@8
