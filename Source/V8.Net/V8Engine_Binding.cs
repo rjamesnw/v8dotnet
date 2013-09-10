@@ -53,7 +53,7 @@ namespace V8.Net
     /// Currently, this class is used to cache new generic types in the type binder.
     /// </summary>
 #if !(V1_1 || V2 || V3 || V3_5)
-    [DebuggerDisplay("{Object}")]
+    [DebuggerDisplay("(Object: {Object}, SubTypes: {SubTypes.Count})")]
 #endif
     public class TypeLibrary<T> where T : class
     {
@@ -353,9 +353,16 @@ namespace V8.Net
             // ... step2: convert the strong value to the expected type (if given, and if necessary) ...
             // (note: if 'IsGenericParameter' is true, then this type represents a type ONLY, and any value is ignored)
 
-            if (Error == null && ExpectedType != null && !ExpectedType.IsGenericParameter && !ExpectedType.IsAssignableFrom(Type))
-                try { Value = Types.ChangeType(Value, ExpectedType); }
-                catch (Exception ex) { Error = ex; }
+            if (Error == null && ExpectedType != null && !ExpectedType.IsGenericParameter && (!ExpectedType.IsGenericType || ExpectedType.IsConstructedGenericType()))
+                if (ExpectedType.IsAssignableFrom(Type))
+                    Type = ExpectedType; // (this sets the explicit type expected)
+                else
+                    try
+                    {
+                        Value = Types.ChangeType(Value, ExpectedType);
+                        Type = ExpectedType; // (this sets the explicit type expected)
+                    }
+                    catch (Exception ex) { Error = ex; }
         }
 
         /// <summary>
@@ -540,7 +547,7 @@ namespace V8.Net
                 return null;
             }
 
-            public TypeLibrary<TypeLibrary<MemberInfo>> ConstructedMembers; // (if this member is a generic type, then this is the cache of constructed generic definitions)
+            public TypeLibrary<TypeLibrary<MemberInfo>> ConstructedMemberGroups; // (if this member is a generic type, then this is the cache of constructed generic definitions)
             public uint TotalConstructedMembers = 0; // (if > 1 then this member is overloaded)
 
             public string MemberName; // (might be different from MemberInfo!)
@@ -569,6 +576,8 @@ namespace V8.Net
                 }
             }
         }
+
+        _MemberDetails _Constructors;
 
         internal readonly Dictionary<string, _MemberDetails> _Members = new Dictionary<string, _MemberDetails>();
         public IEnumerable<MemberInfo> Members { get { return from m in _Members.Values from mi in m.Members select mi; } }
@@ -611,8 +620,13 @@ namespace V8.Net
                 {
                     ClassName = BoundType.Name;
 
-                    if (ClassName == "Object" || ClassName == "Function" || ClassName == "Boolean" || ClassName == "String" || ClassName == "RegExp" || ClassName == "Number" || ClassName == "Math" || ClassName == "Array" || ClassName == "Date")
-                        ClassName = "CLR" + ClassName;
+                    if (BoundType.IsGenericType)
+                    {
+                        ClassName = ClassName.Substring(0, ClassName.LastIndexOf('`')) + "$" + BoundType.GetGenericArguments().Count();
+                    }
+                    else
+                        if (ClassName == "Object" || ClassName == "Function" || ClassName == "Boolean" || ClassName == "String" || ClassName == "RegExp" || ClassName == "Number" || ClassName == "Math" || ClassName == "Array" || ClassName == "Date")
+                            ClassName = "CLR" + ClassName;
                 }
             }
             else ClassName = className;
@@ -695,7 +709,7 @@ namespace V8.Net
                     if (md == null)
                         _Members[baseInstanceMemberDetails.MemberName] = baseInstanceMemberDetails; // (adopt the member into this instance as well for fast lookup)
                     else
-                        if (md.BaseDetails == null && md.TypeBinder == this) 
+                        if (md.BaseDetails == null && md.TypeBinder == this)
                             md.BaseDetails = baseInstanceMemberDetails; // (the iteration goes up the inheritance chain, so once 'BaseDetails' is set, it is ignored [because the base type binders would have already linked the details])
                 }
             }
@@ -761,6 +775,7 @@ namespace V8.Net
             else if (memberInfo.MemberType == MemberTypes.Method)
             {
                 var methodInfo = memberInfo as MethodInfo;
+
                 if (!methodInfo.IsSpecialName)
                 {
                     if (methodInfo.IsGenericMethodDefinition)
@@ -787,15 +802,40 @@ namespace V8.Net
 
                     memberDetails.ImmediateMembers.Set(methodInfo, types);
 
-                    //??if (memberDetails.Methods == null)
-                    //??    memberDetails.Methods = new TypeLibrary<V8Function>();
-                    //?? ('Methods' will be populated when accessed for the first time)
-
                     if (existingMemberDetails == null)
                         set(memberDetails);
                     else
                         memberDetails.TotalImmediateMembers++;
                 }
+            }
+            else if (memberInfo.MemberType == MemberTypes.Constructor)
+            {
+                var constructorInfo = memberInfo as ConstructorInfo;
+
+                if (_Constructors != null)
+                {
+                    memberDetails = _Constructors;
+                    memberDetails.TotalImmediateMembers++;
+                }
+                else
+                    memberDetails = _Constructors = new _MemberDetails(this)
+                    {
+                        FirstMember = constructorInfo,
+                        MemberName = memberName,
+                        MemberType = MemberTypes.Method,
+                        BindingMode = constructorInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
+                    };
+
+                if (memberSecurity >= 0 && memberDetails.MemberSecurity >= 0)
+                    memberDetails.MemberSecurity |= memberSecurity; // (combine all security attributes for all overloaded members, if any)
+                else
+                    memberDetails.MemberSecurity = memberSecurity;
+
+                // ... register the method based on number and type of expected parameters ...
+
+                var types = constructorInfo.GetParameters().Select(p => p.ParameterType).ToArray();
+
+                memberDetails.ImmediateMembers.Set(constructorInfo, types);
             }
 
             return memberDetails;
@@ -1176,6 +1216,122 @@ namespace V8.Net
             return msg + ")";
         }
 
+        // --------------------------------------------------------------------------------------------------------------------
+
+        InternalHandle _TranslateArguments(_MemberDetails memberDetails, Type[] expectedGenericTypes, InternalHandle[] args, ref uint argOffset,
+            out TypeLibrary<MemberInfo> constructedMembers, ref ParameterInfo[] expectedParameters)
+        {
+            bool isGenericInvocation = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
+            InternalHandle[] typeArgs;
+            ArgInfo[] genericArgInfos;
+            constructedMembers = null;
+
+            if (isGenericInvocation)
+            {
+                // ... get the type arguments from the first argument, which should be an array ...
+                // (first argument is always an array of types)
+
+                if (args.Length == 0 || !args[0].IsArray || args[0].ArrayLength == 0)
+                    return Engine.CreateError("No types given: The first argument of a generic method must be an array of types.", JSValueType.ExecutionError);
+
+                typeArgs = new InternalHandle[args[0].ArrayLength]; // TODO: Create a faster way to extract an array of internal handles.
+
+                for (int i = 0; i < args[0].ArrayLength; i++)
+                    typeArgs[i] = args[0].GetProperty(i);
+
+                // ... with the array of types, convert to an 'ArgInfo' array with the extracted argument type information and values...
+
+                genericArgInfos = ArgInfo.GetTypes(typeArgs, 0, expectedGenericTypes); // ('expectedGenericTypes' is a fixed array of types that are ALWAYS expected if only 1 member exists [no overloads])
+                var genericSystemTypes = ArgInfo.GetSystemTypes(genericArgInfos);
+
+                if (memberDetails.ConstructedMemberGroups == null)
+                    memberDetails.ConstructedMemberGroups = new TypeLibrary<TypeLibrary<MemberInfo>>();
+
+                constructedMembers = memberDetails.ConstructedMemberGroups.Get(genericSystemTypes);
+
+                if (constructedMembers == null)
+                {
+                    // ... there can be multiple generic methods (overloads) with different parameters types, so we need to generate and cache each one to see the affect on the parameters ...
+
+                    var genericMethodInfos = memberDetails.ImmediateMembers.Items.Select(i => (MethodInfo)i.Object).ToArray();
+                    constructedMembers = new TypeLibrary<MemberInfo>();
+                    MethodInfo constructedMethod = null;
+
+                    for (int i = 0; i < genericMethodInfos.Length; i++)
+                    {
+                        constructedMethod = genericMethodInfos[i].MakeGenericMethod(genericSystemTypes);
+                        constructedMembers.Set(constructedMethod, constructedMethod.GetParameters().Select(p => p.ParameterType).ToArray());
+                        memberDetails.TotalConstructedMembers++;
+                    }
+
+                    // ... cache the array of constructed generic methods (any overloads with the same generic parameters), which will exist in a type
+                    // library for quick lookup the next time this given types are supplied ...
+                    memberDetails.ConstructedMemberGroups.Set(constructedMembers, genericSystemTypes);
+                }
+
+                // ... if there's only one group of constructed members, and only one member in that group, then we can force the parameter types (makes
+                // calling it much easier for the user) ...
+
+                if (memberDetails.TotalConstructedMembers == 1 && constructedMembers.Items.Count() == 1)
+                    expectedParameters = ((MethodInfo)constructedMembers.Items.First().Object).GetParameters();
+                // TODO: Consider a more efficient way to do the above.
+
+                // ... at this point the 'constructedMethodInfos' will have an array of methods that match the types supplied for this generic method call.
+                // Next, the arguments ????
+
+                argOffset = 1; // (skip first array argument)
+            }
+
+            return InternalHandle.Empty;
+        }
+
+        void _CopyArguments(ParameterInfo[] expectedParameters, Dictionary<int, object[]> convertedArgumentArrayCache, InternalHandle[] args,
+            ref int paramIndex, uint argOffset, out object[] convertedArguments, out ArgInfo[] argInfos)
+        {
+            convertedArguments = null;
+
+            argInfos = ArgInfo.GetArguments(args, argOffset, expectedParameters);
+
+            // ... create/grow the converted arguments array if necessary ...
+            if (!convertedArgumentArrayCache.TryGetValue(argInfos.Length, out convertedArguments) || convertedArguments.Length < argInfos.Length)
+                convertedArgumentArrayCache[argInfos.Length] = convertedArguments = new object[argInfos.Length]; // (array is too small, so discard
+
+            ArgInfo tInfo;
+
+            for (paramIndex = 0; paramIndex < argInfos.Length; paramIndex++)
+            {
+                tInfo = argInfos[paramIndex];
+
+                if (tInfo.HasError) throw tInfo.Error;
+
+                convertedArguments[paramIndex] = tInfo.ValueOrDefault;
+            }
+
+            paramIndex = -1;
+        }
+
+        InternalHandle _InvokeMethod(_MemberDetails memberDetails, MethodInfo soloMethod, object[] convertedArguments, ref InternalHandle _this,
+            ArgInfo[] argInfos, TypeLibrary<MemberInfo> constructedMembers)
+        {
+            if (soloMethod != null)
+            {
+                var result = soloMethod.Invoke(_this.BoundObject, convertedArguments);
+                return soloMethod.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
+            }
+            else // ... more than one method exists (overloads) ..
+            {
+                var systemTypes = ArgInfo.GetSystemTypes(argInfos);
+                var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(systemTypes); // (note: this expects exact types matches!)
+                if (methodInfo == null)
+                    throw new TargetInvocationException("There is no method matching the supplied parameter types ("
+                        + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
+                var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
+                return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
+            }
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
         /// <summary>
         /// Binds a specific or named method of the specified object to a 'V8Function' callback wrapper.
         /// The returns function can be used in setting native V8 object properties to function values.
@@ -1187,7 +1343,7 @@ namespace V8.Net
         /// <param name="className">An optional name to return when 'valueOf()' is called on a JS object (this defaults to the method's name).</param>
         /// <param name="genericTarget">Allows binding a specific handle to the 'this' of a callback (for static bindings).</param>
         /// <param name="genericInstanceTargetUpdater">Allows binding a specific instance to the 'this' of a callback (for static bindings).</param>
-        internal bool _GetBindingForMethod(_MemberDetails memberDetails, out V8Function func, string className = null, Func<InternalHandle> genericTarget = null)
+        internal bool _GetBindingForMethod(_MemberDetails memberDetails, out V8Function func, string className = null)
         {
             func = null;
 
@@ -1199,21 +1355,14 @@ namespace V8.Net
             if (string.IsNullOrEmpty(className))
                 className = memberDetails.MemberName;
 
-            //??var methods = memberDetails.Members.Items.Select(i => i.Object).Cast<MethodInfo>().ToArray();
-
-            //??bool[] hasVariableParams = new bool[methods.Length]; //?? Needed?
-            //for (var mi = 0; mi < methods.Length; mi++)
-            //{
-            //    var parameters = methods[mi].GetParameters();
-            //    hasVariableParams[mi] = parameters.Length > 0 && parameters[parameters.Length - 1].IsDefined(typeof(ParamArrayAttribute), false);
-            //}
-
-            MethodInfo soloMethod = memberDetails.TotalImmediateMembers == 1 ? (MethodInfo)memberDetails.FirstMember : null;
+            bool isGenericMember = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
+            MethodInfo soloMethod = memberDetails.TotalImmediateMembers == 1 && !isGenericMember ? (MethodInfo)memberDetails.FirstMember : null;
             var expectedParameters = soloMethod != null ? soloMethod.GetParameters() : null;
-            var expectedGenericTypes = soloMethod != null && soloMethod.IsGenericMethod ? soloMethod.GetGenericArguments() : null;
+            var expectedGenericTypes = isGenericMember ? ((MethodInfo)memberDetails.FirstMember).GetGenericArguments() : null;
 
             Dictionary<int, object[]> convertedArgumentArrayCache = new Dictionary<int, object[]>(); // (a cache of argument arrays based on argument length to use for calling overloaded methods)
             object[] convertedArguments;
+            // (note: the argument array cache for method invocations will exist in the closure for this member only)
 
             // ... if we know the number of parameters (only one method) then create the argument array now ...
             if (expectedParameters != null)
@@ -1224,115 +1373,31 @@ namespace V8.Net
             func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, InternalHandle _this, InternalHandle[] args) =>
             {
                 if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (isConstructCall) return Engine.CreateError("Objects cannot be constructed from this function.", JSValueType.ExecutionError); // TODO: Test.
 
-                bool isGenericInvocation = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
-                InternalHandle[] typeArgs;
-                ArgInfo[] genericArgInfos;
-                ArgInfo[] argInfoArgs;
+                ArgInfo[] argInfos;
                 int paramIndex = -1;
                 uint argOffset = 0;
-                ArgInfo tInfo;
+                TypeLibrary<MemberInfo> constructedMembers;
+                var _expectedParameters = expectedParameters;
 
                 try
                 {
-                    TypeLibrary<MemberInfo> constructedMembers = null;
-
                     if (!_this.IsBinder)
                         return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberDetails.MemberName + ").", JSValueType.ExecutionError);
 
-                    if (isGenericInvocation)
-                    {
-                        // ... first argument should be an array of types ...
-                        if (args.Length == 0 || !args[0].IsArray || args[0].ArrayLength == 0)
-                            return Engine.CreateError("No types given: The first argument of a generic method must be an array of types.", JSValueType.ExecutionError);
+                    // ... translate the arguments ...
 
-                        typeArgs = new InternalHandle[args[0].ArrayLength]; // TODO: Create a faster way to extract an array of internal handles.
+                    var paResult = _TranslateArguments(memberDetails, expectedGenericTypes, args, ref argOffset, out constructedMembers, ref _expectedParameters);
+                    if (!paResult.IsEmpty) return paResult;
 
-                        for (int i = 0; i < args[0].ArrayLength; i++)
-                            typeArgs[i] = args[0].GetProperty(i);
+                    // ... get the translated arguments into an argument value array in order to invoke the method ...
 
-                        genericArgInfos = ArgInfo.GetTypes(typeArgs, 0, expectedGenericTypes);
-                        var genericSystemTypes = ArgInfo.GetSystemTypes(genericArgInfos);
-
-                        if (memberDetails.ConstructedMembers == null)
-                            memberDetails.ConstructedMembers = new TypeLibrary<TypeLibrary<MemberInfo>>();
-
-                        constructedMembers = memberDetails.ConstructedMembers.Get(genericSystemTypes);
-
-                        if (constructedMembers == null)
-                        {
-                            // ... there can be multiple generic methods (overloads) with different parameters types, so we need to generate and cache each one to see the affect on the parameters ...
-
-                            var genericMethodInfos = memberDetails.ImmediateMembers.Items.Select(i => (MethodInfo)i.Object).ToArray();
-                            constructedMembers = new TypeLibrary<MemberInfo>();
-                            MethodInfo constructedMethod = null;
-
-                            for (int i = 0; i < genericMethodInfos.Length; i++)
-                            {
-                                constructedMethod = genericMethodInfos[i].MakeGenericMethod(genericSystemTypes);
-                                constructedMembers.Set(constructedMethod, constructedMethod.GetParameters().Select(p => p.ParameterType).ToArray());
-                                memberDetails.TotalConstructedMembers++;
-                            }
-
-                            // ... cache the array of constructed generic methods (any overloads with the same generic parameters), which will exist in a type
-                            // library for quick lookup the next time this given types are supplied ...
-                            memberDetails.ConstructedMembers.Set(constructedMembers, genericSystemTypes);
-
-                            if (memberDetails.TotalConstructedMembers == 1)
-                            {
-                                // ... update the closure details for the solo method ...
-                                soloMethod = constructedMethod;
-                                expectedParameters = soloMethod.GetParameters();
-                            }
-
-                        }
-
-
-                        // ... at this point the 'constructedMethodInfos' will have an array of methods that match the types supplied for this generic method call.
-                        // Next, the arguments ????
-
-                        argOffset = 1; // (skip first array argument)
-                    }
-
-                    /* ... get the converted parameters ... */
-                    {
-                        convertedArguments = null;
-
-                        argInfoArgs = ArgInfo.GetArguments(args, argOffset, expectedParameters);
-
-                        // ... create/grow the converted arguments array if necessary ...
-                        if (!convertedArgumentArrayCache.TryGetValue(argInfoArgs.Length, out convertedArguments) || convertedArguments.Length < argInfoArgs.Length)
-                            convertedArgumentArrayCache[argInfoArgs.Length] = convertedArguments = new object[argInfoArgs.Length]; // (array is too small, so discard
-
-                        for (paramIndex = 0; paramIndex < argInfoArgs.Length; paramIndex++)
-                        {
-                            tInfo = argInfoArgs[paramIndex];
-
-                            if (tInfo.HasError) throw tInfo.Error;
-
-                            convertedArguments[paramIndex] = tInfo.ValueOrDefault;
-                        }
-
-                        paramIndex = -1;
-                    }
+                    _CopyArguments(_expectedParameters, convertedArgumentArrayCache, args, ref paramIndex, argOffset, out convertedArguments, out argInfos);
 
                     // ... invoke the method ...
 
-                    if (soloMethod != null)
-                    {
-                        var result = soloMethod.Invoke(_this.BoundObject, convertedArguments);
-                        return soloMethod.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
-                    }
-                    else // ... more than one method exists (overloads) ..
-                    {
-                        var systemTypes = ArgInfo.GetSystemTypes(argInfoArgs);
-                        var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(systemTypes); // (note: this expects exact types matches!)
-                        if (methodInfo == null)
-                            throw new TargetInvocationException("There is no method matching the supplied parameter types ("
-                                + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
-                        var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
-                        return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
-                    }
+                    return _InvokeMethod(memberDetails, soloMethod, convertedArguments, ref _this, argInfos, constructedMembers);
                 }
                 catch (Exception ex)
                 {
@@ -1360,24 +1425,65 @@ namespace V8.Net
             return true;
         }
 
+        // --------------------------------------------------------------------------------------------------------------------
+
         void _BindTypeMembers()
         {
+            // (note: if abstract, '_Constructors' will be 'null')
+            ConstructorInfo soloConstructor = _Constructors != null && _Constructors.TotalImmediateMembers == 1 ? (ConstructorInfo)_Constructors.FirstMember : null;
+            var expectedParameters = soloConstructor != null ? soloConstructor.GetParameters() : null;
+
+            Dictionary<int, object[]> convertedArgumentArrayCache = new Dictionary<int, object[]>(); // (a cache of argument arrays based on argument length to use for calling overloaded methods)
+            object[] convertedArguments;
+            // (note: the argument array cache for method invocations will exist in the closure for this member only)
+
+            // ... if we know the number of parameters (only one method) then create the argument array now ...
+            if (expectedParameters != null)
+                convertedArgumentArrayCache[expectedParameters.Length] = new object[expectedParameters.Length];
+
             TypeFunction = TypeTemplate.GetFunctionObject<TypeBinderFunction>((engine, isConstructCall, _this, args) =>
             {
                 InternalHandle handle;
+                ArgInfo[] argInfos;
+                uint argOffset = 0;
+                int paramIndex = -1;
+                TypeLibrary<MemberInfo> constructedMembers;
+                var _expectedParameters = expectedParameters;
 
                 if (isConstructCall)
                     try
                     {
-                        if (BoundType.IsAbstract)
+                        if (BoundType.IsAbstract) // (note: if abstract, '_Constructors' will be 'null')
                             handle = Engine.CreateError("The CLR type '" + BoundType.Name + "' is abstract - you cannot create instances from abstract types.", JSValueType.ExecutionError);
                         else
                         {
-                            var _args = new object[args.Length];
-                            for (var i = 0; i < args.Length; i++)
-                                _args[i] = args[i].Value;
+                            // ... translate the arguments ...
 
-                            handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, _args), null, _Recursive, DefaultMemberSecurity);
+                            var paResult = _TranslateArguments(_Constructors, null, args, ref argOffset, out constructedMembers, ref _expectedParameters);
+                            if (!paResult.IsEmpty) return paResult;
+
+                            // ... get the translated arguments into an argument value array in order to invoke the method ...
+
+                            _CopyArguments(_expectedParameters, convertedArgumentArrayCache, args, ref paramIndex, argOffset, out convertedArguments, out argInfos);
+
+                            // ... invoke the constructor ...
+
+                            handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, convertedArguments), null, _Recursive, _DefaultMemberSecurity);
+
+                            //??if (soloConstructor != null)
+                            //{
+                            //    var result = Engine.CreateBinding(Activator.CreateInstance(BoundType, convertedArguments), null, _Recursive, _DefaultMemberSecurity);
+                            //}
+                            //else // ... more than one method exists (overloads) ..
+                            //{
+                            //    var systemTypes = ArgInfo.GetSystemTypes(argInfos);
+                            //    var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(systemTypes); // (note: this expects exact types matches!)
+                            //    if (methodInfo == null)
+                            //        throw new TargetInvocationException("There is no method matching the supplied parameter types ("
+                            //            + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
+                            //    var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
+                            //    return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
+                            //}
                         }
                     }
                     catch (Exception ex)

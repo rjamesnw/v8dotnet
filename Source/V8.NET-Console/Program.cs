@@ -50,17 +50,9 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
 
                     // (Note: It's not required to explicitly register a type, but it is recommended for efficiency.)
-
            
-                    _JSServer.RegisterType(typeof(Type), "Type", true, ScriptMemberSecurity.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(Type));
-                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, ScriptMemberSecurity.Locked); // (Note: Not yet registered, but will auto register!)
-                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
-
-                    _JSServer.VerboseConsoleExecute("t = uri.GetType();");
-                    _JSServer.VerboseConsoleExecute("dump(t);");
-
                     _JSServer.RegisterType(typeof(Object), "Object", true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Type), "Type", true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(String), "String", true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(Boolean), "Boolean", true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(Array), "Array", true, ScriptMemberSecurity.Locked);
@@ -82,6 +74,7 @@ namespace V8.Net
                     hSystem.SetProperty(typeof(String));
                     hSystem.SetProperty(typeof(Boolean));
                     hSystem.SetProperty(typeof(Array));
+                    _JSServer.GlobalObject.SetProperty(typeof(Type));
                     _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList));
                     _JSServer.GlobalObject.SetProperty(typeof(char));
                     _JSServer.GlobalObject.SetProperty(typeof(int));
@@ -92,7 +85,11 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(UInt32));
                     _JSServer.GlobalObject.SetProperty(typeof(UInt64));
                     _JSServer.GlobalObject.SetProperty(typeof(Enumerable));
+                    _JSServer.GlobalObject.SetProperty(typeof(Environment));
                     _JSServer.GlobalObject.SetProperty(typeof(System.IO.File));
+
+                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, ScriptMemberSecurity.Locked); // (Note: Not yet registered, but will auto register!)
+                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
 
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), null, true, ScriptMemberSecurity.Locked);
@@ -128,7 +125,7 @@ namespace V8.Net
                     _JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
 
                     Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
-                    _JSServer.RegisterType(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
+                    _JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
                     _JSServer.VerboseConsoleExecute(@"System.String.Empty;");
                     Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
                 
@@ -420,8 +417,6 @@ namespace V8.Net
                             _JSServer.RunMarshallingTests();
 
                             Console.WriteLine("Success! The marshalling between native and managed side is working as expected.");
-
-                            break;
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {
