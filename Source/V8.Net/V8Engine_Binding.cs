@@ -7,10 +7,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 #if !(V1_1 || V2 || V3 || V3_5)
 using System.Dynamic;
-using System.Diagnostics;
 #endif
 
 namespace V8.Net
@@ -113,137 +113,311 @@ namespace V8.Net
 
     // ========================================================================================================================
 
+    //?? Turns out this is not faster.
+    //    /// <summary>
+    //    /// Keeps track of object references based on an array of one or more related strings.
+    //    /// The object references are stored based on a tree of nested string characters for lightning-fast indexed-based lookup.
+    //    /// This nested index tree is designed to only take the space needed for the given character ranges, and nothing more.
+    //    /// Currently, this class is used to cache type members in the type binder based on their names for fast lookup when the named indexer is invoked.
+    //    /// </summary>
+    //#if !(V1_1 || V2 || V3 || V3_5)
+    //    [DebuggerDisplay("{Object}")]
+    //#endif
+    //    public class CharIndexLibrary<T> where T : class
+    //    {
+    //        public CharIndexLibrary<T> Parent;
+    //        public readonly char Char;
+
+    //        CharIndexLibrary<T>[] _SubChars = new CharIndexLibrary<T>[0];
+    //        List<int> _ValidIndexes = new List<int>(); // (holds a series of valid indexes for the sub chars for quick enumeration)
+    //        int _LowerCharOffset = ((int)char.MaxValue) + 1; // The lower char offset is subtracted from the name characters (since the full character range is usually not required).
+
+    //        public T Object;
+
+    //        public CharIndexLibrary() { }
+    //        public CharIndexLibrary(CharIndexLibrary<T> parent, char character) { Parent = parent; Char = character; }
+
+    //        public T Set(string name, T value)
+    //        {
+    //            if (name == null) name = "";
+    //            var entry = this;
+    //            int i = 0, ofs, endDiff, oldLen;
+    //            char c;
+
+    //            while (i < name.Length)
+    //            {
+    //                c = name[i];
+    //                ofs = c - entry._LowerCharOffset;
+
+    //                if (ofs < 0)
+    //                {
+    //                    if (entry._SubChars.Length == 0)
+    //                    {
+    //                        Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, 1); // (first time there is nothing to move, and 'entry._LowerCharOffset' is invalid anyway)
+    //                    }
+    //                    else
+    //                    {
+    //                        // ... need to reduce the lower offset to store this character - which means bumping everything up ...
+    //                        oldLen = entry._SubChars.Length;
+    //                        Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, entry._SubChars.Length + -ofs); // (extend end)
+    //                        Array.Copy(entry._SubChars, 0, entry._SubChars, -ofs, oldLen); // (bump up)
+    //                        Array.Clear(entry._SubChars, 0, Math.Min(-ofs, oldLen));
+    //                        // ... move up the valid indexes ...
+    //                        for (var vi = 0; vi < entry._ValidIndexes.Count; vi++)
+    //                            entry._ValidIndexes[vi] += -ofs;
+    //                    }
+
+    //                    entry._LowerCharOffset += ofs; // (moved down lower offset)
+    //                    entry._ValidIndexes.Add(0);
+    //                    entry = entry._SubChars[0] = new CharIndexLibrary<T>(entry, c);
+    //                }
+    //                else if (ofs >= entry._SubChars.Length)
+    //                {
+    //                    endDiff = 1 + (ofs - entry._SubChars.Length);
+    //                    Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, entry._SubChars.Length + endDiff); // (extend end)
+    //                    entry._ValidIndexes.Add(ofs);
+    //                    entry = entry._SubChars[ofs] = new CharIndexLibrary<T>(entry, c);
+    //                }
+    //                else
+    //                {
+    //                    var _entry = entry._SubChars[ofs];
+    //                    if (_entry == null)
+    //                    {
+    //                        entry._ValidIndexes.Add(ofs);
+    //                        entry._SubChars[ofs] = _entry = new CharIndexLibrary<T>(entry, c);
+    //                    }
+    //                    entry = _entry;
+    //                }
+
+    //                i++;
+    //            }
+
+    //            entry.Object = value;
+
+    //            return value;
+    //        }
+
+    //        public T Get(string name)
+    //        {
+    //            if (name == null) name = "";
+    //            var entry = this;
+    //            int i = 0, ofs;
+    //            char c;
+
+    //            while (i < name.Length)
+    //            {
+    //                c = name[i];
+    //                ofs = c - entry._LowerCharOffset;
+
+    //                if (ofs < 0)
+    //                {
+    //                    return null;
+    //                }
+    //                else if (ofs >= entry._SubChars.Length)
+    //                {
+    //                    return null;
+    //                }
+    //                else
+    //                {
+    //                    entry = entry._SubChars[ofs];
+    //                    if (entry == null)
+    //                        return null;
+    //                }
+    //                i++;
+    //            }
+
+    //            return entry.Object;
+    //        }
+
+    //        public bool Exists(string name)
+    //        {
+    //            return Get(name) != null;
+    //        }
+
+    //        public IEnumerable<CharIndexLibrary<T>> Items { get { return _GetItems(); } }
+
+    //        IEnumerable<CharIndexLibrary<T>> _GetItems()
+    //        {
+    //            if (Object != null) yield return this;
+    //            for (var i = 0; i < _ValidIndexes.Count; i++)
+    //                foreach (var item in _SubChars[_ValidIndexes[i]]._GetItems())
+    //                    yield return item;
+    //        }
+
+    //        public string Name { get { return (Parent != null && Parent.Parent != null ? Parent.Name : "") + Char; } }
+    //    }
+
+    // ========================================================================================================================
+
     /// <summary>
-    /// Keeps track of object references based on an array of one or more related strings.
-    /// The object references are stored based on a tree of nested string characters for lightning-fast indexed-based lookup.
-    /// This nested index tree is designed to only take the space needed for the given character ranges, and nothing more.
-    /// Currently, this class is used to cache type members in the type binder based on their names for fast lookup when the named indexer is invoked.
+    /// Wraps a script value with strong CLR type information for use with generics and method invocation.
+    /// <para>
+    /// This struct represents an argument passed from script to V8.NET binding logic. If the argument represents type information, it is extracted.
+    /// In either case, 'Value' will be the requested strong-typed value, or the default value, whichever is detected first (in that order).
+    /// This can be used to pass arguments to methods, where the value is converted to a specific type if necessary.
+    /// </para>
+    /// <para>Warning: The struct only extracts information, converting the script argument if necessary, and does not own the 'ArgInfoSource' handle.
+    /// As such, the caller is still responsible to release it.</para>
     /// </summary>
-#if !(V1_1 || V2 || V3 || V3_5)
-    [DebuggerDisplay("{Object}")]
-#endif
-    public class CharIndexLibrary<T> where T : class
+    public unsafe struct ArgInfo
     {
-        public CharIndexLibrary<T> Parent;
-        public readonly char Char;
+        public readonly InternalHandle ArgInfoSource; // (note: will not be released by this struct [nor can it be])
 
-        CharIndexLibrary<T>[] _SubChars = new CharIndexLibrary<T>[0];
-        List<int> _ValidIndexes = new List<int>(); // (holds a series of valid indexes for the sub chars for quick enumeration)
-        int _LowerCharOffset = ((int)char.MaxValue) + 1; // The lower char offset is subtracted from the name characters (since the full character range is usually not required).
+        public readonly Type Type;
+        public readonly Int32 TypeID;
 
-        public T Object;
+        public readonly object Value;
+        public readonly Type OriginalValueType;
 
-        public CharIndexLibrary() { }
-        public CharIndexLibrary(CharIndexLibrary<T> parent, char character) { Parent = parent; Char = character; }
+        /// <summary>
+        /// Returns true if this ArgInfo value has valid type information.  This will be false for empty instances.
+        /// </summary>
+        public bool IsValid { get { return Type != null; } }
 
-        public T Set(string name, T value)
+        /// <summary>
+        /// Returns true if a valid value exists.  If false is returned, this usually means this is a type-only ArgInfo object.
+        /// </summary>
+        public readonly bool HasValue;
+
+        /// <summary>
+        /// Returns true if the information was taken from a native ArgInfo object.
+        /// </summary>
+        public bool IsSourceFromArgInfoObject { get { return ArgInfoSource.CLRTypeID >= 0; } }
+
+        public object As(Type newtype) { return Types.ChangeType(Value, newtype); }
+
+        public Exception Error; // (only used if part of a list of arguments)
+        public bool HasError { get { return Error != null; } }
+
+        public ParameterInfo ExpectedParameter;
+        public Type ExpectedType;
+        public bool HasDefaultValue { get { return ExpectedParameter != null && ExpectedParameter.DefaultValue != DBNull.Value; } }
+        public object DefaultValue { get { return HasDefaultValue ? ExpectedParameter.DefaultValue : null; } }
+
+        /// <summary>
+        /// Returns either the underlying argument value (in converted form), or the default value, whichever is detected first (in that order).
+        /// This can be used to pass arguments to methods, where a specific CLR type is required.
+        /// </summary>
+        public object ValueOrDefault
         {
-            if (name == null) name = "";
-            var entry = this;
-            int i = 0, ofs, endDiff, oldLen;
-            char c;
-
-            while (i < name.Length)
+            get
             {
-                c = name[i];
-                ofs = c - entry._LowerCharOffset;
+                if (Error != null) throw Error; // (error was not dealt with yet!)
+                if (!HasValue && HasDefaultValue) return DefaultValue;
+                return Value;
+            }
+        }
 
-                if (ofs < 0)
-                {
-                    if (entry._SubChars.Length == 0)
-                    {
-                        Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, 1); // (first time there is nothing to move, and 'entry._LowerCharOffset' is invalid anyway)
-                    }
-                    else
-                    {
-                        // ... need to reduce the lower offset to store this character - which means bumping everything up ...
-                        oldLen = entry._SubChars.Length;
-                        Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, entry._SubChars.Length + -ofs); // (extend end)
-                        Array.Copy(entry._SubChars, 0, entry._SubChars, -ofs, oldLen); // (bump up)
-                        Array.Clear(entry._SubChars, 0, Math.Min(-ofs, oldLen));
-                        // ... move up the valid indexes ...
-                        for (var vi = 0; vi < entry._ValidIndexes.Count; vi++)
-                            entry._ValidIndexes[vi] += -ofs;
-                    }
+        public ArgInfo(InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
+        {
+            ArgInfoSource = handle;
+            ExpectedParameter = paramInfo;
+            ExpectedType = expectedType ?? (paramInfo != null ? paramInfo.ParameterType : null);
+            Type = null;
+            TypeID = -1;
+            Value = null;
+            Error = null;
 
-                    entry._LowerCharOffset += ofs; // (moved down lower offset)
-                    entry._ValidIndexes.Add(0);
-                    entry = entry._SubChars[0] = new CharIndexLibrary<T>(entry, c);
-                }
-                else if (ofs >= entry._SubChars.Length)
+            if (handle.CLRTypeID >= 0) // (must be an object type with ID <= -2)
+            {
+                TypeID = handle.CLRTypeID;
+
+                using (var hValue = handle.GetProperty("$__Value"))
                 {
-                    endDiff = 1 + (ofs - entry._SubChars.Length);
-                    Array.Resize<CharIndexLibrary<T>>(ref entry._SubChars, entry._SubChars.Length + endDiff); // (extend end)
-                    entry._ValidIndexes.Add(ofs);
-                    entry = entry._SubChars[ofs] = new CharIndexLibrary<T>(entry, c);
-                }
-                else
-                {
-                    var _entry = entry._SubChars[ofs];
-                    if (_entry == null)
-                    {
-                        entry._ValidIndexes.Add(ofs);
-                        entry._SubChars[ofs] = _entry = new CharIndexLibrary<T>(entry, c);
-                    }
-                    entry = _entry;
+                    HasValue = !hValue.IsUndefined;
+                    Value = HasValue ? hValue.Value : null;
                 }
 
-                i++;
+                // (type is set last, as it is used as the flag to determine if the info is valid)
+                Type = TypeID >= 0 ? handle.Engine._RegisteredTypes[TypeID] : null; // (this will return 'null' if the index is invalid)
+            }
+            else
+            {
+                HasValue = !ArgInfoSource.IsUndefined;
+                Value = HasValue ? ArgInfoSource.Value : null;
+
+                if (ArgInfoSource.IsBinder) // (type binders are supported for generic method parameters and types [so no need to invoke them as functions to get a strong type!])
+                    Type = ArgInfoSource.TypeBinder.BoundType;
             }
 
-            entry.Object = value;
+            OriginalValueType = Value != null ? Value.GetType() : typeof(object);
 
-            return value;
+            if (Type == null) Type = OriginalValueType;
+
+            // ... step 1: convert the script value to the strong type if necessary ...
+
+            if (!Type.IsAssignableFrom(OriginalValueType))
+                try { Value = Types.ChangeType(Value, Type); }
+                catch (Exception ex) { Error = ex; }
+
+            // ... step2: convert the strong value to the expected type (if given, and if necessary) ...
+            // (note: if 'IsGenericParameter' is true, then this type represents a type ONLY, and any value is ignored)
+
+            if (Error == null && ExpectedType != null && !ExpectedType.IsGenericParameter && !ExpectedType.IsAssignableFrom(Type))
+                try { Value = Types.ChangeType(Value, ExpectedType); }
+                catch (Exception ex) { Error = ex; }
         }
 
-        public T Get(string name)
+        /// <summary>
+        /// Returns an array of ArgInfo values for the given handles.
+        /// </summary>
+        public static ArgInfo[] GetArguments(InternalHandle[] handles, uint handlesOffset = 0, ParameterInfo[] expectedParameters = null)
         {
-            if (name == null) name = "";
-            var entry = this;
-            int i = 0, ofs;
-            char c;
+            var handlesLength = handles.Length - handlesOffset;
+            var length = expectedParameters != null ? expectedParameters.Length : handlesLength;
 
-            while (i < name.Length)
+            ArgInfo[] argInfoItems = new ArgInfo[length];
+
+            for (var i = 0; i < length; i++)
+                argInfoItems[i] = new ArgInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters != null ? expectedParameters[i] : null);
+
+            return argInfoItems;
+        }
+
+        /// <summary>
+        /// Returns an array of ArgInfo values for the expected types.
+        /// </summary>
+        public static ArgInfo[] GetTypes(InternalHandle[] handles, uint handlesOffset = 0, Type[] expectedTypes = null)
+        {
+            var handlesLength = handles.Length - handlesOffset;
+            var length = expectedTypes != null ? expectedTypes.Length : handlesLength;
+
+            ArgInfo[] argInfoItems = new ArgInfo[length];
+
+            for (var i = 0; i < length; i++)
+                argInfoItems[i] = new ArgInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
+
+            return argInfoItems;
+        }
+
+        /// <summary>
+        /// Returns an array of ArgInfo values for the expected types.
+        /// </summary>
+        public static Type[] GetSystemTypes(IEnumerable<ArgInfo> argInfoList)
+        {
+            int count = argInfoList.Count(), i = 0;
+            var types = new Type[count];
+            var enumerator = argInfoList.GetEnumerator();
+            while (enumerator.MoveNext())
             {
-                c = name[i];
-                ofs = c - entry._LowerCharOffset;
-
-                if (ofs < 0)
-                {
-                    return null;
-                }
-                else if (ofs >= entry._SubChars.Length)
-                {
-                    return null;
-                }
-                else
-                {
-                    entry = entry._SubChars[ofs];
-                    if (entry == null)
-                        return null;
-                }
-                i++;
+                if (enumerator.Current.HasError) throw enumerator.Current.Error;
+                types[i++] = enumerator.Current.Type;
             }
-
-            return entry.Object;
+            return types;
         }
 
-        public bool Exists(string name)
+        /// <summary>
+        /// Extracts and returns an array of all handles from the specified arguments.
+        /// </summary>
+        /// <param name="argInfoArgs"></param>
+        /// <returns></returns>
+        public static InternalHandle[] GetHandles(ArgInfo[] argInfoArgs)
         {
-            return Get(name) != null;
+            InternalHandle[] handles = new InternalHandle[argInfoArgs.Length];
+            for (int i = 0; i < argInfoArgs.Length; i++)
+                handles[i] = argInfoArgs[i].ArgInfoSource;
+            return handles;
         }
-
-        public IEnumerable<CharIndexLibrary<T>> Items { get { return _GetItems(); } }
-
-        IEnumerable<CharIndexLibrary<T>> _GetItems()
-        {
-            if (Object != null) yield return this;
-            for (var i = 0; i < _ValidIndexes.Count; i++)
-                foreach (var item in _SubChars[_ValidIndexes[i]]._GetItems())
-                    yield return item;
-        }
-
-        public string Name { get { return (Parent != null && Parent.Parent != null ? Parent.Name : "") + Char; } }
     }
 
     // ========================================================================================================================
@@ -259,6 +433,11 @@ namespace V8.Net
         /// The engine that will own the 'ObjectTemplate' instance.
         /// </summary>
         public readonly V8Engine Engine;
+
+        /// <summary>
+        /// A reference to the type binder for the immediate base type inherited by the bound type.
+        /// </summary>
+        public readonly TypeBinder BaseTypeBinder;
 
         /// <summary>
         /// Represents a V8 template object used for generating native V8 objects which will correspond to the binding for instances of the underlying type.
@@ -292,23 +471,17 @@ namespace V8.Net
         public readonly string ClassName;
 
         /// <summary>
-        /// Attributes to apply to the members for this type binder.
-        /// </summary>
-        public IEnumerable<KeyValuePair<MemberInfo, V8PropertyAttributes>> Attributes { get { return _Attributes; } }
-        readonly Dictionary<MemberInfo, V8PropertyAttributes> _Attributes = new Dictionary<MemberInfo, V8PropertyAttributes>();
-
-        /// <summary>
         /// If true, then nested object references are included, otherwise they are ignored.  By default, the references are ignored for security reasons.
         /// <param>When an object is bound, only the object instance itself is bound (and not any reference members).</param>
         /// </summary>
-        public bool Recursive { get { return _Recursive; } }
-        internal bool _Recursive;
+        public bool Recursive { get { return _Recursive ?? (BaseTypeBinder != null ? BaseTypeBinder.Recursive : false); } }
+        internal bool? _Recursive;
 
         /// <summary>
         /// Default member attributes for members that don't have the 'ScriptMember' attribute.
         /// </summary>
-        public V8PropertyAttributes DefaultMemberAttributes { get { return _DefaultMemberAttributes; } }
-        internal V8PropertyAttributes _DefaultMemberAttributes = V8PropertyAttributes.Undefined;
+        public ScriptMemberSecurity DefaultMemberSecurity { get { return _DefaultMemberSecurity ?? (BaseTypeBinder != null ? BaseTypeBinder.DefaultMemberSecurity : Engine.DefaultMemberBindingSecurity); } }
+        internal ScriptMemberSecurity? _DefaultMemberSecurity;
 
         /// <summary>
         /// The indexer for this type, if applicable, otherwise this is null.
@@ -322,205 +495,98 @@ namespace V8.Net
         ScriptObject _ScriptObjectAttribute;
 
 #if !(V1_1 || V2 || V3 || V3_5)
-        [DebuggerDisplay("{MemberName}X{TotalMembers}")]
+        [DebuggerDisplay("{MemberName}x{TotalImmediateMembers}")]
 #endif
         internal class _MemberDetails
         {
+            public readonly TypeBinder TypeBinder;
+            public _MemberDetails(TypeBinder owner) { TypeBinder = owner; }
+
+            public _MemberDetails BaseDetails; // (if set, this is these are the inherited members of the same name represented by this member).
+
             public MemberInfo FirstMember; // (this is a quick cached reference to the first member in 'Members', which is faster for fields and properties)
-            public readonly TypeLibrary<MemberInfo> Members = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this represents a method or property (indexer) overload)
-            public uint TotalMembers = 1; // (if > 1 then this member is overloaded)
-            public IEnumerable<MethodInfo> MethodMembers { get { return from i in Members.Items where i.Object.MemberType == MemberTypes.Method select (MethodInfo)i.Object; } }
+            public readonly TypeLibrary<MemberInfo> ImmediateMembers = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this represents a method or property (indexer) overload)
+            public uint TotalImmediateMembers = 1; // (if > 1 then this member is overloaded)
+
+            public IEnumerable<TypeLibrary<MemberInfo>> MemberTypeLibraries
+            {
+                get
+                {
+                    yield return ImmediateMembers;
+                    if (BaseDetails != null)
+                        foreach (var tl in BaseDetails.MemberTypeLibraries)
+                            yield return tl;
+                }
+            }
+
+            public IEnumerable<MemberInfo> Members
+            {
+                get
+                {
+                    foreach (var mi in MemberTypeLibraries.SelectMany(mtl => mtl.Items.Select(i => i.Object)))
+                        yield return mi;
+                }
+            }
+            public IEnumerable<MethodInfo> MethodMembers { get { return from m in Members where m.MemberType == MemberTypes.Method select (MethodInfo)m; } }
+
+            public MemberInfo FindMemberByTypes(params Type[] types)
+            {
+                MemberInfo mi;
+                foreach (var mtl in MemberTypeLibraries)
+                {
+                    mi = mtl.Get(types);
+                    if (mi != null) return mi;
+                }
+                return null;
+            }
+
             public TypeLibrary<TypeLibrary<MemberInfo>> ConstructedMembers; // (if this member is a generic type, then this is the cache of constructed generic definitions)
             public uint TotalConstructedMembers = 0; // (if > 1 then this member is overloaded)
+
             public string MemberName; // (might be different from MemberInfo!)
             public MemberTypes MemberType; // (might be different from MemberInfo!)
-            public V8PropertyAttributes Attributes;
+            public ScriptMemberSecurity? MemberSecurity;
+            public ScriptMemberSecurity InheritedMemberSecurity { get { return MemberSecurity != null ? MemberSecurity.Value : BaseDetails != null ? BaseDetails.InheritedMemberSecurity : ScriptMemberSecurity.NoAcccess; } }
+            public bool HasSecurityFlags(ScriptMemberSecurity memberSecurity) { var ims = InheritedMemberSecurity; return ims >= 0 && memberSecurity >= 0 ? ims.HasFlag(memberSecurity) : ims == memberSecurity; } // (any negative values must be checked with direct equality)
             public BindingMode BindingMode;
             public V8NativeObjectPropertyGetter Getter;
             public V8NativeObjectPropertySetter Setter;
             public V8Function Method;
             //??public TypeLibrary<V8Function> Methods; // (overloads ['SingleMethod' should be null])
             public Handle ValueOverride; // (the value override is a user value that, if exists, overrides the bindings)
-        }
-        internal readonly CharIndexLibrary<_MemberDetails> _Members = new CharIndexLibrary<_MemberDetails>(null, default(char));
 
-        IEnumerable<_MemberDetails> _FieldDetails(BindingMode bindingMode)
-        { return from md in _Members.Items where (bindingMode == BindingMode.None || md.Object.BindingMode == bindingMode) && md.Object.MemberType == MemberTypes.Field select md.Object; }
-
-        IEnumerable<_MemberDetails> _PropertyDetails(BindingMode bindingMode)
-        { return from md in _Members.Items where (bindingMode == BindingMode.None || md.Object.BindingMode == bindingMode) && md.Object.MemberType == MemberTypes.Property select md.Object; }
-
-        IEnumerable<_MemberDetails> _MethodDetails(BindingMode bindingMode)
-        { return from md in _Members.Items where (bindingMode == BindingMode.None || md.Object.BindingMode == bindingMode) && md.Object.MemberType == MemberTypes.Method select md.Object; }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        /// <summary>
-        /// Wraps a script value with strong CLR type information for use with generics and method invocation.
-        /// <para>Warning: The TypeInfo struct only extracts information, and does not own the 'TypeInfoSource' handle. As such, the caller is still responsible to release it.</para>
-        /// </summary>
-        public unsafe struct TypeInfo
-        {
-            public readonly InternalHandle TypeInfoSource; // (note: will not be released by this struct [nor can it be])
-
-            public readonly Type Type;
-            public readonly Int32 TypeID;
-
-            public readonly object Value;
-            public readonly Type OriginalValueType;
-
-            /// <summary>
-            /// Returns true if this TypeInfo value has valid type information.  This will be false for empty instances.
-            /// </summary>
-            public bool IsValid { get { return Type != null; } }
-
-            /// <summary>
-            /// Returns true if a valid value exists.  If false is returned, this usually means this is a type-only TypeInfo object.
-            /// </summary>
-            public readonly bool HasValue;
-
-            /// <summary>
-            /// Returns true if the information was taken from a native TypeInfo object.
-            /// </summary>
-            public bool IsSourceFromTypeInfoObject { get { return TypeInfoSource.CLRTypeID >= 0; } }
-
-            public object As(Type newtype) { return Types.ChangeType(Value, newtype); }
-
-            public Exception Error; // (only used if part of a list of arguments)
-            public bool HasError { get { return Error != null; } }
-
-            public ParameterInfo ExpectedParameter;
-            public Type ExpectedType;
-            public bool HasDefaultValue { get { return ExpectedParameter != null && ExpectedParameter.DefaultValue != DBNull.Value; } }
-            public object DefaultValue { get { return HasDefaultValue ? ExpectedParameter.DefaultValue : null; } }
-
-            /// <summary>
-            /// Returns either the underlying TypeInfo strong value, or the default value, whichever is detected first (in that order).
-            /// This can be used to pass arguments to methods, where the value is automatically converted if necessary.
-            /// </summary>
-            public object ValueOrDefault
+            public bool Accessible // (returns true if this member is allowed to be accessed)
             {
                 get
                 {
-                    if (Error != null) throw Error; // (error was not dealt with yet!)
-                    if (!HasValue && HasDefaultValue) return DefaultValue;
-                    return Value;
-                }
-            }
-
-            /// <summary>
-            /// Converts a given handle to a TypeInfo value, if the handle represents type information, otherwise '{TypeInfo}.IsValid' will be false.
-            /// </summary>
-            public TypeInfo(InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
-            {
-                TypeInfoSource = handle;
-                ExpectedParameter = paramInfo;
-                ExpectedType = expectedType ?? (paramInfo != null ? paramInfo.ParameterType : null);
-                Type = null;
-                TypeID = -1;
-                Value = null;
-                Error = null;
-
-                if (handle.CLRTypeID >= 0) // (must be an object type with ID <= -2)
-                {
-                    TypeID = handle.CLRTypeID;
-
-                    using (var hValue = handle.GetProperty("$__Value"))
+                    bool recursive = TypeBinder.Recursive;
+                    if (!recursive)
                     {
-                        HasValue = !hValue.IsUndefined;
-                        Value = HasValue ? hValue.Value : null;
+                        if (MemberType == MemberTypes.Field && ((FieldInfo)FirstMember).FieldType.IsClass && ((FieldInfo)FirstMember).FieldType != typeof(string)) return false; // (don't include nested objects, except strings)
+                        if (MemberType == MemberTypes.Property && ((PropertyInfo)FirstMember).PropertyType.IsClass && ((PropertyInfo)FirstMember).PropertyType != typeof(string)) return false; // (don't include nested objects, except strings)
                     }
-
-                    // (type is set last, as it is used as the flag to determine if the info is valid)
-                    Type = TypeID >= 0 ? handle.Engine._RegisteredTypes[TypeID] : null; // (this will return 'null' if the index is invalid)
+                    return !HasSecurityFlags(ScriptMemberSecurity.NoAcccess);
                 }
-                else
-                {
-                    HasValue = !TypeInfoSource.IsUndefined;
-                    Value = HasValue ? TypeInfoSource.Value : null;
-
-                    if (TypeInfoSource.IsBinder) // (type binders are supported for generic method parameters and types [so no need to invoke them as functions to get a strong type!])
-                        Type = TypeInfoSource.TypeBinder.BoundType;
-                }
-
-                OriginalValueType = Value != null ? Value.GetType() : typeof(object);
-
-                if (Type == null) Type = OriginalValueType;
-
-                // ... step 1: convert the script value to the strong type if necessary ...
-
-                if (!Type.IsAssignableFrom(OriginalValueType))
-                    try { Value = Types.ChangeType(Value, Type); }
-                    catch (Exception ex) { Error = ex; }
-
-                // ... step2: convert the strong value to the expected type (if given, and if necessary) ...
-                // (note: if 'IsGenericParameter' is true, then this type represents a type ONLY, and any value is ignored)
-
-                if (Error == null && ExpectedType != null && !ExpectedType.IsGenericParameter && !ExpectedType.IsAssignableFrom(Type))
-                    try { Value = Types.ChangeType(Value, ExpectedType); }
-                    catch (Exception ex) { Error = ex; }
-            }
-
-            /// <summary>
-            /// Returns an array of TypeInfo values for the given handles.
-            /// </summary>
-            public static TypeInfo[] GetArguments(InternalHandle[] handles, uint handlesOffset = 0, ParameterInfo[] expectedParameters = null)
-            {
-                var handlesLength = handles.Length - handlesOffset;
-                var length = expectedParameters != null ? expectedParameters.Length : handlesLength;
-
-                TypeInfo[] typeInfoItems = new TypeInfo[length];
-
-                for (var i = 0; i < length; i++)
-                    typeInfoItems[i] = new TypeInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters != null ? expectedParameters[i] : null);
-
-                return typeInfoItems;
-            }
-
-            /// <summary>
-            /// Returns an array of TypeInfo values for the expected types.
-            /// </summary>
-            public static TypeInfo[] GetTypes(InternalHandle[] handles, uint handlesOffset = 0, Type[] expectedTypes = null)
-            {
-                var handlesLength = handles.Length - handlesOffset;
-                var length = expectedTypes != null ? expectedTypes.Length : handlesLength;
-
-                TypeInfo[] typeInfoItems = new TypeInfo[length];
-
-                for (var i = 0; i < length; i++)
-                    typeInfoItems[i] = new TypeInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
-
-                return typeInfoItems;
-            }
-
-            /// <summary>
-            /// Returns an array of TypeInfo values for the expected types.
-            /// </summary>
-            public static Type[] GetSystemTypes(IEnumerable<TypeInfo> typeInfoList)
-            {
-                int count = typeInfoList.Count(), i = 0;
-                var types = new Type[count];
-                var enumerator = typeInfoList.GetEnumerator();
-                while (enumerator.MoveNext())
-                {
-                    if (enumerator.Current.HasError) throw enumerator.Current.Error;
-                    types[i++] = enumerator.Current.Type;
-                }
-                return types;
-            }
-
-            public static InternalHandle[] GetHandles(TypeInfo[] typeInfoArgs)
-            {
-                InternalHandle[] handles = new InternalHandle[typeInfoArgs.Length];
-                for (int i = 0; i < typeInfoArgs.Length; i++)
-                    handles[i] = typeInfoArgs[i].TypeInfoSource;
-                return handles;
             }
         }
 
+        internal readonly Dictionary<string, _MemberDetails> _Members = new Dictionary<string, _MemberDetails>();
+        public IEnumerable<MemberInfo> Members { get { return from m in _Members.Values from mi in m.Members select mi; } }
+
+        IEnumerable<_MemberDetails> _FieldDetails(BindingMode bindingMode)
+        { return from kv in _Members where (bindingMode == BindingMode.None || kv.Value.BindingMode == bindingMode) && kv.Value.MemberType == MemberTypes.Field select kv.Value; }
+
+        IEnumerable<_MemberDetails> _PropertyDetails(BindingMode bindingMode)
+        { return from kv in _Members where (bindingMode == BindingMode.None || kv.Value.BindingMode == bindingMode) && kv.Value.MemberType == MemberTypes.Property select kv.Value; }
+
+        IEnumerable<_MemberDetails> _MethodDetails(BindingMode bindingMode)
+        { return from kv in _Members where (bindingMode == BindingMode.None || kv.Value.BindingMode == bindingMode) && kv.Value.MemberType == MemberTypes.Method select kv.Value; }
+
+        public IEnumerable<TypeBinder> BaseBinders { get { var b = BaseTypeBinder; while (b != null) { yield return b; b = b.BaseTypeBinder; } } }
+
         // --------------------------------------------------------------------------------------------------------------------
 
-        internal TypeBinder(V8Engine engine, Type type, string className = null, bool recursive = false, V8PropertyAttributes defaultMemberAttributes = V8PropertyAttributes.Undefined)
+        internal TypeBinder(V8Engine engine, Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? defaultMemberSecurity = null)
         {
 
             if (engine == null) throw new ArgumentNullException("engine");
@@ -528,18 +594,13 @@ namespace V8.Net
 
             Engine = engine;
             BoundType = type;
-            TypeID = Engine._RegisteredTypes.Add(type);
+            TypeID = Engine._RegisteredTypes.Add(type); // (this is done here to make sure the type is created and accessible to prevent cyclical calls)
             _Recursive = recursive;
-            _DefaultMemberAttributes = defaultMemberAttributes;
+            _DefaultMemberSecurity = defaultMemberSecurity;
             _ScriptObjectAttribute = (from a in type.GetCustomAttributes(true) where a is ScriptObject select (ScriptObject)a).FirstOrDefault();
 
-            if (_DefaultMemberAttributes == V8PropertyAttributes.Undefined)
-            {
-                if (_ScriptObjectAttribute != null)
-                    _DefaultMemberAttributes = (V8PropertyAttributes)_ScriptObjectAttribute.Security;
-                else
-                    _DefaultMemberAttributes = (V8PropertyAttributes)Engine.DefaultMemberBindingSecurity;
-            }
+            if (_DefaultMemberSecurity == null && _ScriptObjectAttribute != null)
+                _DefaultMemberSecurity = _ScriptObjectAttribute.Security;
 
             if (className.IsNullOrWhiteSpace())
             {
@@ -558,10 +619,20 @@ namespace V8.Net
 
             Engine._Binders[type] = this;
 
+            // ... before pulling the members, make sure to profile the base types first ...
+
+            if (type.BaseType != null)
+                BaseTypeBinder = Engine.RegisterType(type.BaseType, null, recursive, defaultMemberSecurity); // (note: this is recursive if there are multiple unbound base types)
+            // (note: parameters are taken directly from the arguments given, and not from this instance's fields)
+
+            // ... setup the templates needed ...
+
             InstanceTemplate = Engine.CreateObjectTemplate<ObjectTemplate>(false);
             InstanceTemplate.RegisterNamedPropertyInterceptors();
 
             TypeTemplate = Engine.CreateFunctionTemplate<FunctionTemplate>(ClassName);
+
+            // ... extract the members and apply to the templates ...
 
             _BindInstanceMembers();
             // (note: the instance member reflection includes static members during the process, which is why '_BindTypeMembers()' must be called AFTER) 
@@ -575,11 +646,11 @@ namespace V8.Net
         {
             if (BoundType == null) throw new InvalidOperationException("'BoundType' is null.");
 
-            var members = BoundType.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+            var members = BoundType.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly); //| BindingFlags.FlattenHierarchy
 
             int mi;
             string memberName;
-            ScriptMemberSecurity attributes;
+            ScriptMemberSecurity? memberSecurity;
             ScriptMember scriptMemberAttrib;
             _MemberDetails memberDetails;
 
@@ -587,29 +658,52 @@ namespace V8.Net
             {
                 var member = members[mi]; // (need to use 'var' for the lambda closures in 'SetAccessor()' below)
 
+                if (member.DeclaringType != BoundType)
+                {
+                    // ... this member does not belong to this type binder ...
+                    continue;
+                }
+
                 memberName = member.Name;
-                attributes = (ScriptMemberSecurity)_DefaultMemberAttributes;
+                memberSecurity = DefaultMemberSecurity;
 
                 scriptMemberAttrib = (from a in member.GetCustomAttributes(true) where a is ScriptMember select (ScriptMember)a).LastOrDefault();
 
                 if (scriptMemberAttrib != null)
                 {
-                    if (scriptMemberAttrib.Security != (ScriptMemberSecurity)V8PropertyAttributes.Undefined)
-                        attributes = scriptMemberAttrib.Security;
+                    memberSecurity = scriptMemberAttrib.Security;
 
-                    if (!string.IsNullOrEmpty(scriptMemberAttrib.InScriptName))
+                    if (!scriptMemberAttrib.InScriptName.IsNullOrWhiteSpace())
                         memberName = scriptMemberAttrib.InScriptName;
                 }
 
-                memberDetails = _CreateMemberDetails(memberName, (V8PropertyAttributes)attributes, member,
-                    s => _Members.Get(s),
-                    md => _Members.Set(md.MemberName, md));
+                memberDetails = _CreateMemberDetails(memberName, memberSecurity, member,
+                    s => _Members.GetValueOrDefault(s),
+                    md => _Members[md.MemberName] = md);
+            }
+
+            // ... resolve the members that belong to the base types ...
+            // (note: this effectively simulates the flattening of all inherited base type members)
+
+            foreach (var tb in BaseBinders) // (this will return the inherited base types in order from the immediate base upwards, which is really important when linking '_MemberDetails' instances)
+            {
+                // ... go through all the INSTANCE types in the declaring type binder and add them ...
+                var baseInstanceMembers = from md in tb._Members.Values where md.BindingMode == BindingMode.Instance select md;
+                foreach (var baseInstanceMemberDetails in baseInstanceMembers)
+                {
+                    var md = _Members.GetValueOrDefault(baseInstanceMemberDetails.MemberName);
+                    if (md == null)
+                        _Members[baseInstanceMemberDetails.MemberName] = baseInstanceMemberDetails; // (adopt the member into this instance as well for fast lookup)
+                    else
+                        if (md.BaseDetails == null && md.TypeBinder == this) 
+                            md.BaseDetails = baseInstanceMemberDetails; // (the iteration goes up the inheritance chain, so once 'BaseDetails' is set, it is ignored [because the base type binders would have already linked the details])
+                }
             }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        internal _MemberDetails _CreateMemberDetails(string memberName, V8PropertyAttributes attribute, MemberInfo memberInfo,
+        internal _MemberDetails _CreateMemberDetails(string memberName, ScriptMemberSecurity? memberSecurity, MemberInfo memberInfo,
             Func<string, _MemberDetails> getExisting, // (called to check if there's an existing member by the same name)
             Action<_MemberDetails> set) // (called when no member exists and needs to be added [i.e. no existing member details were updated])
         {
@@ -622,18 +716,16 @@ namespace V8.Net
             {
                 var fieldInfo = memberInfo as FieldInfo;
 
-                if (!_Recursive && fieldInfo.FieldType.IsClass && fieldInfo.FieldType != typeof(string)) return null; // (don't include nested objects, except strings)
-
-                memberDetails = new _MemberDetails
+                memberDetails = new _MemberDetails(this)
                 {
                     FirstMember = fieldInfo,
                     MemberName = memberName,
                     MemberType = MemberTypes.Field,
-                    Attributes = attribute,
+                    MemberSecurity = memberSecurity,
                     BindingMode = fieldInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
                 };
 
-                memberDetails.Members.Set(fieldInfo, fieldInfo.FieldType);
+                memberDetails.ImmediateMembers.Set(fieldInfo, fieldInfo.FieldType);
 
                 set(memberDetails);
             }
@@ -649,22 +741,20 @@ namespace V8.Net
                     return null;
                 }
 
-                if (!_Recursive && propertyInfo.PropertyType.IsClass && propertyInfo.PropertyType != typeof(string)) return null; // (don't include nested objects, except strings)
-
                 var getMethod = propertyInfo.GetGetMethod();
                 var setMethod = propertyInfo.GetSetMethod();
                 var isStatic = getMethod != null && getMethod.IsStatic || setMethod != null && setMethod.IsStatic;
 
-                memberDetails = new _MemberDetails
+                memberDetails = new _MemberDetails(this)
                 {
                     FirstMember = propertyInfo,
                     MemberName = memberName,
                     MemberType = MemberTypes.Property,
-                    Attributes = attribute,
+                    MemberSecurity = memberSecurity,
                     BindingMode = isStatic ? BindingMode.Static : BindingMode.Instance
                 };
 
-                memberDetails.Members.Set(propertyInfo, propertyInfo.PropertyType);
+                memberDetails.ImmediateMembers.Set(propertyInfo, propertyInfo.PropertyType);
 
                 set(memberDetails);
             }
@@ -678,7 +768,7 @@ namespace V8.Net
 
                     var existingMemberDetails = getExisting != null ? getExisting(memberName) : null;
 
-                    memberDetails = existingMemberDetails ?? new _MemberDetails
+                    memberDetails = existingMemberDetails ?? new _MemberDetails(this)
                    {
                        FirstMember = methodInfo,
                        MemberName = memberName,
@@ -686,16 +776,16 @@ namespace V8.Net
                        BindingMode = methodInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
                    };
 
-                    if (attribute >= 0 && memberDetails.Attributes >= 0)
-                        memberDetails.Attributes |= attribute; // (combine all security attributes for all overloaded members, if any)
+                    if (memberSecurity >= 0 && memberDetails.MemberSecurity >= 0)
+                        memberDetails.MemberSecurity |= memberSecurity; // (combine all security attributes for all overloaded members, if any)
                     else
-                        memberDetails.Attributes = attribute;
+                        memberDetails.MemberSecurity = memberSecurity;
 
                     // ... register the method based on number and type of expected parameters ...
 
                     var types = Arrays.Concat(methodInfo.GetGenericArguments(), methodInfo.GetParameters().Select(p => p.ParameterType).ToArray());
 
-                    memberDetails.Members.Set(methodInfo, types);
+                    memberDetails.ImmediateMembers.Set(methodInfo, types);
 
                     //??if (memberDetails.Methods == null)
                     //??    memberDetails.Methods = new TypeLibrary<V8Function>();
@@ -704,7 +794,7 @@ namespace V8.Net
                     if (existingMemberDetails == null)
                         set(memberDetails);
                     else
-                        memberDetails.TotalMembers++;
+                        memberDetails.TotalImmediateMembers++;
                 }
             }
 
@@ -790,7 +880,7 @@ namespace V8.Net
             else if (fieldInfo.FieldType.IsEnum)
                 getter = _CreateGetAccessor<Int32>(memberDetails, fieldInfo);
 
-            else if (_Recursive)
+            else if (_Recursive ?? false)
             {
                 // ... this type is unknown, but recursive is set, so register the type implicitly and continue ...
                 Engine.RegisterType(fieldInfo.FieldType);
@@ -807,12 +897,12 @@ namespace V8.Net
         {
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
-                if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                if (!memberDetails.Attributes.HasFlag(V8PropertyAttributes.ReadOnly))
+                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
                     if (_this.IsBinder)
                     {
-                        fieldInfo.SetValue(_this.BoundObject, new TypeInfo(value, null, fieldInfo.FieldType).ValueOrDefault);
+                        fieldInfo.SetValue(_this.BoundObject, new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault);
                         return value;
                     }
                     else
@@ -829,7 +919,7 @@ namespace V8.Net
             if (isSystemType)
                 return (InternalHandle _this, string propertyName) =>
                 {
-                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                     try
                     {
@@ -843,7 +933,7 @@ namespace V8.Net
             else
                 return (InternalHandle _this, string propertyName) =>
                 {
-                    if (memberDetails.Attributes < 0) return InternalHandle.Empty;
+                    if (memberDetails.MemberSecurity < 0) return InternalHandle.Empty;
                     if (_this.IsBinder)
                         return Engine.CreateValue((T)fieldInfo.GetValue(_this.BoundObject));
                     else
@@ -858,7 +948,7 @@ namespace V8.Net
             if (isSystemType)
                 return (InternalHandle _this, string propertyName) =>
                 {
-                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                     try
                     {
@@ -872,7 +962,7 @@ namespace V8.Net
             else
                 return (InternalHandle _this, string propertyName) =>
                 {
-                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (_this.IsBinder)
                         return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
                     else
@@ -945,7 +1035,7 @@ namespace V8.Net
             else if (propInfo.PropertyType.IsEnum)
                 getter = _CreateGetAccessor<Int32>(memberDetails, propInfo);
 
-            else if (_Recursive)
+            else if (_Recursive ?? false)
             {
                 // ... this type is unknown, but recursive is set, so register the type implicitly and continue ...
                 Engine.RegisterType(propInfo.PropertyType);
@@ -964,11 +1054,11 @@ namespace V8.Net
 
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
-                if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                if (propertyInfo.CanWrite && !memberDetails.Attributes.HasFlag(V8PropertyAttributes.ReadOnly))
+                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (propertyInfo.CanWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
                     if (_this.IsBinder)
-                        propertyInfo.SetValue(_this.BoundObject, new TypeInfo(value, null, propertyInfo.PropertyType).ValueOrDefault, null);
+                        propertyInfo.SetValue(_this.BoundObject, new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault, null);
                     else
                         return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
                 }
@@ -984,7 +1074,7 @@ namespace V8.Net
             if (isSystemType)
                 return (InternalHandle _this, string propertyName) =>
                 {
-                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (propertyInfo.CanRead)
                     {
                         // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
@@ -1002,7 +1092,7 @@ namespace V8.Net
             else
                 return (InternalHandle _this, string propertyName) =>
                 {
-                    if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (propertyInfo.CanRead)
                     {
                         if (_this.IsBinder)
@@ -1118,7 +1208,7 @@ namespace V8.Net
             //    hasVariableParams[mi] = parameters.Length > 0 && parameters[parameters.Length - 1].IsDefined(typeof(ParamArrayAttribute), false);
             //}
 
-            MethodInfo soloMethod = memberDetails.TotalMembers == 1 ? (MethodInfo)memberDetails.FirstMember : null;
+            MethodInfo soloMethod = memberDetails.TotalImmediateMembers == 1 ? (MethodInfo)memberDetails.FirstMember : null;
             var expectedParameters = soloMethod != null ? soloMethod.GetParameters() : null;
             var expectedGenericTypes = soloMethod != null && soloMethod.IsGenericMethod ? soloMethod.GetGenericArguments() : null;
 
@@ -1133,19 +1223,19 @@ namespace V8.Net
 
             func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, InternalHandle _this, InternalHandle[] args) =>
             {
-                if (memberDetails.Attributes < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
 
                 bool isGenericInvocation = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
                 InternalHandle[] typeArgs;
-                TypeInfo[] genericTypeInfoArgs;
-                TypeInfo[] typeInfoArgs;
+                ArgInfo[] genericArgInfos;
+                ArgInfo[] argInfoArgs;
                 int paramIndex = -1;
                 uint argOffset = 0;
-                TypeInfo tInfo;
+                ArgInfo tInfo;
 
                 try
                 {
-                    TypeLibrary<MemberInfo> members = memberDetails.Members;
+                    TypeLibrary<MemberInfo> constructedMembers = null;
 
                     if (!_this.IsBinder)
                         return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberDetails.MemberName + ").", JSValueType.ExecutionError);
@@ -1161,32 +1251,32 @@ namespace V8.Net
                         for (int i = 0; i < args[0].ArrayLength; i++)
                             typeArgs[i] = args[0].GetProperty(i);
 
-                        genericTypeInfoArgs = TypeInfo.GetTypes(typeArgs, 0, expectedGenericTypes);
-                        var genericSystemTypes = TypeInfo.GetSystemTypes(genericTypeInfoArgs);
+                        genericArgInfos = ArgInfo.GetTypes(typeArgs, 0, expectedGenericTypes);
+                        var genericSystemTypes = ArgInfo.GetSystemTypes(genericArgInfos);
 
                         if (memberDetails.ConstructedMembers == null)
                             memberDetails.ConstructedMembers = new TypeLibrary<TypeLibrary<MemberInfo>>();
 
-                        TypeLibrary<MemberInfo> constructedMethodInfos = memberDetails.ConstructedMembers.Get(genericSystemTypes);
+                        constructedMembers = memberDetails.ConstructedMembers.Get(genericSystemTypes);
 
-                        if (constructedMethodInfos == null)
+                        if (constructedMembers == null)
                         {
                             // ... there can be multiple generic methods (overloads) with different parameters types, so we need to generate and cache each one to see the affect on the parameters ...
 
-                            var genericMethodInfos = memberDetails.Members.Items.Select(i => (MethodInfo)i.Object).ToArray();
-                            constructedMethodInfos = new TypeLibrary<MemberInfo>();
+                            var genericMethodInfos = memberDetails.ImmediateMembers.Items.Select(i => (MethodInfo)i.Object).ToArray();
+                            constructedMembers = new TypeLibrary<MemberInfo>();
                             MethodInfo constructedMethod = null;
 
                             for (int i = 0; i < genericMethodInfos.Length; i++)
                             {
                                 constructedMethod = genericMethodInfos[i].MakeGenericMethod(genericSystemTypes);
-                                constructedMethodInfos.Set(constructedMethod, constructedMethod.GetParameters().Select(p => p.ParameterType).ToArray());
+                                constructedMembers.Set(constructedMethod, constructedMethod.GetParameters().Select(p => p.ParameterType).ToArray());
                                 memberDetails.TotalConstructedMembers++;
                             }
 
                             // ... cache the array of constructed generic methods (any overloads with the same generic parameters), which will exist in a type
                             // library for quick lookup the next time this given types are supplied ...
-                            memberDetails.ConstructedMembers.Set(constructedMethodInfos, genericSystemTypes);
+                            memberDetails.ConstructedMembers.Set(constructedMembers, genericSystemTypes);
 
                             if (memberDetails.TotalConstructedMembers == 1)
                             {
@@ -1197,7 +1287,6 @@ namespace V8.Net
 
                         }
 
-                        members = constructedMethodInfos;
 
                         // ... at this point the 'constructedMethodInfos' will have an array of methods that match the types supplied for this generic method call.
                         // Next, the arguments ????
@@ -1209,15 +1298,15 @@ namespace V8.Net
                     {
                         convertedArguments = null;
 
-                        typeInfoArgs = TypeInfo.GetArguments(args, argOffset, expectedParameters);
+                        argInfoArgs = ArgInfo.GetArguments(args, argOffset, expectedParameters);
 
                         // ... create/grow the converted arguments array if necessary ...
-                        if (!convertedArgumentArrayCache.TryGetValue(typeInfoArgs.Length, out convertedArguments) || convertedArguments.Length < typeInfoArgs.Length)
-                            convertedArgumentArrayCache[typeInfoArgs.Length] = convertedArguments = new object[typeInfoArgs.Length]; // (array is too small, so discard
+                        if (!convertedArgumentArrayCache.TryGetValue(argInfoArgs.Length, out convertedArguments) || convertedArguments.Length < argInfoArgs.Length)
+                            convertedArgumentArrayCache[argInfoArgs.Length] = convertedArguments = new object[argInfoArgs.Length]; // (array is too small, so discard
 
-                        for (paramIndex = 0; paramIndex < typeInfoArgs.Length; paramIndex++)
+                        for (paramIndex = 0; paramIndex < argInfoArgs.Length; paramIndex++)
                         {
-                            tInfo = typeInfoArgs[paramIndex];
+                            tInfo = argInfoArgs[paramIndex];
 
                             if (tInfo.HasError) throw tInfo.Error;
 
@@ -1236,10 +1325,10 @@ namespace V8.Net
                     }
                     else // ... more than one method exists (overloads) ..
                     {
-                        var systemTypes = TypeInfo.GetSystemTypes(typeInfoArgs);
-                        var methodInfo = (MethodInfo)members.Get(systemTypes); // (note: this expects exact types matches!)
+                        var systemTypes = ArgInfo.GetSystemTypes(argInfoArgs);
+                        var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(systemTypes); // (note: this expects exact types matches!)
                         if (methodInfo == null)
-                            throw new TargetInvocationException("There is no overloaded method with the given parameter types ("
+                            throw new TargetInvocationException("There is no method matching the supplied parameter types ("
                                 + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
                         var result = methodInfo.Invoke(_this.BoundObject, convertedArguments);
                         return methodInfo.ReturnType == typeof(void) ? InternalHandle.Empty : Engine.CreateValue(result, _Recursive);
@@ -1288,7 +1377,7 @@ namespace V8.Net
                             for (var i = 0; i < args.Length; i++)
                                 _args[i] = args[i].Value;
 
-                            handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, _args), null, _Recursive, _DefaultMemberAttributes);
+                            handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, _args), null, _Recursive, DefaultMemberSecurity);
                         }
                     }
                     catch (Exception ex)
@@ -1334,23 +1423,23 @@ namespace V8.Net
             V8NativeObjectPropertySetter setter;
 
             foreach (var details in _FieldDetails(BindingMode.Static))
-                if (_GetBindingForDataMember(details, out getter, out setter) && details.Attributes >= 0)
+                if (_GetBindingForDataMember(details, out getter, out setter) && details.MemberSecurity >= 0)
                 {
-                    TypeFunction.SetAccessor(details.MemberName, getter, setter, details.Attributes); // TODO: Investigate need to add access control value.
+                    TypeFunction.SetAccessor(details.MemberName, getter, setter, (V8PropertyAttributes)details.MemberSecurity); // TODO: Investigate need to add access control value.
                 }
 
             foreach (var details in _PropertyDetails(BindingMode.Static))
-                if (_GetBindingForDataMember(details, out getter, out setter) && details.Attributes >= 0)
+                if (_GetBindingForDataMember(details, out getter, out setter) && details.MemberSecurity >= 0)
                 {
-                    TypeFunction.SetAccessor(details.MemberName, getter, setter, details.Attributes); // TODO: Investigate need to add access control value.
+                    TypeFunction.SetAccessor(details.MemberName, getter, setter, (V8PropertyAttributes)details.MemberSecurity); // TODO: Investigate need to add access control value.
                 }
 
             V8Function func;
 
             foreach (var details in _MethodDetails(BindingMode.Static))
-                if (_GetBindingForMethod(details, out func) && details.Attributes >= 0)
+                if (_GetBindingForMethod(details, out func) && details.MemberSecurity >= 0)
                 {
-                    TypeFunction.SetProperty(details.MemberName, func, details.Attributes); // TODO: Investigate need to add access control value.
+                    TypeFunction.SetProperty(details.MemberName, func, (V8PropertyAttributes)details.MemberSecurity); // TODO: Investigate need to add access control value.
                 }
         }
 
@@ -1390,19 +1479,26 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+        internal _MemberDetails _GetMemberDetails(MemberInfo member)
+        {
+            var members = from md in _Members.Values where md.ImmediateMembers.Items.Any(i => i.Object.MetadataToken == member.MetadataToken && i.Object.Module == member.Module) select md;
+            return members.FirstOrDefault();
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
         /// <summary>
         /// Changes the security of a specific member for the underlying type represented by this TypeBinder instance.
         /// </summary>
         /// <param name="member">A specific MemberInfo instance.  If this is not found/supported on the local type, an exception will be thrown.</param>
-        /// <param name="security">The new security to apply.</param>
-        public void ChangeMemberSecurity(MemberInfo member, ScriptMemberSecurity security)
+        /// <param name="memberSecurity">The new security to apply.</param>
+        public void ChangeMemberSecurity(MemberInfo member, ScriptMemberSecurity memberSecurity)
         {
-            var memberDetails = (from md in _Members.Items where md.Object.Members.Items.Select(i => i.Object).Contains(member) select md.Object).FirstOrDefault();
+            var memberDetails = _GetMemberDetails(member);
 
             if (memberDetails == null) throw new MissingMemberException("The member '" + member.Name + "' was not found.");
 
-            if (security >= 0)
-                memberDetails.Attributes = (V8PropertyAttributes)security;
+            memberDetails.MemberSecurity = memberSecurity;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1414,14 +1510,13 @@ namespace V8.Net
         /// <para>Note: The name you enter here is the in-script name, including any "${type #}" suffixes for generic types (for example, "Join$1", where '1' is the
         /// number of expected generic types).  If a member has overloads, the security attribute will apply to all of them.</para></param>
         /// <param name="security">The new security to apply.</param>
-        public void ChangeMemberSecurity(string memberName, ScriptMemberSecurity security)
+        public void ChangeMemberSecurity(string memberName, ScriptMemberSecurity memberSecurity)
         {
-            var memberDetails = (from md in _Members.Items where md.Object.MemberName == memberName select md.Object).ToArray();
+            var memberDetails = (from kv in _Members where kv.Key == memberName select kv.Value).FirstOrDefault();
 
-            if (memberDetails.Length == 0) throw new MissingMemberException("The member '" + memberName + "' was not found.");
-            if (memberDetails.Length > 1) throw new MissingMemberException("Multiple matches were found.");
+            if (memberDetails == null) throw new MissingMemberException("The member '" + memberName + "' was not found.");
 
-            memberDetails[0].Attributes = (V8PropertyAttributes)security;
+            memberDetails.MemberSecurity = memberSecurity;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1498,7 +1593,7 @@ namespace V8.Net
         public override InternalHandle IndexedPropertySetter(int index, InternalHandle value)
         {
             if (TypeBinder.Indexer != null && TypeBinder.Indexer.CanWrite)
-                TypeBinder.Indexer.SetValue(_Object, new TypeBinder.TypeInfo(value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
+                TypeBinder.Indexer.SetValue(_Object, new ArgInfo(value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
             return IndexedPropertyGetter(index);
         }
         public override bool? IndexedPropertyDeleter(int index)
@@ -1518,8 +1613,8 @@ namespace V8.Net
 
         public override InternalHandle NamedPropertyGetter(ref string propertyName)
         {
-            var memberDetails = TypeBinder._Members.Get(propertyName);
-            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
+            var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
+            if (memberDetails != null && memberDetails.Accessible) // (no access == undefined) 
             {
                 if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
 
@@ -1571,8 +1666,8 @@ namespace V8.Net
 
         public override InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            var memberDetails = TypeBinder._Members.Get(propertyName);
-            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
+            var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
+            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (no access == undefined)
             {
                 if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsUndefined)
                 {
@@ -1642,8 +1737,8 @@ namespace V8.Net
 
         public override bool? NamedPropertyDeleter(ref string propertyName)
         {
-            var memberDetails = TypeBinder._Members.Get(propertyName);
-            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
+            var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
+            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (undefined = no access)
             {
                 if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsEmpty)
                 {
@@ -1656,18 +1751,17 @@ namespace V8.Net
 
         public override V8PropertyAttributes? NamedPropertyQuery(ref string propertyName)
         {
-            var memberDetails = TypeBinder._Members.Get(propertyName);
-            if (memberDetails != null && memberDetails.Attributes != V8PropertyAttributes.Undefined) // (undefined = no access)
+            var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
+            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (undefined = no access)
             {
-                return memberDetails.Attributes;
+                return (V8PropertyAttributes)memberDetails.MemberSecurity;
             }
             return null;
         }
 
         public override InternalHandle NamedPropertyEnumerator()
         {
-            string[] memberNames = TypeBinder._Members.Items.Select(i => i.Object.MemberName).ToArray();
-            return Engine.CreateValue(memberNames);
+            return Engine.CreateValue(TypeBinder._Members.Keys);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1716,8 +1810,8 @@ namespace V8.Net
         /// <param name="type">The type to create and cache a binding for.</param>
         /// <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object is bound, only the object instance itself is bound (and not any reference members). If true, then nested object references are included.</param>
-        /// <param name="defaultMemberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public TypeBinder RegisterType(Type type, string className = null, bool? recursive = null, V8PropertyAttributes defaultMemberAttributes = V8PropertyAttributes.Undefined)
+        /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        public TypeBinder RegisterType(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             TypeBinder binder = null;
             lock (_Binders) { _Binders.TryGetValue(type, out binder); }
@@ -1726,36 +1820,14 @@ namespace V8.Net
                 if (recursive != null)
                     binder._Recursive = recursive.Value;
 
-                if (defaultMemberAttributes != V8PropertyAttributes.Undefined)
-                    binder._DefaultMemberAttributes = defaultMemberAttributes;
+                if (memberSecurity != null)
+                    binder._DefaultMemberSecurity = memberSecurity;
 
                 return binder;
             }
             else
-                return new TypeBinder(this, type, className, recursive ?? false, defaultMemberAttributes);
+                return new TypeBinder(this, type, className, recursive, memberSecurity);
         }
-
-        //public TypeBinder RenameTypeMember(string newName, MemberInfo memberInfo)
-        //{
-        //    if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException("newName");
-        //    if (memberInfo == null) throw new ArgumentNullException("memberInfo");
-
-        //    TypeBinder binder = null;
-        //    lock (_Binders) { _Binders.TryGetValue(memberInfo.DeclaringType, out binder); }
-        //    if (binder == null) binder = RegisterType(memberInfo.DeclaringType);
-
-        //    // ... locate member information and change the key ...
-
-        //    switch (memberInfo.MemberType)
-        //    {
-        //        case MemberTypes.
-        //    }
-        //}
-
-        //public TypeBinder RenameTypeMember(Type type, string newName, string memberName, params Type[] parameterTypes)
-        //{
-
-        //}
 
         /// <summary>
         /// Registers a binding for the given type.  If a type already exists that doesn't match the given parameters, it is replaced.
@@ -1765,9 +1837,20 @@ namespace V8.Net
         /// <typeparam name="T">The type to create and cache a binding for.</typeparam>
         /// <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object is bound, only the object instance itself is bound (and not any reference members). If true, then nested object references are included.</param>
-        /// <param name="defaultMemberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public TypeBinder RegisterType<T>(string className = null, bool? recursive = null, V8PropertyAttributes defaultMemberAttributes = V8PropertyAttributes.Undefined)
-        { return RegisterType(typeof(T), className, recursive, defaultMemberAttributes); }
+        /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        public TypeBinder RegisterType<T>(string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        { return RegisterType(typeof(T), className, recursive, memberSecurity); }
+
+        /// <summary>
+        /// Returns the TypeBinder for the given type.  If nothing is found, 'null' will be returned.
+        /// </summary>
+        /// <param name="type">The type to search for.</param>
+        public TypeBinder GetTypeBinder(Type type)
+        {
+            TypeBinder binder = null;
+            lock (_Binders) { _Binders.TryGetValue(type, out binder); }
+            return binder;
+        }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -1779,10 +1862,10 @@ namespace V8.Net
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
         /// If true, then nested object references are included.</param>
-        /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public InternalHandle CreateBinding(Type type, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        public InternalHandle CreateBinding(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
-            var typeBinder = RegisterType(type, className, recursive, memberAttributes);
+            var typeBinder = RegisterType(type, className, recursive, memberSecurity);
             return typeBinder.TypeFunction;
         }
 
@@ -1793,10 +1876,10 @@ namespace V8.Net
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
         /// If true, then nested object references are included.</param>
-        /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public InternalHandle CreateBinding<T>(string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        public InternalHandle CreateBinding<T>(string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
-            return CreateBinding(typeof(T), className, recursive, memberAttributes);
+            return CreateBinding(typeof(T), className, recursive, memberSecurity);
         }
 
         /// <summary>
@@ -1808,15 +1891,15 @@ namespace V8.Net
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
         /// If true, then nested object references are included.</param>
-        /// <param name="memberAttributes">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public InternalHandle CreateBinding(object obj, string className = null, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        public InternalHandle CreateBinding(object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             var objType = obj != null ? obj.GetType() : null;
 
-            if (objType == null || !objType.IsClass || obj is IHandleBased)
-                return CreateValue(obj, recursive, memberAttributes);
+            if (objType == null || obj is IHandleBased)
+                return CreateValue(obj, recursive, memberSecurity);
 
-            var typeBinder = RegisterType(objType, className, recursive, memberAttributes);
+            var typeBinder = RegisterType(objType, className, recursive, memberSecurity);
 
             return typeBinder.CreateObject(obj);
         }

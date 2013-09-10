@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,27 +51,34 @@ namespace V8.Net
 
                     // (Note: It's not required to explicitly register a type, but it is recommended for efficiency.)
 
-                    _JSServer.RegisterType(typeof(Object), "Object", true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(Type), "Type", true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(String), "String", true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(Boolean), "Boolean", true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(Array), "Array", true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(System.Collections.ArrayList), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(char), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(int), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(Int16), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(Int32), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(Int64), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(UInt16), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(UInt32), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(UInt64), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(Enumerable), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.RegisterType(typeof(System.IO.File), null, true, V8PropertyAttributes.Locked);
+           
+                    _JSServer.RegisterType(typeof(Type), "Type", true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Type));
+                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, ScriptMemberSecurity.Locked); // (Note: Not yet registered, but will auto register!)
+                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
+
+                    _JSServer.VerboseConsoleExecute("t = uri.GetType();");
+                    _JSServer.VerboseConsoleExecute("dump(t);");
+
+                    _JSServer.RegisterType(typeof(Object), "Object", true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(String), "String", true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Boolean), "Boolean", true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Array), "Array", true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(System.Collections.ArrayList), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(char), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(int), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Int16), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Int32), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Int64), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(UInt16), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(UInt32), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(UInt64), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Enumerable), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(System.IO.File), null, true, ScriptMemberSecurity.Locked);
 
                     var hSystem = _JSServer.CreateObject();
                     _JSServer.DynamicGlobalObject.System = hSystem;
                     hSystem.SetProperty(typeof(Object)); // (Note: No optional parameters used, so this will simply lookup and apply the existing registered type details above.)
-                    _JSServer.GlobalObject.SetProperty(typeof(Type));
                     hSystem.SetProperty(typeof(String));
                     hSystem.SetProperty(typeof(Boolean));
                     hSystem.SetProperty(typeof(Array));
@@ -86,11 +94,8 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(Enumerable));
                     _JSServer.GlobalObject.SetProperty(typeof(System.IO.File));
 
-                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, V8PropertyAttributes.Locked); // (Note: Not yet registered, but will auto register!)
-                    _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
-
-                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, V8PropertyAttributes.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), null, true, ScriptMemberSecurity.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
                     _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
@@ -102,57 +107,36 @@ namespace V8.Net
                     _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'Console' object ...");
-                    _JSServer.GlobalObject.SetProperty(typeof(Console), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Console), null, true, ScriptMemberSecurity.Locked);
                     //??_JSServer.CreateObject<JS_Console>();
 
                     Console.WriteLine(Environment.NewLine + "Creating a new global type 'TestEnum' ...");
-                    _JSServer.GlobalObject.SetProperty(typeof(TestEnum), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(TestEnum), null, true, ScriptMemberSecurity.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Creating a new global type 'SealedObject' as 'Sealed_Object' ...");
                     Console.WriteLine("(represents a 3rd-party inaccessible V8.NET object.)");
-                    _JSServer.GlobalObject.SetProperty(typeof(SealedObject), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(SealedObject), null, true, ScriptMemberSecurity.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Creating a new wrapped and locked object 'sealedObject' ...");
-                    _JSServer.GlobalObject.SetProperty("sealedObject", new SealedObject(), null, true, V8PropertyAttributes.Locked);
+                    _JSServer.GlobalObject.SetProperty("sealedObject", new SealedObject(), null, true, ScriptMemberSecurity.Locked);
 
-                    Console.WriteLine(Environment.NewLine + "dump(this) ...");
-                    _JSServer.ConsoleExecute(@"dump(this)");
+                    Console.WriteLine(Environment.NewLine + "Dumping global properties ...");
+                    _JSServer.VerboseConsoleExecute(@"dump(this)");
 
                     Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
-                    Console.WriteLine(Environment.NewLine + "r = Enumerable.Range(1,Int32('10'));");
-                    _JSServer.ConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
-                    Console.WriteLine(Environment.NewLine + "a = System.String.Join$1([Int32], ', ', r);");
-                    _JSServer.ConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
+                    _JSServer.VerboseConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
+                    _JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
 
                     Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
                     _JSServer.RegisterType(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
-                    Console.WriteLine(Environment.NewLine + "System.String.Empty; ...");
-                    _JSServer.ConsoleExecute(@"System.String.Empty;");
+                    _JSServer.VerboseConsoleExecute(@"System.String.Empty;");
                     Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
+                
+                    Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
+                    _JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
                 };
 
-                Console.WriteLine(Environment.NewLine + Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
-
-                //// Test for http://v8dotnet.codeplex.com/discussions/447755#post1065482
-                //{
-                //    const string ShortJSON = "{\"result\":true,\"count\":3}";
-
-                //    const string JavaScriptTemplate =
-                //        "var json = '" + ShortJSON + "'; var obj = {};";/* +
-                //        "var obj = JSON.parse(json);";*/
-
-                //    //var javaScriptShortJSON = string.Format(JavaScriptTemplate, ShortJSON);
-
-                //    var jsEngine = _JSServer;
-
-                //    jsEngine.WithContextScope = () =>
-                //    {
-                //        jsEngine.ConsoleExecute(JavaScriptTemplate);
-                //        InternalHandle resultHandle = jsEngine.DynamicGlobalObject.obj;
-                //        var obj = jsEngine.GetObject(resultHandle);
-                //        Console.WriteLine("Test ok.");
-                //    };
-                //}
+                Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
 
                 string input, lcInput;
 
@@ -214,8 +198,8 @@ namespace V8.Net
                                         Console.Write("\r\nCreating a V8DotNetTester instance from within JavaScript ...");
                                         // (note: Once 'V8DotNetTester' is constructed, the 'Initialize()' override will be called immediately before returning,
                                         // but you can return "engine.GetObject<V8DotNetTester>(_this.Handle, true, false)" to prevent it.)
-                                        _JSServer.ConsoleExecute("testWrapper = new V8DotNetTesterWrapper();");
-                                        _JSServer.ConsoleExecute("tester = testWrapper.tester;");
+                                        _JSServer.VerboseConsoleExecute("testWrapper = new V8DotNetTesterWrapper();");
+                                        _JSServer.VerboseConsoleExecute("tester = testWrapper.tester;");
                                         Console.WriteLine(" Ok.");
 
                                         // ... Ok, the object exists, BUT, it is STILL not yet part of the global object, so we add it next ...
@@ -228,12 +212,12 @@ namespace V8.Net
                                         Console.WriteLine("\r\n===============================================================================");
                                         Console.WriteLine("Dumping global properties ...\r\n");
 
-                                        _JSServer.ConsoleExecute("dump(this)");
+                                        _JSServer.VerboseConsoleExecute("dump(this)");
 
                                         Console.WriteLine("\r\n===============================================================================");
                                         Console.WriteLine("Dumping tester properties ...\r\n");
 
-                                        _JSServer.ConsoleExecute("dump(tester)");
+                                        _JSServer.VerboseConsoleExecute("dump(tester)");
 
                                         // ... example of adding a functions via script (note: V8Engine.GlobalObject.Properties will have 'Test' set) ...
 
@@ -265,7 +249,10 @@ namespace V8.Net
 
                                     Console.WriteLine("\r\n===============================================================================\r\n");
                                     Console.WriteLine("Test completed successfully! Any errors would have interrupted execution.");
-                                    Console.WriteLine("Note: The 'dump(obj)' function is still available to use for manual testing.");
+                                    Console.WriteLine("Note: The 'dump(obj)' function is available to use for manual inspection.");
+                                    Console.WriteLine("Press any key to dump the global properties ...");
+                                    Console.ReadKey();
+                                    _JSServer.VerboseConsoleExecute("dump(this);");
                                 };
                             }
                             catch
@@ -369,30 +356,34 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\speedtest")
                         {
-                            Console.Write("\r\nRunning the speed test ... ");
-                            Console.Write("\r\n(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side) \r\n");
-
                             var timer = new Stopwatch();
                             long startTime, elapsed;
+                            long count;
+                            double result1, result2, result3, result4;
+
+                            Console.WriteLine(Environment.NewLine + "Running the speed tests ... ");
 
                             _JSServer.WithContextScope = () =>
                             {
                                 timer.Start();
 
-                                var count = 200000000;
+                                //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
+                                Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
+
+                                count = 200000000;
 
                                 Console.WriteLine("\r\nTesting global property write speed ... ");
                                 startTime = timer.ElapsedMilliseconds;
                                 _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = 0;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
                                 elapsed = timer.ElapsedMilliseconds - startTime;
-                                var result1 = (double)elapsed / count;
+                                result1 = (double)elapsed / count;
                                 Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result1.ToString("0.0#########") + " ms each pass.");
 
                                 Console.WriteLine("\r\nTesting global property read speed ... ");
                                 startTime = timer.ElapsedMilliseconds;
                                 _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) n;");
                                 elapsed = timer.ElapsedMilliseconds - startTime;
-                                var result2 = (double)elapsed / count;
+                                result2 = (double)elapsed / count;
                                 Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
                                 count = 200000;
@@ -402,14 +393,14 @@ namespace V8.Net
                                 startTime = timer.ElapsedMilliseconds;
                                 _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = 0;");
                                 elapsed = timer.ElapsedMilliseconds - startTime;
-                                var result3 = (double)elapsed / count;
+                                result3 = (double)elapsed / count;
                                 Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result3.ToString("0.0#########") + " ms each pass.");
 
                                 Console.WriteLine("\r\nTesting property read speed on a managed object (with interceptors) ... ");
                                 startTime = timer.ElapsedMilliseconds;
                                 _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) mo.n;");
                                 elapsed = timer.ElapsedMilliseconds - startTime;
-                                var result4 = (double)elapsed / count;
+                                result4 = (double)elapsed / count;
                                 Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result4.ToString("0.0#########") + " ms each pass.");
 
                                 Console.WriteLine("\r\nUpdating native properties is {0:N2}x faster than managed ones.", result3 / result1);
@@ -634,7 +625,8 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\nSetting property 1 to an object, which should also set property 3 to the same object ...\r\n");
 
-        Engine.ConsoleExecute("tester.testProperty1 = {x:0}; assert('Testing property testProperty1.x === testProperty3.x', tester.testProperty1.x, tester.testProperty3.x)", this.GetType().Name, true);
+        Engine.VerboseConsoleExecute("dump(tester.testProperty1 = {x:0});", this.GetType().Name, true);
+        Engine.ConsoleExecute("assert('Testing property testProperty1.x === testProperty3.x', tester.testProperty1.x, tester.testProperty3.x)", this.GetType().Name, true);
 
         // ... test function properties ...
 
@@ -644,7 +636,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\nCreating 'this.obj1' with a new instance of tester.testFunction1 and testing the expected values ...\r\n");
 
-        Engine.ConsoleExecute("obj1 = new tester.testFunction1(321);");
+        Engine.VerboseConsoleExecute("obj1 = new tester.testFunction1(321);");
         Engine.ConsoleExecute("assert('Testing obj1.x', obj1.x, 321)", this.GetType().Name, true);
         Engine.ConsoleExecute("assert('Testing obj1.y', obj1.y, 0)", this.GetType().Name, true);
         Engine.ConsoleExecute("assert('Testing obj1[0]', obj1[0], 100)", this.GetType().Name, true);
@@ -658,7 +650,7 @@ public class V8DotNetTester : V8ManagedObject
 
         // ... get a handle to an in-script only object and test the dynamic handle access ...
 
-        Engine.ConsoleExecute("var obj = { x:0, y:0, o2:{ a:1, b:2, o3: { x:0 } } }", this.GetType().Name, true);
+        Engine.VerboseConsoleExecute("var obj = { x:0, y:0, o2:{ a:1, b:2, o3: { x:0 } } }", this.GetType().Name, true);
         dynamic handle = Engine.DynamicGlobalObject.obj;
         handle.x = 1;
         handle.y = 2;

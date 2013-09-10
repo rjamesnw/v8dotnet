@@ -268,6 +268,20 @@ namespace V8.Net
         }
 
         /// <summary>
+        /// Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
+        /// The script is output to the console window before it gets executed.
+        /// <para>Note: This is just a shortcut to calling 'Console.WriteLine(script)', followed by 'ConsoleExecute()'.</para>
+        /// </summary>
+        /// <param name="script">The script to run.</param>
+        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        public void VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        {
+            Console.WriteLine(script);
+            Console.WriteLine(Execute(script, sourceName, throwExceptionOnError).AsString);
+        }
+
+        /// <summary>
         /// Loads a JavaScript file from the current working directory (or specified absolute path) and executes it in the V8 engine, then returns the result.
         /// </summary>
         /// <param name="scriptFile">The script file to load.</param>
@@ -577,10 +591,10 @@ namespace V8.Net
         /// <param name="recursive">For object instances, if true, then nested objects are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-        /// <param name="memberAttributes">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+        /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         /// <returns>A native value that best represents the given managed value.</returns>
-        public InternalHandle CreateValue(object value, bool? recursive = null, V8PropertyAttributes memberAttributes = V8PropertyAttributes.Undefined)
+        public InternalHandle CreateValue(object value, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             if (value == null)
                 return CreateNullValue();
@@ -624,11 +638,11 @@ namespace V8.Net
                 return CreateValue((int)value);
             else if (value is Array)
                 return CreateValue((IEnumerable)value);
-            else if (value.GetType().IsClass)
-                return CreateBinding(value, null, recursive, memberAttributes);
+            else //??if (value.GetType().IsClass)
+                return CreateBinding(value, null, recursive, memberSecurity);
 
-            var type = value != null ? value.GetType().Name : "null";
-            throw new NotSupportedException("Cannot convert object of type '" + type + "' to a JavaScript value.");
+            //??var type = value != null ? value.GetType().Name : "null";
+            //??throw new NotSupportedException("Cannot convert object of type '" + type + "' to a JavaScript value.");
         }
 
         // --------------------------------------------------------------------------------------------------------------------
