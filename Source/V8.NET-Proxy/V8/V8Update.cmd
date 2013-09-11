@@ -1,6 +1,7 @@
 @echo off
 setlocal
 set errorlevel=
+set v8rev=15397
 
 REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
 
@@ -68,7 +69,13 @@ REM _012345678901234567890123456789012345678901234567890123456789012345678901234
 
 :GetSrc
 
+if "%v8rev%"=="" set v8rev=HEAD
+echo V8 revision: %v8rev%
+choice /M "Is the revision ok? If not, you have to update the revision at the top of this command file."
+if errorlevel 2 goto restart
+
 if not exist build\v8\ goto CreateBuildDir
+
 echo The V8 source files already exist. 
 echo 1. Delete and redownload
 echo 2. Appy/Reapply V8.GYP file updates
@@ -84,13 +91,14 @@ echo Removing old build directory ...
 rd /s /q build
 
 :CreateBuildDir
+
 echo Creating build directory ...
 if exist build\ goto BeginSrcDownload
 md build
 if errorlevel 1 goto Error
 :BeginSrcDownload
 echo Downloading V8 ...
-svn checkout http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log
+svn checkout -r %v8rev% http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log
 if errorlevel 1 goto Error
 :UpdateV8GYP
 echo Updating V8.GYP file ...
@@ -116,7 +124,7 @@ if not exist v8\third_party\python_26\ echo Required tools not downloaded. & pau
 REM Check if we are running in the correct environment (supports VS2010 and VS2012) ...
 REM (note: more than one version of Visual Studio may be installed, so start from highest version, to least)
 
-if not "%DevEnvDir%"=="" set VSTools=%DevEnvDir%..\Tools\ & goto BeginV8Update
+if not "%DevEnvDir%"=="" set VSTools=%DevEnvDir%..\Tools\ & goto BeginV8Compile
 
 echo This command file should be run via the Visual Studio developer prompt.
 echo Attempting to do so now ...
@@ -135,17 +143,10 @@ call "%VSTools%VsDevCmd.bat"
 echo Visual Studio developer prompt environment was setup successfully!
 echo.
 
-:BeginV8Update
+:BeginV8Compile
 cd %WorkingDir%
 echo Visual Studio environment being used: %DevEnvDir%
 echo.
-
-if "%v8rev%"=="" goto LatestRev
-echo V8 revision: %v8rev%
-goto SetMode
-:LatestRev
-echo V8 revision: Latest
-set v8rev=HEAD
 
 :SetMode
 set mode=%1
