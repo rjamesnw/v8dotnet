@@ -50,7 +50,7 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
 
                     // (Note: It's not required to explicitly register a type, but it is recommended for efficiency.)
-           
+
                     _JSServer.RegisterType(typeof(Object), "Object", true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(Type), "Type", true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(String), "String", true, ScriptMemberSecurity.Locked);
@@ -128,7 +128,7 @@ namespace V8.Net
                     _JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
                     _JSServer.VerboseConsoleExecute(@"System.String.Empty;");
                     Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
-                
+
                     Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
                     _JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
                 };
@@ -505,8 +505,14 @@ public sealed class SealedObject
     public string FieldB = "!!!";
     public int? PropA { get { return FieldA; } }
     public string PropB { get { return FieldB; } }
+    public InternalHandle H1 = InternalHandle.Empty;
+    public Handle H2 = Handle.Empty;
+    public V8Engine Engine;
 
     public string Test(int a, string b) { FieldA = a; FieldB = b; return a + "_" + b; }
+    public InternalHandle SetHandle1(InternalHandle h) { return H1.Set(h); }
+    public Handle SetHandle2(Handle h) { return H2.Set(h); }
+    public InternalHandle SetEngine(V8Engine engine) { Engine = engine; return Engine.GlobalObject; }
 
     public void Test<t2, t>(t2 a, string b) { }
     public void Test<t2, t>(t a, string b) { }

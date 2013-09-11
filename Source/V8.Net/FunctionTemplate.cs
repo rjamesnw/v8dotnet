@@ -137,10 +137,23 @@ namespace V8.Net
 
         HandleProxy* _CallBack(Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount)
         {
+            var functions = from f in
+                                (from t in _FunctionsByType.Keys.ToArray() // (need to convert this to an array in case the callbacks modify the dictionary!)
+                                 select _Engine._GetObjectWeakReference(_FunctionsByType[t]))
+                            where f != null && f.Object != null && ((V8Function)f.Object).Callback != null
+                            select ((V8Function)f.Object).Callback;
+
+            return _CallBack(managedObjectID, isConstructCall, _this, args, argCount, functions.ToArray());
+        }
+
+        internal static HandleProxy* _CallBack( Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount, params JSFunction[] functions)
+        {
             // ... get a handle to the native "this" object ...
 
             using (InternalHandle hThis = new InternalHandle(_this, false))
             {
+                V8Engine engine = hThis.Engine;
+
                 // ... wrap the arguments ...
 
                 InternalHandle[] _args = new InternalHandle[argCount];
@@ -149,32 +162,16 @@ namespace V8.Net
                 for (i = 0; i < argCount; i++)
                     _args[i]._Set(args[i], false); // (since these will be disposed immediately after, the "first" flag is not required [this also prevents it from getting passed on])
 
-                int funcID;
-                ObservableWeakReference<V8NativeObject> weakRef;
-                V8Function func;
                 InternalHandle result = null;
 
                 try
                 {
                     // ... call all function types (multiple custom derived function types are allowed, but only one of each type) ...
-
-                    var callbackTypes = _FunctionsByType.Keys.ToArray();
-
-                    for (i = callbackTypes.Length - 1; i >= 0; i--)
+                    foreach (var callback in functions)
                     {
-                        funcID = _FunctionsByType[callbackTypes[i]];
-                        if (funcID >= 0)
-                        {
-                            weakRef = _Engine._GetObjectWeakReference(funcID);
-                            func = weakRef != null ? (V8Function)weakRef.Object : null;
-                            if (func != null && func.Callback != null)
-                            {
-                                result = func.Callback(_Engine, isConstructCall, hThis, _args);
+                        result = callback(engine, isConstructCall, hThis, _args);
 
-                                if (!result.IsEmpty) break;
-                            }
-                            //??else return _Engine.CreateError(String.Format("FunctionTemplate._CallBack(): The function object '{0}' for ID {1} no longer exists.", callbackTypes[i].Name, funcID), JSValueType.ExecutionError); //??_FunctionsByType.Remove(callbackTypes[i]); // (was GC'd, or in the process, so remove it!)
-                        }
+                        if (!result.IsEmpty) break;
                     }
                 }
                 finally

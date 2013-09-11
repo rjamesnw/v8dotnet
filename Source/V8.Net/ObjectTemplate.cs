@@ -348,13 +348,17 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Registers a invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
+        /// Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
         /// </summary>
         /// <param name="callback">A callback that gets invoked </param>
-        public void RegisterInvokeHandler(ManagedJSFunctionCallback callback)
+        public void RegisterInvokeHandler(JSFunction callback)
         {
-            V8NetProxy.RegisterInvokeHandler(_NativeObjectTemplateProxy, callback);
-            _Engine._StoreAccessor<ManagedJSFunctionCallback>(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", callback);
+            V8NetProxy.RegisterInvokeHandler(_NativeObjectTemplateProxy, (managedObjectID, isConstructCall, _this, args, argCount)
+                =>
+                {
+                    return FunctionTemplate._CallBack(managedObjectID, isConstructCall, _this, args, argCount, callback);
+                });
+            _Engine._StoreAccessor<JSFunction>(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", callback);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

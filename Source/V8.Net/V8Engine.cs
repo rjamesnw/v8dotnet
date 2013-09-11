@@ -449,7 +449,7 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// See <see cref="CreateObject&lt;T>"/>.
+        /// See <see cref="CreateObject&lt;T>(InternalHandle, bool)"/>.
         /// </summary>
         public V8NativeObject CreateObject(InternalHandle v8Object, bool initialize = true) { return CreateObject<V8NativeObject>(v8Object, initialize); }
 

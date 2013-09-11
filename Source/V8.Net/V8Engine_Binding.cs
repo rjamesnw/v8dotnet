@@ -345,24 +345,44 @@ namespace V8.Net
             if (Type == null) Type = OriginalValueType;
 
             // ... step 1: convert the script value to the strong type if necessary ...
+            // (reason: "Type" represents the type explicitly requested on the script side, so that needs to be established first [consider this conversion path: Number->String->Object {boxed double vs string object}])
+            // (one exception: if the expected type is a V8.NET handle, then pass it directly)
 
-            if (!Type.IsAssignableFrom(OriginalValueType))
-                try { Value = Types.ChangeType(Value, Type); }
-                catch (Exception ex) { Error = ex; }
-
-            // ... step2: convert the strong value to the expected type (if given, and if necessary) ...
-            // (note: if 'IsGenericParameter' is true, then this type represents a type ONLY, and any value is ignored)
-
-            if (Error == null && ExpectedType != null && !ExpectedType.IsGenericParameter && (!ExpectedType.IsGenericType || ExpectedType.IsConstructedGenericType()))
-                if (ExpectedType.IsAssignableFrom(Type))
-                    Type = ExpectedType; // (this sets the explicit type expected)
-                else
-                    try
-                    {
-                        Value = Types.ChangeType(Value, ExpectedType);
-                        Type = ExpectedType; // (this sets the explicit type expected)
-                    }
+            if (ExpectedType == typeof(InternalHandle))
+            {
+                Value = ArgInfoSource;
+                Type = typeof(InternalHandle);
+            }
+            else if (ExpectedType == typeof(Handle))
+            {
+                Value = new Handle(ArgInfoSource);
+                Type = typeof(Handle);
+            }
+            else if (ExpectedType == typeof(V8Engine))
+            {
+                Value = ArgInfoSource.Engine;
+                Type = typeof(V8Engine);
+            }
+            else
+            {
+                if (!Type.IsAssignableFrom(OriginalValueType))
+                    try { Value = Types.ChangeType(Value, Type); }
                     catch (Exception ex) { Error = ex; }
+
+                // ... step2: convert the strong value to the expected type (if given, and if necessary) ...
+                // (note: if 'IsGenericParameter' is true, then this type represents a type ONLY, and any value is ignored)
+
+                if (Error == null && ExpectedType != null && !ExpectedType.IsGenericParameter && (!ExpectedType.IsGenericType || ExpectedType.IsConstructedGenericType()))
+                    if (ExpectedType.IsAssignableFrom(Type))
+                        Type = ExpectedType; // (this sets the explicit type expected)
+                    else
+                        try
+                        {
+                            Value = Types.ChangeType(Value, ExpectedType);
+                            Type = ExpectedType; // (this sets the explicit type expected)
+                        }
+                        catch (Exception ex) { Error = ex; }
+            }
         }
 
         /// <summary>
