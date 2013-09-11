@@ -1068,17 +1068,10 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Calls an object property with a given name on a specified object as a function and returns the result.
-        /// The '_this' property is the "this" object within the function when called.
-        /// If the function name is null or empty, then the current object is assumed to be a function object.
-        /// </summary>
-        public InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
+        internal InternalHandle _Call(string functionName, InternalHandle _this, params InternalHandle[] args)
         {
             try
             {
-                if (functionName.IsNullOrWhiteSpace()) throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
-
                 if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
                 HandleProxy** nativeArrayMem = Utilities.MakeHandleProxyArray(args);
@@ -1098,8 +1091,21 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Calls an object property with a given name on a specified object as a function and returns the result.
-        /// If the function name is null or empty, then the current object is assumed to be a function object.
+        /// Calls the specified function property on the underlying object.
+        /// The '_this' parameter is the "this" reference within the function when called.
+        /// </summary>
+        public InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
+        {
+            if (functionName.IsNullOrWhiteSpace()) throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
+
+            if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
+
+            return _Call(functionName, _this, args);
+        }
+
+        /// <summary>
+        /// Calls the specified function property on the underlying object.
+        /// The 'this' property will not be specified, which will default to the global scope as expected.
         /// </summary>
         public InternalHandle Call(string functionName, params InternalHandle[] args)
         {
@@ -1107,7 +1113,29 @@ namespace V8.Net
 
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            return Call(functionName, InternalHandle.Empty, args);
+            return _Call(functionName, InternalHandle.Empty, args);
+        }
+
+        /// <summary>
+        /// Calls the underlying object as a function.
+        /// The '_this' parameter is the "this" reference within the function when called.
+        /// </summary>
+        public InternalHandle Call(InternalHandle _this, params InternalHandle[] args)
+        {
+            if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
+
+            return _Call(null, _this, args);
+        }
+
+        /// <summary>
+        /// Calls the underlying object as a function.
+        /// The 'this' property will not be specified, which will default to the global scope as expected.
+        /// </summary>
+        public InternalHandle Call(params InternalHandle[] args)
+        {
+            if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
+
+            return _Call(null, InternalHandle.Empty, args);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

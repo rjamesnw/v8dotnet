@@ -887,7 +887,6 @@ namespace V8.Net
         /// <summary>
         /// Calls an object property with a given name on a specified object as a function and returns the result.
         /// The '_this' property is the "this" object within the function when called.
-        /// If the function name is null or empty, then the current object is assumed to be a function object.
         /// </summary>
         public virtual InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
         {
@@ -896,11 +895,28 @@ namespace V8.Net
 
         /// <summary>
         /// Calls an object property with a given name on a specified object as a function and returns the result.
-        /// If the function name is null or empty, then the current object is assumed to be a function object.
         /// </summary>
         public InternalHandle Call(string functionName, params InternalHandle[] args)
         {
             return _Handle.Call(functionName, args);
+        }
+
+        /// <summary>
+        /// Calls the underlying object as a function.
+        /// The '_this' parameter is the "this" reference within the function when called.
+        /// </summary>
+        public InternalHandle Call(InternalHandle _this, params InternalHandle[] args)
+        {
+            return _Handle.Call(_this, args);
+        }
+
+        /// <summary>
+        /// Calls the underlying object as a function.
+        /// The 'this' property will not be specified, which will default to the global scope as expected.
+        /// </summary>
+        public InternalHandle Call(params InternalHandle[] args)
+        {
+            return _Handle.Call(args);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

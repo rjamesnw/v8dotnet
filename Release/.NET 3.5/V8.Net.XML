@@ -458,13 +458,23 @@
             <summary>
             Calls an object property with a given name on a specified object as a function and returns the result.
             The '_this' property is the "this" object within the function when called.
-            If the function name is null or empty, then the current object is assumed to be a function object.
             </summary>
         </member>
         <member name="M:V8.Net.ObjectHandle.Call(System.String,V8.Net.InternalHandle[])">
             <summary>
             Calls an object property with a given name on a specified object as a function and returns the result.
-            If the function name is null or empty, then the current object is assumed to be a function object.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The '_this' parameter is the "this" reference within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.Call(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The 'this' property will not be specified, which will default to the global scope as expected.
             </summary>
         </member>
         <member name="P:V8.Net.ObjectHandle.Prototype">
@@ -659,15 +669,26 @@
         <!-- Badly formed XML comment ignored for member "M:V8.Net.InternalHandle.GetPropertyAttributes(System.String)" -->
         <member name="M:V8.Net.InternalHandle.Call(System.String,V8.Net.InternalHandle,V8.Net.InternalHandle[])">
             <summary>
-            Calls an object property with a given name on a specified object as a function and returns the result.
-            The '_this' property is the "this" object within the function when called.
-            If the function name is null or empty, then the current object is assumed to be a function object.
+            Calls the specified function property on the underlying object.
+            The '_this' parameter is the "this" reference within the function when called.
             </summary>
         </member>
         <member name="M:V8.Net.InternalHandle.Call(System.String,V8.Net.InternalHandle[])">
             <summary>
-            Calls an object property with a given name on a specified object as a function and returns the result.
-            If the function name is null or empty, then the current object is assumed to be a function object.
+            Calls the specified function property on the underlying object.
+            The 'this' property will not be specified, which will default to the global scope as expected.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The '_this' parameter is the "this" reference within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Call(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The 'this' property will not be specified, which will default to the global scope as expected.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsDisposed">
@@ -1481,13 +1502,23 @@
             <summary>
             Calls an object property with a given name on a specified object as a function and returns the result.
             The '_this' property is the "this" object within the function when called.
-            If the function name is null or empty, then the current object is assumed to be a function object.
             </summary>
         </member>
         <member name="M:V8.Net.V8NativeObject.Call(System.String,V8.Net.InternalHandle[])">
             <summary>
             Calls an object property with a given name on a specified object as a function and returns the result.
-            If the function name is null or empty, then the current object is assumed to be a function object.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The '_this' parameter is the "this" reference within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.Call(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The 'this' property will not be specified, which will default to the global scope as expected.
             </summary>
         </member>
         <member name="P:V8.Net.V8NativeObject.Engine">
