@@ -2415,9 +2415,9 @@
             Unregisters handlers that intercept access to properties on ALL objects created by this template.  See <see cref="!:RegisterPropertyInterceptors()"/>.
             </summary>
         </member>
-        <member name="M:V8.Net.ObjectTemplate.RegisterInvokeHandler(V8.Net.ManagedJSFunctionCallback)">
+        <member name="M:V8.Net.ObjectTemplate.RegisterInvokeHandler(V8.Net.JSFunction)">
             <summary>
-            Registers a invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
+            Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
             </summary>
             <param name="callback">A callback that gets invoked </param>
         </member>
