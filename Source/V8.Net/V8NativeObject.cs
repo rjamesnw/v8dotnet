@@ -21,19 +21,25 @@ namespace V8.Net
 
         /// <summary>
         /// Called immediately after creating an object instance and setting the V8Engine property.
-        /// <para>Note: Override "Dispose()" instead of implementing destructors (finalizers) if required.</para>
+        /// Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
+        /// In the constructor, the object only exists as an empty shell.
+        /// It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
+        /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
+        /// the 'IsInitilized' property.</para>
         /// </summary>
         void Initialize(V8NativeObject owner);
 
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Called when there are no more references and the object is ready to be disposed.
-        /// You should always override this if you need to dispose of any native resources yourself.
-        /// DO NOT rely on the destructor (finalizer).
-        /// <para>Note: This can be called from the finalizer thread (indirectly through V8.NET), in which case
-        /// 'GC.SuppressFinalize()' will be called automatically upon return (to prevent collection until the native side is also ready).</para>
-        /// If overriding, make sure to call back to this base method.
+        /// Called when there are no more references (on either the managed or native side) and the object is ready to be deleted from the V8.NET system.
+        /// You should never call this from code directly unless you need to force the release of native resources associated with a custom implementation
+        /// (and if so, a custom internal flag should be kept indicating whether or not the resources have been disposed).
+        /// You should always override/implement this if you need to dispose of any native resources in custom implementations.
+        /// DO NOT rely on the destructor (finalizer) - the object can still survive it.
+        /// <para>Note: This can be triggered either by the worker thread, or on the call-back from the V8 garbage collector.  In either case, tread it as if
+        /// it was called from the GC finalizer (not on the main thread).</para>
+        /// *** If overriding, DON'T call back to this method, otherwise it will call back and end up in a cyclical call (and a stack overflow!). ***
         /// </summary>
         new void Dispose();
 
@@ -183,7 +189,7 @@ namespace V8.Net
 
         /// <summary>
         /// Called immediately after creating an object instance and setting the V8Engine property.
-        /// Derived objects should override this for construction instead of using the constructor.
+        /// Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
         /// In the constructor, the object only exists as an empty shell.
         /// It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
@@ -364,7 +370,7 @@ namespace V8.Net
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        public virtual bool SetProperty(string name, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             return _Handle._Handle.SetProperty(name, obj, className, recursive, memberSecurity);
         }
@@ -379,7 +385,7 @@ namespace V8.Net
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        public virtual bool SetProperty(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             return _Handle._Handle.SetProperty(type, className, recursive, memberSecurity);
         }
@@ -429,7 +435,7 @@ namespace V8.Net
         /// <summary>
         /// Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
         /// </summary>
-        public void SetAccessor(string name,
+        public virtual void SetAccessor(string name,
             V8NativeObjectPropertyGetter getter, V8NativeObjectPropertySetter setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
@@ -441,7 +447,7 @@ namespace V8.Net
         /// <summary>
         /// Returns a list of all property names for this object (including all objects in the prototype chain).
         /// </summary>
-        public string[] GetPropertyNames()
+        public virtual string[] GetPropertyNames()
         {
             return _Handle._Handle.GetPropertyNames();
         }
@@ -461,7 +467,7 @@ namespace V8.Net
         /// If a property doesn't exist, then 'V8PropertyAttributes.None' is returned
         /// (Note: only V8 returns 'None'. The value 'Undefined' has an internal proxy meaning for property interception).</para>
         /// </summary>
-        public V8PropertyAttributes GetPropertyAttributes(string name)
+        public virtual V8PropertyAttributes GetPropertyAttributes(string name)
         {
             return _Handle._Handle.GetPropertyAttributes(name);
         }
@@ -480,7 +486,7 @@ namespace V8.Net
         /// <summary>
         /// Calls an object property with a given name on a specified object as a function and returns the result.
         /// </summary>
-        public InternalHandle Call(string functionName, params InternalHandle[] args)
+        public virtual InternalHandle Call(string functionName, params InternalHandle[] args)
         {
             return _Handle._Handle.Call(functionName, args);
         }
@@ -489,7 +495,7 @@ namespace V8.Net
         /// Calls the underlying object as a function.
         /// The '_this' parameter is the "this" reference within the function when called.
         /// </summary>
-        public InternalHandle Call(InternalHandle _this, params InternalHandle[] args)
+        public virtual InternalHandle Call(InternalHandle _this, params InternalHandle[] args)
         {
             return _Handle._Handle.Call(_this, args);
         }
@@ -498,7 +504,7 @@ namespace V8.Net
         /// Calls the underlying object as a function.
         /// The 'this' property will not be specified, which will default to the global scope as expected.
         /// </summary>
-        public InternalHandle Call(params InternalHandle[] args)
+        public virtual InternalHandle Call(params InternalHandle[] args)
         {
             return _Handle._Handle.Call(args);
         }

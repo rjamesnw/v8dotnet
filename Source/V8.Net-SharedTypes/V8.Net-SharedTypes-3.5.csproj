@@ -34,6 +34,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">V2</DefineConstants>
     <LangVersion>4</LangVersion>
     <DocumentationFile>..\bin\3.5\Debug\V8.Net.SharedTypes.XML</DocumentationFile>
+    <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

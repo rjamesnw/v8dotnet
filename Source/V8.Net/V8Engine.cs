@@ -177,7 +177,7 @@ namespace V8.Net
         /// <summary>
         /// Calling this method forces an "idle" loop in the native wrapper until the V8 engine finishes pending work tasks.
         /// The work performed helps to reduce the memory footprint within V8.
-        /// <para>(See also: <seealso cref="DoIdleNotification()"/>)</para>
+        /// <para>(See also: <seealso cref="DoIdleNotification(int)"/>)</para>
         /// </summary>
         public void ForceV8GarbageCollection()
         {

@@ -1,7 +1,7 @@
 @echo off
 setlocal
 set errorlevel=
-set v8rev=15397
+set v8rev=
 
 REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
 
@@ -19,8 +19,7 @@ cd "%WorkingDir%"
 cls
 
 echo This command file is used to download the V8 source and build it.
-echo The 'svn' command line program is required, and can be found at
-echo 'http://subversion.apache.org/packages.html' (see ReadMe.txt).
+echo The 'git' and 'svn' command line programs are required (see ReadMe.txt).
 echo.
 echo 1. Open ReadMe.txt
 echo 2. Download V8 source
@@ -78,15 +77,18 @@ if not exist build\v8\ goto CreateBuildDir
 
 echo The V8 source files already exist. 
 echo 1. Delete and redownload
-echo 2. Appy/Reapply V8.GYP file updates
-echo 3. Exit
+echo 2. Update to the revision %v8rev%.
+echo 3. Appy/Reapply V8.GYP file updates
+echo 4. Main Menu
 
-choice /C 123
+choice /C 1234
 echo.
 
-if errorlevel 3 goto Restart
-if errorlevel 2 goto UpdateV8GYP
+if errorlevel 4 goto Restart
+if errorlevel 3 goto UpdateV8GYP
+if errorlevel 2 goto UpdateToRev
 
+:redownload
 echo Removing old build directory ...
 rd /s /q build
 
@@ -96,10 +98,19 @@ echo Creating build directory ...
 if exist build\ goto BeginSrcDownload
 md build
 if errorlevel 1 goto Error
+
 :BeginSrcDownload
 echo Downloading V8 ...
-svn checkout -r %v8rev% http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log
+REM svn checkout -r %v8rev% http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log ; ISSUE 2882
+git clone git://github.com/v8/v8.git build\v8
 if errorlevel 1 goto Error
+
+:UpdateToRev
+cd build\v8
+git checkout %v8rev%
+git pull --rebase origin master
+cd ..\..
+
 :UpdateV8GYP
 echo Updating V8.GYP file ...
 call UpdateGYP "build\v8\tools\gyp"
@@ -193,8 +204,10 @@ xcopy v8\*.* v8-ia32\ /e /y >nul
 if errorlevel 1 goto Error
 cd v8-ia32
 echo Generating Visual Studio project files for the 32-bit libraries...
-third_party\python_26\python build\gyp_v8 -Dtarget_arch=ia32 -Dcomponent=shared_library -Dv8_use_snapshot=false >gyp.log
+third_party\python_26\python build\gyp_v8 -Dtarget_arch=ia32 -Dcomponent=shared_library
+REM -Dcomponent=shared_library -Dv8_use_snapshot=false
 if errorlevel 1 goto Error
+if not exist "build\all.sln" echo "Error: build\all.sln was not created." & goto Error
 :BuildV832Bit
 echo Building v8-ia32\tools\gyp\v8.sln ...
 set LogFile=%CD%\build.log
@@ -233,7 +246,9 @@ xcopy v8\*.* v8-x64\ /e /y >nul
 if errorlevel 1 goto Error
 cd v8-x64
 echo Generating Visual Studio project files for the 64-bit libraries...
-third_party\python_26\python build\gyp_v8 -Dtarget_arch=x64 -Dcomponent=shared_library -Dv8_use_snapshot=false >gyp.log
+third_party\python_26\python build\gyp_v8 -Dtarget_arch=x64 -Dcomponent=shared_library
+REM -Dcomponent=shared_library -Dv8_use_snapshot=false
+if not exist "build\all.sln" echo "Error: build\all.sln was not created." & goto Error
 if errorlevel 1 goto Error
 :BuildV864Bit
 echo Building v8-x64\tools\gyp\v8.sln ...
