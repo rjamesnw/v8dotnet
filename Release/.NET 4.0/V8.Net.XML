@@ -197,7 +197,7 @@
             <summary>
             Calling this method forces an "idle" loop in the native wrapper until the V8 engine finishes pending work tasks.
             The work performed helps to reduce the memory footprint within V8.
-            <para>(See also: <seealso cref="!:DoIdleNotification()"/>)</para>
+            <para>(See also: <seealso cref="M:V8.Net.V8Engine.DoIdleNotification(System.Int32)"/>)</para>
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine.DoIdleNotification(System.Int32)">
@@ -581,7 +581,7 @@
             <summary>
             Handles should be set in either two ways: 1. by using the "Set()" method on the left side handle, or 2. using the "Clone()' method on the right side.
             Using the "=" operator to set a handle may cause memory leaks if not used correctly.
-            See also: <seealso cref="!:Set()"/>
+            See also: <seealso cref="M:V8.Net.InternalHandle.Set(V8.Net.InternalHandle)"/>
             </summary>
         </member>
         <member name="M:V8.Net.InternalHandle.Dispose">
@@ -985,17 +985,23 @@
         <member name="M:V8.Net.IV8NativeObject.Initialize(V8.Net.V8NativeObject)">
             <summary>
             Called immediately after creating an object instance and setting the V8Engine property.
-            <para>Note: Override "Dispose()" instead of implementing destructors (finalizers) if required.</para>
+            Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
+            In the constructor, the object only exists as an empty shell.
+            It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
+            <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
+            the 'IsInitilized' property.</para>
             </summary>
         </member>
         <member name="M:V8.Net.IV8NativeObject.Dispose">
             <summary>
-            Called when there are no more references and the object is ready to be disposed.
-            You should always override this if you need to dispose of any native resources yourself.
-            DO NOT rely on the destructor (finalizer).
-            <para>Note: This can be called from the finalizer thread (indirectly through V8.NET), in which case
-            'GC.SuppressFinalize()' will be called automatically upon return (to prevent collection until the native side is also ready).</para>
-            If overriding, make sure to call back to this base method.
+            Called when there are no more references (on either the managed or native side) and the object is ready to be deleted from the V8.NET system.
+            You should never call this from code directly unless you need to force the release of native resources associated with a custom implementation
+            (and if so, a custom internal flag should be kept indicating whether or not the resources have been disposed).
+            You should always override/implement this if you need to dispose of any native resources in custom implementations.
+            DO NOT rely on the destructor (finalizer) - the object can still survive it.
+            <para>Note: This can be triggered either by the worker thread, or on the call-back from the V8 garbage collector.  In either case, tread it as if
+            it was called from the GC finalizer (not on the main thread).</para>
+            *** If overriding, DON'T call back to this method, otherwise it will call back and end up in a cyclical call (and a stack overflow!). ***
             </summary>
         </member>
         <member name="T:V8.Net.IFinalizable">
@@ -1006,7 +1012,7 @@
         <member name="M:V8.Net.V8NativeObject.Initialize">
             <summary>
             Called immediately after creating an object instance and setting the V8Engine property.
-            Derived objects should override this for construction instead of using the constructor.
+            Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
             In the constructor, the object only exists as an empty shell.
             It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
             <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
@@ -2090,7 +2096,7 @@
             Creates another copy of this handle and increments the reference count to the native handle.
             Handles should be set in either two ways: 1. by using the "Set()" method on the left side handle, or 2. using the "Clone()' method on the right side.
             Using the "=" operator to set a handle may cause memory leaks if not used correctly.
-            See also: <seealso cref="!:Set()"/>
+            See also: <seealso cref="M:V8.Net.Handle.Set(V8.Net.InternalHandle)"/>
             </summary>
         </member>
         <member name="M:V8.Net.Handle.Dispose">
@@ -2443,7 +2449,7 @@
         </member>
         <member name="M:V8.Net.ObjectTemplate.UnregisterPropertyInterceptors">
             <summary>
-            Unregisters handlers that intercept access to properties on ALL objects created by this template.  See <see cref="!:RegisterPropertyInterceptors()"/>.
+            Unregisters handlers that intercept access to properties on ALL objects created by this template.  See <see cref="M:V8.Net.ObjectTemplate.RegisterNamedPropertyInterceptors"/> and <see cref="M:V8.Net.ObjectTemplate.RegisterIndexedPropertyInterceptors"/>.
             </summary>
         </member>
         <member name="M:V8.Net.ObjectTemplate.RegisterInvokeHandler(V8.Net.JSFunction)">
