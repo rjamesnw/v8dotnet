@@ -1702,10 +1702,15 @@ namespace V8.Net
 
         public override void Initialize()
         {
-            base.Initialize();
+            if (_Object != null)
+            {
+                if (ObjectType == null)
+                    ObjectType = _Object.GetType();
 
-            if (ObjectType == null && _Object != null)
-                ObjectType = _Object.GetType();
+                _Proxy = (IV8NativeObject)_Object;
+            }
+
+            base.Initialize();
         }
 
         // --------------------------------------------------------------------------------------------------------------------

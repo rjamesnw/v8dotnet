@@ -204,7 +204,7 @@ namespace V8.Net
         /// Creates another copy of this handle and increments the reference count to the native handle.
         /// Handles should be set in either two ways: 1. by using the "Set()" method on the left side handle, or 2. using the "Clone()' method on the right side.
         /// Using the "=" operator to set a handle may cause memory leaks if not used correctly.
-        /// See also: <seealso cref="Set()"/>
+        /// See also: <seealso cref="Set(InternalHandle)"/>
         /// </summary>
         public Handle Clone()
         {

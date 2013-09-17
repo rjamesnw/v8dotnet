@@ -49,7 +49,7 @@ namespace V8.Net
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
 
-                    // (Note: It's not required to explicitly register a type, but it is recommended for efficiency.)
+                    // (Note: It's not required to explicitly register a type, but it is recommended for more control.)
 
                     _JSServer.RegisterType(typeof(Object), "Object", true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(Type), "Type", true, ScriptMemberSecurity.Locked);

@@ -331,7 +331,7 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Unregisters handlers that intercept access to properties on ALL objects created by this template.  See <see cref="RegisterPropertyInterceptors()"/>.
+        /// Unregisters handlers that intercept access to properties on ALL objects created by this template.  See <see cref="RegisterNamedPropertyInterceptors()"/> and <see cref="RegisterIndexedPropertyInterceptors()"/>.
         /// </summary>
         public void UnregisterPropertyInterceptors()
         {
