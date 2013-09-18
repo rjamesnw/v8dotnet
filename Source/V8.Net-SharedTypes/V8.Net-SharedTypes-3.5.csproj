@@ -50,6 +50,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3' ">V3</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">V2</DefineConstants>
     <DocumentationFile>..\bin\3.5\Release\V8.Net.SharedTypes.XML</DocumentationFile>
+    <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -66,6 +67,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3' ">V3</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">V2</DefineConstants>
     <DocumentationFile>..\bin\3.5\Debug\V8.Net.SharedTypes.XML</DocumentationFile>
+    <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>..\bin\3.5\Release\</OutputPath>
@@ -82,6 +84,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3' ">V3</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">V2</DefineConstants>
     <DocumentationFile>..\bin\3.5\Release\V8.Net.SharedTypes.XML</DocumentationFile>
+    <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -98,6 +101,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3' ">V3</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">V2</DefineConstants>
     <DocumentationFile>..\bin\3.5\Debug\V8.Net.SharedTypes.XML</DocumentationFile>
+    <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>..\bin\3.5\Release\</OutputPath>
@@ -114,6 +118,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3' ">V3</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">V2</DefineConstants>
     <DocumentationFile>..\bin\3.5\Release\V8.Net.SharedTypes.XML</DocumentationFile>
+    <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

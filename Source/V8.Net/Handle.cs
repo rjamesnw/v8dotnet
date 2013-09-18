@@ -91,6 +91,36 @@ namespace V8.Net
 
     // ========================================================================================================================
 
+    /// <summary>
+    /// Represents a handle type for tracking native objects.
+    /// </summary>
+    public interface IHandle
+    {
+        /// <summary>
+        /// Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+        /// <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+        /// NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+        /// To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+        /// to convert it to a handle object that will dispose itself.</para>
+        /// </summary>
+        InternalHandle Set(InternalHandle handle);
+
+        /// <summary>
+        /// Attempts to dispose of the internally wrapped handle proxy and makes this handle empty.
+        /// If other handles exist, then they will still be valid, and this handle instance will become empty.
+        /// <para>This is useful to use with "using" statements to quickly release a handle into the cache for reuse.</para>
+        /// </summary>
+        void Dispose();
+
+        /// <summary>
+        /// Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
+        /// </summary>
+        bool IsDisposed { get; }
+    }
+
+    /// <summary>
+    /// Represents a type that uses or supports a handle.
+    /// </summary>
     public interface IHandleBased
     {
         /// <summary>
@@ -127,7 +157,7 @@ namespace V8.Net
     /// Another benefit is that thread locking is required for heap memory allocation (for obvious reasons), so stack allocation is faster within a
     /// multi-threaded context.</para>
     /// </summary>
-    public unsafe class Handle : IHandleBased, IDynamicMetaObjectProvider, IDisposable, IConvertible, IFinalizable
+    public unsafe class Handle : IHandle, IHandleBased, IDynamicMetaObjectProvider, IDisposable, IConvertible, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -193,6 +223,8 @@ namespace V8.Net
             _Handle.Set(handle);
             return this;
         }
+
+        InternalHandle IHandle.Set(InternalHandle handle) { return _Handle.Set(handle); }
 
         internal Handle _Set(HandleProxy* hp)
         {

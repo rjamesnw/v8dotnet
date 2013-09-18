@@ -4,6 +4,37 @@
         <name>V8.Net</name>
     </assembly>
     <members>
+        <member name="T:V8.Net.IHandle">
+            <summary>
+            Represents a handle type for tracking native objects.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IHandle.Set(V8.Net.InternalHandle)">
+            <summary>
+            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+            to convert it to a handle object that will dispose itself.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IHandle.Dispose">
+            <summary>
+            Attempts to dispose of the internally wrapped handle proxy and makes this handle empty.
+            If other handles exist, then they will still be valid, and this handle instance will become empty.
+            <para>This is useful to use with "using" statements to quickly release a handle into the cache for reuse.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandle.IsDisposed">
+            <summary>
+            Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
+            </summary>
+        </member>
+        <member name="T:V8.Net.IHandleBased">
+            <summary>
+            Represents a type that uses or supports a handle.
+            </summary>
+        </member>
         <member name="M:V8.Net.IHandleBased.AsHandle">
             <summary>
             Returns the underlying handle object associated with this instance.  If no 'Handle' object exists, one is created and returned.
@@ -509,6 +540,15 @@
             </summary>
         </member>
         <member name="M:V8.Net.InternalHandle.Set(V8.Net.InternalHandle)">
+            <summary>
+            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+            to convert it to a handle object that will dispose itself.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Set(V8.Net.Handle)">
             <summary>
             Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
             <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
