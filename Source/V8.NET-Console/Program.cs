@@ -112,10 +112,10 @@ namespace V8.Net
 
                     Console.WriteLine(Environment.NewLine + "Creating a new global type 'SealedObject' as 'Sealed_Object' ...");
                     Console.WriteLine("(represents a 3rd-party inaccessible V8.NET object.)");
-                    _JSServer.GlobalObject.SetProperty(typeof(SealedObject), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(SealedObject), null, true);
 
                     Console.WriteLine(Environment.NewLine + "Creating a new wrapped and locked object 'sealedObject' ...");
-                    _JSServer.GlobalObject.SetProperty("sealedObject", new SealedObject(), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty("sealedObject", new SealedObject(null, null), null, true, ScriptMemberSecurity.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Dumping global properties ...");
                     _JSServer.VerboseConsoleExecute(@"dump(this)");
@@ -508,6 +508,12 @@ public sealed class SealedObject
     public InternalHandle H1 = InternalHandle.Empty;
     public Handle H2 = Handle.Empty;
     public V8Engine Engine;
+
+    public SealedObject(InternalHandle h1, InternalHandle h2)
+    {
+        H1.Set(h1);
+        H2 = h2;
+    }
 
     public string Test(int a, string b) { FieldA = a; FieldB = b; return a + "_" + b; }
     public InternalHandle SetHandle1(InternalHandle h) { return H1.Set(h); }

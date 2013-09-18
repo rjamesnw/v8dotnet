@@ -897,7 +897,12 @@ namespace V8.Net
             if (string.IsNullOrEmpty(memberName))
                 memberName = fieldInfo.Name;
 
-            if (fieldInfo.FieldType == typeof(bool))
+            if (fieldInfo.FieldType == typeof(InternalHandle))
+                getter = _CreateGetAccessor<InternalHandle>(memberDetails, fieldInfo);
+            else if (fieldInfo.FieldType == typeof(Handle))
+                getter = _CreateGetAccessor<Handle>(memberDetails, fieldInfo);
+
+            else if (fieldInfo.FieldType == typeof(bool))
                 getter = _CreateGetAccessor<bool>(memberDetails, fieldInfo);
 
             else if (fieldInfo.FieldType == typeof(byte))
@@ -955,6 +960,10 @@ namespace V8.Net
 
         V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
+            MethodInfo handleSetter = null;
+            if (typeof(IHandle).IsAssignableFrom(fieldInfo.FieldType))
+                handleSetter = typeof(IHandle).GetMethod("Set");
+
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
                 if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
@@ -962,7 +971,13 @@ namespace V8.Net
                 {
                     if (_this.IsBinder)
                     {
-                        fieldInfo.SetValue(_this.BoundObject, new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault);
+                        object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
+
+                        if (handleSetter != null && _value is InternalHandle)
+                            _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // ('_value' is updated to the new handle value, because values are not objects and have to be written back to the field)
+
+                        fieldInfo.SetValue(_this.BoundObject, _value);
+
                         return value;
                     }
                     else
@@ -1052,7 +1067,12 @@ namespace V8.Net
             if (string.IsNullOrEmpty(memberName))
                 memberName = propInfo.Name;
 
-            if (propInfo.PropertyType == typeof(bool))
+            if (propInfo.PropertyType == typeof(InternalHandle))
+                getter = _CreateGetAccessor<InternalHandle>(memberDetails, propInfo);
+            else if (propInfo.PropertyType == typeof(Handle))
+                getter = _CreateGetAccessor<Handle>(memberDetails, propInfo);
+
+            else if (propInfo.PropertyType == typeof(bool))
                 getter = _CreateGetAccessor<bool>(memberDetails, propInfo);
 
             else if (propInfo.PropertyType == typeof(byte))
@@ -1110,7 +1130,9 @@ namespace V8.Net
 
         V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
-            //??var setMethod = propertyInfo.GetSetMethod();
+            MethodInfo handleSetter = null;
+            if (typeof(IHandle).IsAssignableFrom(propertyInfo.PropertyType))
+                handleSetter = typeof(IHandle).GetMethod("Set");
 
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
@@ -1118,7 +1140,14 @@ namespace V8.Net
                 if (propertyInfo.CanWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
                     if (_this.IsBinder)
-                        propertyInfo.SetValue(_this.BoundObject, new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault, null);
+                    {
+                        object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
+
+                        if (handleSetter != null && _value is InternalHandle)
+                            _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // ('_value' is updated to the new handle value, because values are not objects and have to be written back to the field)
+
+                        propertyInfo.SetValue(_this.BoundObject, _value, null);
+                    }
                     else
                         return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
                 }
@@ -1238,10 +1267,10 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        InternalHandle _TranslateArguments(_MemberDetails memberDetails, Type[] expectedGenericTypes, InternalHandle[] args, ref uint argOffset,
+        InternalHandle _TranslateGenericArguments(_MemberDetails memberDetails, Type[] expectedGenericTypes, InternalHandle[] args, ref uint argOffset,
             out TypeLibrary<MemberInfo> constructedMembers, ref ParameterInfo[] expectedParameters)
         {
-            bool isGenericInvocation = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
+            bool isGenericInvocation = ((MethodBase)memberDetails.FirstMember).IsGenericMethodDefinition; // (note: always false for constructors!)
             InternalHandle[] typeArgs;
             ArgInfo[] genericArgInfos;
             constructedMembers = null;
@@ -1293,7 +1322,7 @@ namespace V8.Net
                 // calling it much easier for the user) ...
 
                 if (memberDetails.TotalConstructedMembers == 1 && constructedMembers.Items.Count() == 1)
-                    expectedParameters = ((MethodInfo)constructedMembers.Items.First().Object).GetParameters();
+                    expectedParameters = ((MethodBase)constructedMembers.Items.First().Object).GetParameters();
                 // TODO: Consider a more efficient way to do the above.
 
                 // ... at this point the 'constructedMethodInfos' will have an array of methods that match the types supplied for this generic method call.
@@ -1406,12 +1435,12 @@ namespace V8.Net
                     if (!_this.IsBinder)
                         return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberDetails.MemberName + ").", JSValueType.ExecutionError);
 
-                    // ... translate the arguments ...
+                    // ... translate the generic arguments, if applicable ...
 
-                    var paResult = _TranslateArguments(memberDetails, expectedGenericTypes, args, ref argOffset, out constructedMembers, ref _expectedParameters);
+                    var paResult = _TranslateGenericArguments(memberDetails, expectedGenericTypes, args, ref argOffset, out constructedMembers, ref _expectedParameters);
                     if (!paResult.IsEmpty) return paResult;
 
-                    // ... get the translated arguments into an argument value array in order to invoke the method ...
+                    // ... get the actual arguments passed from script into an argument value array in order to invoke the method ...
 
                     _CopyArguments(_expectedParameters, convertedArgumentArrayCache, args, ref paramIndex, argOffset, out convertedArguments, out argInfos);
 
@@ -1477,12 +1506,12 @@ namespace V8.Net
                             handle = Engine.CreateError("The CLR type '" + BoundType.Name + "' is abstract - you cannot create instances from abstract types.", JSValueType.ExecutionError);
                         else
                         {
-                            // ... translate the arguments ...
+                            // ... translate the generic arguments, if applicable ...
 
-                            var paResult = _TranslateArguments(_Constructors, null, args, ref argOffset, out constructedMembers, ref _expectedParameters);
+                            var paResult = _TranslateGenericArguments(_Constructors, null, args, ref argOffset, out constructedMembers, ref _expectedParameters); // TODO: This is most likely irrelevant for constructors! Look into bypassing.
                             if (!paResult.IsEmpty) return paResult;
 
-                            // ... get the translated arguments into an argument value array in order to invoke the method ...
+                            // ... get the actual arguments passed from script into an argument value array in order to invoke the method ...
 
                             _CopyArguments(_expectedParameters, convertedArgumentArrayCache, args, ref paramIndex, argOffset, out convertedArguments, out argInfos);
 

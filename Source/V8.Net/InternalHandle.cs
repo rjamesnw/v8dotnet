@@ -18,7 +18,7 @@ namespace V8.Net
     /// <para>DO NOT STORE THIS HANDLE. Use "Handle" instead (i.e. "Handle h = someInternalHandle;"), or use the value with the "using(someInternalHandle){}" statement.</para>
     /// </summary>
     public unsafe struct InternalHandle :
-        IHandleBased,
+        IHandle, IHandleBased,
         IV8Object,
         IDisposable, // ('IDisposable' will not box in a "using" statement: http://stackoverflow.com/questions/2412981/if-my-struct-implements-idisposable-will-it-be-boxed-when-used-in-a-using-statem)
         IDynamicMetaObjectProvider,
@@ -81,6 +81,19 @@ namespace V8.Net
                 return h;
             }
             else return _Set(handle._HandleProxy);
+        }
+
+        /// <summary>
+        /// Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+        /// <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+        /// NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+        /// To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+        /// to convert it to a handle object that will dispose itself.</para>
+        /// </summary>
+        public InternalHandle Set(Handle handle)
+        {
+            Set(handle._Handle);
+            return this;
         }
 
         internal InternalHandle _Set(HandleProxy* hp, bool checkIfFirst = true)
