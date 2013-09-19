@@ -829,6 +829,7 @@ namespace V8.Net
         /// Calls the V8 'Set()' function on the underlying native object.
         /// Returns true if successful.
         /// </summary>
+        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         public bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             try
@@ -900,22 +901,20 @@ namespace V8.Net
         /// Returns true if successful.
         /// </summary>
         /// <param name="type">The type to wrap.</param>
+        /// <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         /// <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        public bool SetProperty(Type type, V8PropertyAttributes propertyAttributes = V8PropertyAttributes.None, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
             var func = (V8Function)Engine.CreateBinding(type, className, recursive, memberSecurity).Object;
 
-            if (memberSecurity != null)
-                return SetProperty(func.FunctionTemplate.ClassName, func, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
-            else
-                return SetProperty(func.FunctionTemplate.ClassName, func);
+            return SetProperty(func.FunctionTemplate.ClassName, func, propertyAttributes);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

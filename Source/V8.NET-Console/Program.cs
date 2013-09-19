@@ -88,11 +88,11 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(Environment));
                     _JSServer.GlobalObject.SetProperty(typeof(System.IO.File));
 
-                    _JSServer.GlobalObject.SetProperty(typeof(Uri), null, true, ScriptMemberSecurity.Locked); // (Note: Not yet registered, but will auto register!)
+                    _JSServer.GlobalObject.SetProperty(typeof(Uri), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked); // (Note: Not yet registered, but will auto register!)
                     _JSServer.GlobalObject.SetProperty("uri", new Uri("http://www.example.com"));
 
-                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), null, true, ScriptMemberSecurity.Locked);
-                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
                     _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
@@ -104,15 +104,15 @@ namespace V8.Net
                     _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'Console' object ...");
-                    _JSServer.GlobalObject.SetProperty(typeof(Console), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(Console), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
                     //??_JSServer.CreateObject<JS_Console>();
 
                     Console.WriteLine(Environment.NewLine + "Creating a new global type 'TestEnum' ...");
-                    _JSServer.GlobalObject.SetProperty(typeof(TestEnum), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.GlobalObject.SetProperty(typeof(TestEnum), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
 
                     Console.WriteLine(Environment.NewLine + "Creating a new global type 'SealedObject' as 'Sealed_Object' ...");
                     Console.WriteLine("(represents a 3rd-party inaccessible V8.NET object.)");
-                    _JSServer.GlobalObject.SetProperty(typeof(SealedObject), null, true);
+                    _JSServer.GlobalObject.SetProperty(typeof(SealedObject), V8PropertyAttributes.Locked, null, true);
 
                     Console.WriteLine(Environment.NewLine + "Creating a new wrapped and locked object 'sealedObject' ...");
                     _JSServer.GlobalObject.SetProperty("sealedObject", new SealedObject(null, null), null, true, ScriptMemberSecurity.Locked);

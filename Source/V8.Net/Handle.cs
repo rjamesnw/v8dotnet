@@ -645,6 +645,11 @@ namespace V8.Net
 
     public interface IV8Object
     {
+        /// <summary>
+        /// Calls the V8 'Set()' function on the underlying native object.
+        /// Returns true if successful.
+        /// </summary>
+        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
@@ -661,8 +666,11 @@ namespace V8.Net
         /// <param name="name">The property name.</param>
         /// <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types.</param>
         /// <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
-        /// <param name="recursive">For object types, if true, then nested objects are included, otherwise only the object itself is bound and returned.</param>
-        /// <param name="memberSecurity">Default flags that describe JavaScript properties for all members that don't have any 'ScriptMember' attribute.  They must be 'OR'd together as needed.</param>
+        /// <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+        /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+        /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+        /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+        /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         bool SetProperty(string name, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null);
 
         /// <summary>
@@ -670,10 +678,14 @@ namespace V8.Net
         /// Returns true if successful.
         /// </summary>
         /// <param name="type">The type to wrap.</param>
+        /// <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         /// <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
-        /// <param name="recursive">If true, then nested objects are wrapped as properties are accessed, otherwise only the object itself is bound when created.</param>
-        /// <param name="memberSecurity">Default flags that describe JavaScript properties for all members that don't have any 'ScriptMember' attribute.  They must be 'OR'd together as needed.</param>
-        bool SetProperty(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null);
+        /// <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+        /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+        /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+        /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+        /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        bool SetProperty(Type type, V8PropertyAttributes propertyAttributes = V8PropertyAttributes.None, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null);
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -786,6 +798,7 @@ namespace V8.Net
         /// Calls the V8 'Set()' function on the underlying native object.
         /// Returns true if successful.
         /// </summary>
+        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         public virtual bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             return _Handle.SetProperty(name, value, attributes);
@@ -822,14 +835,15 @@ namespace V8.Net
         /// Returns true if successful.
         /// </summary>
         /// <param name="type">The type to wrap.</param>
+        /// <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
         /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
         /// <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        public bool SetProperty(Type type, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        public bool SetProperty(Type type, V8PropertyAttributes propertyAttributes = V8PropertyAttributes.None, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
-            return _Handle.SetProperty(type, className, recursive, memberSecurity);
+            return _Handle.SetProperty(type, propertyAttributes, className, recursive, memberSecurity);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

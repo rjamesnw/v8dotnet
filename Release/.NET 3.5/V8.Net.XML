@@ -326,6 +326,13 @@
             If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
             </summary>
         </member>
+        <member name="M:V8.Net.IV8Object.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        </member>
         <member name="M:V8.Net.IV8Object.SetProperty(System.Int32,V8.Net.InternalHandle)">
             <summary>
             Calls the V8 'Set()' function on the underlying native object.
@@ -341,18 +348,25 @@
             <param name="name">The property name.</param>
             <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types.</param>
             <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
-            <param name="recursive">For object types, if true, then nested objects are included, otherwise only the object itself is bound and returned.</param>
-            <param name="memberSecurity">Default flags that describe JavaScript properties for all members that don't have any 'ScriptMember' attribute.  They must be 'OR'd together as needed.</param>
+            <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         </member>
-        <member name="M:V8.Net.IV8Object.SetProperty(System.Type,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+        <member name="M:V8.Net.IV8Object.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
             <summary>
             Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
             Returns true if successful.
             </summary>
             <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
             <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
-            <param name="recursive">If true, then nested objects are wrapped as properties are accessed, otherwise only the object itself is bound when created.</param>
-            <param name="memberSecurity">Default flags that describe JavaScript properties for all members that don't have any 'ScriptMember' attribute.  They must be 'OR'd together as needed.</param>
+            <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         </member>
         <member name="M:V8.Net.IV8Object.GetProperty(System.String)">
             <summary>
@@ -412,6 +426,7 @@
             Calls the V8 'Set()' function on the underlying native object.
             Returns true if successful.
             </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         </member>
         <member name="M:V8.Net.ObjectHandle.SetProperty(System.Int32,V8.Net.InternalHandle)">
             <summary>
@@ -433,12 +448,13 @@
             in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
             <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
         </member>
-        <member name="M:V8.Net.ObjectHandle.SetProperty(System.Type,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+        <member name="M:V8.Net.ObjectHandle.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
             <summary>
             Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
             Returns true if successful.
             </summary>
             <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
             <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
             <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
             For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
@@ -632,6 +648,7 @@
             Calls the V8 'Set()' function on the underlying native object.
             Returns true if successful.
             </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         </member>
         <member name="M:V8.Net.InternalHandle.SetProperty(System.Int32,V8.Net.InternalHandle)">
             <summary>
@@ -654,12 +671,13 @@
             <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
             don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         </member>
-        <member name="M:V8.Net.InternalHandle.SetProperty(System.Type,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+        <member name="M:V8.Net.InternalHandle.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
             <summary>
             Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
             Returns true if successful.
             </summary>
             <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
             <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
             <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
             For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
@@ -1471,6 +1489,7 @@
             Calls the V8 'Set()' function on the underlying native object.
             Returns true if successful.
             </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         </member>
         <member name="M:V8.Net.V8NativeObject.SetProperty(System.Int32,V8.Net.InternalHandle)">
             <summary>
@@ -1490,19 +1509,22 @@
             <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
             For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
             in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-            <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         </member>
-        <member name="M:V8.Net.V8NativeObject.SetProperty(System.Type,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+        <member name="M:V8.Net.V8NativeObject.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
             <summary>
             Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
             Returns true if successful.
             </summary>
             <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
             <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
             <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
             For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
             in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-            <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         </member>
         <member name="M:V8.Net.V8NativeObject.GetProperty(System.String)">
             <summary>
