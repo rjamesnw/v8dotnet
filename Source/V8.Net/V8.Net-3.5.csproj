@@ -108,6 +108,7 @@
     <Compile Include="Handle.cs" />
     <Compile Include="InternalHandle.cs" />
     <Compile Include="V8Engine_Binding.cs" />
+    <Compile Include="V8Engine_Tests.cs" />
     <Compile Include="V8Engine_Worker.cs" />
     <Compile Include="V8Engine_Handles.cs" />
     <Compile Include="Exceptions.cs" />

@@ -38,6 +38,25 @@ namespace V8.Net
             return type.IsConstructedGenericType;
 #endif
         }
+
+        /// <summary>
+        /// Convert a list of enumerable items into strings and return the concatenated result.
+        /// </summary>
+        public static string Join(this IEnumerable values, string separator)
+        {
+#if (V1_1 || V2 || V3 || V3_5)
+            string s = "";
+            int i = 0;
+            foreach (var item in values)
+            {
+                if (i++ > 0) s += separator;
+                s += item != null ? item.ToString() : String.Empty;
+            }
+            return s;
+#else
+            return String.Join(separator, values);
+#endif
+        }
     }
 
     // ========================================================================================================================
@@ -307,9 +326,10 @@ namespace V8.Net
         public static string Join(string separator, object[] objects)
         {
             string s = "";
+            int i = 0;
             foreach (object o in objects)
             {
-                if (s.Length > 0) s += separator;
+                if (i++ > 0) s += separator;
                 if (o != null)
                     s += o.ToString();
             }

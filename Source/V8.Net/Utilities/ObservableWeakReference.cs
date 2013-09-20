@@ -40,9 +40,25 @@ namespace V8.Net
         /// called yet.  To prevent this, this property is blocking if the target is set to null by the finalizer, until the finalizer triggers a call to
         /// 'DoFinalize()'.  As such, this property never returns 'null'.</para>
         /// </summary>
-        public T Object { get { T o; while ((o = (T)_ObjectRef.Target ?? NearDeathReference) == null) Thread.Sleep(0); return o; } }
+        public T Object
+        {
+            get
+            {
+                T o;
+                while ((o = (T)_ObjectRef.Target ?? NearDeathReference) == null)
+                    NullWaitEvent.WaitOne();
+                return o;
+            }
+        }
 
         WeakReference _ObjectRef;
+
+        /// <summary>
+        /// When a finalizer runs on an object, the GC has already cleared all weak references. This means the main thread can read a null object reference
+        /// before the callback has a chance to reset the reference.  To protect against this, any call on a null reference will block until this event has
+        /// been signalled.
+        /// </summary>
+        public ManualResetEvent NullWaitEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// If 'IsGCReady' returns true, then this is the only reference that is keeping the object alive.
@@ -60,6 +76,7 @@ namespace V8.Net
         {
             NearDeathReference = obj;
             _IsGCReady = true;
+            NullWaitEvent.Set();
             if (GCReady != null)
                 GCReady(this, obj);
             if (!CanCollect) GC.ReRegisterForFinalize(obj);
@@ -79,6 +96,7 @@ namespace V8.Net
                 obj = NearDeathReference;
                 SetTarget(obj);
                 NearDeathReference = null;
+                NullWaitEvent.Reset();
             }
             return obj;
         }

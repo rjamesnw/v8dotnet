@@ -23,13 +23,13 @@ namespace V8.Net
         {
             var details = "";
             if (goodData != null && goodData.Length > 0)
-                details += " \r\nBytes expected (sequential order in memory): " + string.Join(", ", goodData);
+                details += " \r\nBytes expected (sequential order in memory): " + goodData.Join(", ");
             if (badValues != null)
             {
                 var badData = new byte[goodData != null ? goodData.Length : badValLen > 0 ? badValLen : IntPtr.Size];
                 for (var i = 0; i < badData.Length; i++)
                     badData[i] = badValues[i];
-                details += " \r\nBytes received (sequential order in memory): " + string.Join(", ", badData);
+                details += " \r\nBytes received (sequential order in memory): " + badData.Join(", ");
             }
             throw new ContextMarshalException(string.Format("The field value for '{0}->{1}' (offset {2}) on the native side proxy struct does not align with the managed side struct." + details,
                 structName, fieldName, offset));
@@ -51,7 +51,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(4);
             data = new byte[4];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte(mem + i, data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
             Int32* _val = (Int32*)mem;
             Int32 result = *_val;
             Marshal.FreeCoTaskMem(mem);
@@ -63,7 +63,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(8);
             data = new byte[8];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte(mem + i, data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
             Int64* _val = (Int64*)mem;
             Int64 result = *_val;
             Marshal.FreeCoTaskMem(mem);
@@ -75,7 +75,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(8);
             data = new byte[8];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte(mem + i, data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
             double* _val = (double*)mem;
             double result = *_val;
             Marshal.FreeCoTaskMem(mem);
@@ -87,7 +87,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(8);
             data = new byte[IntPtr.Size];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte(mem + i, data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
             Int32* _val32 = (Int32*)mem;
             Int64* _val64 = (Int64*)mem;
             Int64 result = data.Length == 8 ? *_val64 : *_val32;
