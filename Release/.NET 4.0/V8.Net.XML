@@ -1617,6 +1617,13 @@
             </summary>
             <typeparam name="T">The object type to keep a reference for.</typeparam>
         </member>
+        <member name="F:V8.Net.ObservableWeakReference`1.NullWaitEvent">
+            <summary>
+            When a finalizer runs on an object, the GC has already cleared all weak references. This means the main thread can read a null object reference
+            before the callback has a chance to reset the reference.  To protect against this, any call on a null reference will block until this event has
+            been signalled.
+            </summary>
+        </member>
         <member name="M:V8.Net.ObservableWeakReference`1.Reset">
             <summary>
             If 'IsGCReady' is true, then this moves the near death reference back into the weak reference. If not, this method does nothing.
@@ -1675,6 +1682,11 @@
         <member name="M:V8.Net.ExtensionMethods.IsConstructedGenericType(System.Type)">
             <summary>
             '{Type}.IsConstructedGenericType' is only supported in .NET 4.5+, so this is a cross-version supported implementation.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ExtensionMethods.Join(System.Collections.IEnumerable,System.String)">
+            <summary>
+            Convert a list of enumerable items into strings and return the concatenated result.
             </summary>
         </member>
         <member name="M:V8.Net.Utilities.AllocNativeMemory(System.Int32)">
