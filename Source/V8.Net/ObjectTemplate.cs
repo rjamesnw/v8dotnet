@@ -395,7 +395,7 @@ namespace V8.Net
                 throw ex;
             }
 
-            obj.Initialize();
+            obj.Initialize(false, null);
 
             return (T)obj;
         }

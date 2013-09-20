@@ -423,7 +423,7 @@ namespace V8.Net
                 var obj = _CreateManagedObject<T>(template, v8Object.PassOn(), connectNativeObject);
 
                 if (initialize)
-                    obj.Initialize();
+                    obj.Initialize(false, null);
 
                 return obj;
             }
@@ -483,7 +483,7 @@ namespace V8.Net
             }
 
             if (initialize)
-                obj.Initialize();
+                obj.Initialize(false, null);
 
             return (T)obj;
         }
