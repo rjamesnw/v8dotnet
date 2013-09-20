@@ -1038,7 +1038,7 @@
             An interface for the V8NativeObject object.
             </summary>
         </member>
-        <member name="M:V8.Net.IV8NativeObject.Initialize(V8.Net.V8NativeObject)">
+        <member name="M:V8.Net.IV8NativeObject.Initialize(V8.Net.V8NativeObject,System.Boolean,V8.Net.InternalHandle[])">
             <summary>
             Called immediately after creating an object instance and setting the V8Engine property.
             Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
@@ -1065,7 +1065,7 @@
             Applied to V8 related objects to take control of the finalization process from the GC so it can be better coordinated with the native V8 engine.
             </summary>
         </member>
-        <member name="M:V8.Net.V8NativeObject.Initialize">
+        <member name="M:V8.Net.V8NativeObject.Initialize(System.Boolean,V8.Net.InternalHandle[])">
             <summary>
             Called immediately after creating an object instance and setting the V8Engine property.
             Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
@@ -1075,9 +1075,9 @@
             the 'IsInitilized' property.</para>
             </summary>
         </member>
-        <member name="M:V8.Net.V8NativeObject.Initialize(V8.Net.V8NativeObject)">
+        <member name="M:V8.Net.V8NativeObject.Initialize(V8.Net.V8NativeObject,System.Boolean,V8.Net.InternalHandle[])">
             <summary>
-            (Exists only to support the 'IV8NativeInterface' interface and should not be called directly - call 'Initialize()' instead.)
+            (Exists only to support the 'IV8NativeInterface' interface and should not be called directly - call 'Initialize(isConstructCall, args)' instead.)
             </summary>
         </member>
         <member name="M:V8.Net.V8NativeObject.Finalize">
