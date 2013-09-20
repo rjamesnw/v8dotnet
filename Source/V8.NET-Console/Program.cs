@@ -536,14 +536,15 @@ public sealed class SealedObject
 /// </summary>
 public class V8DotNetTesterFunction : V8Function
 {
-    public override void Initialize()
+    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         Callback = ConstructV8DotNetTesterWrapper;
+        return Handle;
     }
 
     public InternalHandle ConstructV8DotNetTesterWrapper(V8Engine engine, bool isConstructCall, InternalHandle _this, params InternalHandle[] args)
     {
-        return isConstructCall ? engine.GetObject<V8DotNetTesterWrapper>(_this) : InternalHandle.Empty;
+        return isConstructCall ? engine.GetObject<V8DotNetTesterWrapper>(_this, true, false).Initialize(isConstructCall, args).AsInternalHandle : InternalHandle.Empty;
         // (note: V8DotNetTesterWrapper would cause an error here if derived from V8ManagedObject)
     }
 }
@@ -556,10 +557,11 @@ public class V8DotNetTesterWrapper : V8NativeObject // (I can also implement IV8
 {
     V8DotNetTester _Tester;
 
-    public override void Initialize()
+    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         _Tester = Engine.CreateObjectTemplate().CreateObject<V8DotNetTester>();
         SetProperty("tester", _Tester); // (or _Tester.Handle works also)
+        return Handle;
     }
 }
 
@@ -567,9 +569,9 @@ public class V8DotNetTester : V8ManagedObject
 {
     IV8Function _MyFunc;
 
-    public override void Initialize()
+    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
-        base.Initialize();
+        base.Initialize(isConstructCall, args);
 
         Console.WriteLine("\r\nInitializing V8DotNetTester ...\r\n");
 
@@ -608,6 +610,8 @@ public class V8DotNetTester : V8ManagedObject
         this.AsDynamic.testFunction1 = _MyFunc;
 
         Console.WriteLine("\r\n... initialization complete.");
+
+        return Handle;
     }
 
     public void Execute()

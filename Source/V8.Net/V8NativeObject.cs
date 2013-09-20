@@ -27,7 +27,7 @@ namespace V8.Net
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
         /// the 'IsInitilized' property.</para>
         /// </summary>
-        void Initialize(V8NativeObject owner);
+        ObjectHandle Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args);
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -195,21 +195,25 @@ namespace V8.Net
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
         /// the 'IsInitilized' property.</para>
         /// </summary>
-        public virtual void Initialize()
+        public virtual ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
         {
             if (_Proxy != this && !IsInitilized)
-                _Proxy.Initialize(this);
+                _Proxy.Initialize(this, isConstructCall, args);
 
             IsInitilized = true;
+
+            return Handle;
         }
 
         /// <summary>
-        /// (Exists only to support the 'IV8NativeInterface' interface and should not be called directly - call 'Initialize()' instead.)
+        /// (Exists only to support the 'IV8NativeInterface' interface and should not be called directly - call 'Initialize(isConstructCall, args)' instead.)
         /// </summary>
-        public void Initialize(V8NativeObject owner)
+        public ObjectHandle Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args)
         {
             if (!IsInitilized)
-                Initialize();
+                Initialize(isConstructCall, args);
+
+            return Handle;
         }
 
         /// <summary>

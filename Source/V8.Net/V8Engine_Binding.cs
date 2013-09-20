@@ -1729,7 +1729,7 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        public override void Initialize()
+        public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
         {
             if (_Object != null)
             {
@@ -1739,7 +1739,7 @@ namespace V8.Net
                 _Proxy = (IV8NativeObject)_Object;
             }
 
-            base.Initialize();
+            return base.Initialize(isConstructCall, args);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

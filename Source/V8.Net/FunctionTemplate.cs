@@ -234,7 +234,7 @@ namespace V8.Net
 
             _FunctionsByType[typeof(T)] = func.ID; // (this exists to index functions by type)
 
-            func.Initialize();
+            func.Initialize(false, null);
 
             return (T)func;
         }
@@ -310,6 +310,8 @@ namespace V8.Net
             {
                 obj._Handle._Set(V8NetProxy.CreateFunctionInstance(_NativeFunctionTemplateProxy, obj.ID, args.Length, _args));
                 // (note: setting '_NativeObject' also updates it's '_ManagedObject' field if necessary.
+
+                obj.Initialize(true, args);
             }
             catch (Exception ex)
             {
@@ -321,8 +323,6 @@ namespace V8.Net
             {
                 Utilities.FreeNativeMemory((IntPtr)_args);
             }
-
-            obj.Initialize();
 
             return obj;
         }
