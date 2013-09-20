@@ -15,7 +15,7 @@ namespace V8.Net
     /// <summary>
     /// An interface for the V8NativeObject object.
     /// </summary>
-    public interface IV8NativeObject : IV8Object, IDisposable, IDynamicMetaObjectProvider
+    public interface IV8NativeObject : IDisposable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
