@@ -67,19 +67,13 @@ namespace V8.Net
 
                     while (workPending && _PauseWorker == 0)
                     {
-                        WithIsolateScope = () =>
-                        {
-                            workPending = _DoWorkStep();
-                            DoIdleNotification(1);
-                        };
+                        workPending = _DoWorkStep();
+                        DoIdleNotification(1);
                         Thread.Sleep(0);
                     }
                 }
                 Thread.Sleep(100);
-                WithIsolateScope = () =>
-                {
-                    DoIdleNotification(100);
-                };
+                DoIdleNotification(100);
             }
         }
 

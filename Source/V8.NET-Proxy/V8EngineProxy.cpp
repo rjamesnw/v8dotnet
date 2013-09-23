@@ -58,6 +58,8 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
     :ProxyBase(V8EngineProxyClass), _Isolate(Isolate::New()), _GlobalObjectTemplateProxy(nullptr),
     _Strings(1000, _StringItem()), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _NextNonTemplateObjectID(-2)
 {
+    BEGIN_ISOLATE_SCOPE(this);
+
     _Handles.clear();
     _DisposedHandles.clear();
     _Strings.clear();
@@ -77,6 +79,8 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 
     _DisposedEngines.push_back(false);
     _EngineID = _NextEngineID++;
+
+    END_ISOLATE_SCOPE;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -233,36 +237,36 @@ HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-
-// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-void V8EngineProxy::WithIsolateScope(CallbackAction action)
-{
-    BEGIN_ISOLATE_SCOPE(this);
-    if (action != nullptr) action();
-    END_ISOLATE_SCOPE;
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-
-// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-void V8EngineProxy::WithContextScope(CallbackAction action)
-{
-    BEGIN_ISOLATE_SCOPE(this);
-    BEGIN_CONTEXT_SCOPE(this);
-    if (action != nullptr) action();
-    END_CONTEXT_SCOPE;
-    END_ISOLATE_SCOPE;
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-
-// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-void V8EngineProxy::WithHandleScope(CallbackAction action)
-{
-    BEGIN_HANDLE_SCOPE(this);
-    if (action != nullptr) action();
-    END_HANDLE_SCOPE;
-}
+// ??
+//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
+//void V8EngineProxy::WithIsolateScope(CallbackAction action)
+//{
+//    BEGIN_ISOLATE_SCOPE(this);
+//    if (action != nullptr) action();
+//    END_ISOLATE_SCOPE;
+//}
+//
+//// ------------------------------------------------------------------------------------------------------------------------
+// ??
+//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
+//void V8EngineProxy::WithContextScope(CallbackAction action)
+//{
+//    BEGIN_ISOLATE_SCOPE(this);
+//    BEGIN_CONTEXT_SCOPE(this);
+//    if (action != nullptr) action();
+//    END_CONTEXT_SCOPE;
+//    END_ISOLATE_SCOPE;
+//}
+//
+//// ------------------------------------------------------------------------------------------------------------------------
+// ??
+//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
+//void V8EngineProxy::WithHandleScope(CallbackAction action)
+//{
+//    BEGIN_HANDLE_SCOPE(this);
+//    if (action != nullptr) action();
+//    END_HANDLE_SCOPE;
+//}
 
 // ------------------------------------------------------------------------------------------------------------------------
 
