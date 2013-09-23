@@ -442,28 +442,6 @@
             A static array of all V8 engines created.
             </summary>
         </member>
-        <member name="P:V8.Net.V8Engine.WithHandleScope">
-            <summary>
-            Executes the given lambda expression within a basic Handle scope (for non-JavaScript environment related operations, such as simply calling one of the "V8Engine.Create???" value methods).
-            While this scope is fine for basic handle operations (such as only creating values), calling engine methods that change the environment/execution context requires 'WithContextScope'.
-            This scope is fractionally faster than the context scope because context and isolate scope objects don't need to be created on the stack.
-            This scope is not thread safe (because an Isolate it required).
-            </summary>
-        </member>
-        <member name="P:V8.Net.V8Engine.WithIsolateScope">
-            <summary>
-            Executes the given lambda expression within the Isolate scope. This implies a thread safe lock scope, and a handle scope (but no context).
-            The V8 engine requires JavaScript code to run within Isolate scopes in order to support multiple threads (when used with a lock scope).
-            If ever in doubt, use 'WithContextScope' instead, which includes this one.
-            </summary>
-        </member>
-        <member name="P:V8.Net.V8Engine.WithContextScope">
-            <summary>
-            Executes the given lambda expression within the Context scope (the executing environment). This implies both Isolate and Handle scopes as well (so this is also thread safe).
-            The V8 engine requires JavaScript code to run within Context scopes, which contains the executing environment (where the global object resides).
-            This is required in order to execute scripts. If you are not executing scripts, or changing the executing environment, using 'WithIsolateScope' may be fractionally faster.
-            </summary>
-        </member>
         <member name="T:V8.Net.InternalHandle">
             <summary>
             Keeps track of native V8 handles (C++ native side).
