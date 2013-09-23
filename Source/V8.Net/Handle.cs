@@ -643,6 +643,9 @@ namespace V8.Net
 
     // ========================================================================================================================
 
+    /// <summary>
+    /// Represents methods that can be called on V8 objects.
+    /// </summary>
     public interface IV8Object
     {
         /// <summary>

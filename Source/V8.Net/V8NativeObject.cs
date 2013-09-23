@@ -13,7 +13,10 @@ namespace V8.Net
     // ========================================================================================================================
 
     /// <summary>
-    /// An interface for the V8NativeObject object.
+    /// An interface for objects wrapped by V8NativeObject instances.
+    /// <para>These methods are called in proxy to the V8NativeObject's related methods ('Initialize(...)' and 'Dispose(...)').</para>
+    /// The arguments passed to 'Initialize(...)' ('isConstructCall' and 'args') are the responsibility of the developer - except for the binder, which will
+    /// pass in the values as expected.
     /// </summary>
     public interface IV8NativeObject : IDisposable
     {
@@ -27,7 +30,7 @@ namespace V8.Net
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
         /// the 'IsInitilized' property.</para>
         /// </summary>
-        ObjectHandle Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args);
+        void Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args);
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -50,7 +53,7 @@ namespace V8.Net
     /// Represents a basic JavaScript object. This class wraps V8 functionality for operations required on any native V8 object (including managed ones).
     /// <para>This class implements 'DynamicObject' to make setting properties a bit easier.</para>
     /// </summary>
-    public unsafe class V8NativeObject : IHandleBased, IV8NativeObject, IDynamicMetaObjectProvider, IFinalizable
+    public unsafe class V8NativeObject : IHandleBased, IV8Object, IV8NativeObject, IDynamicMetaObjectProvider, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -208,12 +211,10 @@ namespace V8.Net
         /// <summary>
         /// (Exists only to support the 'IV8NativeInterface' interface and should not be called directly - call 'Initialize(isConstructCall, args)' instead.)
         /// </summary>
-        public ObjectHandle Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args)
+        public void Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args)
         {
             if (!IsInitilized)
                 Initialize(isConstructCall, args);
-
-            return Handle;
         }
 
         /// <summary>

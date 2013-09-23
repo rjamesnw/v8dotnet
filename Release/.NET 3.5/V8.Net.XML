@@ -326,6 +326,11 @@
             If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
             </summary>
         </member>
+        <member name="T:V8.Net.IV8Object">
+            <summary>
+            Represents methods that can be called on V8 objects.
+            </summary>
+        </member>
         <member name="M:V8.Net.IV8Object.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
             <summary>
             Calls the V8 'Set()' function on the underlying native object.
@@ -1031,7 +1036,7 @@
             <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
         </member>
         <!-- Badly formed XML comment ignored for member "M:V8.Net.V8Engine.CreateBinding``1(System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})" -->
-        <member name="M:V8.Net.V8Engine.CreateBinding(System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+        <member name="M:V8.Net.V8Engine.CreateBinding(System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity},System.Boolean)">
             <summary>
             Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are not bound however).
             The type returned is an object with property accessors for the object's public fields, properties, and methods.
@@ -1042,6 +1047,7 @@
             <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
             If true, then nested object references are included.</param>
             <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+            <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         </member>
         <member name="M:V8.Net.V8Engine.RunMarshallingTests">
             <summary>
@@ -1268,7 +1274,7 @@
             </summary>
             <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
             <param name="v8Object">A handle to a native V8 object.</param>
-            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created wrapper before returning.</param>
+            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         </member>
         <member name="M:V8.Net.V8Engine.CreateObject``1(V8.Net.InternalHandle,System.Boolean)">
             <summary>
@@ -1281,7 +1287,7 @@
             </summary>
             <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
             <param name="v8Object">A handle to a native V8 object.</param>
-            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created wrapper before returning.</param>
+            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         </member>
         <member name="M:V8.Net.V8Engine.CreateObject(V8.Net.InternalHandle,System.Boolean)">
             <summary>
@@ -1418,7 +1424,10 @@
         </member>
         <member name="T:V8.Net.IV8NativeObject">
             <summary>
-            An interface for the V8NativeObject object.
+            An interface for objects wrapped by V8NativeObject instances.
+            <para>These methods are called in proxy to the V8NativeObject's related methods ('Initialize(...)' and 'Dispose(...)').</para>
+            The arguments passed to 'Initialize(...)' ('isConstructCall' and 'args') are the responsibility of the developer - except for the binder, which will
+            pass in the values as expected.
             </summary>
         </member>
         <member name="M:V8.Net.IV8NativeObject.Initialize(V8.Net.V8NativeObject,System.Boolean,V8.Net.InternalHandle[])">
@@ -1819,12 +1828,21 @@
             <param name="genericTarget">Allows binding a specific handle to the 'this' of a callback (for static bindings).</param>
             <param name="genericInstanceTargetUpdater">Allows binding a specific instance to the 'this' of a callback (for static bindings).</param>
         </member>
-        <member name="M:V8.Net.TypeBinder.CreateObject``2(``1)">
+        <member name="M:V8.Net.TypeBinder.CreateObject``2(``1,System.Boolean)">
             <summary>
             Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
             It's an error to pass an object instance that is not of the same underlying type as this type binder.
             </summary>
             <param name="obj">An object instance for the object binder (required).</param>
+            <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+            <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
+        </member>
+        <member name="M:V8.Net.TypeBinder.CreateObject(System.Object,System.Boolean)">
+            <summary>
+            Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
+            It's an error to pass an object instance that is not of the same underlying type as this type binder.
+            </summary>
+            <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
             <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
         </member>
         <member name="M:V8.Net.TypeBinder.ChangeMemberSecurity(System.Reflection.MemberInfo,V8.Net.ScriptMemberSecurity)">
@@ -2527,7 +2545,7 @@
             </summary>
             <param name="callback">A callback that gets invoked </param>
         </member>
-        <member name="M:V8.Net.ObjectTemplate.CreateObject``1">
+        <member name="M:V8.Net.ObjectTemplate.CreateObject``1(System.Boolean)">
             <summary>
             Creates an object of the specified type and returns it.  A V8 object is also created and associated with it.
             <para>Performance note: Creating 'V8NativeObject' type objects are allowed, but an object template is not needed for those.  If you create a
@@ -2537,8 +2555,9 @@
             '<seealso cref="M:V8.Net.ObjectTemplate.UnregisterPropertyInterceptors"/>' on the object template to make them the same speed as if 'V8Engine.CreateObject()' was used.</para>
             </summary>
             <typeparam name="T">The type of managed object to create, which must implement 'IV8NativeObject',</typeparam>
+            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:V8.Net.ObjectTemplate.CreateObject" -->
+        <!-- Badly formed XML comment ignored for member "M:V8.Net.ObjectTemplate.CreateObject(System.Boolean)" -->
         <member name="M:V8.Net.ObjectTemplate.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
             <summary>
             Calls the V8 'Set()' function on the underlying native object template to set properties that will exist on all objects created from this template.

@@ -490,7 +490,7 @@ public class GenericTest<T, T2>
 }
 
 [ScriptObject("Sealed_Object", ScriptMemberSecurity.Permanent)]
-public sealed class SealedObject
+public sealed class SealedObject: IV8NativeObject
 {
     public static TestEnum _StaticField = TestEnum.A;
     public static TestEnum StaticField { get { return _StaticField; } }
@@ -529,6 +529,14 @@ public sealed class SealedObject
 
     public object[] TestD<T1, T2>() { return new object[2] { typeof(T1), typeof(T2) }; }
     public int[] TestE(int i1, int i2) { return new int[2] { i1, i2 }; }
+
+    public void Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args)
+    {
+    }
+
+    public void Dispose()
+    {
+    }
 }
 
 /// <summary>
@@ -539,7 +547,8 @@ public class V8DotNetTesterFunction : V8Function
     public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         Callback = ConstructV8DotNetTesterWrapper;
-        return Handle;
+
+        return base.Initialize(isConstructCall, args);
     }
 
     public InternalHandle ConstructV8DotNetTesterWrapper(V8Engine engine, bool isConstructCall, InternalHandle _this, params InternalHandle[] args)

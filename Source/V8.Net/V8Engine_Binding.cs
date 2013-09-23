@@ -1517,7 +1517,8 @@ namespace V8.Net
 
                             // ... invoke the constructor ...
 
-                            handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, convertedArguments), null, _Recursive, _DefaultMemberSecurity);
+                            handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, convertedArguments), null, _Recursive, _DefaultMemberSecurity, false);
+                            handle.Object.Initialize(true, args);
 
                             //??if (soloConstructor != null)
                             //{
@@ -1608,8 +1609,9 @@ namespace V8.Net
         /// It's an error to pass an object instance that is not of the same underlying type as this type binder.
         /// </summary>
         /// <param name="obj">An object instance for the object binder (required).</param>
+        /// <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         /// <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
-        public T CreateObject<T, InstanceType>(InstanceType obj)
+        public T CreateObject<T, InstanceType>(InstanceType obj, bool initializeBinder = true)
             where T : ObjectBinder, new()
             where InstanceType : class
         {
@@ -1621,15 +1623,21 @@ namespace V8.Net
 
             object binder;
 
-            binder = InstanceTemplate.CreateObject<T>();
+            binder = InstanceTemplate.CreateObject<T>(initializeBinder);
             ((T)binder).Object = obj;
 
             return (T)binder;
         }
 
-        public ObjectBinder CreateObject(object obj)
+        /// <summary>
+        /// Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
+        /// It's an error to pass an object instance that is not of the same underlying type as this type binder.
+        /// </summary>
+        /// <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        /// <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
+        public ObjectBinder CreateObject(object obj, bool initializeBinder = true)
         {
-            return CreateObject<ObjectBinder, object>(obj);
+            return CreateObject<ObjectBinder, object>(obj, initializeBinder);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -2052,7 +2060,8 @@ namespace V8.Net
         /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
         /// If true, then nested object references are included.</param>
         /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        public InternalHandle CreateBinding(object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        /// <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        public InternalHandle CreateBinding(object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null, bool initializeBinder = true)
         {
             var objType = obj != null ? obj.GetType() : null;
 
@@ -2061,7 +2070,7 @@ namespace V8.Net
 
             var typeBinder = RegisterType(objType, className, recursive, memberSecurity);
 
-            return typeBinder.CreateObject(obj);
+            return typeBinder.CreateObject(obj, initializeBinder);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
