@@ -38,6 +38,13 @@ extern "C"
     }
 
     EXPORT HandleProxy* STDCALL V8Execute(V8EngineProxy *engine, uint16_t *script, uint16_t *sourceName) { return engine->Execute(script, sourceName); }
+    EXPORT HandleProxy* STDCALL V8Compile(V8EngineProxy *engine, uint16_t *script, uint16_t *sourceName) { return engine->Compile(script, sourceName); }
+    EXPORT HandleProxy* STDCALL V8ExecuteCompiledScript(V8EngineProxy *engine, HandleProxy* script)
+    { 
+        if (!script->IsScript())
+            return engine->CreateError("Not a valid script handle.", JSV_ExecutionError);
+        return engine->Execute(script->Script());
+    }
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Object Template Related

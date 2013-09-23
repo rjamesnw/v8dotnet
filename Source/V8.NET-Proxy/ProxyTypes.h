@@ -137,6 +137,7 @@ enum JSValueType: int32_t
     JSV_CompilerError = -2, // An error has occurred compiling the script (usually a syntax error).
     JSV_InternalError = -1, // An internal error has occurred (before or after script execution).
     JSV_Undefined = 0, // Value is unknown or not set.
+    JSV_Script, // The handle represents a compiled script.
     JSV_Null,
     JSV_Bool, // The value is a Boolean, as supported within JavaScript for true/false conditions.
     JSV_BoolObject, // The value is a Boolean object (object reference), as supported within JavaScript when executing "new Boolean()".
@@ -211,6 +212,7 @@ private:
     };
 
     Persistent<Value> _Handle; // Reference to a JavaScript object (persisted handle for future reference - WARNING: Must be explicitly released when no longer needed!).
+    Persistent<v8::Script> _Script; // (references a script handle [instead of a value one])
 
     static void _DisposeCallback(Isolate* isolate, Persistent<Value> object, void* parameter);
     static void _RevivableCallback(Isolate* isolate, Persistent<Value>* object, HandleProxy* parameter);
@@ -222,8 +224,10 @@ protected:
 
     HandleProxy* Initialize(v8::Handle<Value> handle);
     HandleProxy* SetHandle(v8::Handle<Value> handle);
+    HandleProxy* SetHandle(v8::Handle<v8::Script> handle);
     HandleProxy* SetDate(double ms);
 
+    void _ClearHandleValue();
     bool _Dispose(bool registerDisposal);
 
 public:
@@ -231,6 +235,8 @@ public:
     int32_t SetManagedObjectID(int32_t id) { return (_ObjectID = id); }
 
     bool IsError() { return _Type < 0; }
+
+    bool IsScript() { return _Type == JSV_Script; }
 
     // Disposes of the handle that is wrapped by this proxy instance.
     bool Dispose();
@@ -244,7 +250,8 @@ public:
     V8EngineProxy* EngineProxy() { return _EngineProxy; }
     int32_t EngineID() { return _EngineID; }
 
-    Handle<Value> Handle();
+    v8::Handle<Value> Handle();
+    v8::Handle<v8::Script> Script();
 
     void MakeWeak();
     void MakeStrong();
@@ -616,13 +623,16 @@ public:
 
     FunctionTemplateProxy* CreateFunctionTemplate(uint16_t *className, ManagedJSFunctionCallback callback);
 
-    HandleProxy* Execute(uint16_t* script, uint16_t* sourceName);
+    HandleProxy* Execute(const uint16_t* script, uint16_t* sourceName);
+    HandleProxy* Execute(Handle<Script> script);
+    HandleProxy* Compile(const uint16_t* script, uint16_t* sourceName);
 
     HandleProxy* CreateNumber(double num);
     HandleProxy* CreateInteger(int32_t num);
     HandleProxy* CreateBoolean(bool b);
-    HandleProxy* CreateString(uint16_t* str);
-    HandleProxy* CreateError(uint16_t* message, JSValueType errorType);
+    HandleProxy* CreateString(const uint16_t* str);
+    HandleProxy* CreateError(const char* message, JSValueType errorType);
+    HandleProxy* CreateError(const uint16_t* message, JSValueType errorType);
     HandleProxy* CreateDate(double ms);
     HandleProxy* CreateArray(HandleProxy** items, uint16_t length);
     HandleProxy* CreateArray(uint16_t** items, uint16_t length);

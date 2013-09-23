@@ -258,6 +258,26 @@ namespace V8.Net
         }
 
         /// <summary>
+        /// Executes JavaScript on the V8 engine and returns the result.
+        /// </summary>
+        /// <param name="script">The script to run.</param>
+        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        public Handle Execute(Handle script, bool throwExceptionOnError = false)
+        {
+            if (script.ValueType != JSValueType.Script)
+                throw new InvalidOperationException("The handle must represent pre-compiled JavaScript.");
+
+            Handle result = V8NetProxy.V8ExecuteCompiledScript(_NativeV8EngineProxy, script);
+            // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
+
+            if (throwExceptionOnError)
+                result.ThrowOnError();
+
+            return result;
+        }
+
+        /// <summary>
         /// Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
         /// <para>Note: This is just a shortcut to calling 'Execute()' followed by 'Console.WriteLine()'.</para>
         /// </summary>
@@ -281,6 +301,25 @@ namespace V8.Net
         {
             Console.WriteLine(script);
             Console.WriteLine(Execute(script, sourceName, throwExceptionOnError).AsString);
+        }
+
+        /// <summary>
+        /// Compiles JavaScript on the V8 engine and returns the result.
+        /// Since V8 JIT-compiles script every time, repeated tasks can take advantage of re-executing pre-compiled scripts for a speed boost.
+        /// </summary>
+        /// <param name="script">The script to run.</param>
+        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        /// <returns>A handle to the compiled script.</returns>
+        public Handle Compile(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        {
+            Handle result = V8NetProxy.V8Compile(_NativeV8EngineProxy, script, sourceName);
+            // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
+
+            if (throwExceptionOnError)
+                result.ThrowOnError();
+
+            return result;
         }
 
         /// <summary>

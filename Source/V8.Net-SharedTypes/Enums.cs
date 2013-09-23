@@ -113,6 +113,11 @@ namespace V8.Net
         Undefined = 0,
 
         /// <summary>
+        /// The handle proxy represents pre-compiled JavaScript.
+        /// </summary>
+        Script,
+
+        /// <summary>
         /// The value is null (a null object reference).  This is NOT the same as 'undefined' (no value set).
         /// </summary>
         Null,

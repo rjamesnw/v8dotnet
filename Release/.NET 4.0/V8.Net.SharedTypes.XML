@@ -175,6 +175,11 @@
             The value is undefined (no value set).  This is NOT the same as 'null'.
             </summary>
         </member>
+        <member name="F:V8.Net.JSValueType.Script">
+            <summary>
+            The handle proxy represents pre-compiled JavaScript.
+            </summary>
+        </member>
         <member name="F:V8.Net.JSValueType.Null">
             <summary>
             The value is null (a null object reference).  This is NOT the same as 'undefined' (no value set).

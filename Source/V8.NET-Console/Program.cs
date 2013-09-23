@@ -222,7 +222,6 @@ namespace V8.Net
                                         Console.WriteLine("Ready to run the tester, press any key to proceed ...\r\n");
                                         Console.ReadKey();
 
-
                                         tester.Execute();
 
                                         //Console.WriteLine("\r\n===============================================================================\r\n");
@@ -490,7 +489,7 @@ public class GenericTest<T, T2>
 }
 
 [ScriptObject("Sealed_Object", ScriptMemberSecurity.Permanent)]
-public sealed class SealedObject: IV8NativeObject
+public sealed class SealedObject : IV8NativeObject
 {
     public static TestEnum _StaticField = TestEnum.A;
     public static TestEnum StaticField { get { return _StaticField; } }
@@ -625,7 +624,17 @@ public class V8DotNetTester : V8ManagedObject
 
     public void Execute()
     {
-        Console.WriteLine("Begin testing properties on this.tester ...\r\n");
+        Console.WriteLine("Testing pre-compiled script ...\r\n");
+
+        Engine.Execute("var i = 0;");
+        var pcScript = Engine.Compile("i = i + 1;");
+        for (var i = 0; i < 100; i++)
+            Engine.Execute(pcScript, true);
+
+        Engine.ConsoleExecute("assert('Testing i==100', i, 100)", this.GetType().Name, true);
+
+        Console.WriteLine("\r\nPress any key to begin testing properties on 'this.tester' ...\r\n");
+        Console.ReadKey();
 
         // ... test the non-function/object propertied ...
 
