@@ -45,7 +45,6 @@ namespace V8.Net
                 };
                 _TitleUpdateTimer.Start();
 
-                _JSServer.WithContextScope = () =>
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
 
@@ -131,7 +130,7 @@ namespace V8.Net
 
                     Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
                     _JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
-                };
+                }
 
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
 
@@ -174,82 +173,60 @@ namespace V8.Net
                                 Console.WriteLine("\r\n===============================================================================");
                                 Console.WriteLine("Setting up the test environment ...\r\n");
 
-
-                                _JSServer.WithContextScope = () =>
                                 {
-                                    {
-                                        // ... create a function template in order to generate our object! ...
-                                        // (note: this is not using ObjectTemplate because the native V8 does not support class names for those objects [class names are object type names])
+                                    // ... create a function template in order to generate our object! ...
+                                    // (note: this is not using ObjectTemplate because the native V8 does not support class names for those objects [class names are object type names])
 
-                                        Console.Write("\r\nCreating a FunctionTemplate instance ...");
-                                        var funcTemplate = _JSServer.CreateFunctionTemplate(typeof(V8DotNetTesterWrapper).Name);
-                                        Console.WriteLine(" Ok.");
+                                    Console.Write("\r\nCreating a FunctionTemplate instance ...");
+                                    var funcTemplate = _JSServer.CreateFunctionTemplate(typeof(V8DotNetTesterWrapper).Name);
+                                    Console.WriteLine(" Ok.");
 
-                                        // ... use the template to generate our object ...
+                                    // ... use the template to generate our object ...
 
-                                        Console.Write("\r\nRegistering the custom V8DotNetTester function object ...");
-                                        var testerFunc = funcTemplate.GetFunctionObject<V8DotNetTesterFunction>();
-                                        _JSServer.DynamicGlobalObject.V8DotNetTesterWrapper = testerFunc;
-                                        Console.WriteLine(" Ok.  'V8DotNetTester' is now a type [Function] in the global scope.");
+                                    Console.Write("\r\nRegistering the custom V8DotNetTester function object ...");
+                                    var testerFunc = funcTemplate.GetFunctionObject<V8DotNetTesterFunction>();
+                                    _JSServer.DynamicGlobalObject.V8DotNetTesterWrapper = testerFunc;
+                                    Console.WriteLine(" Ok.  'V8DotNetTester' is now a type [Function] in the global scope.");
 
-                                        Console.Write("\r\nCreating a V8DotNetTester instance from within JavaScript ...");
-                                        // (note: Once 'V8DotNetTester' is constructed, the 'Initialize()' override will be called immediately before returning,
-                                        // but you can return "engine.GetObject<V8DotNetTester>(_this.Handle, true, false)" to prevent it.)
-                                        _JSServer.VerboseConsoleExecute("testWrapper = new V8DotNetTesterWrapper();");
-                                        _JSServer.VerboseConsoleExecute("tester = testWrapper.tester;");
-                                        Console.WriteLine(" Ok.");
+                                    Console.Write("\r\nCreating a V8DotNetTester instance from within JavaScript ...");
+                                    // (note: Once 'V8DotNetTester' is constructed, the 'Initialize()' override will be called immediately before returning,
+                                    // but you can return "engine.GetObject<V8DotNetTester>(_this.Handle, true, false)" to prevent it.)
+                                    _JSServer.VerboseConsoleExecute("testWrapper = new V8DotNetTesterWrapper();");
+                                    _JSServer.VerboseConsoleExecute("tester = testWrapper.tester;");
+                                    Console.WriteLine(" Ok.");
 
-                                        // ... Ok, the object exists, BUT, it is STILL not yet part of the global object, so we add it next ...
+                                    // ... Ok, the object exists, BUT, it is STILL not yet part of the global object, so we add it next ...
 
-                                        Console.Write("\r\nRetrieving the 'tester' property on the global object for the V8DotNetTester instance ...");
-                                        var handle = _JSServer.GlobalObject.GetProperty("tester");
-                                        var tester = (V8DotNetTester)_JSServer.DynamicGlobalObject.tester;
-                                        Console.WriteLine(" Ok.");
+                                    Console.Write("\r\nRetrieving the 'tester' property on the global object for the V8DotNetTester instance ...");
+                                    var handle = _JSServer.GlobalObject.GetProperty("tester");
+                                    var tester = (V8DotNetTester)_JSServer.DynamicGlobalObject.tester;
+                                    Console.WriteLine(" Ok.");
 
-                                        Console.WriteLine("\r\n===============================================================================");
-                                        Console.WriteLine("Dumping global properties ...\r\n");
+                                    Console.WriteLine("\r\n===============================================================================");
+                                    Console.WriteLine("Dumping global properties ...\r\n");
 
-                                        _JSServer.VerboseConsoleExecute("dump(this)");
+                                    _JSServer.VerboseConsoleExecute("dump(this)");
 
-                                        Console.WriteLine("\r\n===============================================================================");
-                                        Console.WriteLine("Dumping tester properties ...\r\n");
+                                    Console.WriteLine("\r\n===============================================================================");
+                                    Console.WriteLine("Dumping tester properties ...\r\n");
 
-                                        _JSServer.VerboseConsoleExecute("dump(tester)");
+                                    _JSServer.VerboseConsoleExecute("dump(tester)");
 
-                                        // ... example of adding a functions via script (note: V8Engine.GlobalObject.Properties will have 'Test' set) ...
+                                    // ... example of adding a functions via script (note: V8Engine.GlobalObject.Properties will have 'Test' set) ...
 
-                                        Console.WriteLine("\r\n===============================================================================");
-                                        Console.WriteLine("Ready to run the tester, press any key to proceed ...\r\n");
-                                        Console.ReadKey();
-
-                                        tester.Execute();
-
-                                        //Console.WriteLine("\r\n===============================================================================\r\n");
-                                        //Console.WriteLine("Testing garbage collection: Setting 'this.tempObj' to a new managed ...");
-
-                                        //tempObj = JSServer.CreateObject();
-                                        //tempObjID = tempObj.ID;
-                                        //JSServer.DynamicGlobalObject.tempObj = tempObj;
-                                    }
-
-                                    //Console.WriteLine("Triggering the garbage collection ...");
-
-                                    //GC.Collect();
-                                    //GC.WaitForPendingFinalizers();
-
-                                    //Console.WriteLine("Looking for object ...");
-
-                                    //var obj = JSServer.GetObjectByID(tempObjID);
-
-                                    //if (obj != null) throw new Exception("Object was not garbage collected.");
-
-                                    Console.WriteLine("\r\n===============================================================================\r\n");
-                                    Console.WriteLine("Test completed successfully! Any errors would have interrupted execution.");
-                                    Console.WriteLine("Note: The 'dump(obj)' function is available to use for manual inspection.");
-                                    Console.WriteLine("Press any key to dump the global properties ...");
+                                    Console.WriteLine("\r\n===============================================================================");
+                                    Console.WriteLine("Ready to run the tester, press any key to proceed ...\r\n");
                                     Console.ReadKey();
-                                    _JSServer.VerboseConsoleExecute("dump(this);");
-                                };
+
+                                    tester.Execute();
+                                }
+
+                                Console.WriteLine("\r\n===============================================================================\r\n");
+                                Console.WriteLine("Test completed successfully! Any errors would have interrupted execution.");
+                                Console.WriteLine("Note: The 'dump(obj)' function is available to use for manual inspection.");
+                                Console.WriteLine("Press any key to dump the global properties ...");
+                                Console.ReadKey();
+                                _JSServer.VerboseConsoleExecute("dump(this);");
                             }
                             catch
                             {
@@ -267,10 +244,7 @@ namespace V8.Net
                         else if (lcInput == @"\v8gc")
                         {
                             Console.Write("\r\nForcing V8 garbage collection ... ");
-                            _JSServer.WithContextScope = () =>
-                            {
-                                _JSServer.ForceV8GarbageCollection();
-                            };
+                            _JSServer.ForceV8GarbageCollection();
                             Console.WriteLine("Done.\r\n");
                         }
                         else if (lcInput == @"\gctest")
@@ -281,7 +255,6 @@ namespace V8.Net
                             InternalHandle internalHandle = InternalHandle.Empty;
                             int i;
 
-                            _JSServer.WithContextScope = () =>
                             {
                                 Console.WriteLine("Setting 'this.tempObj' to a new managed object ...");
 
@@ -296,8 +269,7 @@ namespace V8.Net
 
                                 Console.WriteLine("Clearing managed references and running the garbage collector ...");
                                 testHandle = null;
-
-                            };
+                            }
 
                             GC.Collect();
                             GC.WaitForPendingFinalizers();
@@ -336,10 +308,10 @@ namespace V8.Net
 
 
                             Console.WriteLine("Forcing V8 garbage collection ... ");
-                            _JSServer.WithContextScope = () => { _JSServer.DynamicGlobalObject.tempObj = null; };
+                            _JSServer.DynamicGlobalObject.tempObj = null;
                             for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
                             {
-                                _JSServer.WithContextScope = _JSServer.ForceV8GarbageCollection;
+                                _JSServer.ForceV8GarbageCollection();
                                 System.Threading.Thread.Sleep(1);
                             }
 
@@ -359,49 +331,47 @@ namespace V8.Net
 
                             Console.WriteLine(Environment.NewLine + "Running the speed tests ... ");
 
-                            _JSServer.WithContextScope = () =>
-                            {
-                                timer.Start();
+                            timer.Start();
 
-                                //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
-                                Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
+                            //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
+                            Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
 
-                                count = 200000000;
+                            count = 200000000;
 
-                                Console.WriteLine("\r\nTesting global property write speed ... ");
-                                startTime = timer.ElapsedMilliseconds;
-                                _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = 0;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
-                                elapsed = timer.ElapsedMilliseconds - startTime;
-                                result1 = (double)elapsed / count;
-                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result1.ToString("0.0#########") + " ms each pass.");
+                            Console.WriteLine("\r\nTesting global property write speed ... ");
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = 0;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result1 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result1.ToString("0.0#########") + " ms each pass.");
 
-                                Console.WriteLine("\r\nTesting global property read speed ... ");
-                                startTime = timer.ElapsedMilliseconds;
-                                _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) n;");
-                                elapsed = timer.ElapsedMilliseconds - startTime;
-                                result2 = (double)elapsed / count;
-                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
+                            Console.WriteLine("\r\nTesting global property read speed ... ");
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) n;");
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result2 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
-                                count = 200000;
+                            count = 200000;
 
-                                Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
-                                _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();
-                                startTime = timer.ElapsedMilliseconds;
-                                _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = 0;");
-                                elapsed = timer.ElapsedMilliseconds - startTime;
-                                result3 = (double)elapsed / count;
-                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result3.ToString("0.0#########") + " ms each pass.");
+                            Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
+                            _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = 0;");
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result3 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result3.ToString("0.0#########") + " ms each pass.");
 
-                                Console.WriteLine("\r\nTesting property read speed on a managed object (with interceptors) ... ");
-                                startTime = timer.ElapsedMilliseconds;
-                                _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) mo.n;");
-                                elapsed = timer.ElapsedMilliseconds - startTime;
-                                result4 = (double)elapsed / count;
-                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result4.ToString("0.0#########") + " ms each pass.");
+                            Console.WriteLine("\r\nTesting property read speed on a managed object (with interceptors) ... ");
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) mo.n;");
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result4 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result4.ToString("0.0#########") + " ms each pass.");
 
-                                Console.WriteLine("\r\nUpdating native properties is {0:N2}x faster than managed ones.", result3 / result1);
-                                Console.WriteLine("\r\nReading native properties is {0:N2}x faster than managed ones.", result4 / result2);
-                            };
+                            Console.WriteLine("\r\nUpdating native properties is {0:N2}x faster than managed ones.", result3 / result1);
+                            Console.WriteLine("\r\nReading native properties is {0:N2}x faster than managed ones.", result4 / result2);
+
                             Console.WriteLine("\r\nDone.\r\n");
                         }
                         else if (lcInput == @"\exit")
@@ -423,25 +393,22 @@ namespace V8.Net
                         }
                         else
                         {
-                            _JSServer.WithContextScope = () =>
+                            Console.WriteLine();
+
+                            try
+                            {
+                                var result = _JSServer.Execute(input, "V8.NET Console");
+                                Console.WriteLine(result.AsString);
+                            }
+                            catch (Exception ex)
                             {
                                 Console.WriteLine();
-
-                                try
-                                {
-                                    var result = _JSServer.Execute(input, "V8.NET Console");
-                                    Console.WriteLine(result.AsString);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine();
-                                    Console.WriteLine();
-                                    Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
-                                    Console.WriteLine();
-                                    Console.WriteLine("Error!  Press any key to continue ...");
-                                    Console.ReadKey();
-                                }
-                            };
+                                Console.WriteLine();
+                                Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
+                                Console.WriteLine();
+                                Console.WriteLine("Error!  Press any key to continue ...");
+                                Console.ReadKey();
+                            }
                         }
                     }
                     catch (Exception ex)

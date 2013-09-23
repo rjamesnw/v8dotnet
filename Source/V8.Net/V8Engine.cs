@@ -150,12 +150,9 @@ namespace V8.Net
 
                 _RegisterEngine(_NativeV8EngineProxy->ID);
 
-                WithIsolateScope = () =>
-                {
-                    _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>();
-                    _GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
-                    GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
-                };
+                _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>();
+                _GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
+                GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
             }
 
             ___V8GarbageCollectionRequestCallback = _V8GarbageCollectionRequestCallback;
@@ -213,30 +210,6 @@ namespace V8.Net
             }
             return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])
         }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        /// <summary>
-        /// Executes the given lambda expression within a basic Handle scope (for non-JavaScript environment related operations, such as simply calling one of the "V8Engine.Create???" value methods).
-        /// While this scope is fine for basic handle operations (such as only creating values), calling engine methods that change the environment/execution context requires 'WithContextScope'.
-        /// This scope is fractionally faster than the context scope because context and isolate scope objects don't need to be created on the stack.
-        /// This scope is not thread safe (because an Isolate it required).
-        /// </summary>
-        public Action WithHandleScope { set { if (value != null) V8NetProxy.WithV8HandleScope(_NativeV8EngineProxy, value); } }
-
-        /// <summary>
-        /// Executes the given lambda expression within the Isolate scope. This implies a thread safe lock scope, and a handle scope (but no context).
-        /// The V8 engine requires JavaScript code to run within Isolate scopes in order to support multiple threads (when used with a lock scope).
-        /// If ever in doubt, use 'WithContextScope' instead, which includes this one.
-        /// </summary>
-        public Action WithIsolateScope { set { if (value != null) V8NetProxy.WithV8IsolateScope(_NativeV8EngineProxy, value); } }
-
-        /// <summary>
-        /// Executes the given lambda expression within the Context scope (the executing environment). This implies both Isolate and Handle scopes as well (so this is also thread safe).
-        /// The V8 engine requires JavaScript code to run within Context scopes, which contains the executing environment (where the global object resides).
-        /// This is required in order to execute scripts. If you are not executing scripts, or changing the executing environment, using 'WithIsolateScope' may be fractionally faster.
-        /// </summary>
-        public Action WithContextScope { set { if (value != null) V8NetProxy.WithV8ContextScope(_NativeV8EngineProxy, value); } }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -393,7 +366,10 @@ namespace V8.Net
         /// </summary>
         /// <param name="className">The "class name" in V8 is the type name returned when "valueOf()" is used on an object. If this is null (default) then 'V8Function' is assumed.</param>
         /// <param name="callbackSource">A delegate to call when the function is executed.</param>
-        public FunctionTemplate CreateFunctionTemplate(string className = null) { return CreateFunctionTemplate<FunctionTemplate>(className); }
+        public FunctionTemplate CreateFunctionTemplate(string className = null)
+        {
+            return CreateFunctionTemplate<FunctionTemplate>(className);
+        }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -562,10 +538,13 @@ namespace V8.Net
         public InternalHandle CreateValue(IEnumerable enumerable, bool ignoreErrors = false)
         {
             var values = (enumerable).Cast<object>().ToArray();
+
             InternalHandle[] handles = new InternalHandle[values.Length];
+
             for (var i = 0; i < values.Length; i++)
                 try { handles[i] = CreateValue(values[i]); }
                 catch (Exception ex) { if (!ignoreErrors) throw ex; }
+
             return CreateArray(handles);
         }
 

@@ -84,11 +84,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-#if V1_1 || V2 || V3 || V3_5
-        public static extern bool DoIdleNotification(NativeV8EngineProxy* engine, int hint);
-#else
         public static extern bool DoIdleNotification(NativeV8EngineProxy* engine, int hint = 1000);
-#endif
 
 #if x86
         [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]

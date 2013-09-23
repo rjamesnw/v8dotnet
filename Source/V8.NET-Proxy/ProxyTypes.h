@@ -442,6 +442,9 @@ public:
 
     ~ObjectTemplateProxy();
 
+    V8EngineProxy* EngineProxy() { return _EngineProxy; }
+    int32_t EngineID() { return _EngineID; }
+
     void RegisterNamedPropertyHandlers(
         ManagedNamedPropertyGetter getter, 
         ManagedNamedPropertySetter setter, 
@@ -511,6 +514,9 @@ public:
 
     FunctionTemplateProxy(V8EngineProxy* engineProxy, uint16_t* className, ManagedJSFunctionCallback managedCallback = nullptr);
     ~FunctionTemplateProxy();
+
+    V8EngineProxy* EngineProxy() { return _EngineProxy; }
+    int32_t EngineID() { return _EngineID; }
 
     void SetManagedCallback(ManagedJSFunctionCallback managedCallback);
 
