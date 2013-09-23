@@ -882,8 +882,8 @@ namespace V8.Net
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-            if (obj is IV8NativeObject || obj is Handle || obj is InternalHandle)
-                return SetProperty(name, (InternalHandle)obj, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+            if (obj is IHandleBased)
+                return SetProperty(name, ((IHandleBased)obj).AsInternalHandle, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
 
             if (obj == null || obj is string || obj.GetType().IsValueType) // TODO: Check enum support.
                 return SetProperty(name, Engine.CreateValue(obj), (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));

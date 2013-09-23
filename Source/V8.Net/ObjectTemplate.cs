@@ -372,7 +372,8 @@ namespace V8.Net
         /// '<seealso cref="UnregisterPropertyInterceptors()"/>' on the object template to make them the same speed as if 'V8Engine.CreateObject()' was used.</para>
         /// </summary>
         /// <typeparam name="T">The type of managed object to create, which must implement 'IV8NativeObject',</typeparam>
-        public T CreateObject<T>() where T : V8NativeObject, new()
+        /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        public T CreateObject<T>(bool initialize = true) where T : V8NativeObject, new()
         {
             if (_NativeObjectTemplateProxy == null)
                 throw new InvalidOperationException("This managed object template is either not initialized, or does not support creating V8 objects.");
@@ -395,7 +396,8 @@ namespace V8.Net
                 throw ex;
             }
 
-            obj.Initialize(false, null);
+            if (initialize)
+                obj.Initialize(false, null);
 
             return (T)obj;
         }
@@ -403,7 +405,8 @@ namespace V8.Net
         /// <summary>
         /// See <see cref="CreateObject<T>()"/>.
         /// </summary>
-        public V8ManagedObject CreateObject() { return CreateObject<V8ManagedObject>(); }
+        /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        public V8ManagedObject CreateObject(bool initialize = true) { return CreateObject<V8ManagedObject>(initialize); }
 
         // --------------------------------------------------------------------------------------------------------------------
 

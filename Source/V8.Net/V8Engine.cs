@@ -410,7 +410,7 @@ namespace V8.Net
         /// </summary>
         /// <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
         /// <param name="v8Object">A handle to a native V8 object.</param>
-        /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created wrapper before returning.</param>
+        /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         internal T _CreateObject<T>(ITemplate template, InternalHandle v8Object, bool initialize = true, bool connectNativeObject = true)
             where T : V8NativeObject, new()
         {
@@ -443,7 +443,7 @@ namespace V8.Net
         /// </summary>
         /// <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
         /// <param name="v8Object">A handle to a native V8 object.</param>
-        /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created wrapper before returning.</param>
+        /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         public T CreateObject<T>(InternalHandle v8Object, bool initialize = true)
             where T : V8NativeObject, new()
         {
