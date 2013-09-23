@@ -2,7 +2,8 @@
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Handle<Value> HandleProxy::Handle() { return _Handle; }
+v8::Handle<Value> HandleProxy::Handle() { return _Handle; }
+v8::Handle<Script> HandleProxy::Script() { return _Script; }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
@@ -71,17 +72,43 @@ HandleProxy* HandleProxy::Initialize(v8::Handle<Value> handle)
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-HandleProxy* HandleProxy::SetHandle(v8::Handle<Value> handle)
+void HandleProxy::_ClearHandleValue()
 {
     if (!_Handle.IsEmpty())
     {
         _Handle.Dispose();
         _Handle.Clear();
     }
+    if (!_Script.IsEmpty())
+    {
+        _Script.Dispose();
+        _Script.Clear();
+    }
+    _Value.Dispose();
+    _Type = JSV_Undefined;
+}
+
+HandleProxy* HandleProxy::SetHandle(v8::Handle<v8::Script> handle)
+{
+    _ClearHandleValue();
+
+    _Script = Persistent<v8::Script>::New(handle);
+    _Type = JSV_Script;
+
+    return this;
+}
+
+HandleProxy* HandleProxy::SetHandle(v8::Handle<Value> handle)
+{
+    _ClearHandleValue();
 
     _Handle = Persistent<Value>::New(handle);
 
-    if (_Handle->IsBoolean())
+    if (_Handle.IsEmpty())
+    {
+        _Type = JSV_Undefined;
+    }
+    else if (_Handle->IsBoolean())
     {
         _Type = JSV_Bool;
     }
@@ -265,13 +292,10 @@ void HandleProxy::_RevivableCallback(Isolate* isolate, Persistent<Value>* object
             dispose = engineProxy->_ManagedV8GarbageCollectionRequestCallback(handleProxy);
     }
 
-    if (dispose) // (Note: the managed callback may have already cached the handle, but the handle value will not be disposed yet)
+    if (dispose) // (Note: the managed callback may have already cached the handle, but the handle *value* will not be disposed yet)
     {
-        if (!handleProxy->_Handle.IsEmpty())
-        {
-            handleProxy->_Handle.Dispose(); // (V8 handle is no longer tracked on the managed side, so let it go within this GC request [better here while idle])
-            handleProxy->_Handle.Clear(); // (no longer valid)
-        }
+        handleProxy->_ClearHandleValue();
+        // (V8 handle is no longer tracked on the managed side, so let it go within this GC request [better here while idle])
     }
 }
 
@@ -279,6 +303,8 @@ void HandleProxy::_RevivableCallback(Isolate* isolate, Persistent<Value>* object
 
 void HandleProxy::UpdateValue()
 {
+    if (_Type < 0 || _Type == JSV_Script) return;
+
     _Value.Dispose();
 
     switch (_Type)
@@ -316,18 +342,18 @@ void HandleProxy::UpdateValue()
         }
         ;case JSV_String:
         {
-            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; 
+            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; // (note: string is not disposed by struct object and becomes owned by this proxy!)
             break;
         }
         ;case JSV_StringObject:
         {
-            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; 
+            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
             break;
         }
         ;case JSV_Date:
         {
             _Value.V8Number = _Handle->NumberValue(); 
-            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; 
+            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
             break;
         }
         ;case JSV_Undefined:
@@ -338,7 +364,7 @@ void HandleProxy::UpdateValue()
         ;default: // (by default, an "object" type is assumed (warning: this includes functions); however, we can't translate it (obviously), so we just return a reference to this handle proxy instead)
         {
             if (!_Handle.IsEmpty())
-                _Value.V8String = _StringItem(_EngineProxy, *_Handle->ToString()).String; 
+                _Value.V8String = _StringItem(_EngineProxy, *_Handle->ToString()).String;
             break;
         }
     }

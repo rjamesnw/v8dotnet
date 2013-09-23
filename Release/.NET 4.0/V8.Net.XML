@@ -220,6 +220,14 @@
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
         </member>
+        <member name="M:V8.Net.V8Engine.Execute(V8.Net.Handle,System.Boolean)">
+            <summary>
+            Executes JavaScript on the V8 engine and returns the result.
+            </summary>
+            <param name="script">The script to run.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        </member>
         <member name="M:V8.Net.V8Engine.ConsoleExecute(System.String,System.String,System.Boolean)">
             <summary>
             Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
@@ -238,6 +246,16 @@
             <param name="script">The script to run.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.Compile(System.String,System.String,System.Boolean)">
+            <summary>
+            Compiles JavaScript on the V8 engine and returns the result.
+            Since V8 JIT-compiles script every time, repeated tasks can take advantage of re-executing pre-compiled scripts for a speed boost.
+            </summary>
+            <param name="script">The script to run.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+            <returns>A handle to the compiled script.</returns>
         </member>
         <member name="M:V8.Net.V8Engine.LoadScript(System.String,System.String,System.Boolean)">
             <summary>

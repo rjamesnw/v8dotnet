@@ -92,16 +92,16 @@ V8EngineProxy::~V8EngineProxy()
         // ... empty all handles to be sure they won't be accessed ...
 
         for (size_t i = 0; i < _Handles.size(); i++)
-            _Handles[i]->_Handle.Dispose();
+            _Handles[i]->_ClearHandleValue();
 
         // ... flag engine as disposed ...
 
-        _DisposedEngines[_EngineID] = true; // (this supports cases where the engine may be deleted while proxy objects are will in memory)
-        // (note: one this flag is set, disposing handles causes the instances to be deleted)
+        _DisposedEngines[_EngineID] = true; // (this supports cases where the engine may be deleted while proxy objects are still in memory)
+        // (note: once this flag is set, disposing handles causes the proxy instances to be deleted immediately [instead of caching])
 
         // ... deleted disposed proxy handles ...
 
-        // At this point the disposed proxy handles are no longer associated with managed handles, so the engine is now responsible to delete them)
+        // At this point the *disposed* (and hence, *cached*) proxy handles are no longer associated with managed handles, so the engine is now responsible to delete them)
         for (size_t i = 0; i < _DisposedHandles.size(); i++)
             _Handles[_DisposedHandles[i]]->_Dispose(false); // (engine is flagged as disposed, so this call will only delete the instance)
 
@@ -112,6 +112,8 @@ V8EngineProxy::~V8EngineProxy()
 
         _Isolate->Dispose();
         _Isolate = nullptr;
+
+        // ... free the string cache ...
 
         for (size_t i = 0; i < _Strings.size(); i++)
             _Strings[i].Free();
@@ -312,7 +314,7 @@ Local<String> _GetErrorMessage(TryCatch &tryCatch)
     return msg;
 }
 
-HandleProxy* V8EngineProxy::Execute(uint16_t* script, uint16_t* sourceName)
+HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName)
 {
     HandleProxy *returnVal = nullptr;
 
@@ -332,15 +334,71 @@ HandleProxy* V8EngineProxy::Execute(uint16_t* script, uint16_t* sourceName)
             returnVal->_Type = JSV_CompilerError;
         }
         else
-        {
-            auto result = compiledScript->Run();
+            returnVal = Execute(compiledScript);
+    }
+    catch (exception ex)
+    {
+        returnVal = GetHandleProxy(String::New(ex.what()));
+        returnVal->_Type = JSV_InternalError;
+    }
 
-            if (__tryCatch.HasCaught())
-            {
-                returnVal = GetHandleProxy(_GetErrorMessage(__tryCatch));
-                returnVal->_Type = JSV_ExecutionError;
-            }
-            else  returnVal = GetHandleProxy(result);
+    return returnVal;
+}
+
+HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
+{
+    HandleProxy *returnVal = nullptr;
+
+    try
+    {
+
+        TryCatch __tryCatch;
+        //__tryCatch.SetVerbose(true);
+
+        auto result = script->Run();
+
+        if (__tryCatch.HasCaught())
+        {
+            returnVal = GetHandleProxy(_GetErrorMessage(__tryCatch));
+            returnVal->_Type = JSV_ExecutionError;
+        }
+        else  returnVal = GetHandleProxy(result);
+    }
+    catch (exception ex)
+    {
+        returnVal = GetHandleProxy(String::New(ex.what()));
+        returnVal->_Type = JSV_InternalError;
+    }
+
+    return returnVal;
+}
+
+HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName)
+{
+    HandleProxy *returnVal = nullptr;
+
+    try
+    {
+
+        TryCatch __tryCatch;
+        //__tryCatch.SetVerbose(true);
+
+        if (sourceName == nullptr) sourceName = (uint16_t*)L"";
+
+        auto hScript = String::New(script);
+
+        auto compiledScript = Script::Compile(hScript, String::New(sourceName));
+
+        if (__tryCatch.HasCaught())
+        {
+            returnVal = GetHandleProxy(_GetErrorMessage(__tryCatch));
+            returnVal->_Type = JSV_CompilerError;
+        }
+        else
+        {
+            returnVal = GetHandleProxy(Handle<Value>());
+            returnVal->SetHandle(compiledScript);
+            returnVal->_Value.V8String = _StringItem(this, *hScript).String;
         }
     }
     catch (exception ex)
@@ -369,18 +427,26 @@ HandleProxy* V8EngineProxy::CreateBoolean(bool b)
     return GetHandleProxy(v8::Boolean::New(b));
 }
 
-HandleProxy* V8EngineProxy::CreateString(uint16_t* str) 
+HandleProxy* V8EngineProxy::CreateString(const uint16_t* str) 
 { 
     return GetHandleProxy(v8::String::New(str)); 
 }
 
-HandleProxy* V8EngineProxy::CreateError(uint16_t* message, JSValueType errorType) 
+HandleProxy* V8EngineProxy::CreateError(const uint16_t* message, JSValueType errorType) 
 { 
     if (errorType >= 0) throw exception("Invalid error type.");
     auto h = GetHandleProxy(v8::String::New(message)); 
     h->_Type = errorType;
     return h;
 }
+HandleProxy* V8EngineProxy::CreateError(const char* message, JSValueType errorType)
+{
+    if (errorType >= 0) throw exception("Invalid error type.");
+    auto h = GetHandleProxy(String::New(message));
+    h->_Type = errorType;
+    return h;
+}
+
 
 HandleProxy* V8EngineProxy::CreateDate(double ms) 
 { 

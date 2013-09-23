@@ -97,11 +97,25 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
 #endif
-#if V1_1 || V2 || V3 || V3_5
-        public static extern HandleProxy* V8Execute(NativeV8EngineProxy* engine, string script, string sourceName);
-#else
         public static extern HandleProxy* V8Execute(NativeV8EngineProxy* engine, string script, string sourceName = null);
+
+#if x86
+        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
+#elif x64
+        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
+#else
+        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
 #endif
+        public static extern HandleProxy* V8Compile(NativeV8EngineProxy* engine, string script, string sourceName = null);
+
+#if x86
+        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
+#elif x64
+        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
+#else
+        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
+#endif
+        public static extern HandleProxy* V8ExecuteCompiledScript(NativeV8EngineProxy* engine, HandleProxy* script);
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
