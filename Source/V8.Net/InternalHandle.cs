@@ -870,8 +870,8 @@ namespace V8.Net
         /// the specified property name.
         /// Returns true if successful.
         /// </summary>
-        /// <param name="name">The property name.</param>
-        /// <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types.</param>
+        /// <param name="name">The property name. If 'null', then the name of the object type is assumed.</param>
+        /// <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types, unless the object is already a handle, in which case it is set directly.</param>
         /// <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
         /// <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
         /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
@@ -881,6 +881,11 @@ namespace V8.Net
         public bool SetProperty(string name, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
+
+            if (name.IsNullOrWhiteSpace())
+                if (obj == null) throw new InvalidOperationException("You cannot pass 'null' without a valid property name.");
+                else
+                    name = obj.GetType().Name;
 
             if (obj is IHandleBased)
                 return SetProperty(name, ((IHandleBased)obj).AsInternalHandle, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
