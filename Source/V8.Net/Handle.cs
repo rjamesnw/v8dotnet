@@ -92,6 +92,141 @@ namespace V8.Net
     // ========================================================================================================================
 
     /// <summary>
+    /// The basic handle interface is a higher level interface that implements members that can be common to many handle types for various 3rd-party script
+    /// implementations.  It's primary purpose is to support the DreamSpace.NET development framework, which can support various scripting engines, and is
+    /// designed to be non-V8.NET specific.  Third-party scripts should implement this interface for their handles, or create and return value wrappers that
+    /// implement this interface.
+    /// </summary>
+    public interface IBasicHandle : IDisposable, IConvertible
+    {
+        /// <summary>
+        /// Returns the underlying value of this handle.
+        /// If the handle represents an object, the the object OR a value represented by the object is returned.
+        /// </summary>
+        object Value { get; }
+
+        /// <summary>
+        /// Returns the underlying object associated with this handle.
+        /// This exists because 'Value' my not return the underlying object, depending on implementation.
+        /// </summary>
+        object Object { get; }
+
+        /// <summary>
+        /// Returns true if this handle is associated with a CLR object.
+        /// </summary>
+        bool HasObject { get; }
+
+        /// <summary>
+        /// Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists.
+        /// <para>An empty state is when a handle is set to 'Handle.Empty' and has no valid native V8 handle assigned.
+        /// This is similar to "undefined"; however, this property will be true if a valid native V8 handle exists that is set to "undefined".</para>
+        /// </summary>
+        bool IsEmpty { get; }
+
+        /// <summary>
+        /// Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty').
+        /// <para>"Undefined" does not mean "null".  A variable (handle) can be defined and set to "null".</para>
+        /// </summary>
+        bool IsUndefined { get; }
+
+        /// <summary>
+        /// Returns 'true' if this handle represents a 'null' value (that is, an explicitly defined 'null' value).
+        /// This will return 'false' if 'IsEmpty' or 'IsUndefined' is true.
+        /// </summary>
+        bool IsNull { get; }
+
+        /// <summary>
+        /// The handle represents a Boolean value.
+        /// </summary>
+        bool IsBoolean { get; }
+
+        /// <summary>
+        /// The handle represents an Int32 value.
+        /// </summary>
+        bool IsInt32 { get; }
+
+        /// <summary>
+        /// The handle represents a number value.
+        /// </summary>
+        bool IsNumber { get; }
+
+        /// <summary>
+        /// The handle represents a string value.
+        /// </summary>
+        bool IsString { get; }
+
+        /// <summary>
+        /// The handle represents a *script* object.
+        /// </summary>
+        bool IsObject { get; }
+
+        /// <summary>
+        /// The handle represents a function/procedure/method value.
+        /// </summary>
+        bool IsFunction { get; }
+
+        /// <summary>
+        /// The handle represents a date value.
+        /// </summary>
+        bool IsDate { get; }
+
+        /// <summary>
+        /// The handle represents an array object.
+        /// </summary>
+        bool IsArray { get; }
+
+        /// <summary>
+        /// The handle represents a regular expression object.
+        /// </summary>
+        bool IsRegExp { get; }
+
+        /// <summary>
+        /// Returns true of the handle represents ANY *script* object type.
+        /// </summary>
+        bool IsObjectType { get; }
+        
+        /// <summary>
+        /// Returns true of this handle represents an error.
+        /// </summary>
+        bool IsError { get; }
+
+        /// <summary>
+        /// Returns the 'Value' property type cast to the expected type.
+        /// Warning: No conversion is made between different value types.
+        /// </summary>
+        DerivedType As<DerivedType>();
+
+        /// Returns the 'LastValue' property type cast to the expected type.
+        /// Warning: No conversion is made between different value types.
+        DerivedType LastAs<DerivedType>();
+
+        /// <summary>
+        /// Returns the underlying value converted if necessary to a Boolean type.
+        /// </summary>
+        bool AsBoolean { get; }
+
+        /// <summary>
+        /// Returns the underlying value converted if necessary to an Int32 type.
+        /// </summary>
+        Int32 AsInt32 { get; }
+
+        /// <summary>
+        /// Returns the underlying value converted if necessary to a double type.
+        /// </summary>
+        double AsDouble { get; }
+
+        /// <summary>
+        /// Returns the underlying value converted if necessary to a string type.
+        /// </summary>
+        String AsString { get; }
+
+        /// <summary>
+        /// Returns the underlying value converted if necessary to a DateTime type.
+        /// </summary>
+        DateTime AsDate { get; }
+    }
+
+    /// <summary>
     /// Represents a handle type for tracking native objects.
     /// </summary>
     public interface IHandle
@@ -157,7 +292,7 @@ namespace V8.Net
     /// Another benefit is that thread locking is required for heap memory allocation (for obvious reasons), so stack allocation is faster within a
     /// multi-threaded context.</para>
     /// </summary>
-    public unsafe class Handle : IHandle, IHandleBased, IDynamicMetaObjectProvider, IDisposable, IConvertible, IFinalizable
+    public unsafe class Handle : IHandle, IHandleBased, IDynamicMetaObjectProvider, IBasicHandle, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -396,6 +531,8 @@ namespace V8.Net
         /// Bound objects are usually custom user objects (non-V8.NET objects) wrapped in ObjectBinder instances.
         /// </summary>
         public object BoundObject { get { return _Handle.BoundObject; } }
+
+        object IBasicHandle.Object { get { return BoundObject ?? Object; } }
 
         /// <summary>
         /// Returns the registered type ID for objects that represent registered CLR types.

@@ -165,7 +165,7 @@ namespace V8.Net
 
         ~V8Engine()
         {
-            PauseWorker(); // (will return only when it has successfully paused)
+            TerminateWorker(); // (will return only when it has successfully paused)
 
             if (_NativeV8EngineProxy != null)
                 V8NetProxy.DestroyV8EngineProxy(_NativeV8EngineProxy);
@@ -301,13 +301,13 @@ namespace V8.Net
         /// <param name="scriptFile">The script file to load.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
-        public Handle LoadScript(string scriptFile, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public Handle LoadScript(string scriptFile, string sourceName = null, bool throwExceptionOnError = false)
         {
             Handle result;
             try
             {
                 var jsText = File.ReadAllText(scriptFile);
-                result = Execute(jsText, sourceName, throwExceptionOnError);
+                result = Execute(jsText, sourceName ?? scriptFile, throwExceptionOnError);
                 if (throwExceptionOnError)
                     result.ThrowOnError();
             }
@@ -321,6 +321,32 @@ namespace V8.Net
             return result;
         }
 
+        /// <summary>
+        /// Loads a JavaScript file from the current working directory (or specified absolute path) and compiles it in the V8 engine, then returns the compiled script.
+        /// You will need to call 'Execute(...)' with the script handle to execute it.
+        /// </summary>
+        /// <param name="scriptFile">The script file to load.</param>
+        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+        /// <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
+        public Handle LoadScriptCompiled(string scriptFile, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        {
+            Handle result;
+            try
+            {
+                var jsText = File.ReadAllText(scriptFile);
+                result = Compile(jsText, sourceName, throwExceptionOnError);
+                if (throwExceptionOnError)
+                    result.ThrowOnError();
+            }
+            catch (Exception ex)
+            {
+                if (throwExceptionOnError)
+                    throw ex;
+                result = CreateValue(Exceptions.GetFullErrorMessage(ex));
+                result._Handle._HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+            }
+            return result;
+        }
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
