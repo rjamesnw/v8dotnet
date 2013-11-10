@@ -61,6 +61,7 @@ namespace V8.Net
             while (true)
             {
                 if (_PauseWorker == 1) _PauseWorker = 2;
+                else if (_PauseWorker == -1) break;
                 else
                 {
                     workPending = _WeakObjects.Count > 0 || _ObjectsToFinalize.Count > 0;
@@ -75,6 +76,8 @@ namespace V8.Net
                 Thread.Sleep(100);
                 DoIdleNotification(100);
             }
+
+            _PauseWorker = -2;
         }
 
         /// <summary>
@@ -138,8 +141,23 @@ namespace V8.Net
         /// </summary>
         public void PauseWorker()
         {
-            _PauseWorker = 1;
-            while (_PauseWorker == 1) { }
+            if (_Worker.IsAlive)
+            {
+                _PauseWorker = 1;
+                while (_PauseWorker == 1 && _Worker.IsAlive) { }
+            }
+        }
+
+        /// <summary>
+        /// Pauses the worker thread (usually for debug purposes). The worker thread clears out orphaned object entries (mainly).
+        /// </summary>
+        public void TerminateWorker()
+        {
+            if (_Worker.IsAlive)
+            {
+                _PauseWorker = -1;
+                while (_PauseWorker == -1 && _Worker.IsAlive) { }
+            }
         }
 
         /// <summary>

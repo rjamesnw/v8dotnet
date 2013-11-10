@@ -4,6 +4,140 @@
         <name>V8.Net</name>
     </assembly>
     <members>
+        <member name="T:V8.Net.IBasicHandle">
+            <summary>
+            The basic handle interface is a higher level interface that implements members that can be common to many handle types for various 3rd-party script
+            implementations.  It's primary purpose is to support the DreamSpace.NET development framework, which can support various scripting engines, and is
+            designed to be non-V8.NET specific.  Third-party scripts should implement this interface for their handles, or create and return value wrappers that
+            implement this interface.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IBasicHandle.As``1">
+            <summary>
+            Returns the 'Value' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IBasicHandle.LastAs``1">
+            Returns the 'LastValue' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+        </member>
+        <member name="P:V8.Net.IBasicHandle.Value">
+            <summary>
+            Returns the underlying value of this handle.
+            If the handle represents an object, the the object OR a value represented by the object is returned.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.Object">
+            <summary>
+            Returns the underlying object associated with this handle.
+            This exists because 'Value' my not return the underlying object, depending on implementation.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.HasObject">
+            <summary>
+            Returns true if this handle is associated with a CLR object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsEmpty">
+            <summary>
+            Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists.
+            <para>An empty state is when a handle is set to 'Handle.Empty' and has no valid native V8 handle assigned.
+            This is similar to "undefined"; however, this property will be true if a valid native V8 handle exists that is set to "undefined".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsUndefined">
+            <summary>
+            Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty').
+            <para>"Undefined" does not mean "null".  A variable (handle) can be defined and set to "null".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsNull">
+            <summary>
+            Returns 'true' if this handle represents a 'null' value (that is, an explicitly defined 'null' value).
+            This will return 'false' if 'IsEmpty' or 'IsUndefined' is true.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsBoolean">
+            <summary>
+            The handle represents a Boolean value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsInt32">
+            <summary>
+            The handle represents an Int32 value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsNumber">
+            <summary>
+            The handle represents a number value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsString">
+            <summary>
+            The handle represents a string value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsObject">
+            <summary>
+            The handle represents a *script* object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsFunction">
+            <summary>
+            The handle represents a function/procedure/method value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsDate">
+            <summary>
+            The handle represents a date value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsArray">
+            <summary>
+            The handle represents an array object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsRegExp">
+            <summary>
+            The handle represents a regular expression object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsObjectType">
+            <summary>
+            Returns true of the handle represents ANY *script* object type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsError">
+            <summary>
+            Returns true of this handle represents an error.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsBoolean">
+            <summary>
+            Returns the underlying value converted if necessary to a Boolean type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsInt32">
+            <summary>
+            Returns the underlying value converted if necessary to an Int32 type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsDouble">
+            <summary>
+            Returns the underlying value converted if necessary to a double type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsString">
+            <summary>
+            Returns the underlying value converted if necessary to a string type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsDate">
+            <summary>
+            Returns the underlying value converted if necessary to a DateTime type.
+            </summary>
+        </member>
         <member name="T:V8.Net.IHandle">
             <summary>
             Represents a handle type for tracking native objects.
@@ -1070,6 +1204,11 @@
             Pauses the worker thread (usually for debug purposes). The worker thread clears out orphaned object entries (mainly).
             </summary>
         </member>
+        <member name="M:V8.Net.V8Engine.TerminateWorker">
+            <summary>
+            Pauses the worker thread (usually for debug purposes). The worker thread clears out orphaned object entries (mainly).
+            </summary>
+        </member>
         <member name="M:V8.Net.V8Engine.ResumeWorker">
             <summary>
             Unpauses the worker thread (see <see cref="M:V8.Net.V8Engine.PauseWorker"/>).
@@ -1205,6 +1344,15 @@
         <member name="M:V8.Net.V8Engine.LoadScript(System.String,System.String,System.Boolean)">
             <summary>
             Loads a JavaScript file from the current working directory (or specified absolute path) and executes it in the V8 engine, then returns the result.
+            </summary>
+            <param name="scriptFile">The script file to load.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.LoadScriptCompiled(System.String,System.String,System.Boolean)">
+            <summary>
+            Loads a JavaScript file from the current working directory (or specified absolute path) and compiles it in the V8 engine, then returns the compiled script.
+            You will need to call 'Execute(...)' with the script handle to execute it.
             </summary>
             <param name="scriptFile">The script file to load.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>

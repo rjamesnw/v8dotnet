@@ -1,6 +1,6 @@
  V8_Net_Proxy_x86
 
- Timestamp is 5240b707 (Mon Sep 23 17:47:51 2013)
+ Timestamp is 5243020a (Wed Sep 25 11:32:26 2013)
 
  Preferred load address is 10000000
 
@@ -117,29 +117,29 @@
  0001:000043f0       ?GetManagedObjectID@HandleProxy@@QAEHXZ 100053f0 f   HandleProxy.obj
  0001:00004560       ?_RevivableCallback@HandleProxy@@CAXPAVIsolate@v8@@PAV?$Persistent@VValue@v8@@@3@PAU1@@Z 10005560 f   HandleProxy.obj
  0001:000045e0       ?UpdateValue@HandleProxy@@QAEXXZ 100055e0 f   HandleProxy.obj
- 0001:00004730       ??1?$lock_guard@Vrecursive_mutex@std@@@std@@QAE@XZ 10005730 f i HandleProxy.obj
- 0001:00004750       ??0ManagedAccessorInfo@@QAE@PAVObjectTemplateProxy@@HABV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 10005750 f i ObjectTemplateProxy.obj
- 0001:000047a0       ??0ObjectTemplateProxy@@QAE@PAVV8EngineProxy@@@Z 100057a0 f   ObjectTemplateProxy.obj
- 0001:00004830       ??0ObjectTemplateProxy@@QAE@PAVV8EngineProxy@@V?$Local@VObjectTemplate@v8@@@v8@@@Z 10005830 f   ObjectTemplateProxy.obj
- 0001:000048c0       ??1ObjectTemplateProxy@@QAE@XZ 100058c0 f   ObjectTemplateProxy.obj
- 0001:000049f0       ?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 100059f0 f   ObjectTemplateProxy.obj
- 0001:00004b70       ?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 10005b70 f   ObjectTemplateProxy.obj
- 0001:00004d10       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 10005d10 f   ObjectTemplateProxy.obj
- 0001:00004e60       ?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 10005e60 f   ObjectTemplateProxy.obj
- 0001:00004fc0       ?GetPropertyNames@ObjectTemplateProxy@@SAXABV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 10005fc0 f   ObjectTemplateProxy.obj
- 0001:00005140       ?GetProperty@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 10006140 f   ObjectTemplateProxy.obj
- 0001:00005290       ?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 10006290 f   ObjectTemplateProxy.obj
- 0001:00005400       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 10006400 f   ObjectTemplateProxy.obj
- 0001:00005530       ?DeleteProperty@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 10006530 f   ObjectTemplateProxy.obj
- 0001:00005670       ?GetPropertyIndices@ObjectTemplateProxy@@SAXABV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 10006670 f   ObjectTemplateProxy.obj
- 0001:000057f0       ?AccessorGetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 100067f0 f   ObjectTemplateProxy.obj
- 0001:00005950       ?AccessorSetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@ABV?$PropertyCallbackInfo@X@3@@Z 10006950 f   ObjectTemplateProxy.obj
- 0001:00005a80       ?SetAccessor@ObjectTemplateProxy@@QAEXHPBGP6GPAUHandleProxy@@PAU2@PAG@ZP6GPAU2@121@ZW4AccessControl@v8@@W4PropertyAttribute@4@@Z 10006a80 f   ObjectTemplateProxy.obj
- 0001:00005b40       ??3@YAXPAX0@Z              10006b40 f i V8EngineProxy.obj
- 0001:00005b50       ??1_Mutex_base@std@@QAE@XZ 10006b50 f i V8EngineProxy.obj
- 0001:00005b60       ??0_StringItem@@QAE@PAVV8EngineProxy@@PAVString@v8@@@Z 10006b60 f   V8EngineProxy.obj
- 0001:00005bb0       ??0V8EngineProxy@@QAE@_NP6AXXZH@Z 10006bb0 f   V8EngineProxy.obj
- 0001:00005db0       ??1recursive_mutex@std@@QAE@XZ 10006db0 f i V8EngineProxy.obj
+ 0001:00004740       ??1?$lock_guard@Vrecursive_mutex@std@@@std@@QAE@XZ 10005740 f i HandleProxy.obj
+ 0001:00004760       ??0ManagedAccessorInfo@@QAE@PAVObjectTemplateProxy@@HABV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 10005760 f i ObjectTemplateProxy.obj
+ 0001:000047b0       ??0ObjectTemplateProxy@@QAE@PAVV8EngineProxy@@@Z 100057b0 f   ObjectTemplateProxy.obj
+ 0001:00004840       ??0ObjectTemplateProxy@@QAE@PAVV8EngineProxy@@V?$Local@VObjectTemplate@v8@@@v8@@@Z 10005840 f   ObjectTemplateProxy.obj
+ 0001:000048d0       ??1ObjectTemplateProxy@@QAE@XZ 100058d0 f   ObjectTemplateProxy.obj
+ 0001:00004a00       ?GetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 10005a00 f   ObjectTemplateProxy.obj
+ 0001:00004b80       ?SetProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 10005b80 f   ObjectTemplateProxy.obj
+ 0001:00004d20       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VInteger@v8@@@3@@Z 10005d20 f   ObjectTemplateProxy.obj
+ 0001:00004e70       ?DeleteProperty@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VBoolean@v8@@@3@@Z 10005e70 f   ObjectTemplateProxy.obj
+ 0001:00004fd0       ?GetPropertyNames@ObjectTemplateProxy@@SAXABV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 10005fd0 f   ObjectTemplateProxy.obj
+ 0001:00005150       ?GetProperty@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VValue@v8@@@v8@@@Z 10006150 f   ObjectTemplateProxy.obj
+ 0001:000052a0       ?SetProperty@ObjectTemplateProxy@@SAXIV?$Local@VValue@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 100062a0 f   ObjectTemplateProxy.obj
+ 0001:00005410       ?GetPropertyAttributes@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VInteger@v8@@@v8@@@Z 10006410 f   ObjectTemplateProxy.obj
+ 0001:00005540       ?DeleteProperty@ObjectTemplateProxy@@SAXIABV?$PropertyCallbackInfo@VBoolean@v8@@@v8@@@Z 10006540 f   ObjectTemplateProxy.obj
+ 0001:00005680       ?GetPropertyIndices@ObjectTemplateProxy@@SAXABV?$PropertyCallbackInfo@VArray@v8@@@v8@@@Z 10006680 f   ObjectTemplateProxy.obj
+ 0001:00005800       ?AccessorGetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@ABV?$PropertyCallbackInfo@VValue@v8@@@3@@Z 10006800 f   ObjectTemplateProxy.obj
+ 0001:00005960       ?AccessorSetterCallbackProxy@ObjectTemplateProxy@@SAXV?$Local@VString@v8@@@v8@@V?$Local@VValue@v8@@@3@ABV?$PropertyCallbackInfo@X@3@@Z 10006960 f   ObjectTemplateProxy.obj
+ 0001:00005a90       ?SetAccessor@ObjectTemplateProxy@@QAEXHPBGP6GPAUHandleProxy@@PAU2@PAG@ZP6GPAU2@121@ZW4AccessControl@v8@@W4PropertyAttribute@4@@Z 10006a90 f   ObjectTemplateProxy.obj
+ 0001:00005b50       ??3@YAXPAX0@Z              10006b50 f i V8EngineProxy.obj
+ 0001:00005b60       ??1_Mutex_base@std@@QAE@XZ 10006b60 f i V8EngineProxy.obj
+ 0001:00005b70       ??0_StringItem@@QAE@PAVV8EngineProxy@@PAVString@v8@@@Z 10006b70 f   V8EngineProxy.obj
+ 0001:00005bc0       ??0V8EngineProxy@@QAE@_NP6AXXZH@Z 10006bc0 f   V8EngineProxy.obj
+ 0001:00005dc0       ??1recursive_mutex@std@@QAE@XZ 10006dc0 f i V8EngineProxy.obj
  0001:00005e10       ??1V8EngineProxy@@QAE@XZ   10006e10 f   V8EngineProxy.obj
  0001:00006110       ?GetNativeString@V8EngineProxy@@QAE?AU_StringItem@@PAVString@v8@@@Z 10007110 f   V8EngineProxy.obj
  0001:00006200       ?GetHandleProxy@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VValue@v8@@@v8@@@Z 10007200 f   V8EngineProxy.obj
@@ -658,7 +658,7 @@
  0000:fffec000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
  0000:fffec000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
  0000:fffec000       .debug$S                   10000000     v8-ia32:v8-ia32.dll
- 0001:000046f0       $LN84                      100056f0     * CIL library *:* CIL module *
+ 0001:00004704       $LN84                      10005704     * CIL library *:* CIL module *
  0001:0000699d       __catch$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@PBGPAG@Z$0 1000799d f   * CIL library *:* CIL module *
  0001:00006ace       __catch$?Execute@V8EngineProxy@@QAEPAUHandleProxy@@V?$Handle@VScript@v8@@@v8@@@Z$0 10007ace f   * CIL library *:* CIL module *
  0001:00006c66       __catch$?Compile@V8EngineProxy@@QAEPAUHandleProxy@@PBGPAG@Z$0 10007c66 f   * CIL library *:* CIL module *

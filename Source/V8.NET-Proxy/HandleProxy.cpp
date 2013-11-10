@@ -303,7 +303,7 @@ void HandleProxy::_RevivableCallback(Isolate* isolate, Persistent<Value>* object
 
 void HandleProxy::UpdateValue()
 {
-    if (_Type < 0 || _Type == JSV_Script) return;
+    if (_Type == JSV_Script) return;
 
     _Value.Dispose();
 

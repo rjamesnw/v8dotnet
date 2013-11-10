@@ -20,9 +20,8 @@ namespace V8.Net
     public unsafe struct InternalHandle :
         IHandle, IHandleBased,
         IV8Object,
-        IDisposable, // ('IDisposable' will not box in a "using" statement: http://stackoverflow.com/questions/2412981/if-my-struct-implements-idisposable-will-it-be-boxed-when-used-in-a-using-statem)
-        IDynamicMetaObjectProvider,
-        IConvertible
+        IBasicHandle, // ('IDisposable' will not box in a "using" statement: http://stackoverflow.com/questions/2412981/if-my-struct-implements-idisposable-will-it-be-boxed-when-used-in-a-using-statem)
+        IDynamicMetaObjectProvider
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -369,6 +368,8 @@ namespace V8.Net
         /// Bound objects are usually custom user objects (non-V8.NET objects) wrapped in ObjectBinder instances.
         /// </summary>
         public object BoundObject { get { return BindingMode == BindingMode.Instance ? ((ObjectBinder)Object).Object : null; } }
+
+        object IBasicHandle.Object { get { return BoundObject ?? Object; } }
 
         /// <summary>
         /// Returns the registered type ID for objects that represent registered CLR types.
