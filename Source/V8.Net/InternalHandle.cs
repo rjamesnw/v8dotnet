@@ -159,25 +159,29 @@ namespace V8.Net
 
         internal void _Dispose(bool inFinalizer)
         {
-            if (_HandleProxy != null && _HandleProxy->ManagedReferenceCount > 0)
+            if (_HandleProxy != null)
             {
-                if (_HandleProxy->ManagedReferenceCount == 1 && _HandleProxy->_ObjectID >= 0 && !IsInPendingDisposalQueue)
+                if (_HandleProxy->ManagedReferenceCount > 0)
                 {
-                    // (if this handle directly references a managed object, then notify the object info that it is weak if the ref count is 1)
-                    var weakRef = Engine._GetObjectWeakReference(_HandleProxy->_ObjectID);
-                    if (weakRef != null)
-                        weakRef.Object._TryDisposeNativeHandle();
-                }
-                else
-                {
-                    _HandleProxy->ManagedReferenceCount--;
+                    if (_HandleProxy->ManagedReferenceCount == 1 && _HandleProxy->_ObjectID >= 0 && !IsInPendingDisposalQueue)
+                    {
+                        // (if this handle directly references a managed object, then notify the object info that it is weak if the ref count is 1)
+                        var weakRef = Engine._GetObjectWeakReference(_HandleProxy->_ObjectID);
+                        if (weakRef != null)
+                            weakRef.Object._TryDisposeNativeHandle();
+                    }
+                    else
+                    {
+                        _HandleProxy->ManagedReferenceCount--;
 
-                    if (_HandleProxy->ManagedReferenceCount == 0)
-                        __TryDispose();
+                        if (_HandleProxy->ManagedReferenceCount == 0)
+                            __TryDispose();
 
-                    _First = false;
-                    _HandleProxy = null;
+                    }
                 }
+                else __TryDispose(); // (no other references, so try to dispose now)
+                _First = false;
+                _HandleProxy = null;
             }
         }
 
@@ -504,10 +508,10 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Returns true if this handle is weak AND is associated with a weak managed object reference.
+        /// Returns true if this handle has no references (usually a primitive type), or is weak AND is associated with a weak managed object reference.
         /// When a handle is ready to be disposed, then calling "Dispose()" will succeed and cause the handle to be placed back into the cache on the native side.
         /// </summary>
-        public bool IsDisposeReady { get { return IsWeakHandle && IsWeakManagedObject; } }
+        public bool IsDisposeReady { get { return _HandleProxy != null && _HandleProxy->ManagedReferenceCount == 0 || IsWeakHandle && IsWeakManagedObject; } }
 
         /// <summary>
         /// Attempts to dispose of this handle (add it back into the native proxy cache for reuse).  If the handle represents a managed object with strong
