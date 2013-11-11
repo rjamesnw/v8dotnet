@@ -997,7 +997,7 @@
         </member>
         <member name="P:V8.Net.InternalHandle.IsDisposeReady">
             <summary>
-            Returns true if this handle is weak AND is associated with a weak managed object reference.
+            Returns true if this handle has no references (usually a primitive type), or is weak AND is associated with a weak managed object reference.
             When a handle is ready to be disposed, then calling "Dispose()" will succeed and cause the handle to be placed back into the cache on the native side.
             </summary>
         </member>

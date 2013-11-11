@@ -165,7 +165,7 @@ namespace V8.Net
 
         ~V8Engine()
         {
-            TerminateWorker(); // (will return only when it has successfully paused)
+            TerminateWorker(); // (will return only when it has successfully terminated)
 
             if (_NativeV8EngineProxy != null)
                 V8NetProxy.DestroyV8EngineProxy(_NativeV8EngineProxy);
