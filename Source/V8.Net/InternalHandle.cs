@@ -163,9 +163,9 @@ namespace V8.Net
             {
                 if (_HandleProxy->ManagedReferenceCount > 0)
                 {
+                    // (if this handle directly references a managed object, then notify the object info that it is weak if the handle ref count is 1)
                     if (_HandleProxy->ManagedReferenceCount == 1 && _HandleProxy->_ObjectID >= 0 && !IsInPendingDisposalQueue)
                     {
-                        // (if this handle directly references a managed object, then notify the object info that it is weak if the ref count is 1)
                         var weakRef = Engine._GetObjectWeakReference(_HandleProxy->_ObjectID);
                         if (weakRef != null)
                             weakRef.Object._TryDisposeNativeHandle();
@@ -175,13 +175,20 @@ namespace V8.Net
                         _HandleProxy->ManagedReferenceCount--;
 
                         if (_HandleProxy->ManagedReferenceCount == 0)
+                        {
                             __TryDispose();
+                            _First = false;
+                            _HandleProxy = null;
+                        }
 
                     }
                 }
-                else __TryDispose(); // (no other references, so try to dispose now)
-                _First = false;
-                _HandleProxy = null;
+                else
+                {
+                    __TryDispose(); // (no other references, so try to dispose now)
+                    _First = false;
+                    _HandleProxy = null;
+                }
             }
         }
 
@@ -548,6 +555,33 @@ namespace V8.Net
 
                 GC.RemoveMemoryPressure((Marshal.SizeOf(typeof(HandleProxy))));
             }
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
+        /// place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
+        /// any associated handles later.  The released object is returned, or null if there is no object.
+        /// </summary>
+        /// <returns>The object released.</returns>
+        public V8NativeObject ReleaseManagedObject()
+        {
+            if (IsObjectType && ObjectID >= 0)
+                lock (Engine._Objects)
+                {
+                    var weakRef = Engine._Objects[ObjectID];
+                    if (weakRef != null)
+                    {
+                        var obj = weakRef.Object;
+                        var placeHolder = new V8NativeObject();
+                        placeHolder.Handle = obj.Handle;
+                        weakRef.SetTarget(placeHolder);
+                        obj.Handle = ObjectHandle.Empty;
+                        return obj;
+                    }
+                }
+            return null;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

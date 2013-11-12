@@ -254,6 +254,14 @@
             <para>Note: A disposed native handle is simply cached for reuse, and always points back to the same managed handle.</para>
             </summary>
         </member>
+        <member name="M:V8.Net.Handle.ReleaseManagedObject">
+            <summary>
+            Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
+            place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
+            any associated handles later.  The released object is returned, or null if there is no object.
+            </summary>
+            <returns>The object released.</returns>
+        </member>
         <member name="M:V8.Net.Handle.As``1">
             <summary>
             Returns the 'Value' property type cast to the expected type.
@@ -753,6 +761,14 @@
             Completes the disposal of the native handle.
             <para>Note: A disposed native handle is simply cached for reuse, and always points back to the same managed handle.</para>
             </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.ReleaseManagedObject">
+            <summary>
+            Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
+            place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
+            any associated handles later.  The released object is returned, or null if there is no object.
+            </summary>
+            <returns>The object released.</returns>
         </member>
         <member name="M:V8.Net.InternalHandle.As``1">
             <summary>
@@ -2157,6 +2173,12 @@
             When a finalizer runs on an object, the GC has already cleared all weak references. This means the main thread can read a null object reference
             before the callback has a chance to reset the reference.  To protect against this, any call on a null reference will block until this event has
             been signalled.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObservableWeakReference`1.SetTarget(`0)">
+            <summary>
+            Changes the underlying target object of the internal weak reference instance.
+            Warning: If the previous reference is "near death", it will be reset in order to set the new value.
             </summary>
         </member>
         <member name="M:V8.Net.ObservableWeakReference`1.Reset">

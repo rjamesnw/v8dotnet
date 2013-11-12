@@ -60,6 +60,9 @@ namespace V8.Net
 
             while (true)
             {
+                //??if (GlobalObject.AsInternalHandle._HandleProxy->Disposed > 0)
+                //    System.Diagnostics.Debugger.Break();
+
                 if (_PauseWorker == 1) _PauseWorker = 2;
                 else if (_PauseWorker == -1) break;
                 else
@@ -106,10 +109,14 @@ namespace V8.Net
             }
 
             if (objID >= 0)
+            {
+                V8NativeObject obj;
                 lock (_Objects)
                 {
-                    _Objects[objID].Object._MakeWeak();
+                    obj = _Objects[objID].Object;
                 }
+                obj._MakeWeak(); // (don't call this while '_Objects' is locked, because the main thread may be executing script that also may need a lock, but this call may also be blocked by a native V8 mutex)
+            }
 
             // ... and do one object ready to be finalized ...
 

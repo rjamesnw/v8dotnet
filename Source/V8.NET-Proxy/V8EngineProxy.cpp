@@ -35,7 +35,7 @@ void _StringItem::Clear() { String = nullptr; Length = 0; }
 
 static bool _V8Initialized = false;
 
-vector<bool> V8EngineProxy::_DisposedEngines(100);
+vector<bool> V8EngineProxy::_DisposedEngines(100, false);
 
 int32_t V8EngineProxy::_NextEngineID = 0;
 
@@ -77,6 +77,8 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
     if ((vector<bool>::size_type)_NextEngineID >= _DisposedEngines.capacity())
         _DisposedEngines.resize(_DisposedEngines.capacity() + 32);
 
+    if (_NextEngineID == 0)
+        _DisposedEngines.clear(); // (need to clear the pre-allocated vector on first use)
     _DisposedEngines.push_back(false);
     _EngineID = _NextEngineID++;
 
