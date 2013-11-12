@@ -184,7 +184,7 @@ namespace V8.Net
         /// Returns true of the handle represents ANY *script* object type.
         /// </summary>
         bool IsObjectType { get; }
-        
+
         /// <summary>
         /// Returns true of this handle represents an error.
         /// </summary>
@@ -623,6 +623,16 @@ namespace V8.Net
         /// <para>Note: A disposed native handle is simply cached for reuse, and always points back to the same managed handle.</para>
         /// </summary>
         internal void _CompleteDisposal() { _Handle._CompleteDisposal(); }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
+        /// place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
+        /// any associated handles later.  The released object is returned, or null if there is no object.
+        /// </summary>
+        /// <returns>The object released.</returns>
+        public V8NativeObject ReleaseManagedObject() { return _Handle.ReleaseManagedObject(); }
 
         // --------------------------------------------------------------------------------------------------------------------
 

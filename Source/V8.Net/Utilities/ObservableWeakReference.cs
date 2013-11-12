@@ -82,7 +82,16 @@ namespace V8.Net
             if (!CanCollect) GC.ReRegisterForFinalize(obj);
         }
 
-        public void SetTarget(T obj) { _ObjectRef.Target = obj; }
+        /// <summary>
+        /// Changes the underlying target object of the internal weak reference instance.
+        /// Warning: If the previous reference is "near death", it will be reset in order to set the new value.
+        /// </summary>
+        public void SetTarget(T obj)
+        {
+            if (_IsGCReady)
+                Reset(); // (reset 'GC ready' status first)
+            _ObjectRef.Target = obj;
+        }
 
         /// <summary>
         /// If 'IsGCReady' is true, then this moves the near death reference back into the weak reference. If not, this method does nothing.
@@ -91,11 +100,12 @@ namespace V8.Net
         public T Reset()
         {
             var obj = Object; // (this is read first to cause blocking if the finalizer is working on the target object)
-            if (_IsGCReady && NearDeathReference != null)
+            if (_IsGCReady)
             {
+                _IsGCReady = false;
                 obj = NearDeathReference;
-                SetTarget(obj);
                 NearDeathReference = null;
+                SetTarget(obj);
                 NullWaitEvent.Reset();
             }
             return obj;

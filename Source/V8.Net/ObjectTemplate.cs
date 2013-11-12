@@ -93,108 +93,178 @@ namespace V8.Net
 
         protected HandleProxy* _NamedPropertyGetter(string propertyName, ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
-                return null;
-            var mo = obj.Reset() as IV8ManagedObject; // (this acts also as a test because native object wrappers are also supported)
-            return mo != null ? mo.NamedPropertyGetter(ref propertyName) : null;
-        }
-
-        protected HandleProxy* _NamedPropertySetter(string propertyName, HandleProxy* value, ref ManagedAccessorInfo info)
-        {
-            using (InternalHandle hValue = new InternalHandle(value, false))
+            try
             {
                 var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return null;
-                var mo = obj.Reset() as IV8ManagedObject;
-                return mo != null ? mo.NamedPropertySetter(ref propertyName, hValue, V8PropertyAttributes.Undefined) : null;
+                var mo = obj.Reset() as IV8ManagedObject; // (this acts also as a test because native object wrappers are also supported)
+                return mo != null ? mo.NamedPropertyGetter(ref propertyName) : null;
+            }
+            catch (Exception ex)
+            {
+                return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+            }
+        }
+
+        protected HandleProxy* _NamedPropertySetter(string propertyName, HandleProxy* value, ref ManagedAccessorInfo info)
+        {
+            try
+            {
+                using (InternalHandle hValue = new InternalHandle(value, false))
+                {
+                    var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                    if (obj == null)
+                        return null;
+                    var mo = obj.Reset() as IV8ManagedObject;
+                    return mo != null ? mo.NamedPropertySetter(ref propertyName, hValue, V8PropertyAttributes.Undefined) : null;
+                }
+            }
+            catch (Exception ex)
+            {
+                return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
             }
         }
 
         protected V8PropertyAttributes _NamedPropertyQuery(string propertyName, ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
-                return V8PropertyAttributes.Undefined;
-            var mo = obj.Reset() as IV8ManagedObject;
-            var result = mo != null ? mo.NamedPropertyQuery(ref propertyName) : null;
-            if (result != null) return result.Value;
-            else return V8PropertyAttributes.Undefined; // (not intercepted, so perform default action)
+            try
+            {
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                if (obj == null)
+                    return V8PropertyAttributes.Undefined;
+                var mo = obj.Reset() as IV8ManagedObject;
+                var result = mo != null ? mo.NamedPropertyQuery(ref propertyName) : null;
+                if (result != null) return result.Value;
+                else return V8PropertyAttributes.Undefined; // (not intercepted, so perform default action)
+            }
+            catch
+            {
+                return V8PropertyAttributes.Undefined; // TODO: Need a better way to marshal/pass these exception object instances (themselves) across the native boundary for the underlying engine instance)
+            }
         }
 
         protected int _NamedPropertyDeleter(string propertyName, ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
+            try
+            {
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                if (obj == null)
+                    return -1;
+                var mo = obj.Reset() as IV8ManagedObject;
+                var result = mo != null ? mo.NamedPropertyDeleter(ref propertyName) : null;
+                if (result != null) return result.Value ? 1 : 0;
+                else return -1; // (not intercepted, so perform default action)
+            }
+            catch
+            {
                 return -1;
-            var mo = obj.Reset() as IV8ManagedObject;
-            var result = mo != null ? mo.NamedPropertyDeleter(ref propertyName) : null;
-            if (result != null) return result.Value ? 1 : 0;
-            else return -1; // (not intercepted, so perform default action)
+            }
         }
 
         protected HandleProxy* _NamedPropertyEnumerator(ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
-                return null;
-            var mo = obj.Reset() as IV8ManagedObject;
-            return mo != null ? mo.NamedPropertyEnumerator() : null;
+            try
+            {
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                if (obj == null)
+                    return null;
+                var mo = obj.Reset() as IV8ManagedObject;
+                return mo != null ? mo.NamedPropertyEnumerator() : null;
+            }
+            catch (Exception ex)
+            {
+                return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+            }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
         protected HandleProxy* _IndexedPropertyGetter(Int32 index, ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
-                return null;
-            var mo = obj.Reset() as IV8ManagedObject;
-            return mo != null ? mo.IndexedPropertyGetter(index) : null;
-        }
-
-        protected HandleProxy* _IndexedPropertySetter(Int32 index, HandleProxy* value, ref ManagedAccessorInfo info)
-        {
-            using (InternalHandle hValue = new InternalHandle(value, false))
+            try
             {
                 var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return null;
                 var mo = obj.Reset() as IV8ManagedObject;
-                return mo != null ? mo.IndexedPropertySetter(index, hValue) : null;
+                return mo != null ? mo.IndexedPropertyGetter(index) : null;
+            }
+            catch (Exception ex)
+            {
+                return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+            }
+        }
+
+        protected HandleProxy* _IndexedPropertySetter(Int32 index, HandleProxy* value, ref ManagedAccessorInfo info)
+        {
+            try
+            {
+                using (InternalHandle hValue = new InternalHandle(value, false))
+                {
+                    var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                    if (obj == null)
+                        return null;
+                    var mo = obj.Reset() as IV8ManagedObject;
+                    return mo != null ? mo.IndexedPropertySetter(index, hValue) : null;
+                }
+            }
+            catch (Exception ex)
+            {
+                return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
             }
         }
 
         protected V8PropertyAttributes _IndexedPropertyQuery(Int32 index, ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
+            try
+            {
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                if (obj == null)
+                    return V8PropertyAttributes.Undefined;
+                var mo = obj.Reset() as IV8ManagedObject;
+                var result = mo != null ? mo.IndexedPropertyQuery(index) : null;
+                if (result != null) return result.Value;
+                else return V8PropertyAttributes.Undefined; // (not intercepted, so perform default action)
+            }
+            catch
+            {
                 return V8PropertyAttributes.Undefined;
-            var mo = obj.Reset() as IV8ManagedObject;
-            var result = mo != null ? mo.IndexedPropertyQuery(index) : null;
-            if (result != null) return result.Value;
-            else return V8PropertyAttributes.Undefined; // (not intercepted, so perform default action)
+            }
         }
 
         protected int _IndexedPropertyDeleter(Int32 index, ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
+            try
+            {
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                if (obj == null)
+                    return -1;
+                var mo = obj.Reset() as IV8ManagedObject;
+                var result = mo != null ? mo.IndexedPropertyDeleter(index) : null;
+                if (result != null) return result.Value ? 1 : 0;
+                else return -1; // (not intercepted, so perform default action)
+            }
+            catch
+            {
                 return -1;
-            var mo = obj.Reset() as IV8ManagedObject;
-            var result = mo != null ? mo.IndexedPropertyDeleter(index) : null;
-            if (result != null) return result.Value ? 1 : 0;
-            else return -1; // (not intercepted, so perform default action)
+            }
         }
 
         protected HandleProxy* _IndexedPropertyEnumerator(ref ManagedAccessorInfo info)
         {
-            var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
-            if (obj == null)
-                return null;
-            var mo = obj.Reset() as IV8ManagedObject;
-            return mo != null ? mo.IndexedPropertyEnumerator() : null;
+            try
+            {
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                if (obj == null)
+                    return null;
+                var mo = obj.Reset() as IV8ManagedObject;
+                return mo != null ? mo.IndexedPropertyEnumerator() : null;
+            }
+            catch (Exception ex)
+            {
+                return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+            }
         }
 
         // --------------------------------------------------------------------------------------------------------------------

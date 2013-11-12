@@ -155,6 +155,7 @@ namespace V8.Net
                             Console.WriteLine(@"\gctest - Runs a simple GC test against V8.NET and the native V8 engine.");
                             Console.WriteLine(@"\speedtest - Runs a simple test script to test V8.NET performance with the V8 engine.");
                             Console.WriteLine(@"\mtest - Runs a simple test script to test V8.NET integration/marshalling compatibility with the V8 engine on your system.");
+                            Console.WriteLine(@"\newenginetest - Creates 3 new engines (each time) and runs simple expressions in each one (note: new engines are never removed once created).");
                             Console.WriteLine(@"\exit - Exists the console.");
                         }
                         else if (lcInput == @"\cls")
@@ -219,6 +220,9 @@ namespace V8.Net
                                     Console.ReadKey();
 
                                     tester.Execute();
+
+                                    Console.WriteLine("\r\nReleasing managed tester object ...\r\n");
+                                    tester.Handle.ReleaseManagedObject();
                                 }
 
                                 Console.WriteLine("\r\n===============================================================================\r\n");
@@ -386,6 +390,33 @@ namespace V8.Net
                             _JSServer.RunMarshallingTests();
 
                             Console.WriteLine("Success! The marshalling between native and managed side is working as expected.");
+                        }
+                        else if (lcInput == @"\newenginetest")
+                        {
+                            Console.WriteLine("Creating 3 more engines ...");
+
+                            var engine1 = new V8Engine();
+                            var engine2 = new V8Engine();
+                            var engine3 = new V8Engine();
+
+                            Console.WriteLine("Running test expressions ...");
+
+                            var resultHandle = engine1.Execute("1 + 2");
+                            var result = resultHandle.AsInt32;
+                            Console.WriteLine("Engine 1: 1+2=" + result);
+                            resultHandle.Dispose();
+
+                            resultHandle = engine2.Execute("2+3");
+                            result = resultHandle.AsInt32;
+                            Console.WriteLine("Engine 2: 2+3=" + result);
+                            resultHandle.Dispose();
+
+                            resultHandle = engine3.Execute("3 + 4");
+                            result = resultHandle.AsInt32;
+                            Console.WriteLine("Engine 3: 3+4=" + result);
+                            resultHandle.Dispose();
+
+                            Console.WriteLine("Done.");
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {

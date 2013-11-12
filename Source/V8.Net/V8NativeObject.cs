@@ -91,7 +91,7 @@ namespace V8.Net
             get { var id = _Handle.ObjectID; return id < 0 ? _ID ?? id : id; } // (this attempts to return the underlying managed object ID of the handle proxy, or the local ID if -1)
             internal set { _Handle.ObjectID = (_ID = value).Value; } // (once set, the managed object will be fixed to the ID as long as the underlying handle has a managed object ID of -1)
         }
-        Int32? _ID;
+        Int32? _ID; // ('_ID' is used within object collection to determine if the worker needs to get involved [{handle}.ObjectID cannot be used as it may call into the native side])
 
         /// <summary>
         /// Another object of the same interface to direct actions to (such as 'Initialize()').
@@ -111,7 +111,18 @@ namespace V8.Net
         /// Setting this property will call the inherited 'Set()' method to replace the handle associated with this object instance (this should never be done on
         /// objects created from templates ('V8ManagedObject' objects), otherwise callbacks from JavaScript to the managed side will not act as expected, if at all).
         /// </summary>
-        public ObjectHandle Handle { get { return _Handle; } set { _Handle.Set((Handle)value); } }
+        public ObjectHandle Handle
+        {
+            get { return _Handle; }
+            set
+            {
+                Handle h = (Handle)value;
+                if (!h.IsEmpty && !h.IsObject)
+                    throw new InvalidCastException("The handle '" + value + "' does not represent an object type.");
+                _Handle.Set(h);
+                _ID = _Handle.ObjectID >= 0 ? _Handle.ObjectID : (int?)null;
+            }
+        }
         internal ObjectHandle _Handle = ObjectHandle.Empty;
 
 #if !(V1_1 || V2 || V3 || V3_5)
@@ -224,7 +235,7 @@ namespace V8.Net
         /// </summary>
         ~V8NativeObject()
         {
-            if (_ID != null) // (if there's no ID, then let the instance die)
+            if (_ID != null && _ID.Value >= 0) // (if there's no object ID, then let the instance die [skipped this block will allow the finalizer to complete])
             {
                 lock (Engine._Objects)
                 {
@@ -236,7 +247,7 @@ namespace V8.Net
             if (!((IFinalizable)this).CanFinalize)
                 lock (_Engine._ObjectsToFinalize)
                 {
-                    _Engine._ObjectsToFinalize.Add(this);
+                    _Engine._ObjectsToFinalize.Add(this); // (defer the finalize event to the worker thread instead, and keep the instance intact for now)
                     GC.ReRegisterForFinalize(this);
                 }
         }
@@ -331,7 +342,7 @@ namespace V8.Net
         {
             var objText = _Proxy.GetType().Name;
             var disposeText = _Handle.IsDisposed ? "Yes" : "No";
-            return objText + " (ID: " + (_ID ?? -1) + " / Value: '" + _Handle + "' / Is Disposed?: " + disposeText + ")";
+            return objText + " (ID: " + ID + " / Value: '" + _Handle + "' / Is Disposed?: " + disposeText + ")";
         }
 
         // --------------------------------------------------------------------------------------------------------------------
