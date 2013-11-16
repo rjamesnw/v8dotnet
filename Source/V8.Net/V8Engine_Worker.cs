@@ -111,7 +111,7 @@ namespace V8.Net
             if (objID >= 0)
             {
                 V8NativeObject obj;
-                lock (_Objects)
+                using (_ObjectsLocker.ReadLock())
                 {
                     obj = _Objects[objID].Object;
                 }

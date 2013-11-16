@@ -342,7 +342,7 @@ namespace V8.Net
         /// </summary>
         public Handle Set(Handle handle)
         {
-            _Handle.Set(handle._Handle);
+            _Handle.Set(handle != null ? handle._Handle : InternalHandle.Empty);
             return this;
         }
 
@@ -587,7 +587,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// True if this handle is ready to be disposed (cached) on the native side.
+        /// True if this handle is place into a queue to be made weak and eventually disposed (cached) on the native side.
         /// </summary>
         public bool IsInPendingDisposalQueue
         {

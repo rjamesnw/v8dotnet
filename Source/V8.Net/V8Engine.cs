@@ -24,7 +24,8 @@ namespace V8.Net
 
     /// <summary>
     /// Creates a new managed V8Engine wrapper instance and associates it with a new native V8 engine.
-    /// The engine does not implement locks, so to make it thread safe, you should lock against an engine instance (i.e. lock(myEngine){...}).
+    /// The engine does not implement locks, so to make it thread safe, you should lock against an engine instance (i.e. lock(myEngine){...}).  The native V8
+    /// environment, however, is thread safe (but blocks to allow only one thread at a time).
     /// </summary>
     public unsafe partial class V8Engine
     {
@@ -174,9 +175,11 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Calling this method forces an "idle" loop in the native wrapper until the V8 engine finishes pending work tasks.
-        /// The work performed helps to reduce the memory footprint within V8.
+        /// Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.
+        /// The work performed helps to reduce the memory footprint within the native V8 engine.
         /// <para>(See also: <seealso cref="DoIdleNotification(int)"/>)</para>
+        /// <para>Note: You CANNOT GC CLR objects using this method.  This only applies to collection of native V8 handles that are no longer in use.
+        /// To *force* the disposal of an object, do this: "{Handle}.ReleaseManagedObject(); {Handle}.Dispose(); GC.Collect();"</para>
         /// </summary>
         public void ForceV8GarbageCollection()
         {
@@ -201,12 +204,9 @@ namespace V8.Net
         {
             if (persistedObjectHandle->_ObjectID >= 0)
             {
-                lock (_Objects)
-                {
-                    var weakRef = _Objects[persistedObjectHandle->_ObjectID];
-                    if (weakRef != null)
-                        return weakRef.Object._OnNativeGCRequested(); // (notify the object that a V8 GC is requested)
-                }
+                var weakRef = _GetObjectWeakReference(persistedObjectHandle->_ObjectID);
+                if (weakRef != null)
+                    return weakRef.Object._OnNativeGCRequested(); // (notify the object that a V8 GC is requested)
             }
             return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])
         }

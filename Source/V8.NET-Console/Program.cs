@@ -11,6 +11,16 @@ using V8.Net;
 
 namespace V8.Net
 {
+    public class SamplePointFunctionTemplate : FunctionTemplate
+    {
+        public SamplePointFunctionTemplate() { }
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+        }
+    }
+    
     public class Program
     {
         static V8Engine _JSServer;
@@ -130,6 +140,8 @@ namespace V8.Net
 
                     Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
                     _JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
+
+                    var funcTemp = _JSServer.CreateFunctionTemplate<SamplePointFunctionTemplate>("SamplePointFunctionTemplate");
                 }
 
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
@@ -690,10 +702,10 @@ public class V8DotNetTester : V8ManagedObject
         Console.WriteLine("(1000 native object handles will be created, but one V8NativeObject wrapper will be used)");
         Console.ReadKey();
         Console.Write("Running ...");
-        var obj = Engine.CreateObject<V8NativeObject>(); // (need to create an object from a native object handle to begin with)
+        var obj = new V8NativeObject();
         for (var i = 0; i < 1000; i++)
         {
-            obj.Handle = Engine.GlobalObject;
+            obj.Handle = Engine.GlobalObject.GetProperty("obj");
         }
         Console.WriteLine(" Done.");
     }

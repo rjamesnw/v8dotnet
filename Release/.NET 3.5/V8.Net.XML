@@ -388,7 +388,7 @@
         </member>
         <member name="P:V8.Net.Handle.IsInPendingDisposalQueue">
             <summary>
-            True if this handle is ready to be disposed (cached) on the native side.
+            True if this handle is place into a queue to be made weak and eventually disposed (cached) on the native side.
             </summary>
         </member>
         <member name="P:V8.Net.Handle.IsNativelyWeak">
@@ -1002,7 +1002,7 @@
         </member>
         <member name="P:V8.Net.InternalHandle.IsInPendingDisposalQueue">
             <summary>
-            True if this handle is ready to be disposed (cached) on the native side.
+            True if this handle is place into a queue to be made weak and eventually disposed (cached) on the native side.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsNativelyWeak">
@@ -1102,7 +1102,8 @@
         <member name="T:V8.Net.V8Engine">
             <summary>
             Creates a new managed V8Engine wrapper instance and associates it with a new native V8 engine.
-            The engine does not implement locks, so to make it thread safe, you should lock against an engine instance (i.e. lock(myEngine){...}).
+            The engine does not implement locks, so to make it thread safe, you should lock against an engine instance (i.e. lock(myEngine){...}).  The native V8
+            environment, however, is thread safe (but blocks to allow only one thread at a time).
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine._StoreAccessor``1(System.Int32,System.String,``0)">
@@ -1296,9 +1297,11 @@
         </member>
         <member name="M:V8.Net.V8Engine.ForceV8GarbageCollection">
             <summary>
-            Calling this method forces an "idle" loop in the native wrapper until the V8 engine finishes pending work tasks.
-            The work performed helps to reduce the memory footprint within V8.
+            Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.
+            The work performed helps to reduce the memory footprint within the native V8 engine.
             <para>(See also: <seealso cref="M:V8.Net.V8Engine.DoIdleNotification(System.Int32)"/>)</para>
+            <para>Note: You CANNOT GC CLR objects using this method.  This only applies to collection of native V8 handles that are no longer in use.
+            To *force* the disposal of an object, do this: "{Handle}.ReleaseManagedObject(); {Handle}.Dispose(); GC.Collect();"</para>
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine.DoIdleNotification(System.Int32)">
@@ -2619,6 +2622,11 @@
             Set this to an object that implements a call-back to execute when the function associated with this FunctionTemplate is called within JavaScript.
             </summary>
         </member>
+        <member name="M:V8.Net.FunctionTemplate.OnInitialized">
+            <summary>
+            Called when the object is initialized instance is ready for use.
+            </summary>
+        </member>
         <member name="M:V8.Net.FunctionTemplate.GetFunctionObject``1(V8.Net.JSFunction)">
             <summary>
             Returns the specified V8Function object type associated with this function template.
@@ -2688,6 +2696,11 @@
             <summary>
             The V8 engine automatically creates two templates with every function template: one for object creation (instances) and one for object inheritance (prototypes).
             This property returns the ObjectTemplate wrapper associated with the prototype template for the function object in this template.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.OnInitialized">
+            <summary>
+            Called when the object is initialized instance is ready for use.
             </summary>
         </member>
         <member name="M:V8.Net.ObjectTemplate.RegisterNamedPropertyInterceptors">

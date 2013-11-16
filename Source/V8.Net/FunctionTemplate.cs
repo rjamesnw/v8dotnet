@@ -53,8 +53,6 @@ namespace V8.Net
 
         public FunctionTemplate()
         {
-            if (Assembly.GetCallingAssembly() != Assembly.GetExecutingAssembly() && !Assembly.GetCallingAssembly().FullName.StartsWith("mscorlib,"))
-                throw new InvalidOperationException("You must create function templates by calling 'V8Engine.CreateFunctionTemplate()'.");
         }
 
         ~FunctionTemplate()
@@ -129,6 +127,9 @@ namespace V8.Net
             OnInitialized();
         }
 
+        /// <summary>
+        /// Called when the object is initialized instance is ready for use.
+        /// </summary>
         protected override void OnInitialized()
         {
         }
@@ -205,6 +206,12 @@ namespace V8.Net
         /// It is expect to provide a callback method when using the default 'V8Function' object, but if you have a custom derivation you can set this to 'null'.</param>
         public T GetFunctionObject<T>(JSFunction callback = null) where T : V8Function, new()
         {
+            if (_Engine == null)
+                throw new InvalidOperationException("You must create object templates by calling one of the 'V8Engine.CreateFunctionTemplate()' overloads.");
+
+            if (_NativeFunctionTemplateProxy == null)
+                throw new InvalidOperationException("This managed function template is not initialized.");
+
             int funcID;
             V8Function func;
 

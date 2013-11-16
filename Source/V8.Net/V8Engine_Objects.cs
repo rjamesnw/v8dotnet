@@ -22,22 +22,23 @@ namespace V8.Net
         /// Holds an index of all the created objects.
         /// </summary>
         internal readonly IndexedObjectList<ObservableWeakReference<V8NativeObject>> _Objects = new IndexedObjectList<ObservableWeakReference<V8NativeObject>>();
+        internal readonly ReaderWriterLock _ObjectsLocker = new ReaderWriterLock();
 
         // --------------------------------------------------------------------------------------------------------------------
 
         internal ObservableWeakReference<V8NativeObject> _GetObjectWeakReference(Int32 objectID) // (performs the lookup in a lock block)
         {
-            lock (_Objects) { return _Objects[objectID]; }
+            using (_ObjectsLocker.ReadLock()) { return _Objects[objectID]; } // (Note: if index is outside bounds, then null is returned.)
         }
 
         internal V8NativeObject _GetObjectAsIs(Int32 objectID) // (performs the object lookup in a lock block without causing a GC reset)
         {
-            lock (_Objects) { var weakRef = _Objects[objectID]; return weakRef != null ? weakRef.Object : null; }
+            using (_ObjectsLocker.ReadLock()) { var weakRef = _Objects[objectID]; return weakRef != null ? weakRef.Object : null; }
         }
 
         internal void _RemoveObjectWeakReference(Int32 objectID) // (performs the removal in a lock block)
         {
-            lock (_Objects) { _Objects.Remove(objectID); }
+            using (_ObjectsLocker.WriteLock()) { _Objects.Remove(objectID); }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -77,11 +78,11 @@ namespace V8.Net
                             throw new InvalidOperationException("Cannot create a managed object for this handle when one already exists. Existing objects will not be returned by 'Create???' methods to prevent initializing more than once.");
 
                 newObject = new T();
-                newObject._Handle.Set(handle);
                 newObject._Engine = this;
                 newObject.Template = template;
+                newObject.Handle = handle;
 
-                lock (_Objects) // (need a lock because of the worker thread)
+                using (_ObjectsLocker.WriteLock()) // (need a lock because of the worker thread)
                 {
                     newObject.ID = _Objects.Add(new ObservableWeakReference<V8NativeObject>(newObject));
                 }
@@ -192,7 +193,11 @@ namespace V8.Net
         /// new object put in the same place as identified by the same ID value. As long as you keep a reference/handle, or perform no other V8.NET actions
         /// between the time you read an object's ID, and the time this method is called, then you can safely use this method.</para>
         /// </summary>
-        public V8NativeObject GetObjectByID(int objectID) { var weakRef = _Objects[objectID]; return weakRef != null ? weakRef.Reset() : null; }
+        public V8NativeObject GetObjectByID(int objectID)
+        { 
+            var weakRef = _Objects[objectID]; 
+            return weakRef != null ? weakRef.Reset() : null; 
+        }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -201,8 +206,11 @@ namespace V8.Net
         /// </summary>
         public V8NativeObject[] GetObjects(ITemplate template)
         {
-            lock (_Objects) { return (from o in _Objects where o.Object.Template == template select o.Object).ToArray(); }
-            // (note: cannot enumerate because '_Objects' needs to be thread-safe)
+            using (_ObjectsLocker.ReadLock())
+            {
+                return (from o in _Objects where o.Object.Template == template select o.Object).ToArray();
+            }
+            // (WARNING: cannot enumerate objects in this block as it may cause a deadlock - 'lock (_Objects){}' can conflict with the finalizer thread if 'o.Object' blocks to wait on it)
         }
 
         // --------------------------------------------------------------------------------------------------------------------
