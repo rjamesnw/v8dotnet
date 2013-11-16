@@ -172,7 +172,8 @@ namespace V8.Net
                     }
                     else
                     {
-                        _HandleProxy->ManagedReferenceCount--;
+                        if (_HandleProxy->ManagedReferenceCount > 0)
+                            _HandleProxy->ManagedReferenceCount--;
 
                         if (_HandleProxy->ManagedReferenceCount == 0)
                         {
@@ -214,7 +215,8 @@ namespace V8.Net
 
         public static implicit operator ObjectHandle(InternalHandle handle)
         {
-            if (handle.IsObjectType) throw new InvalidCastException("The handle '" + handle + "' does not represent an object type.");
+            if (!handle.IsEmpty && !handle.IsObjectType) // (note: an empty handle is ok)
+                throw new InvalidCastException(string.Format(_VALUE_NOT_AN_OBJECT_ERRORMSG, handle));
             return handle._HandleProxy != null ? new ObjectHandle(handle) : ObjectHandle.Empty;
         }
 
@@ -475,15 +477,11 @@ namespace V8.Net
                 var id = _CurrentObjectID;
                 if (id >= 0)
                 {
-                    var engine = Engine;
-                    lock (engine._Objects)
-                    {
-                        var owr = engine._GetObjectWeakReference(_CurrentObjectID);
-                        if (owr != null)
-                            return owr.IsGCReady;
-                        else
-                            _CurrentObjectID = id = -1; // (this ID is no longer valid)
-                    }
+                    var owr = Engine._GetObjectWeakReference(_CurrentObjectID);
+                    if (owr != null)
+                        return owr.IsGCReady;
+                    else
+                        _CurrentObjectID = id = -1; // (this ID is no longer valid)
                 }
                 return id == -1;
             }
@@ -497,7 +495,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// True if this handle is ready to be disposed (cached) on the native side.
+        /// True if this handle is place into a queue to be made weak and eventually disposed (cached) on the native side.
         /// </summary>
         public bool IsInPendingDisposalQueue
         {
@@ -568,16 +566,20 @@ namespace V8.Net
         public V8NativeObject ReleaseManagedObject()
         {
             if (IsObjectType && ObjectID >= 0)
-                lock (Engine._Objects)
+                using (Engine._ObjectsLocker.ReadLock())
                 {
-                    var weakRef = Engine._Objects[ObjectID];
+                    var weakRef = Engine._GetObjectWeakReference(ObjectID);
                     if (weakRef != null)
                     {
                         var obj = weakRef.Object;
                         var placeHolder = new V8NativeObject();
+                        placeHolder._Engine = obj._Engine;
+                        placeHolder.Template = obj.Template;
+                        weakRef.SetTarget(placeHolder); // (this must be done first before moving the handle to the new object!)
                         placeHolder.Handle = obj.Handle;
-                        weakRef.SetTarget(placeHolder);
-                        obj.Handle = ObjectHandle.Empty;
+                        obj.Template = null;
+                        obj._ID = null;
+                        obj._Handle.Set(InternalHandle.Empty);
                         return obj;
                     }
                 }
@@ -757,7 +759,7 @@ namespace V8.Net
         /// </summary>
         public override bool Equals(object obj)
         {
-            return obj is InternalHandle && _HandleProxy == ((InternalHandle)obj)._HandleProxy;
+            return obj is IHandleBased && _HandleProxy == ((IHandleBased)obj).AsInternalHandle._HandleProxy;
         }
 
         public override int GetHashCode()
@@ -863,6 +865,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         internal const string _NOT_AN_OBJECT_ERRORMSG = "The handle does not represent a JavaScript object.";
+        internal const string _VALUE_NOT_AN_OBJECT_ERRORMSG = "The handle {0} does not represent a JavaScript object.";
 
         /// <summary>
         /// Calls the V8 'Set()' function on the underlying native object.
@@ -1027,7 +1030,7 @@ namespace V8.Net
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
             var engine = Engine;
-
+            // TODO: Need a different native ID to track this.
             V8NetProxy.SetObjectAccessor(this, ObjectID, name,
                    Engine._StoreAccessor<ManagedAccessorGetter>(ObjectID, "get_" + name, (HandleProxy* _this, string propertyName) =>
                    {

@@ -282,8 +282,6 @@ namespace V8.Net
 
         public ObjectTemplate()
         {
-            if (Assembly.GetCallingAssembly() != Assembly.GetExecutingAssembly() && !Assembly.GetCallingAssembly().FullName.StartsWith("mscorlib,"))
-                throw new InvalidOperationException("You must create object templates by calling 'V8Engine.CreateObjectTemplate()'.");
         }
 
         internal void _Initialize(V8Engine v8EngineProxy, bool registerPropertyInterceptors = true)
@@ -315,6 +313,9 @@ namespace V8.Net
             OnInitialized();
         }
 
+        /// <summary>
+        /// Called when the object is initialized instance is ready for use.
+        /// </summary>
         protected override void OnInitialized()
         {
         }
@@ -445,6 +446,9 @@ namespace V8.Net
         /// <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         public T CreateObject<T>(bool initialize = true) where T : V8NativeObject, new()
         {
+            if (_Engine == null)
+                throw new InvalidOperationException("You must create object templates by calling one of the 'V8Engine.CreateObjectTemplate()' overloads.");
+
             if (_NativeObjectTemplateProxy == null)
                 throw new InvalidOperationException("This managed object template is either not initialized, or does not support creating V8 objects.");
 

@@ -11,6 +11,36 @@ namespace V8.Net
 {
     // ========================================================================================================================
 
+    public struct ReaderLock : IDisposable
+    {
+        ReaderWriterLock _RWLock;
+        public ReaderLock(ReaderWriterLock rwlock, Int32 timeout)
+        {
+            _RWLock = rwlock;
+            _RWLock.AcquireReaderLock(timeout);
+        }
+        public void Dispose()
+        {
+            _RWLock.ReleaseReaderLock();
+        }
+    }
+
+    public struct WriterLock : IDisposable
+    {
+        ReaderWriterLock _RWLock;
+        public WriterLock(ReaderWriterLock rwlock, Int32 timeout)
+        {
+            _RWLock = rwlock;
+            _RWLock.AcquireWriterLock(timeout);
+        }
+        public void Dispose()
+        {
+            _RWLock.ReleaseWriterLock();
+        }
+    }
+
+    // ========================================================================================================================
+
     public static class ExtensionMethods
     {
 #if (V1_1 || V2 || V3 || V3_5)
@@ -56,6 +86,15 @@ namespace V8.Net
 #else
             return String.Join(separator, values);
 #endif
+        }
+
+        public static ReaderLock ReadLock(this ReaderWriterLock _this, Int32 timeout = Int32.MaxValue)
+        {
+            return new ReaderLock(_this, timeout);
+        }
+        public static WriterLock WriteLock(this ReaderWriterLock _this, Int32 timeout = Int32.MaxValue)
+        {
+            return new WriterLock(_this, timeout);
         }
     }
 

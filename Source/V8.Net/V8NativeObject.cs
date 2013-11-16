@@ -89,9 +89,13 @@ namespace V8.Net
         public Int32 ID
         {
             get { var id = _Handle.ObjectID; return id < 0 ? _ID ?? id : id; } // (this attempts to return the underlying managed object ID of the handle proxy, or the local ID if -1)
-            internal set { _Handle.ObjectID = (_ID = value).Value; } // (once set, the managed object will be fixed to the ID as long as the underlying handle has a managed object ID of -1)
+            internal set
+            {
+                _Handle.ObjectID = value;
+                _ID = value;
+            } // (once set, the managed object will be fixed to the ID as long as the underlying handle has a handle-based object ID less than 0)
         }
-        Int32? _ID; // ('_ID' is used within object collection to determine if the worker needs to get involved [{handle}.ObjectID cannot be used as it may call into the native side])
+        internal Int32? _ID; // ('_ID' is used within object collection to determine if the worker needs to get involved [{handle}.ObjectID cannot be used as it may call into the native side])
 
         /// <summary>
         /// Another object of the same interface to direct actions to (such as 'Initialize()').
@@ -116,11 +120,21 @@ namespace V8.Net
             get { return _Handle; }
             set
             {
-                Handle h = (Handle)value;
-                if (!h.IsEmpty && !h.IsObject)
-                    throw new InvalidCastException("The handle '" + value + "' does not represent an object type.");
-                _Handle.Set(h);
-                _ID = _Handle.ObjectID >= 0 ? _Handle.ObjectID : (int?)null;
+                var handle = value != null ? (InternalHandle)value : InternalHandle.Empty;
+
+                if (handle.ObjectID >= 0 && handle.Object != this)
+                    throw new InvalidOperationException("Another managed object is already bound to this handle.");
+
+                if (!_Handle.IsEmpty && _Handle.ObjectID >= 0)
+                    throw new InvalidOperationException("Cannot replace a the handle of a V8Engine create object once it has been set."); // (IDs < 0 are not tracked in the V8.NET's object list)
+                else
+                {
+                    if (!handle.IsEmpty && !handle.IsObjectType)
+                        throw new InvalidCastException(string.Format(InternalHandle._VALUE_NOT_AN_OBJECT_ERRORMSG, handle));
+
+                    _Handle.Set((Handle)value);
+                    ID = _Handle.ObjectID;
+                }
             }
         }
         internal ObjectHandle _Handle = ObjectHandle.Empty;
@@ -153,7 +167,7 @@ namespace V8.Net
         /// <summary>
         /// Returns true if this object is ready to be garbage collected by the native side.
         /// </summary>
-        public bool IsManagedObjectWeak { get { lock (Engine._Objects) { return _ID != null ? Engine._Objects[_ID.Value].IsGCReady : true; } } }
+        public bool IsManagedObjectWeak { get { using (Engine._ObjectsLocker.ReadLock()) { return _ID != null ? Engine._Objects[_ID.Value].IsGCReady : true; } } }
 
         /// <summary>
         /// Used internally to quickly determine when an instance represents a binder object type, or static type binder function (faster than reflection!).
@@ -235,24 +249,27 @@ namespace V8.Net
         /// </summary>
         ~V8NativeObject()
         {
-            if (_ID != null && _ID.Value >= 0) // (if there's no object ID, then let the instance die [skipped this block will allow the finalizer to complete])
+            if (_ID != null && _ID.Value >= 0 && Engine != null) // (if there's no object ID, then let the instance die [skipping this block may allow the finalizer to complete])
             {
-                lock (Engine._Objects)
-                {
-                    Engine._Objects[_ID.Value].DoFinalize(this); // (will re-register this object for finalization)
-                    // (the native GC has not reported we can remove this yet, so just flag the collection attempt [note: if 'Engine._Objects[_ID.Value].CanCollect' is true here, then finalize will succeed])
-                }
+                var weakRef = Engine._GetObjectWeakReference(_ID.Value);
+                weakRef.DoFinalize(this); // (will re-register this object for finalization)
+                // (the native GC has not reported we can remove this yet, so just flag the collection attempt [note: if 'weakRef.CanCollect' is true here, then finalize will succeed])
+                // (WARNING: 'lock (Engine._Objects){}' can conflict with the main thread if care is not taken)
+                // (Past issue: When '{Engine}.GetObjects()' was called, and an '_Objects[?].Object' is accessed, a deadlock can occur since the finalizer has nulled all the weak references)
             }
 
+            // ... check if the finalizer can reclaim this object, otherwise it needs to be placed in a queue for the worker, which will attempt to perform 
+            // necessary tasks that shouldn't execute in a finalizer (such as trying to dispose of the native handle first before the object gets destroyed) ...
+            // (note: 'CanFinalize' should return true if the object has no ties to V8.NET's object list, or association with template objects)
             if (!((IFinalizable)this).CanFinalize)
-                lock (_Engine._ObjectsToFinalize)
+                lock (Engine._ObjectsToFinalize) // (this lock is sufficient, since only the worker accesses it, and the worker only locks when getting a reference from the array [and nothing more])
                 {
-                    _Engine._ObjectsToFinalize.Add(this); // (defer the finalize event to the worker thread instead, and keep the instance intact for now)
+                    _Engine._ObjectsToFinalize.Add(this); // (defer the finalize event to the worker thread instead)
                     GC.ReRegisterForFinalize(this);
                 }
         }
 
-        bool IFinalizable.CanFinalize { get { return _ID == null; } set { } }
+        bool IFinalizable.CanFinalize { get { return (_ID == null || _ID.Value < 0) && _Template == null; } set { } }
 
         void IFinalizable.DoFinalize()
         {
@@ -304,7 +321,7 @@ namespace V8.Net
 
         internal bool _OnNativeGCRequested() // WARNING: The worker thread may trigger a V8 GC callback in its own thread!
         {
-            lock (_Engine._Objects)
+            using (Engine._ObjectsLocker.WriteLock())
             {
                 if (Template is FunctionTemplate)
                     ((FunctionTemplate)Template)._RemoveFunctionType(ID);// (make sure to remove the function references from the template instance)
@@ -317,14 +334,13 @@ namespace V8.Net
 
                 Engine._ClearAccessors(_ID.Value); // (just to be sure - accessors are no longer needed once the native handle is GC'd)
 
-                Template = null;
-
                 if (_ID != null)
                     _Engine._RemoveObjectWeakReference(_ID.Value);
 
                 _Handle.ObjectID = -1;
 
-                _ID = null;
+                Template = null; // (note: this decrements a template counter; allows the GC finalizer to collect the object)
+                _ID = null; // (also allows the GC finalizer to collect the object)
             }
 
             return true; // ("true" means to "continue disposal of native handle" [if not already empty])
