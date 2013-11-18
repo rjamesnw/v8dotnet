@@ -20,11 +20,7 @@ extern "C"
     }
     EXPORT void STDCALL DestroyV8EngineProxy(V8EngineProxy *engine) 
     { 
-        BEGIN_ISOLATE_SCOPE(engine);
-        BEGIN_CONTEXT_SCOPE(engine);
         delete engine; 
-        END_CONTEXT_SCOPE;
-        END_ISOLATE_SCOPE;
     }
 
     EXPORT void STDCALL RegisterGCCallback(V8EngineProxy* engine, ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback)

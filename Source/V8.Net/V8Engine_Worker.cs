@@ -144,7 +144,7 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Pauses the worker thread (usually for debug purposes). The worker thread clears out orphaned object entries (mainly).
+        /// Pauses the worker thread (usually for debug purposes). (Note: The worker thread manages object GC along with the native V8 GC.)
         /// </summary>
         public void PauseWorker()
         {
@@ -156,14 +156,23 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Pauses the worker thread (usually for debug purposes). The worker thread clears out orphaned object entries (mainly).
+        /// Terminates the worker thread, without a 3 second timeout to be sure.
+        /// This is called when the engine is shutting down. (Note: The worker thread manages object GC along with the native V8 GC.)
         /// </summary>
-        public void TerminateWorker()
+        internal void _TerminateWorker()
         {
             if (_Worker.IsAlive)
             {
                 _PauseWorker = -1;
-                while (_PauseWorker == -1 && _Worker.IsAlive) { }
+                var timeoutCountdown = 3000;
+                while (_PauseWorker == -1 && _Worker.IsAlive)
+                    if (timeoutCountdown-- > 0)
+                        Thread.Sleep(1);
+                    else
+                    {
+                        _Worker.Abort();
+                        break;
+                    }
             }
         }
 

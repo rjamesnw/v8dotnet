@@ -147,7 +147,7 @@ namespace V8.Net
             return _CallBack(managedObjectID, isConstructCall, _this, args, argCount, functions.ToArray());
         }
 
-        internal static HandleProxy* _CallBack( Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount, params JSFunction[] functions)
+        internal static HandleProxy* _CallBack(Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount, params JSFunction[] functions)
         {
             // ... get a handle to the native "this" object ...
 
@@ -178,7 +178,8 @@ namespace V8.Net
                 finally
                 {
                     for (i = 0; i < _args.Length; i++)
-                        _args[i].Dispose();
+                        if (_args[i] != result)
+                            _args[i].Dispose();
                 }
 
                 if (isConstructCall && result.HasObject && result.Object is V8ManagedObject && result.Object.Handle._Handle == hThis)

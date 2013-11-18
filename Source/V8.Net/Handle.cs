@@ -326,7 +326,7 @@ namespace V8.Net
                 }
         }
 
-        bool IFinalizable.CanFinalize { get { return IsEmpty; } set { } }
+        bool IFinalizable.CanFinalize { get { return IsEmpty || IsDisposed; } set { } }
 
         void IFinalizable.DoFinalize()
         {
