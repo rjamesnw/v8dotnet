@@ -27,7 +27,7 @@ namespace V8.Net
     /// The engine does not implement locks, so to make it thread safe, you should lock against an engine instance (i.e. lock(myEngine){...}).  The native V8
     /// environment, however, is thread safe (but blocks to allow only one thread at a time).
     /// </summary>
-    public unsafe partial class V8Engine
+    public unsafe partial class V8Engine : IDisposable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -58,7 +58,7 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        internal readonly NativeV8EngineProxy* _NativeV8EngineProxy;
+        internal NativeV8EngineProxy* _NativeV8EngineProxy;
         V8GarbageCollectionRequestCallback ___V8GarbageCollectionRequestCallback; // (need to keep a reference to this otherwise the reverse p/invoke will fail)
         static readonly object _GlobalLock = new object();
 
@@ -166,11 +166,53 @@ namespace V8.Net
 
         ~V8Engine()
         {
-            TerminateWorker(); // (will return only when it has successfully terminated)
-
-            if (_NativeV8EngineProxy != null)
-                V8NetProxy.DestroyV8EngineProxy(_NativeV8EngineProxy);
+            Dispose();
         }
+
+        public void Dispose()
+        {
+            if (_NativeV8EngineProxy != null)
+            {
+                _TerminateWorker(); // (will return only when it has successfully terminated)
+
+                // ... clear all handles of object IDs for disposal ...
+
+                HandleProxy* hProxy;
+
+                for (var i = 0; i < _HandleProxies.Length; i++)
+                {
+                    hProxy = _HandleProxies[i];
+                    if (hProxy != null && !hProxy->IsDisposed)
+                        hProxy->_ObjectID = -2; // (note: this must be <= -2, otherwise the ID auto updates -1 to -2 to flag the ID as already processed)
+                }
+
+                // ... allow all objects to be finalized by the GC ...
+
+                ObservableWeakReference<V8NativeObject> weakRef;
+
+                for (var i = 0; i < _Objects.Count; i++)
+                    if ((weakRef = _Objects[i]) != null && weakRef.Object != null)
+                    {
+                        weakRef.Object._ID = null;
+                        weakRef.Object.Template = null;
+                        weakRef.Object._Handle = ObjectHandle.Empty;
+                    }
+
+                // ... destroy the native engine ...
+
+                if (_NativeV8EngineProxy != null)
+                {
+                    _Engines[_NativeV8EngineProxy->ID] = null; // (notifies any lingering handles that this engine is now gone)
+                    V8NetProxy.DestroyV8EngineProxy(_NativeV8EngineProxy);
+                    _NativeV8EngineProxy = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true once this engine has been disposed.
+        /// </summary>
+        public bool IsDisposed { get { return _NativeV8EngineProxy == null; } }
 
         // --------------------------------------------------------------------------------------------------------------------
 

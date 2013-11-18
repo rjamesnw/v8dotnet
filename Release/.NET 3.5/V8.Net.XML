@@ -1218,12 +1218,13 @@
         </member>
         <member name="M:V8.Net.V8Engine.PauseWorker">
             <summary>
-            Pauses the worker thread (usually for debug purposes). The worker thread clears out orphaned object entries (mainly).
+            Pauses the worker thread (usually for debug purposes). (Note: The worker thread manages object GC along with the native V8 GC.)
             </summary>
         </member>
-        <member name="M:V8.Net.V8Engine.TerminateWorker">
+        <member name="M:V8.Net.V8Engine._TerminateWorker">
             <summary>
-            Pauses the worker thread (usually for debug purposes). The worker thread clears out orphaned object entries (mainly).
+            Terminates the worker thread, without a 3 second timeout to be sure.
+            This is called when the engine is shutting down. (Note: The worker thread manages object GC along with the native V8 GC.)
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine.ResumeWorker">
@@ -1552,6 +1553,11 @@
         <member name="P:V8.Net.V8Engine.Engines">
             <summary>
             A static array of all V8 engines created.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8Engine.IsDisposed">
+            <summary>
+            Returns true once this engine has been disposed.
             </summary>
         </member>
         <member name="F:V8.Net.BindingMode.None">

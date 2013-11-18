@@ -20,7 +20,7 @@ namespace V8.Net
             base.OnInitialized();
         }
     }
-    
+
     public class Program
     {
         static V8Engine _JSServer;
@@ -48,10 +48,13 @@ namespace V8.Net
                 _TitleUpdateTimer.AutoReset = true;
                 _TitleUpdateTimer.Elapsed += (_o, _e) =>
                 {
-                    Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
-                        + " / Pending Native GC: " + _JSServer.TotalHandlesPendingDisposal
-                        + " / Cached: " + _JSServer.TotalHandlesCached
-                        + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
+                    if (!_JSServer.IsDisposed)
+                        Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
+                            + " / Pending Native GC: " + _JSServer.TotalHandlesPendingDisposal
+                            + " / Cached: " + _JSServer.TotalHandlesCached
+                            + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
+                    else
+                        Console.Title = "V8.Net Console - Shutting down...";
                 };
                 _TitleUpdateTimer.Start();
 
@@ -77,7 +80,7 @@ namespace V8.Net
                     _JSServer.RegisterType(typeof(Enumerable), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(System.IO.File), null, true, ScriptMemberSecurity.Locked);
 
-                    var hSystem = _JSServer.CreateObject();
+                    ObjectHandle hSystem = _JSServer.CreateObject();
                     _JSServer.DynamicGlobalObject.System = hSystem;
                     hSystem.SetProperty(typeof(Object)); // (Note: No optional parameters used, so this will simply lookup and apply the existing registered type details above.)
                     hSystem.SetProperty(typeof(String));
@@ -392,7 +395,11 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\exit")
                         {
-                            Console.WriteLine("User aborted.");
+                            Console.WriteLine("User requested exit, disposing the engine instance ...");
+                            _JSServer.Dispose();
+                            Console.WriteLine("Engine disposed successfully. Press any key to continue ...");
+                            Console.ReadKey();
+                            Console.WriteLine("Goodbye. :)");
                             break;
                         }
                         else if (lcInput == @"\mtest")
@@ -474,6 +481,9 @@ namespace V8.Net
                 Console.WriteLine("Error!  Press any key to exit ...");
                 Console.ReadKey();
             }
+
+            if (_TitleUpdateTimer != null)
+                _TitleUpdateTimer.Dispose();
         }
 
         static void CurrentDomain_FirstChanceException(object sender, FirstChanceExceptionEventArgs e)

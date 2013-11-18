@@ -20,12 +20,13 @@ HandleProxy::~HandleProxy()
 {
     if (Type != 0) // (type is 0 if this class was wiped with 0's {if used in a marshalling test})
     {
-        _Dispose(false);
-        _Value.Dispose();
+        _ClearHandleValue();
+        _ObjectID = -1;
+        _Disposed = 3;
     }
 }
 
-// Sets the state if this instance to disposed (for safety, the handle is NOT disposed.
+// Sets the state if this instance to disposed (for safety, the handle is NOT deleted, only cached).
 // (registerDisposal is false when called within 'V8EngineProxy.DisposeHandleProxy()' (to prevent a cyclical loop), or by the engine's destructor)
 bool HandleProxy::_Dispose(bool registerDisposal)
 {
@@ -42,8 +43,8 @@ bool HandleProxy::_Dispose(bool registerDisposal)
                 return true;
             }
 
+            _ClearHandleValue();
             _ObjectID = -1;
-            _Value.Dispose();
             _Disposed = 3;
 
             return true;
