@@ -1058,6 +1058,7 @@
         <member name="P:V8.Net.InternalHandle.ArrayLength">
             <summary>
             Returns the array length for handles that represent arrays. For all other types, this returns 0.
+            Note: To get the items of the array, use 'GetProperty(#)'.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsWeakManagedObject">
@@ -2502,6 +2503,7 @@
         <member name="P:V8.Net.Handle.ArrayLength">
             <summary>
             Returns the array length for handles that represent arrays. For all other types, this returns 0.
+            Note: To get the items of the array, use '{ObjectHandle|InternalHandle|V8NativeObject}.GetProperty(#)'.
             </summary>
         </member>
         <member name="P:V8.Net.Handle.IsWeakManagedObject">

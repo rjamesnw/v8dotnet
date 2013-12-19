@@ -569,6 +569,7 @@ namespace V8.Net
 
         /// <summary>
         /// Returns the array length for handles that represent arrays. For all other types, this returns 0.
+        /// Note: To get the items of the array, use '{ObjectHandle|InternalHandle|V8NativeObject}.GetProperty(#)'.
         /// </summary>
         public Int32 ArrayLength { get { return _Handle.ArrayLength; } }
 
