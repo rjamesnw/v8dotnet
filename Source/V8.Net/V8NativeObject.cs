@@ -102,7 +102,7 @@ namespace V8.Net
         /// If the generic type 'V8NativeObject&lt;T>' is used, then this is set to an instance of "T", otherwise this is set to "this" instance.
         /// </summary>
         public IV8NativeObject Proxy { get { return _Proxy; } }
-        internal IV8NativeObject _Proxy;
+        internal IV8NativeObject _Proxy; // (Note: MUST NEVER BE NULL)
 
         /// <summary>
         /// True if this object was initialized and is ready for use.

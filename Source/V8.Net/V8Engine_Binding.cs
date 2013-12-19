@@ -1744,7 +1744,8 @@ namespace V8.Net
                 if (ObjectType == null)
                     ObjectType = _Object.GetType();
 
-                _Proxy = (IV8NativeObject)_Object;
+                if (_Object is IV8NativeObject)
+                    _Proxy = (IV8NativeObject)_Object;
             }
 
             return base.Initialize(isConstructCall, args);
