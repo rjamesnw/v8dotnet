@@ -1167,7 +1167,7 @@ namespace V8.Net
         /// Calls the specified function property on the underlying object.
         /// The 'this' property will not be specified, which will default to the global scope as expected.
         /// </summary>
-        public InternalHandle Call(string functionName, params InternalHandle[] args)
+        public InternalHandle StaticCall(string functionName, params InternalHandle[] args)
         {
             if (functionName.IsNullOrWhiteSpace()) throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
 
@@ -1191,7 +1191,7 @@ namespace V8.Net
         /// Calls the underlying object as a function.
         /// The 'this' property will not be specified, which will default to the global scope as expected.
         /// </summary>
-        public InternalHandle Call(params InternalHandle[] args)
+        public InternalHandle StaticCall(params InternalHandle[] args)
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 

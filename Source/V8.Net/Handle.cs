@@ -909,7 +909,7 @@ namespace V8.Net
         /// Calls an object property with a given name on a specified object as a function and returns the result.
         /// If the function name is null or empty, then the current object is assumed to be a function object.
         /// </summary>
-        InternalHandle Call(string functionName, params InternalHandle[] args);
+        InternalHandle StaticCall(string functionName, params InternalHandle[] args);
 
         // --------------------------------------------------------------------------------------------------------------------
     }
@@ -1093,9 +1093,9 @@ namespace V8.Net
         /// <summary>
         /// Calls an object property with a given name on a specified object as a function and returns the result.
         /// </summary>
-        public InternalHandle Call(string functionName, params InternalHandle[] args)
+        public InternalHandle StaticCall(string functionName, params InternalHandle[] args)
         {
-            return _Handle.Call(functionName, args);
+            return _Handle.StaticCall(functionName, args);
         }
 
         /// <summary>
@@ -1111,9 +1111,9 @@ namespace V8.Net
         /// Calls the underlying object as a function.
         /// The 'this' property will not be specified, which will default to the global scope as expected.
         /// </summary>
-        public InternalHandle Call(params InternalHandle[] args)
+        public InternalHandle StaticCall(params InternalHandle[] args)
         {
-            return _Handle.Call(args);
+            return _Handle.StaticCall(args);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
