@@ -138,10 +138,16 @@ namespace V8.Net
         }
 
         /// <summary>
+        /// Returns a 'V8NativeObject' or 'V8Function' object based on the handle.
         /// <see cref="GetObject&lt;T&gt;"/>
         /// </summary>
         public V8NativeObject GetObject(InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true)
-        { return GetObject<V8NativeObject>(handle, createIfNotFound, initializeOnCreate); }
+        {
+            if (handle.IsFunction)
+                return GetObject<V8Function>(handle, createIfNotFound, initializeOnCreate);
+            else
+                return GetObject<V8NativeObject>(handle, createIfNotFound, initializeOnCreate); 
+        }
 
         // --------------------------------------------------------------------------------------------------------------------
 

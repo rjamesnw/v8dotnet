@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using V8.Net;
@@ -25,7 +26,7 @@ namespace V8.Net
     {
         static V8Engine _JSServer;
 
-        static Timer _TitleUpdateTimer;
+        static System.Timers.Timer _TitleUpdateTimer;
 
         static void Main(string[] args)
         {
@@ -44,7 +45,7 @@ namespace V8.Net
                 _JSServer.RunMarshallingTests();
                 Console.WriteLine(" Pass!");
 
-                _TitleUpdateTimer = new Timer(500);
+                _TitleUpdateTimer = new System.Timers.Timer(500);
                 _TitleUpdateTimer.AutoReset = true;
                 _TitleUpdateTimer.Elapsed += (_o, _e) =>
                 {
@@ -437,6 +438,59 @@ namespace V8.Net
 
                             Console.WriteLine("Done.");
                         }
+                        else if (lcInput == @"\memleaktest")
+                        {
+                            string script = @"
+for (var i=0; i < 1000; i++) {
+// if the loop is empty no memory leak occurs.
+// if any of the following 3 method calls are uncommented then a bad memory leak occurs.
+//SomeMethods.StaticDoNothing();
+//shared.StaticDoNothing();
+shared.InstanceDoNothing();
+}
+";
+                            _JSServer.GlobalObject.SetProperty(typeof(SomeMethods), recursive: true, memberSecurity: ScriptMemberSecurity.ReadWrite);
+                            var sm = new SomeMethods();
+                            _JSServer.GlobalObject.SetProperty("shared", sm, recursive: true);
+                            var hScript = _JSServer.Compile(script, null, true);
+                            int i = 0;
+                            try
+                            {
+                                while (true)
+                                {
+                                    // putting a using statement on the returned handle stops the memory leak when running just the for loop.
+                                    // using a compiled script seems to reduce garbage collection, but does not affect the memory leak
+                                    using (var h = _JSServer.Execute(hScript, true))
+                                    {
+                                    } // end using handle returned by execute
+                                    _JSServer.DoIdleNotification();
+                                    Thread.Sleep(1);
+                                    i++;
+                                    if (i % 1000 == 0)
+                                    {
+                                        GC.Collect();
+                                        GC.WaitForPendingFinalizers();
+                                        _JSServer.ForceV8GarbageCollection();
+                                        i = 0;
+                                    }
+                                } // end infinite loop
+                            }
+                            catch (OutOfMemoryException ex)
+                            {
+                                Console.WriteLine(ex);
+                                Console.ReadKey();
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex);
+                                Console.ReadKey();
+                            }
+                            catch
+                            {
+                                Console.WriteLine("We caught something");
+                                Console.ReadKey();
+                            }
+                        }
                         else if (lcInput.StartsWith(@"\"))
                         {
                             Console.WriteLine(@"Invalid console command. Type '\help' to see available commands.");
@@ -493,6 +547,16 @@ namespace V8.Net
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
         }
+    }
+}
+
+public class SomeMethods
+{
+    public static void StaticDoNothing()
+    {
+    }
+    public void InstanceDoNothing()
+    {
     }
 }
 

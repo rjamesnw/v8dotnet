@@ -134,6 +134,8 @@ namespace V8.Net
         /// </summary>
         public static HandleProxy** MakeHandleProxyArray(InternalHandle[] items)
         {
+            // (Note: items may be NULL, which is equivalent to "undefined")
+
             HandleProxy** nativeArrayMem = (HandleProxy**)Utilities.AllocPointerArray(items.Length);
 
             for (var i = 0; i < items.Length; i++)

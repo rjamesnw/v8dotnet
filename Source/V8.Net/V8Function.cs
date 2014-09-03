@@ -33,7 +33,7 @@ namespace V8.Net
         /// Calls the native side to invoke the function associated with this managed function wrapper.
         /// <para>Note: This simply calls 'base.Call()' without a function name.</para>
         /// </summary>
-        InternalHandle Call(params InternalHandle[] args);
+        InternalHandle StaticCall(params InternalHandle[] args);
 
         /// <summary>
         /// Calls the native side to invoke the function associated with this managed function wrapper.
@@ -72,7 +72,7 @@ namespace V8.Net
         /// Calls the native side to invoke the function associated with this managed function wrapper.
         /// <para>Note: This method simply calls 'Handle.Call()' without a function name.</para>
         /// </summary>
-        public override InternalHandle Call(params InternalHandle[] args) { return _Handle._Handle._Call(null, InternalHandle.Empty, args); }
+        public override InternalHandle StaticCall(params InternalHandle[] args) { return _Handle._Handle._Call(null, InternalHandle.Empty, args); }
 
         /// <summary>
         /// Calls the native side to invoke the function associated with this managed function wrapper.
