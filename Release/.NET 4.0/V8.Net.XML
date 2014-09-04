@@ -173,6 +173,7 @@
         </member>
         <member name="M:V8.Net.V8Engine.GetObject(V8.Net.InternalHandle,System.Boolean,System.Boolean)">
             <summary>
+            Returns a 'V8NativeObject' or 'V8Function' object based on the handle.
             <see cref="M:V8.Net.V8Engine.GetObject``1(V8.Net.InternalHandle,System.Boolean,System.Boolean)"/>
             </summary>
         </member>
@@ -617,7 +618,7 @@
             If the function name is null or empty, then the current object is assumed to be a function object.
             </summary>
         </member>
-        <member name="M:V8.Net.IV8Object.Call(System.String,V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.IV8Object.StaticCall(System.String,V8.Net.InternalHandle[])">
             <summary>
             Calls an object property with a given name on a specified object as a function and returns the result.
             If the function name is null or empty, then the current object is assumed to be a function object.
@@ -956,7 +957,7 @@
             The '_this' parameter is the "this" reference within the function when called.
             </summary>
         </member>
-        <member name="M:V8.Net.InternalHandle.Call(System.String,V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.InternalHandle.StaticCall(System.String,V8.Net.InternalHandle[])">
             <summary>
             Calls the specified function property on the underlying object.
             The 'this' property will not be specified, which will default to the global scope as expected.
@@ -968,7 +969,7 @@
             The '_this' parameter is the "this" reference within the function when called.
             </summary>
         </member>
-        <member name="M:V8.Net.InternalHandle.Call(V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.InternalHandle.StaticCall(V8.Net.InternalHandle[])">
             <summary>
             Calls the underlying object as a function.
             The 'this' property will not be specified, which will default to the global scope as expected.
@@ -1370,7 +1371,7 @@
             The '_this' property is the "this" object within the function when called.
             </summary>
         </member>
-        <member name="M:V8.Net.V8NativeObject.Call(System.String,V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.V8NativeObject.StaticCall(System.String,V8.Net.InternalHandle[])">
             <summary>
             Calls an object property with a given name on a specified object as a function and returns the result.
             </summary>
@@ -1381,7 +1382,7 @@
             The '_this' parameter is the "this" reference within the function when called.
             </summary>
         </member>
-        <member name="M:V8.Net.V8NativeObject.Call(V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.V8NativeObject.StaticCall(V8.Net.InternalHandle[])">
             <summary>
             Calls the underlying object as a function.
             The 'this' property will not be specified, which will default to the global scope as expected.
@@ -1448,7 +1449,7 @@
             feel free to implement the 'IV8Function' interface for your own classes instead.
             </summary>
         </member>
-        <member name="M:V8.Net.IV8Function.Call(V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.IV8Function.StaticCall(V8.Net.InternalHandle[])">
             <summary>
             Calls the native side to invoke the function associated with this managed function wrapper.
             <para>Note: This simply calls 'base.Call()' without a function name.</para>
@@ -1468,7 +1469,7 @@
             You can dynamically update this at any time, or even set it to null.
             </summary>
         </member>
-        <member name="M:V8.Net.V8Function.Call(V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.V8Function.StaticCall(V8.Net.InternalHandle[])">
             <summary>
             Calls the native side to invoke the function associated with this managed function wrapper.
             <para>Note: This method simply calls 'Handle.Call()' without a function name.</para>
@@ -2684,7 +2685,7 @@
             The '_this' property is the "this" object within the function when called.
             </summary>
         </member>
-        <member name="M:V8.Net.ObjectHandle.Call(System.String,V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.ObjectHandle.StaticCall(System.String,V8.Net.InternalHandle[])">
             <summary>
             Calls an object property with a given name on a specified object as a function and returns the result.
             </summary>
@@ -2695,7 +2696,7 @@
             The '_this' parameter is the "this" reference within the function when called.
             </summary>
         </member>
-        <member name="M:V8.Net.ObjectHandle.Call(V8.Net.InternalHandle[])">
+        <member name="M:V8.Net.ObjectHandle.StaticCall(V8.Net.InternalHandle[])">
             <summary>
             Calls the underlying object as a function.
             The 'this' property will not be specified, which will default to the global scope as expected.
