@@ -287,30 +287,30 @@ echo Importing V8 libraries ...
 
 REM *** .NET 4.0 ***
 
-xcopy v8-ia32\build\%mode%\v8-ia32.dll ..\..\..\bin\%mode%\x86\ /Y >nul
+xcopy v8-ia32\build\%mode%\*.dll ..\..\..\bin\%mode%\x86\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-ia32\build\%mode%\v8-ia32.pdb ..\..\..\bin\%mode%\x86\ /Y >nul
+xcopy v8-ia32\build\%mode%\*.pdb ..\..\..\bin\%mode%\x86\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-x64\build\%mode%\v8-x64.dll ..\..\..\bin\%mode%\x64\ /Y >nul
+xcopy v8-x64\build\%mode%\*.dll ..\..\..\bin\%mode%\x64\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-x64\build\%mode%\v8-x64.pdb ..\..\..\bin\%mode%\x64\  /Y >nul
+xcopy v8-x64\build\%mode%\*.pdb ..\..\..\bin\%mode%\x64\  /Y >nul
 if errorlevel 1 goto Error
 
 REM *** .NET 3.5 ***
 
-xcopy v8-ia32\build\%mode%\v8-ia32.dll ..\..\..\bin\3.5\%mode%\x86\ /Y >nul
+xcopy v8-ia32\build\%mode%\*.dll ..\..\..\bin\3.5\%mode%\x86\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-ia32\build\%mode%\v8-ia32.pdb ..\..\..\bin\3.5\%mode%\x86\ /Y >nul
+xcopy v8-ia32\build\%mode%\*.pdb ..\..\..\bin\3.5\%mode%\x86\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-x64\build\%mode%\v8-x64.dll ..\..\..\bin\3.5\%mode%\x64\ /Y >nul
+xcopy v8-x64\build\%mode%\*.dll ..\..\..\bin\3.5\%mode%\x64\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-x64\build\%mode%\v8-x64.pdb ..\..\..\bin\3.5\%mode%\x64\  /Y >nul
+xcopy v8-x64\build\%mode%\*.pdb ..\..\..\bin\3.5\%mode%\x64\  /Y >nul
 if errorlevel 1 goto Error
 
 

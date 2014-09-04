@@ -185,7 +185,7 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
         handleProxy = (new HandleProxy(this, (int32_t)_Handles.size()))->Initialize(handle);
         _Handles.push_back(handleProxy); // (keep a record of all handles created)
 
-        _Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up)
+        //_Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up)
     }
 
     return handleProxy;

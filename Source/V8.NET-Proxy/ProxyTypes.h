@@ -89,7 +89,7 @@ template <class T> struct CopyablePersistent {
 { \
     v8::Locker __lockScope(_this->Isolate()); \
     v8::Isolate::Scope __isolateScope(_this->Isolate()); \
-    v8::HandleScope __handleScope(_this->Isolate());
+    v8::HandleScope __handleScope(Isolate::GetCurrent());
 
 #define END_ISOLATE_SCOPE \
     __handleScope; \
