@@ -77,13 +77,11 @@ void HandleProxy::_ClearHandleValue()
 {
     if (!_Handle.IsEmpty())
     {
-        _Handle.Dispose();
-        _Handle.Clear();
+        _Handle.Reset();
     }
     if (!_Script.IsEmpty())
     {
-        _Script.Dispose();
-        _Script.Clear();
+        _Script.Reset();
     }
     _Value.Dispose();
     _Type = JSV_Undefined;
@@ -93,7 +91,7 @@ HandleProxy* HandleProxy::SetHandle(v8::Handle<v8::Script> handle)
 {
     _ClearHandleValue();
 
-    _Script = Persistent<v8::Script>::New(handle);
+    _Script = CopyablePersistent<v8::Script>(handle);
     _Type = JSV_Script;
 
     return this;
@@ -103,7 +101,7 @@ HandleProxy* HandleProxy::SetHandle(v8::Handle<Value> handle)
 {
     _ClearHandleValue();
 
-    _Handle = Persistent<Value>::New(handle);
+	_Handle = CopyablePersistent<Value>(handle);
 
     if (_Handle.IsEmpty())
     {
@@ -197,11 +195,11 @@ HandleProxy* HandleProxy::SetHandle(v8::Handle<Value> handle)
     return this;
 }
 
-void HandleProxy::_DisposeCallback(Isolate* isolate, Persistent<Value> object, void* parameter)
+void HandleProxy::_DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data)
 {
     //auto engineProxy = (V8EngineProxy*)isolate->GetData();
     //auto handleProxy = parameter;
-    object.Dispose();
+    //?object.Reset();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -229,7 +227,7 @@ int32_t HandleProxy::GetManagedObjectID()
             }
             else
             {
-                auto handle = obj->GetHiddenValue(String::New("ManagedObjectID"));
+				auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
                 if (!handle.IsEmpty() && handle->IsInt32())
                     _ObjectID = (int32_t)handle->Int32Value();
             }
@@ -242,11 +240,11 @@ int32_t HandleProxy::GetManagedObjectID()
             if (_ObjectID < -2)
             {
                 // ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
-                auto hTypeID = obj->Get(String::New("$__TypeID"));
+				auto hTypeID = obj->Get(NewString("$__TypeID"));
                 if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
                 {
                     int32_t typeID = hTypeID->Int32Value();
-                    if (obj->Has(String::New("$__Value")))
+					if (obj->Has(NewString("$__Value")))
                     {
                         _CLRTypeID = typeID;
                     }
@@ -264,7 +262,7 @@ void HandleProxy::MakeWeak()
 {
     if (GetManagedObjectID() >= 0)
     {
-        _Handle.MakeWeak<Value, HandleProxy>(_EngineProxy->_Isolate, this, _RevivableCallback);
+        _Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback);
         _Disposed = 2;
     }
 }
@@ -272,7 +270,7 @@ void HandleProxy::MakeWeak()
 // This is called when the managed side is no longer ready to destroy this V8 handle.
 void HandleProxy::MakeStrong()
 {
-    _Handle.ClearWeak(_EngineProxy->_Isolate);
+    _Handle.Value.ClearWeak();
     if (_Disposed == 2) _Disposed = 1; // (roll back to managed-side "dispose ready" status; note: the managed side worker currently doesn't track this yet, so it's not supported)
 }
 
@@ -280,10 +278,10 @@ void HandleProxy::MakeStrong()
 // When the managed side is ready to destroy a handle, it first marks it as weak.  When the V8 engine's garbage collector finally calls back, the managed side
 // object information is finally destroyed.
 
-void HandleProxy::_RevivableCallback(Isolate* isolate, Persistent<Value>* object, HandleProxy* parameter)
+void HandleProxy::_RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data)
 {
-    auto engineProxy = (V8EngineProxy*)isolate->GetData();
-    auto handleProxy = parameter;
+	auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
+	auto handleProxy = data.GetParameter();
 
     auto dispose = true;
 

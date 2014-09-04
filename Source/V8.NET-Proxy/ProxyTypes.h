@@ -43,10 +43,42 @@ using namespace v8;
 
 // ========================================================================================================================
 
+template <class T> struct CopyablePersistent {
+	v8::Persistent<T, CopyablePersistentTraits<T>> Value;
+	CopyablePersistent() { }
+	CopyablePersistent(CopyablePersistent &p) { Value = p; }
+	CopyablePersistent(Handle<T> &h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
+	CopyablePersistent& operator= (const Handle<T>& h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; }
+	operator Local<T>() const { return Handle(); }
+	T* operator ->() const { return *Handle(); }
+	/* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
+	Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
+	bool IsEmpty() const { return Value.IsEmpty(); }
+	void Reset() { return Value.Reset(); }
+	template <class S> Local<S> As() { return Handle().As<S>(); }
+};
+
+#define V8Undefined v8::Undefined(Isolate::GetCurrent())
+#define V8Null v8::Null(Isolate::GetCurrent())
+#define NewNumber(value) Number::New(Isolate::GetCurrent(), value)
+#define NewInteger(value) Integer::New(Isolate::GetCurrent(), value)
+#define NewBool(value) Boolean::New(Isolate::GetCurrent(), value)
+#define NewSizedUString(str, len) String::NewFromTwoByte(Isolate::GetCurrent(), str, String::kNormalString, len)
+#define NewUString(str) String::NewFromTwoByte(Isolate::GetCurrent(), str, String::kNormalString)
+#define NewSizedString(str, len) String::NewFromUtf8(Isolate::GetCurrent(), str, String::kNormalString, len)
+#define NewString(str) String::NewFromUtf8(Isolate::GetCurrent(), str, String::kNormalString)
+#define NewObject() Object::New(Isolate::GetCurrent())
+#define NewDate(ms) Date::New(Isolate::GetCurrent(), ms)
+#define NewArray(len) Array::New(Isolate::GetCurrent(), len)
+#define NewObjectTemplate() ObjectTemplate::New(Isolate::GetCurrent())
+#define NewFunctionTemplate(callback, data) FunctionTemplate::New(Isolate::GetCurrent(), callback, data)
+#define NewExternal(ptr) External::New(Isolate::GetCurrent(), ptr)
+#define ThrowException(value) Isolate::GetCurrent()->ThrowException(value)
+
 #define BEGIN_HANDLE_SCOPE(_this) \
 { \
     v8::Locker __lockScope(_this->_Isolate); \
-    v8::HandleScope __handleScope;
+    v8::HandleScope __handleScope(_this->_Isolate);
 
 #define END_HANDLE_SCOPE \
     __handleScope; /* (prevent non-usage warnings) */ \
@@ -57,7 +89,7 @@ using namespace v8;
 { \
     v8::Locker __lockScope(_this->Isolate()); \
     v8::Isolate::Scope __isolateScope(_this->Isolate()); \
-    v8::HandleScope __handleScope;
+    v8::HandleScope __handleScope(_this->Isolate());
 
 #define END_ISOLATE_SCOPE \
     __handleScope; \
@@ -211,11 +243,11 @@ private:
         int64_t __EngineProxy; // (to keep pointer sizes consistent between 32 and 64 bit systems)
     };
 
-    Persistent<Value> _Handle; // Reference to a JavaScript object (persisted handle for future reference - WARNING: Must be explicitly released when no longer needed!).
-    Persistent<v8::Script> _Script; // (references a script handle [instead of a value one])
+	CopyablePersistent<Value> _Handle; // Reference to a JavaScript object (persisted handle for future reference - WARNING: Must be explicitly released when no longer needed!).
+	CopyablePersistent<v8::Script> _Script; // (references a script handle [instead of a value one])
 
-    static void _DisposeCallback(Isolate* isolate, Persistent<Value> object, void* parameter);
-    static void _RevivableCallback(Isolate* isolate, Persistent<Value>* object, HandleProxy* parameter);
+	static void _DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data);
+	static void _RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data);
 
 protected:
 
@@ -406,8 +438,8 @@ typedef HandleProxy* (STDCALL *ManagedJSFunctionCallback)(int32_t managedObjectI
 // ========================================================================================================================
 
 /**
-* A proxy class to encapsulate the call-back methods needed to resolve properties for representing a managed object.
-*/
+  * A proxy class to encapsulate the call-back methods needed to resolve properties for representing a managed object.
+  */
 #pragma pack(push, 1)
 class ObjectTemplateProxy: ProxyBase
 {
@@ -416,7 +448,7 @@ protected:
     V8EngineProxy* _EngineProxy;
     int32_t _EngineID;
     int32_t _ObjectID; // ObjectTemplate will have a "shared" object ID for use with associating accessors.
-    Persistent<ObjectTemplate> _ObjectTemplate;
+	CopyablePersistent<ObjectTemplate> _ObjectTemplate;
 
     ManagedNamedPropertyGetter NamedPropertyGetter;
     ManagedNamedPropertySetter NamedPropertySetter;
@@ -504,7 +536,7 @@ protected:
 
     V8EngineProxy* _EngineProxy;
     int32_t _EngineID;
-    Persistent<FunctionTemplate> _FunctionTemplate;
+	CopyablePersistent<FunctionTemplate> _FunctionTemplate;
     ObjectTemplateProxy* _InstanceTemplate;
     ObjectTemplateProxy* _PrototypeTemplate;
 
@@ -579,8 +611,8 @@ protected:
 
     Isolate* _Isolate;
     ObjectTemplateProxy* _GlobalObjectTemplateProxy; // (for working with the managed side regarding the global scope)
-    Persistent<Context> _Context;
-    Persistent<Object> _GlobalObject; // (taken from the context)
+	CopyablePersistent<v8::Context> _Context;
+	CopyablePersistent<v8::Object> _GlobalObject; // (taken from the context)
     ManagedV8GarbageCollectionRequestCallback _ManagedV8GarbageCollectionRequestCallback;
 
     vector<_StringItem> _Strings; // An array (cache) of string buffers to reuse when marshalling strings.

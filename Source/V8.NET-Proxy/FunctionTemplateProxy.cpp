@@ -6,8 +6,8 @@ FunctionTemplateProxy::FunctionTemplateProxy(V8EngineProxy* engineProxy, uint16_
     :ProxyBase(FunctionTemplateProxyClass), _EngineProxy(engineProxy), _EngineID(engineProxy->_EngineID)
 {
     // The function template will call the local "InvocationCallbackProxy" function, which then translates the call for the managed side.
-    _FunctionTemplate = Persistent<FunctionTemplate>::New(_EngineProxy->Isolate(), FunctionTemplate::New(InvocationCallbackProxy, External::New(this)));
-    _FunctionTemplate->SetClassName(String::New(className));
+    _FunctionTemplate = CopyablePersistent<FunctionTemplate>(NewFunctionTemplate(InvocationCallbackProxy, NewExternal(this)));
+    _FunctionTemplate->SetClassName(NewUString(className));
 
     _InstanceTemplate = new ObjectTemplateProxy(_EngineProxy, _FunctionTemplate->InstanceTemplate());
     _PrototypeTemplate = new ObjectTemplateProxy(_EngineProxy, _FunctionTemplate->PrototypeTemplate());
@@ -29,7 +29,7 @@ FunctionTemplateProxy::~FunctionTemplateProxy()
             BEGIN_CONTEXT_SCOPE(_EngineProxy);
 
             if (!_FunctionTemplate.IsEmpty())
-                _FunctionTemplate.Dispose();
+                _FunctionTemplate.Reset();
 
             END_CONTEXT_SCOPE;
             END_ISOLATE_SCOPE;
@@ -126,8 +126,8 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
     proxyVal->_ObjectID = managedObjectID;
     //??auto count = obj->InternalFieldCount();
     obj->SetAlignedPointerInInternalField(0, this); // (stored a reference to the proxy instance for the call-back functions)
-    obj->SetInternalField(1, External::New((void*)managedObjectID)); // (stored a reference to the managed object for the call-back functions)
-    obj->SetHiddenValue(String::New("ManagedObjectID"), Integer::New(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+    obj->SetInternalField(1, NewExternal((void*)managedObjectID)); // (stored a reference to the managed object for the call-back functions)
+    obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
     return proxyVal;
 }
 
@@ -135,7 +135,7 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
 
 void FunctionTemplateProxy::Set(const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes)
 {
-    _FunctionTemplate->Set(String::New(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
+    _FunctionTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

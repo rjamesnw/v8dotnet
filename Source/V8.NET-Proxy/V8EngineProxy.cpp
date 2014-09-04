@@ -1,3 +1,5 @@
+// https://thlorenz.github.io/v8-dox/build/v8-3.25.30/html/index.html (more up to date)
+
 #include "ProxyTypes.h"
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -72,7 +74,7 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
         _V8Initialized = true;
     }
 
-    _Isolate->SetData(this); // (sets a reference in the isolate to the proxy [useful within callbacks])
+    _Isolate->SetData(0, this); // (sets a reference in the isolate to the proxy [useful within callbacks])
 
     if ((vector<bool>::size_type)_NextEngineID >= _DisposedEngines.capacity())
         _DisposedEngines.resize(_DisposedEngines.capacity() + 32);
@@ -162,7 +164,9 @@ void V8EngineProxy::DisposeNativeString(_StringItem &item)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-
+/*
+ * Returns a proxy wrapper for the given handle to allow access via the managed side.
+ */
 HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 {
     std::lock_guard<std::recursive_mutex> handleSection(_HandleSystemMutex);
@@ -181,7 +185,7 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
         handleProxy = (new HandleProxy(this, (int32_t)_Handles.size()))->Initialize(handle);
         _Handles.push_back(handleProxy); // (keep a record of all handles created)
 
-        v8::V8::IdleNotification(); // (handles should not have to be created all the time, so this helps to free them up)
+        _Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up)
     }
 
     return handleProxy;
@@ -219,23 +223,27 @@ FunctionTemplateProxy* V8EngineProxy::CreateFunctionTemplate(uint16_t *className
 HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
 {
     if (!_Context.IsEmpty())
-        _Context.Dispose();
+        _Context.Reset();
 
     if (_GlobalObjectTemplateProxy != nullptr)
         delete _GlobalObjectTemplateProxy;
 
     _GlobalObjectTemplateProxy = proxy;
+	
+	auto context = v8::Context::New(_Isolate, nullptr, Local<ObjectTemplate>::New(_Isolate, _GlobalObjectTemplateProxy->_ObjectTemplate));
 
-    _Context = Persistent<v8::Context>::New(_Isolate, v8::Context::New(_Isolate, nullptr, _GlobalObjectTemplateProxy->_ObjectTemplate));
+	_Context = context;
 
     // ... the context auto creates the global object from the given template, BUT, we still need to update the internal fields with proper values expected
     // for callback into managed code ...
 
-    _GlobalObject = Persistent<Object>::New(_Isolate, _Context->Global()->GetPrototype()->ToObject()); // (keep a reference to the global object for faster reference)
-    _GlobalObject->SetAlignedPointerInInternalField(0, _GlobalObjectTemplateProxy); // (proxy object reference)
-    _GlobalObject->SetInternalField(1, External::New((void*)-1)); // (manage object ID, which is only applicable when tracking many created objects [and not a single engine or global scope])
+	auto globalObject = context->Global()->GetPrototype()->ToObject();
+	globalObject->SetAlignedPointerInInternalField(0, _GlobalObjectTemplateProxy); // (proxy object reference)
+	globalObject->SetInternalField(1, External::New(_Isolate, (void*)-1)); // (manage object ID, which is only applicable when tracking many created objects [and not a single engine or global scope])
 
-    return GetHandleProxy(_GlobalObject); // (the native side will own this, and is responsible to free it when done)
+	_GlobalObject = globalObject; // (keep a reference to the global object for faster reference)
+	
+	return GetHandleProxy(globalObject); // (the native side will own this, and is responsible to free it when done)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -290,8 +298,8 @@ Local<String> _GetErrorMessage(TryCatch &tryCatch)
         {
             uint16_t* ss = new uint16_t[stackStr->Length()+1];
             stack->ToString()->Write(ss);
-            auto subStackStr = String::New(ss, msg->Length());
-            auto stackPartStr = String::New(ss + msg->Length(), stackStr->Length() - msg->Length());
+            auto subStackStr = NewSizedUString(ss, msg->Length());
+			auto stackPartStr = NewSizedUString(ss + msg->Length(), stackStr->Length() - msg->Length());
             delete[] ss;
 
             if (msg->Equals(subStackStr))
@@ -299,22 +307,22 @@ Local<String> _GetErrorMessage(TryCatch &tryCatch)
         }
     }
 
-    msg = msg->Concat(msg, String::New("\r\n"));
+    msg = msg->Concat(msg, NewString("\r\n"));
 
-    msg = msg->Concat(msg, String::New("  Line: "));
-    auto line = Integer::New(tryCatch.Message()->GetLineNumber())->ToString();
+	msg = msg->Concat(msg, NewString("  Line: "));
+    auto line = NewInteger(tryCatch.Message()->GetLineNumber())->ToString();
     msg = msg->Concat(msg, line);
 
-    msg = msg->Concat(msg, String::New("  Column: "));
-    auto col = Integer::New(tryCatch.Message()->GetStartColumn())->ToString();
+	msg = msg->Concat(msg, NewString("  Column: "));
+	auto col = NewInteger(tryCatch.Message()->GetStartColumn())->ToString();
     msg = msg->Concat(msg, col);
-    msg = msg->Concat(msg, String::New("\r\n"));
+	msg = msg->Concat(msg, NewString("\r\n"));
 
     if (showStackMsg)
     {
-        msg = msg->Concat(msg, String::New("  Stack: "));
+		msg = msg->Concat(msg, NewString("  Stack: "));
         msg = msg->Concat(msg, stackStr);
-        msg = msg->Concat(msg, String::New("\r\n"));
+		msg = msg->Concat(msg, NewString("\r\n"));
     }
 
     return msg;
@@ -332,7 +340,7 @@ HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName
 
         if (sourceName == nullptr) sourceName = (uint16_t*)L"";
 
-        auto compiledScript = Script::Compile(String::New(script), String::New(sourceName));
+		auto compiledScript = Script::Compile(NewUString(script), NewUString(sourceName));
 
         if (__tryCatch.HasCaught())
         {
@@ -344,7 +352,7 @@ HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName
     }
     catch (exception ex)
     {
-        returnVal = GetHandleProxy(String::New(ex.what()));
+        returnVal = GetHandleProxy(NewString(ex.what()));
         returnVal->_Type = JSV_InternalError;
     }
 
@@ -372,7 +380,7 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
     }
     catch (exception ex)
     {
-        returnVal = GetHandleProxy(String::New(ex.what()));
+		returnVal = GetHandleProxy(NewString(ex.what()));
         returnVal->_Type = JSV_InternalError;
     }
 
@@ -391,9 +399,9 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
 
         if (sourceName == nullptr) sourceName = (uint16_t*)L"";
 
-        auto hScript = String::New(script);
+		auto hScript = NewUString(script);
 
-        auto compiledScript = Script::Compile(hScript, String::New(sourceName));
+		auto compiledScript = Script::Compile(hScript, NewUString(sourceName));
 
         if (__tryCatch.HasCaught())
         {
@@ -409,7 +417,7 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
     }
     catch (exception ex)
     {
-        returnVal = GetHandleProxy(String::New(ex.what()));
+		returnVal = GetHandleProxy(NewString(ex.what()));
         returnVal->_Type = JSV_InternalError;
     }
 
@@ -420,35 +428,35 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
 
 HandleProxy* V8EngineProxy::CreateNumber(double num)
 {
-    return GetHandleProxy(v8::Number::New(num));
+    return GetHandleProxy(NewNumber(num));
 }
 
 HandleProxy* V8EngineProxy::CreateInteger(int32_t num)
 {
-    return GetHandleProxy(v8::Integer::New(num));
+    return GetHandleProxy(NewInteger(num));
 }
 
 HandleProxy* V8EngineProxy::CreateBoolean(bool b)
 { 
-    return GetHandleProxy(v8::Boolean::New(b));
+    return GetHandleProxy(NewBool(b));
 }
 
 HandleProxy* V8EngineProxy::CreateString(const uint16_t* str) 
 { 
-    return GetHandleProxy(v8::String::New(str)); 
+    return GetHandleProxy(NewUString(str)); 
 }
 
 HandleProxy* V8EngineProxy::CreateError(const uint16_t* message, JSValueType errorType) 
 { 
     if (errorType >= 0) throw exception("Invalid error type.");
-    auto h = GetHandleProxy(v8::String::New(message)); 
+	auto h = GetHandleProxy(NewUString(message));
     h->_Type = errorType;
     return h;
 }
 HandleProxy* V8EngineProxy::CreateError(const char* message, JSValueType errorType)
 {
     if (errorType >= 0) throw exception("Invalid error type.");
-    auto h = GetHandleProxy(String::New(message));
+	auto h = GetHandleProxy(NewString(message));
     h->_Type = errorType;
     return h;
 }
@@ -456,7 +464,7 @@ HandleProxy* V8EngineProxy::CreateError(const char* message, JSValueType errorTy
 
 HandleProxy* V8EngineProxy::CreateDate(double ms) 
 { 
-    return GetHandleProxy(Date::New(ms));
+    return GetHandleProxy(NewDate(ms));
 }
 
 HandleProxy* V8EngineProxy::CreateObject(int32_t managedObjectID) 
@@ -464,14 +472,14 @@ HandleProxy* V8EngineProxy::CreateObject(int32_t managedObjectID)
     if (managedObjectID == -1)
         managedObjectID = GetNextNonTemplateObjectID();
 
-    auto handle = GetHandleProxy(v8::Object::New());
+	auto handle = GetHandleProxy(NewObject());
     ConnectObject(handle, managedObjectID, nullptr);
     return handle;
 }
 
 HandleProxy* V8EngineProxy::CreateArray(HandleProxy** items, uint16_t length)
 {
-    Local<Array> array = Array::New(length);
+    Local<Array> array = NewArray(length);
 
     if (items != nullptr && length > 0)
         for (auto i = 0; i < length; i++)
@@ -482,18 +490,18 @@ HandleProxy* V8EngineProxy::CreateArray(HandleProxy** items, uint16_t length)
 
 HandleProxy* V8EngineProxy::CreateArray(uint16_t** items, uint16_t length)
 {
-    Local<Array> array = Array::New(length);
+	Local<Array> array = NewArray(length);
 
     if (items != nullptr && length > 0)
         for (auto i = 0; i < length; i++)
-            array->Set(i, String::New(items[i]));
+            array->Set(i, NewUString(items[i]));
 
     return GetHandleProxy(array);
 }
 
 HandleProxy* V8EngineProxy::CreateNullValue()
 {
-    return GetHandleProxy(v8::Null());
+    return GetHandleProxy(V8Null);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

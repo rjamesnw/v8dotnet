@@ -36,8 +36,8 @@ extern "C"
     {
         BEGIN_ISOLATE_SCOPE(engine);
         BEGIN_CONTEXT_SCOPE(engine);
-        V8::LowMemoryNotification();
-        while(!V8::IdleNotification()) {}
+        engine->Isolate()->LowMemoryNotification();
+        while (!engine->Isolate()->IdleNotification(1000)) {}
         END_CONTEXT_SCOPE;
         END_ISOLATE_SCOPE;
     }
@@ -46,7 +46,7 @@ extern "C"
     {
         BEGIN_ISOLATE_SCOPE(engine);
         BEGIN_CONTEXT_SCOPE(engine);
-        return V8::IdleNotification(hint);
+        return engine->Isolate()->IdleNotification(hint);
         END_CONTEXT_SCOPE;
         END_ISOLATE_SCOPE;
     }
@@ -181,9 +181,9 @@ extern "C"
             {
                 if (templateProxy != nullptr)
                     obj->SetAlignedPointerInInternalField(0, templateProxy); // (stored a reference to the proxy instance for the call-back function(s))
-                obj->SetInternalField(1, External::New((void*)managedObjectID));
+                obj->SetInternalField(1, NewExternal((void*)managedObjectID));
             }
-            obj->SetHiddenValue(String::New("ManagedObjectID"), Integer::New(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+            obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
         }
         handleProxy->SetManagedObjectID(managedObjectID);
 
@@ -226,7 +226,7 @@ extern "C"
             if (hSubject.IsEmpty() || !hSubject->IsObject())
                 throw exception("Call: The subject handle does not represent an object.");
 
-            auto hProp = hSubject.As<Object>()->Get(String::New(functionName));
+            auto hProp = hSubject.As<Object>()->Get(NewUString(functionName));
 
             if (hProp.IsEmpty() || !hProp->IsFunction())
                 throw exception("Call: The specified property does not represent a function.");
@@ -258,7 +258,7 @@ extern "C"
 
     // ------------------------------------------------------------------------------------------------------------------------
 
-    EXPORT bool STDCALL SetObjectPropertyByName(HandleProxy *proxy, const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attribs = None)
+    EXPORT bool STDCALL SetObjectPropertyByName(HandleProxy *proxy, const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attribs = v8::None)
     {
         auto engine = proxy->EngineProxy();
         BEGIN_ISOLATE_SCOPE(engine);
@@ -268,8 +268,8 @@ extern "C"
         if (handle.IsEmpty() || !handle->IsObject())
             throw exception("The handle does not represent an object.");
         auto obj = handle.As<Object>();
-        Handle<Value> valueHandle = value != nullptr ? value->Handle() : v8::Undefined();
-        return obj->Set(String::New(name), valueHandle, attribs);
+        Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+        return obj->ForceSet(NewUString(name), valueHandle, attribs);
 
         END_CONTEXT_SCOPE;
         END_ISOLATE_SCOPE;
@@ -285,7 +285,7 @@ extern "C"
         if (handle.IsEmpty() || !handle->IsObject())
             throw exception("The handle does not represent an object.");
         auto obj = handle.As<Object>();
-        Handle<Value> valueHandle = value != nullptr ? value->Handle() : v8::Undefined();
+		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
         return obj->Set(index,  valueHandle);
 
         END_CONTEXT_SCOPE;
@@ -302,7 +302,7 @@ extern "C"
         if (handle.IsEmpty() || !handle->IsObject())
             throw exception("The handle does not represent an object.");
         auto obj = handle.As<Object>();
-        return proxy->EngineProxy()->GetHandleProxy(obj->Get(String::New(name)));
+		return proxy->EngineProxy()->GetHandleProxy(obj->Get(NewUString(name)));
 
         END_CONTEXT_SCOPE;
         END_ISOLATE_SCOPE;
@@ -334,7 +334,7 @@ extern "C"
         if (handle.IsEmpty() || !handle->IsObject())
             throw exception("The handle does not represent an object.");
         auto obj = handle.As<Object>();
-        return obj->Delete(String::New(name));
+		return obj->Delete(NewUString(name));
 
         END_CONTEXT_SCOPE;
         END_ISOLATE_SCOPE;
@@ -370,14 +370,14 @@ extern "C"
 
         auto obj = handle.As<Object>();
 
-        obj->SetHiddenValue(String::New("ManagedObjectID"), Integer::New(managedObjectID));
+		obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID));
 
-        auto accessors = Array::New(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
-        accessors->Set(0, Integer::New(managedObjectID));
-        accessors->Set(1, External::New(getter));
-        accessors->Set(2, External::New(setter));
+		auto accessors = NewArray(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
+		accessors->Set(0, NewInteger(managedObjectID));
+		accessors->Set(1, NewExternal(getter));
+		accessors->Set(2, NewExternal(setter));
 
-        obj->SetAccessor(String::New(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
+		obj->SetAccessor(NewUString(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
 
         END_CONTEXT_SCOPE;
         END_ISOLATE_SCOPE;
@@ -453,7 +453,7 @@ extern "C"
         if (handle.IsEmpty() || !handle->IsObject())
             throw exception("The handle does not represent an object.");
         auto obj = handle.As<Object>();
-        return obj->GetPropertyAttributes(String::New(name));
+		return obj->GetPropertyAttributes(NewUString(name));
 
         END_CONTEXT_SCOPE;
         END_ISOLATE_SCOPE;
