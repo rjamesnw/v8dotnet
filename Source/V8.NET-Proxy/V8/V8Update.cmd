@@ -2,6 +2,7 @@
 setlocal
 set errorlevel=
 set v8rev=
+set GIT_CURL_VERBOSE=1
 
 REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
 
@@ -47,16 +48,35 @@ if not exist build\v8\ echo V8 Source not downloaded. & pause & goto restart
 
 cd build\v8
 
+if exist "getGYP.log" del getGYP.log
+if exist "getPython.log" del getPython.log
+if exist "getCygwin.log" del getCygwin.log
+if exist "getICU.log" del getICU.log
+if exist "getGTest.log" del getGTest.log
+if exist "getGMock.log" del getGMock.log
+
 echo Downloading GYP ...
-svn checkout http://gyp.googlecode.com/svn/trunk  build/gyp >getGYP.log
+svn co http://gyp.googlecode.com/svn/trunk  build/gyp  >getGYP.log
 if errorlevel 1 goto Error
 
 echo Downloading Python ...
-svn checkout http://src.chromium.org/svn/trunk/tools/third_party/python_26  third_party/python_26 >getPython.log
+svn co http://src.chromium.org/svn/trunk/tools/third_party/python_26  third_party/python_26  >getPython.log
 if errorlevel 1 goto Error
 
-echo Downloading Cygwin ...
-svn checkout http://src.chromium.org/svn/trunk/deps/third_party/cygwin  third_party/cygwin >getCygwin.log
+echo Downloading Cygwin...
+svn co http://src.chromium.org/svn/trunk/deps/third_party/cygwin third_party/cygwin  >getCygwin.log
+if errorlevel 1 goto Error
+
+echo Downloading ICU ...
+svn co https://src.chromium.org/chrome/trunk/deps/third_party/icu52  third_party/icu  >getICU.log
+if errorlevel 1 goto Error
+
+echo Downloading GTest ...
+svn co http://googletest.googlecode.com/svn/trunk  testing/gtest  >getGTest.log
+if errorlevel 1 goto Error
+
+echo Downloading GMock ...
+svn co http://googlemock.googlecode.com/svn/trunk  testing/gmock  >getGMock.log
 if errorlevel 1 goto Error
 
 echo.
@@ -102,7 +122,7 @@ if errorlevel 1 goto Error
 :BeginSrcDownload
 echo Downloading V8 ...
 REM svn checkout -r %v8rev% http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log ; ISSUE 2882
-git clone git://github.com/v8/v8.git build\v8
+git clone https://chromium.googlesource.com/external/v8.git  build\v8
 if errorlevel 1 goto Error
 
 :UpdateToRev
@@ -128,9 +148,10 @@ if not exist build\v8\ echo V8 Source not downloaded. & pause & goto restart
 
 cd build
 
-if not exist v8\build\gyp\ echo Required tools not downloaded. & pause & goto restart
-if not exist v8\third_party\cygwin\ echo Required tools not downloaded. & pause & goto restart
-if not exist v8\third_party\python_26\ echo Required tools not downloaded. & pause & goto restart
+if not exist v8\build\gyp\ echo Required tool 'GYP' not downloaded. & pause & goto restart
+if not exist v8\third_party\python_26\ echo Required tool 'Python' not downloaded. & pause & goto restart
+if not exist v8\third_party\cygwin\ echo Required tool 'Cygwin' not downloaded. & pause & goto restart
+if not exist v8\third_party\icu\ echo Required tool 'ICU' not downloaded. & pause & goto restart
 
 REM Check if we are running in the correct environment (supports VS2010 and VS2012) ...
 REM (note: more than one version of Visual Studio may be installed, so start from highest version, to least)
@@ -140,6 +161,7 @@ if not "%DevEnvDir%"=="" set VSTools=%DevEnvDir%..\Tools\ & goto BeginV8Compile
 echo This command file should be run via the Visual Studio developer prompt.
 echo Attempting to do so now ...
 
+if not "%VS120COMNTOOLS%"=="" set VSTools=%VS120COMNTOOLS%& set VSVer=2013& goto SetVSEnv
 if not "%VS110COMNTOOLS%"=="" set VSTools=%VS110COMNTOOLS%& set VSVer=2012& goto SetVSEnv
 if not "%VS100COMNTOOLS%"=="" set VSTools=%VS100COMNTOOLS%& set VSVer=2010& goto SetVSEnv
 
@@ -253,7 +275,9 @@ if errorlevel 1 goto Error
 :BuildV864Bit
 echo Building v8-x64\tools\gyp\v8.sln ...
 set LogFile=%CD%\build.log
-msbuild /p:Configuration=%mode% /p:Platform=x64 tools\gyp\v8.sln >"%LogFile%"
+msbuild /p:Configuration=%mode% /p:Platform=x64 /p:TreatWarningsAsErrors=false tools\gyp\v8.sln >"%LogFile%"
+REM Note: 'TreatWarningsAsErrors' must be false, as size_t (int64 in x64) is downsized to int32 in some areas.
+REM (For more options see http://msdn.microsoft.com/en-us/library/bb629394.aspx)
 if errorlevel 1 goto Error
 set LogFile=
 cd ..

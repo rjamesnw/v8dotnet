@@ -7,8 +7,9 @@ ObjectTemplateProxy::ObjectTemplateProxy(V8EngineProxy* engineProxy)
     NamedPropertyGetter(nullptr), NamedPropertySetter(nullptr), NamedPropertyQuery(nullptr), NamedPropertyDeleter(nullptr), NamedPropertyEnumerator(nullptr)
 {
     _ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // ("ObjectTemplateProxy" will qualify as a non-template-created object in this case)
-    _ObjectTemplate = Persistent<ObjectTemplate>::New(_EngineProxy->Isolate(), ObjectTemplate::New());
-    _ObjectTemplate->SetInternalFieldCount(2); // (one for the associated proxy, and one for the associated managed object ID)
+	auto obj = NewObjectTemplate();
+	obj->SetInternalFieldCount(2); // (one for the associated proxy, and one for the associated managed object ID)
+	_ObjectTemplate = CopyablePersistent<ObjectTemplate>(obj);
 }
 
 ObjectTemplateProxy::ObjectTemplateProxy(V8EngineProxy* engineProxy, Local<ObjectTemplate> objectTemplate)
@@ -16,8 +17,8 @@ ObjectTemplateProxy::ObjectTemplateProxy(V8EngineProxy* engineProxy, Local<Objec
     NamedPropertyGetter(nullptr), NamedPropertySetter(nullptr), NamedPropertyQuery(nullptr), NamedPropertyDeleter(nullptr), NamedPropertyEnumerator(nullptr)
 {
     _ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // ("ObjectTemplateProxy" will qualify as a non-template-created object in this case)
-    _ObjectTemplate = Persistent<ObjectTemplate>::New(_EngineProxy->Isolate(), objectTemplate);
-    _ObjectTemplate->SetInternalFieldCount(2); // (one for the associated proxy, and one for the associated managed object ID)
+	objectTemplate->SetInternalFieldCount(2); // (one for the associated proxy, and one for the associated managed object ID)
+	_ObjectTemplate = CopyablePersistent<ObjectTemplate>(objectTemplate);
 }
 
 ObjectTemplateProxy::~ObjectTemplateProxy()
@@ -30,7 +31,7 @@ ObjectTemplateProxy::~ObjectTemplateProxy()
             BEGIN_CONTEXT_SCOPE(_EngineProxy);
 
             if (!_ObjectTemplate.IsEmpty())
-                _ObjectTemplate.Dispose();
+                _ObjectTemplate.Reset();
 
             END_CONTEXT_SCOPE;
             END_ISOLATE_SCOPE;
@@ -71,7 +72,7 @@ void ObjectTemplateProxy::RegisterIndexedPropertyHandlers(
     IndexedPropertyDeleter = deleter; 
     IndexedPropertyEnumerator = enumerator;
 
-    _ObjectTemplate->SetIndexedPropertyHandler(GetProperty, SetProperty, GetPropertyAttributes, DeleteProperty, GetPropertyIndices);
+	_ObjectTemplate->SetIndexedPropertyHandler(GetProperty, SetProperty, GetPropertyAttributes, DeleteProperty, GetPropertyIndices);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -79,7 +80,7 @@ void ObjectTemplateProxy::RegisterIndexedPropertyHandlers(
 void ObjectTemplateProxy::RegisterInvokeHandler(ManagedJSFunctionCallback callback)
 {
     _ManagedCallback = callback;
-    _ObjectTemplate->SetCallAsFunctionHandler(FunctionTemplateProxy::InvocationCallbackProxy, External::New(this));
+	_ObjectTemplate->SetCallAsFunctionHandler(FunctionTemplateProxy::InvocationCallbackProxy, NewExternal(this));
 
 }
 
@@ -87,12 +88,12 @@ void ObjectTemplateProxy::RegisterInvokeHandler(ManagedJSFunctionCallback callba
 
 void ObjectTemplateProxy::UnregisterNamedPropertyHandlers()
 {
-    _ObjectTemplate->SetNamedPropertyHandler((NamedPropertyGetterCallback)nullptr);
+	_ObjectTemplate->SetNamedPropertyHandler((NamedPropertyGetterCallback)nullptr);
 }
 
 void ObjectTemplateProxy::UnregisterIndexedPropertyHandlers()
 {
-    _ObjectTemplate->SetIndexedPropertyHandler((IndexedPropertyGetterCallback)nullptr);
+	_ObjectTemplate->SetIndexedPropertyHandler((IndexedPropertyGetterCallback)nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ void ObjectTemplateProxy::GetProperty(Local<String> hName, const PropertyCallbac
                 str.Dispose();
                 if (result != nullptr) 
                     if (result->IsError())
-                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
+						info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
                     else
                         info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
                 // (result == null == undefined [which means the managed side didn't return anything])
@@ -179,7 +180,7 @@ void ObjectTemplateProxy::GetPropertyAttributes(Local<String> hName, const Prope
                 int result = proxy->NamedPropertyQuery(str.String, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 str.Dispose();
                 if (result >= 0)
-                    info.GetReturnValue().Set(Handle<v8::Integer>(v8::Integer::New(result)));
+                    info.GetReturnValue().Set(Handle<v8::Integer>(NewInteger(result)));
             }
         }
     }
@@ -209,7 +210,7 @@ void ObjectTemplateProxy::DeleteProperty(Local<String> hName, const PropertyCall
                 // if 'result' is < 0, then this represents an "undefined" return value, otherwise 0 == false, and > 0 is true.
 
                 if (result >= 0)
-                    info.GetReturnValue().Set(Handle<v8::Boolean>(v8::Boolean::New(result != 0 ? true : false)));
+					info.GetReturnValue().Set(Handle<v8::Boolean>(NewBool(result != 0 ? true : false)));
             }
         }
     }
@@ -236,7 +237,7 @@ void ObjectTemplateProxy::GetPropertyNames(const PropertyCallbackInfo<Array>& in
                 if (result != nullptr) 
                     if (result->IsError())
                     {
-                        auto array = Array::New(1);
+						auto array = NewArray(1);
                         array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString())));
                         info.GetReturnValue().Set(array);
                     }
@@ -326,7 +327,7 @@ void ObjectTemplateProxy::GetPropertyAttributes(uint32_t index, const PropertyCa
                 ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
                 int result = proxy->IndexedPropertyQuery(index, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 if (result >= 0)
-                    info.GetReturnValue().Set(Handle<v8::Integer>(v8::Integer::New(result)));
+					info.GetReturnValue().Set(Handle<v8::Integer>(NewInteger(result)));
             }
         }
     }
@@ -354,7 +355,7 @@ void ObjectTemplateProxy::DeleteProperty(uint32_t index, const PropertyCallbackI
                 // if 'result' is < 0, then this represents an "undefined" return value, otherwise 0 == false, and > 0 is true.
 
                 if (result >= 0)
-                    info.GetReturnValue().Set(Handle<v8::Boolean>(v8::Boolean::New(result != 0 ? true : false)));
+					info.GetReturnValue().Set(Handle<v8::Boolean>(NewBool(result != 0 ? true : false)));
             }
         }
     }
@@ -381,7 +382,7 @@ void ObjectTemplateProxy::GetPropertyIndices(const PropertyCallbackInfo<Array>& 
                 if (result != nullptr) 
                     if (result->IsError())
                     {
-                        auto array = Array::New(1);
+						auto array = NewArray(1);
                         array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString())));
                         info.GetReturnValue().Set(array);
                     }
@@ -429,7 +430,7 @@ void ObjectTemplateProxy::AccessorGetterCallbackProxy(Local<String> property, co
             //        managedObjectID = (int32_t)hHiddenObjID->Int32Value();
             //}
 
-            auto engine = (V8EngineProxy*)info.GetIsolate()->GetData();
+            auto engine = (V8EngineProxy*)info.GetIsolate()->GetData(0);
             ManagedAccessorGetter getter = (ManagedAccessorGetter)hAccessors->Get(1).As<External>()->Value();
 
             if (getter != nullptr)
@@ -482,7 +483,7 @@ void ObjectTemplateProxy::AccessorSetterCallbackProxy(Local<String> property, Lo
             //        managedObjectID = (int32_t)hHiddenObjID->Int32Value();
             //}
 
-            auto engine = (V8EngineProxy*)info.GetIsolate()->GetData();
+            auto engine = (V8EngineProxy*)info.GetIsolate()->GetData(0);
             ManagedAccessorSetter setter = (ManagedAccessorSetter)hAccessors->Get(2).As<External>()->Value();
 
             if (setter != nullptr)
@@ -519,16 +520,16 @@ void ObjectTemplateProxy::SetAccessor(int32_t managedObjectID, const uint16_t *n
                                       ManagedAccessorGetter getter, ManagedAccessorSetter setter,
                                       v8::AccessControl access, v8::PropertyAttribute attributes)
 {
-    auto accessors = Array::New(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
-    accessors->Set(0, Integer::New(managedObjectID));
-    accessors->Set(1, External::New(getter));
-    accessors->Set(2, External::New(setter));
-    _ObjectTemplate->SetAccessor(String::New(name), AccessorGetterCallbackProxy, AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
+	auto accessors = NewArray(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
+	accessors->Set(0, NewInteger(managedObjectID));
+	accessors->Set(1, NewExternal(getter));
+	accessors->Set(2, NewExternal(setter));
+	_ObjectTemplate->SetAccessor(NewUString(name), AccessorGetterCallbackProxy, AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
 }
 
 void ObjectTemplateProxy::Set(const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes)
 {
-    _ObjectTemplate->Set(String::New(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
+	_ObjectTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

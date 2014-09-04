@@ -485,11 +485,11 @@ shared.InstanceDoNothing();
                                 Console.WriteLine(ex);
                                 Console.ReadKey();
                             }
-                            catch
-                            {
-                                Console.WriteLine("We caught something");
-                                Console.ReadKey();
-                            }
+                            //?catch
+                            //{
+                            //    Console.WriteLine("We caught something");
+                            //    Console.ReadKey();
+                            //}
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {
