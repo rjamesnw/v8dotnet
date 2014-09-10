@@ -6,7 +6,7 @@
 #if (_MSC_PLATFORM_TOOLSET >= 110)
 #include <mutex>
 #endif
-#include <v8stdint.h>
+#include <include\v8stdint.h>
 #include "Platform.h"
 
 using namespace std;
@@ -17,6 +17,7 @@ using namespace std;
 
 #if _WIN32 || _WIN64
 #include <windows.h>
+#pragma comment(lib, "winmm.lib") // (required by V8 now)
 #include <oleauto.h>
 #define ALLOC_MANAGED_MEM(size) GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, size)
 #define REALLOC_MANAGED_MEM(ptr, size) GlobalReAlloc(ptr, size, GMEM_MOVEABLE)
@@ -34,8 +35,9 @@ using namespace std;
 #define USING_V8_SHARED 1
 #define V8_USE_UNSAFE_HANDLES 1 // (see https://groups.google.com/forum/#!topic/v8-users/oBE_DTpRC08)
 
-#include <v8.h>
-#include <v8-debug.h>
+#include <include\v8.h>
+#include <include\v8-debug.h>
+#include <include\libplatform\libplatform.h>
 
 using namespace v8;
 
@@ -44,18 +46,19 @@ using namespace v8;
 // ========================================================================================================================
 
 template <class T> struct CopyablePersistent {
-	v8::Persistent<T, CopyablePersistentTraits<T>> Value;
-	CopyablePersistent() { }
-	CopyablePersistent(CopyablePersistent &p) { Value = p; }
-	CopyablePersistent(Handle<T> &h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
-	CopyablePersistent& operator= (const Handle<T>& h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; }
-	operator Local<T>() const { return Handle(); }
-	T* operator ->() const { return *Handle(); }
-	/* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
-	Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
-	bool IsEmpty() const { return Value.IsEmpty(); }
-	void Reset() { return Value.Reset(); }
-	template <class S> Local<S> As() { return Handle().As<S>(); }
+    v8::Persistent<T, CopyablePersistentTraits<T>> Value;
+    CopyablePersistent() { }
+    CopyablePersistent(CopyablePersistent &p) { Value = p; }
+    CopyablePersistent(Handle<T> &h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
+    ~CopyablePersistent() { if (!Value.IsEmpty()) Value.Reset(); }
+    CopyablePersistent& operator= (const Handle<T>& h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; }
+    operator Local<T>() const { return Handle(); }
+    T* operator ->() const { return *Handle(); }
+    /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
+    Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
+    bool IsEmpty() const { return Value.IsEmpty(); }
+    void Reset() { return Value.Reset(); }
+    template <class S> Local<S> As() { return Handle().As<S>(); }
 };
 
 #define V8Undefined v8::Undefined(Isolate::GetCurrent())
@@ -243,11 +246,11 @@ private:
         int64_t __EngineProxy; // (to keep pointer sizes consistent between 32 and 64 bit systems)
     };
 
-	CopyablePersistent<Value> _Handle; // Reference to a JavaScript object (persisted handle for future reference - WARNING: Must be explicitly released when no longer needed!).
-	CopyablePersistent<v8::Script> _Script; // (references a script handle [instead of a value one])
+    CopyablePersistent<Value> _Handle; // Reference to a JavaScript object (persisted handle for future reference - WARNING: Must be explicitly released when no longer needed!).
+    CopyablePersistent<v8::Script> _Script; // (references a script handle [instead of a value one])
 
-	static void _DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data);
-	static void _RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data);
+    static void _DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data);
+    static void _RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data);
 
 protected:
 
@@ -445,24 +448,24 @@ class ObjectTemplateProxy: ProxyBase
 {
 protected:
 
-    V8EngineProxy* _EngineProxy;
+    V8EngineProxy* _EngineProxy = nullptr;
     int32_t _EngineID;
     int32_t _ObjectID; // ObjectTemplate will have a "shared" object ID for use with associating accessors.
-	CopyablePersistent<ObjectTemplate> _ObjectTemplate;
+    CopyablePersistent<ObjectTemplate> _ObjectTemplate;
 
-    ManagedNamedPropertyGetter NamedPropertyGetter;
-    ManagedNamedPropertySetter NamedPropertySetter;
-    ManagedNamedPropertyQuery NamedPropertyQuery;
-    ManagedNamedPropertyDeleter NamedPropertyDeleter;
-    ManagedNamedPropertyEnumerator NamedPropertyEnumerator;
+    ManagedNamedPropertyGetter NamedPropertyGetter = nullptr;
+    ManagedNamedPropertySetter NamedPropertySetter = nullptr;
+    ManagedNamedPropertyQuery NamedPropertyQuery = nullptr;
+    ManagedNamedPropertyDeleter NamedPropertyDeleter = nullptr;
+    ManagedNamedPropertyEnumerator NamedPropertyEnumerator = nullptr;
 
-    ManagedIndexedPropertyGetter IndexedPropertyGetter;
-    ManagedIndexedPropertySetter IndexedPropertySetter;
-    ManagedIndexedPropertyQuery IndexedPropertyQuery;
-    ManagedIndexedPropertyDeleter IndexedPropertyDeleter;
-    ManagedIndexedPropertyEnumerator IndexedPropertyEnumerator;
+    ManagedIndexedPropertyGetter IndexedPropertyGetter = nullptr;
+    ManagedIndexedPropertySetter IndexedPropertySetter = nullptr;
+    ManagedIndexedPropertyQuery IndexedPropertyQuery = nullptr;
+    ManagedIndexedPropertyDeleter IndexedPropertyDeleter = nullptr;
+    ManagedIndexedPropertyEnumerator IndexedPropertyEnumerator = nullptr;
 
-    ManagedJSFunctionCallback _ManagedCallback;
+    ManagedJSFunctionCallback _ManagedCallback = nullptr;
 
 public:
 
@@ -536,7 +539,7 @@ protected:
 
     V8EngineProxy* _EngineProxy;
     int32_t _EngineID;
-	CopyablePersistent<FunctionTemplate> _FunctionTemplate;
+    CopyablePersistent<FunctionTemplate> _FunctionTemplate;
     ObjectTemplateProxy* _InstanceTemplate;
     ObjectTemplateProxy* _PrototypeTemplate;
 
@@ -611,8 +614,8 @@ protected:
 
     Isolate* _Isolate;
     ObjectTemplateProxy* _GlobalObjectTemplateProxy; // (for working with the managed side regarding the global scope)
-	CopyablePersistent<v8::Context> _Context;
-	CopyablePersistent<v8::Object> _GlobalObject; // (taken from the context)
+    CopyablePersistent<v8::Context> _Context;
+    CopyablePersistent<v8::Object> _GlobalObject; // (taken from the context)
     ManagedV8GarbageCollectionRequestCallback _ManagedV8GarbageCollectionRequestCallback;
 
     vector<_StringItem> _Strings; // An array (cache) of string buffers to reuse when marshalling strings.

@@ -3,8 +3,7 @@
 // ------------------------------------------------------------------------------------------------------------------------
 
 ObjectTemplateProxy::ObjectTemplateProxy(V8EngineProxy* engineProxy)
-    :ProxyBase(ObjectTemplateProxyClass), _EngineProxy(engineProxy), _EngineID(engineProxy->_EngineID),
-    NamedPropertyGetter(nullptr), NamedPropertySetter(nullptr), NamedPropertyQuery(nullptr), NamedPropertyDeleter(nullptr), NamedPropertyEnumerator(nullptr)
+    :ProxyBase(ObjectTemplateProxyClass), _EngineProxy(engineProxy), _EngineID(engineProxy->_EngineID)
 {
     _ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // ("ObjectTemplateProxy" will qualify as a non-template-created object in this case)
 	auto obj = NewObjectTemplate();
@@ -13,8 +12,7 @@ ObjectTemplateProxy::ObjectTemplateProxy(V8EngineProxy* engineProxy)
 }
 
 ObjectTemplateProxy::ObjectTemplateProxy(V8EngineProxy* engineProxy, Local<ObjectTemplate> objectTemplate)
-    :ProxyBase(ObjectTemplateProxyClass), _EngineProxy(engineProxy), _EngineID(engineProxy->_EngineID),
-    NamedPropertyGetter(nullptr), NamedPropertySetter(nullptr), NamedPropertyQuery(nullptr), NamedPropertyDeleter(nullptr), NamedPropertyEnumerator(nullptr)
+    :ProxyBase(ObjectTemplateProxyClass), _EngineProxy(engineProxy), _EngineID(engineProxy->_EngineID)
 {
     _ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // ("ObjectTemplateProxy" will qualify as a non-template-created object in this case)
 	objectTemplate->SetInternalFieldCount(2); // (one for the associated proxy, and one for the associated managed object ID)
@@ -88,12 +86,22 @@ void ObjectTemplateProxy::RegisterInvokeHandler(ManagedJSFunctionCallback callba
 
 void ObjectTemplateProxy::UnregisterNamedPropertyHandlers()
 {
-	_ObjectTemplate->SetNamedPropertyHandler((NamedPropertyGetterCallback)nullptr);
+	_ObjectTemplate->SetNamedPropertyHandler(nullptr, nullptr, nullptr, nullptr, nullptr);
+	NamedPropertyGetter = nullptr;
+	NamedPropertySetter = nullptr;
+	NamedPropertyQuery = nullptr;
+	NamedPropertyDeleter = nullptr;
+	NamedPropertyEnumerator = nullptr;
 }
 
 void ObjectTemplateProxy::UnregisterIndexedPropertyHandlers()
 {
-	_ObjectTemplate->SetIndexedPropertyHandler((IndexedPropertyGetterCallback)nullptr);
+	_ObjectTemplate->SetIndexedPropertyHandler(nullptr, nullptr, nullptr, nullptr, nullptr);
+	IndexedPropertyGetter = nullptr;
+	IndexedPropertySetter = nullptr;
+	IndexedPropertyQuery = nullptr;
+	IndexedPropertyDeleter = nullptr;
+	IndexedPropertyEnumerator = nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

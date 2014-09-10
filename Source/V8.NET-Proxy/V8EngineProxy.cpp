@@ -68,8 +68,10 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 
     _ManagedV8GarbageCollectionRequestCallback = nullptr;
 
-    if (!_V8Initialized) 
+    if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
     {
+        v8::V8::InitializePlatform(v8::platform::CreateDefaultPlatform());
+        v8::V8::InitializeICU();
         v8::V8::Initialize();
         _V8Initialized = true;
     }
@@ -115,6 +117,9 @@ V8EngineProxy::~V8EngineProxy()
 
         // Note: the '_GlobalObjectTemplateProxy' instance is not deleted because the managed GC will do that later (if not before this).
         _GlobalObjectTemplateProxy = nullptr;
+
+        _GlobalObject.Reset();
+        _Context.Reset();
 
         END_ISOLATE_SCOPE;
 
@@ -229,21 +234,21 @@ HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
         delete _GlobalObjectTemplateProxy;
 
     _GlobalObjectTemplateProxy = proxy;
-	
-	auto context = v8::Context::New(_Isolate, nullptr, Local<ObjectTemplate>::New(_Isolate, _GlobalObjectTemplateProxy->_ObjectTemplate));
+    
+    auto context = v8::Context::New(_Isolate, nullptr, Local<ObjectTemplate>::New(_Isolate, _GlobalObjectTemplateProxy->_ObjectTemplate));
 
-	_Context = context;
+    _Context = context;
 
     // ... the context auto creates the global object from the given template, BUT, we still need to update the internal fields with proper values expected
     // for callback into managed code ...
 
-	auto globalObject = context->Global()->GetPrototype()->ToObject();
-	globalObject->SetAlignedPointerInInternalField(0, _GlobalObjectTemplateProxy); // (proxy object reference)
-	globalObject->SetInternalField(1, External::New(_Isolate, (void*)-1)); // (manage object ID, which is only applicable when tracking many created objects [and not a single engine or global scope])
+    auto globalObject = context->Global()->GetPrototype()->ToObject();
+    globalObject->SetAlignedPointerInInternalField(0, _GlobalObjectTemplateProxy); // (proxy object reference)
+    globalObject->SetInternalField(1, External::New(_Isolate, (void*)-1)); // (manage object ID, which is only applicable when tracking many created objects [and not a single engine or global scope])
 
-	_GlobalObject = globalObject; // (keep a reference to the global object for faster reference)
-	
-	return GetHandleProxy(globalObject); // (the native side will own this, and is responsible to free it when done)
+    _GlobalObject = globalObject; // (keep a reference to the global object for faster reference)
+    
+    return GetHandleProxy(globalObject); // (the native side will own this, and is responsible to free it when done)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -299,7 +304,7 @@ Local<String> _GetErrorMessage(TryCatch &tryCatch)
             uint16_t* ss = new uint16_t[stackStr->Length()+1];
             stack->ToString()->Write(ss);
             auto subStackStr = NewSizedUString(ss, msg->Length());
-			auto stackPartStr = NewSizedUString(ss + msg->Length(), stackStr->Length() - msg->Length());
+            auto stackPartStr = NewSizedUString(ss + msg->Length(), stackStr->Length() - msg->Length());
             delete[] ss;
 
             if (msg->Equals(subStackStr))
@@ -309,20 +314,20 @@ Local<String> _GetErrorMessage(TryCatch &tryCatch)
 
     msg = msg->Concat(msg, NewString("\r\n"));
 
-	msg = msg->Concat(msg, NewString("  Line: "));
+    msg = msg->Concat(msg, NewString("  Line: "));
     auto line = NewInteger(tryCatch.Message()->GetLineNumber())->ToString();
     msg = msg->Concat(msg, line);
 
-	msg = msg->Concat(msg, NewString("  Column: "));
-	auto col = NewInteger(tryCatch.Message()->GetStartColumn())->ToString();
+    msg = msg->Concat(msg, NewString("  Column: "));
+    auto col = NewInteger(tryCatch.Message()->GetStartColumn())->ToString();
     msg = msg->Concat(msg, col);
-	msg = msg->Concat(msg, NewString("\r\n"));
+    msg = msg->Concat(msg, NewString("\r\n"));
 
     if (showStackMsg)
     {
-		msg = msg->Concat(msg, NewString("  Stack: "));
+        msg = msg->Concat(msg, NewString("  Stack: "));
         msg = msg->Concat(msg, stackStr);
-		msg = msg->Concat(msg, NewString("\r\n"));
+        msg = msg->Concat(msg, NewString("\r\n"));
     }
 
     return msg;
@@ -340,7 +345,7 @@ HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName
 
         if (sourceName == nullptr) sourceName = (uint16_t*)L"";
 
-		auto compiledScript = Script::Compile(NewUString(script), NewUString(sourceName));
+        auto compiledScript = Script::Compile(NewUString(script), NewUString(sourceName));
 
         if (__tryCatch.HasCaught())
         {
@@ -380,7 +385,7 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
     }
     catch (exception ex)
     {
-		returnVal = GetHandleProxy(NewString(ex.what()));
+        returnVal = GetHandleProxy(NewString(ex.what()));
         returnVal->_Type = JSV_InternalError;
     }
 
@@ -399,9 +404,9 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
 
         if (sourceName == nullptr) sourceName = (uint16_t*)L"";
 
-		auto hScript = NewUString(script);
+        auto hScript = NewUString(script);
 
-		auto compiledScript = Script::Compile(hScript, NewUString(sourceName));
+        auto compiledScript = Script::Compile(hScript, NewUString(sourceName));
 
         if (__tryCatch.HasCaught())
         {
@@ -417,7 +422,7 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
     }
     catch (exception ex)
     {
-		returnVal = GetHandleProxy(NewString(ex.what()));
+        returnVal = GetHandleProxy(NewString(ex.what()));
         returnVal->_Type = JSV_InternalError;
     }
 
@@ -449,14 +454,14 @@ HandleProxy* V8EngineProxy::CreateString(const uint16_t* str)
 HandleProxy* V8EngineProxy::CreateError(const uint16_t* message, JSValueType errorType) 
 { 
     if (errorType >= 0) throw exception("Invalid error type.");
-	auto h = GetHandleProxy(NewUString(message));
+    auto h = GetHandleProxy(NewUString(message));
     h->_Type = errorType;
     return h;
 }
 HandleProxy* V8EngineProxy::CreateError(const char* message, JSValueType errorType)
 {
     if (errorType >= 0) throw exception("Invalid error type.");
-	auto h = GetHandleProxy(NewString(message));
+    auto h = GetHandleProxy(NewString(message));
     h->_Type = errorType;
     return h;
 }
@@ -472,7 +477,7 @@ HandleProxy* V8EngineProxy::CreateObject(int32_t managedObjectID)
     if (managedObjectID == -1)
         managedObjectID = GetNextNonTemplateObjectID();
 
-	auto handle = GetHandleProxy(NewObject());
+    auto handle = GetHandleProxy(NewObject());
     ConnectObject(handle, managedObjectID, nullptr);
     return handle;
 }
@@ -490,7 +495,7 @@ HandleProxy* V8EngineProxy::CreateArray(HandleProxy** items, uint16_t length)
 
 HandleProxy* V8EngineProxy::CreateArray(uint16_t** items, uint16_t length)
 {
-	Local<Array> array = NewArray(length);
+    Local<Array> array = NewArray(length);
 
     if (items != nullptr && length > 0)
         for (auto i = 0; i < length; i++)
