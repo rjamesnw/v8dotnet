@@ -101,7 +101,7 @@ HandleProxy* HandleProxy::SetHandle(v8::Handle<Value> handle)
 {
     _ClearHandleValue();
 
-	_Handle = CopyablePersistent<Value>(handle);
+    _Handle = CopyablePersistent<Value>(handle);
 
     if (_Handle.IsEmpty())
     {
@@ -227,7 +227,7 @@ int32_t HandleProxy::GetManagedObjectID()
             }
             else
             {
-				auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
+                auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
                 if (!handle.IsEmpty() && handle->IsInt32())
                     _ObjectID = (int32_t)handle->Int32Value();
             }
@@ -240,11 +240,11 @@ int32_t HandleProxy::GetManagedObjectID()
             if (_ObjectID < -2)
             {
                 // ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
-				auto hTypeID = obj->Get(NewString("$__TypeID"));
+                auto hTypeID = obj->Get(NewString("$__TypeID"));
                 if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
                 {
                     int32_t typeID = hTypeID->Int32Value();
-					if (obj->Has(NewString("$__Value")))
+                    if (obj->Has(NewString("$__Value")))
                     {
                         _CLRTypeID = typeID;
                     }
@@ -280,8 +280,8 @@ void HandleProxy::MakeStrong()
 
 void HandleProxy::_RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data)
 {
-	auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
-	auto handleProxy = data.GetParameter();
+    auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
+    auto handleProxy = data.GetParameter();
 
     auto dispose = true;
 
