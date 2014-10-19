@@ -632,6 +632,8 @@ public:
     V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort);
     ~V8EngineProxy();
 
+    static Local<String> GetErrorMessage(TryCatch &tryCatch);
+        
     // Returns the next object ID for objects that do NOT have a corresponding object.  These objects still need an ID, and are given values less than -1.
     int32_t GetNextNonTemplateObjectID() { return _NextNonTemplateObjectID--; }
 
@@ -655,9 +657,9 @@ public:
 
     static bool IsDisposed(int32_t engineID);
 
-    void WithIsolateScope(CallbackAction action);
-    void WithContextScope(CallbackAction action);
-    void WithHandleScope(CallbackAction action);
+    void WithIsolateScope(CallbackAction action); //?
+    void WithContextScope(CallbackAction action); //?
+    void WithHandleScope(CallbackAction action); //?
 
     ObjectTemplateProxy* CreateObjectTemplate();
     HandleProxy* SetGlobalObjectTemplate(ObjectTemplateProxy* proxy);
@@ -667,6 +669,8 @@ public:
     HandleProxy* Execute(const uint16_t* script, uint16_t* sourceName);
     HandleProxy* Execute(Handle<Script> script);
     HandleProxy* Compile(const uint16_t* script, uint16_t* sourceName);
+
+	HandleProxy* Call(HandleProxy *subject, const uint16_t *functionName, HandleProxy *_this, uint16_t argCount, HandleProxy** args);
 
     HandleProxy* CreateNumber(double num);
     HandleProxy* CreateInteger(int32_t num);

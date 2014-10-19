@@ -35,8 +35,6 @@ namespace V8.Net
 
             try
             {
-                Console.Title = "V8.Net Console";
-
                 Console.Write(Environment.NewLine + "Creating a V8Engine instance ...");
                 _JSServer = new V8Engine();
                 Console.WriteLine(" Done!");
@@ -309,7 +307,7 @@ namespace V8.Net
                             // above!); however, this block has the only strong reference keeping everything alive (including the handle), so once the
                             // reference goes out of scope, the managed GC will collect it, which will mark the managed object as ready for collection.
                             // Once both the managed object and handle are marked, this in turn marks the native handle as weak. When the native V8
-                            // engine's garbage collector is ready to dispose of the handle, as call back is triggered and the the native object and
+                            // engine's garbage collector is ready to dispose of the handle, as call back is triggered and the native object and
                             // handles will finally be removed ...
 
                             tempObj = null;
@@ -716,6 +714,24 @@ public class V8DotNetTester : V8ManagedObject
             Engine.Execute(pcScript, true);
 
         Engine.ConsoleExecute("assert('Testing i==100', i, 100)", this.GetType().Name, true);
+
+        Console.WriteLine("\r\nTesting JS function call from native side ...\r\n");
+
+        ObjectHandle f = (ObjectHandle)Engine.ConsoleExecute("f = function(arg1) { return arg1; }");
+        var fresult = f.StaticCall(Engine.CreateValue(10));
+        Console.WriteLine("f(10) == " + fresult);
+        if (fresult != 10)
+            throw new Exception("CLR handle call to native function failed.");
+
+        Console.WriteLine("\r\nTesting JS function call exception from native side ...\r\n");
+
+        f = (ObjectHandle)Engine.ConsoleExecute("f = function() { return thisdoesntexist; }");
+        fresult = f.StaticCall();
+        Console.WriteLine("f() == " + fresult);
+        if (!fresult.ToString().Contains("Error"))
+            throw new Exception("Native exception error did not come through.");
+        else
+            Console.WriteLine("Expected exception came through - pass.\r\n");
 
         Console.WriteLine("\r\nPress any key to begin testing properties on 'this.tester' ...\r\n");
         Console.ReadKey();

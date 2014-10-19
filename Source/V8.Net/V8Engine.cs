@@ -296,26 +296,32 @@ namespace V8.Net
         /// Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
         /// <para>Note: This is just a shortcut to calling 'Execute()' followed by 'Console.WriteLine()'.</para>
         /// </summary>
+        /// <returns>The result of the executed script.</returns>
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public void ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public Handle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
-            Console.WriteLine(Execute(script, sourceName, throwExceptionOnError).AsString);
+            Handle result = Execute(script, sourceName, throwExceptionOnError);
+            Console.WriteLine(result.AsString);
+            return result;
         }
 
         /// <summary>
-        /// Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
+        /// Executes JavaScript on the V8 engine and automatically writes the script given AND the result to the console (only valid for applications that support 'Console' methods).
         /// The script is output to the console window before it gets executed.
         /// <para>Note: This is just a shortcut to calling 'Console.WriteLine(script)', followed by 'ConsoleExecute()'.</para>
+        /// <returns>The result of the executed script.</returns>
         /// </summary>
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public void VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public Handle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
             Console.WriteLine(script);
-            Console.WriteLine(Execute(script, sourceName, throwExceptionOnError).AsString);
+            Handle result = Execute(script, sourceName, throwExceptionOnError);
+            Console.WriteLine(result.AsString);
+            return result;
         }
 
         /// <summary>
