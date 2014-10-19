@@ -213,45 +213,7 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
-		if (_this == nullptr) _this = subject; // (assume the subject is also "this" if not given)
-
-		auto hThis = _this->Handle();
-		if (hThis.IsEmpty() || !hThis->IsObject())
-			throw exception("Call: The target instance handle ('this') does not represent an object.");
-
-		auto hSubject = subject->Handle();
-		Handle<Function> hFunc;
-
-		if (functionName != nullptr) // (if no name is given, assume the subject IS a function object, otherwise get the property as a function)
-		{
-			if (hSubject.IsEmpty() || !hSubject->IsObject())
-				throw exception("Call: The subject handle does not represent an object.");
-
-			auto hProp = hSubject.As<Object>()->Get(NewUString(functionName));
-
-			if (hProp.IsEmpty() || !hProp->IsFunction())
-				throw exception("Call: The specified property does not represent a function.");
-
-			hFunc = hProp.As<Function>();
-		}
-		else if (hSubject.IsEmpty() || !hSubject->IsFunction())
-			throw exception("Call: The subject handle does not represent a function.");
-		else
-			hFunc = hSubject.As<Function>();
-
-		Handle<Value> result;
-
-		if (argCount > 0)
-		{
-			Handle<Value>* _args = new Handle<Value>[argCount];
-			for (auto i = 0; i < argCount; i++)
-				_args[i] = args[i]->Handle();
-			result = hFunc->Call(hThis.As<Object>(), argCount, _args);
-			delete[] _args;
-		}
-		else result = hFunc->Call(hThis.As<Object>(), 0, nullptr);
-
-		return result.IsEmpty() ? nullptr : subject->EngineProxy()->GetHandleProxy(result);
+		return engine->Call(subject, functionName, _this, argCount, args);
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
