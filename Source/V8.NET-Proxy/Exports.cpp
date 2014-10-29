@@ -14,8 +14,13 @@ extern "C"
 	// ------------------------------------------------------------------------------------------------------------------------
 	// Engine Related
 
+	EXPORT void STDCALL InitV8Engine()
+	{	   		
+		v8::V8::Initialize();
+		
+	}
 	EXPORT V8EngineProxy* STDCALL CreateV8EngineProxy(bool enableDebugging, DebugMessageDispatcher *debugMessageDispatcher, int debugPort)
-	{
+	{	 
 		return new V8EngineProxy(enableDebugging, debugMessageDispatcher, debugPort);
 	}
 	EXPORT void STDCALL DestroyV8EngineProxy(V8EngineProxy *engine)
@@ -200,7 +205,7 @@ extern "C"
 
 		auto handle = handleProxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		return handleProxy->EngineProxy()->GetHandleProxy(handle.As<Object>()->GetPrototype());
 
 		END_CONTEXT_SCOPE;
@@ -229,9 +234,14 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+		Handle<Value> valueHandle;
+		if ( value != nullptr ){
+			valueHandle = value->Handle();
+		}else{
+			valueHandle = V8Undefined;
+		} 
 		return obj->ForceSet(NewUString(name), valueHandle, attribs);
 
 		END_CONTEXT_SCOPE;
@@ -246,9 +256,14 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+		Handle<Value> valueHandle;
+		if ( value != nullptr ){
+			valueHandle = value->Handle();
+		}else{
+			valueHandle = V8Undefined;
+		}
 		return obj->Set(index, valueHandle);
 
 		END_CONTEXT_SCOPE;
@@ -263,7 +278,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		return proxy->EngineProxy()->GetHandleProxy(obj->Get(NewUString(name)));
 
@@ -279,7 +294,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		return proxy->EngineProxy()->GetHandleProxy(obj->Get(index));
 
@@ -295,7 +310,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		return obj->Delete(NewUString(name));
 
@@ -311,7 +326,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		return obj->Delete(index);
 
@@ -329,7 +344,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 
 		auto obj = handle.As<Object>();
 
@@ -380,7 +395,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		auto names = obj->GetPropertyNames();
 		return proxy->EngineProxy()->GetHandleProxy(names);
@@ -397,7 +412,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		auto names = obj->GetOwnPropertyNames();
 		return proxy->EngineProxy()->GetHandleProxy(names);
@@ -414,7 +429,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsObject())
-			throw exception("The handle does not represent an object.");
+			throw runtime_error("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		return obj->GetPropertyAttributes(NewUString(name));
 
@@ -430,7 +445,7 @@ extern "C"
 
 		auto handle = proxy->Handle();
 		if (handle.IsEmpty() || !handle->IsArray())
-			throw exception("The handle does not represent an array object.");
+			throw runtime_error("The handle does not represent an array object.");
 		return handle.As<Array>()->Length();
 
 		END_CONTEXT_SCOPE;
@@ -653,7 +668,7 @@ extern "C"
 		}
 		else
 		{
-			throw exception("'Data' points to an invalid object reference and cannot be deleted.");
+			throw runtime_error("'Data' points to an invalid object reference and cannot be deleted.");
 		}
 	}
 

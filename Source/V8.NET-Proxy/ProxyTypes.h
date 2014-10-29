@@ -5,8 +5,10 @@
 #include <vector>
 #if (_MSC_PLATFORM_TOOLSET >= 110)
 #include <mutex>
+#elif defined(__GXX_EXPERIMENTAL_CXX0X__)
+#include <mutex>
 #endif
-#include <include\v8stdint.h>
+#include <include/v8stdint.h>
 #include "Platform.h"
 
 using namespace std;
@@ -27,38 +29,76 @@ using namespace std;
 #define STDCALL __stdcall
 #else
 #include <glib.h>
+#include <string.h>
+#include <functional>
 #define ALLOC_MANAGED_MEM(size) g_malloc(size)
+#define REALLOC_MANAGED_MEM(ptr, size) g_realloc(ptr, size)
 #define FREE_MANAGED_MEM(ptr) g_free(ptr)
-#define STDCALL __stdcall
+// according to http://stackoverflow.com/questions/3054257/is-there-stdcall-in-linux
+#define STDCALL
+typedef unsigned char byte;
 #endif
 
 #define USING_V8_SHARED 1
 #define V8_USE_UNSAFE_HANDLES 1 // (see https://groups.google.com/forum/#!topic/v8-users/oBE_DTpRC08)
 
-#include <include\v8.h>
-#include <include\v8-debug.h>
-#include <include\libplatform\libplatform.h>
+#include <include/v8.h>
+#include <include/v8-debug.h>
+#include <include/libplatform/libplatform.h>
 
 using namespace v8;
 
+#if _WIN32 || _WIN64
 #define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
+
 
 // ========================================================================================================================
 
 template <class T> struct CopyablePersistent {
     v8::Persistent<T, CopyablePersistentTraits<T>> Value;
+
     CopyablePersistent() { }
-    CopyablePersistent(CopyablePersistent &p) { Value = p; }
-    CopyablePersistent(Handle<T> &h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
-    ~CopyablePersistent() { if (!Value.IsEmpty()) Value.Reset(); }
-    CopyablePersistent& operator= (const Handle<T>& h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; }
-    operator Local<T>() const { return Handle(); }
-    T* operator ->() const { return *Handle(); }
-    /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
-    Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
-    bool IsEmpty() const { return Value.IsEmpty(); }
-    void Reset() { return Value.Reset(); }
-    template <class S> Local<S> As() { return Handle().As<S>(); }
+
+    CopyablePersistent(CopyablePersistent &p) {
+        Value = p;
+     }
+
+    CopyablePersistent(Handle<T> &h) { 
+        Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); 
+    }
+
+    ~CopyablePersistent() { 
+        if (!Value.IsEmpty())
+                Value.Reset(); 
+    }
+
+    CopyablePersistent& operator= (const Local<T>& h) 
+    { 
+        Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; 
+    }
+    operator Local<T>() const { 
+        return Handle(); 
+    }
+    T* operator ->() const { 
+        return *Handle(); 
+    }
+    // /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
+    Local<T> Handle() const { 
+        return Local<T>::New(Isolate::GetCurrent(), Value); 
+    }
+    bool IsEmpty() const { 
+        return Value.IsEmpty(); 
+    }
+    void Reset() { 
+        return Value.Reset(); 
+    }
+    template <class S> Local<S> As() { 
+        return Handle().As<S>(); 
+    }
 };
 
 #define V8Undefined v8::Undefined(Isolate::GetCurrent())
@@ -77,6 +117,7 @@ template <class T> struct CopyablePersistent {
 #define NewFunctionTemplate(callback, data) FunctionTemplate::New(Isolate::GetCurrent(), callback, data)
 #define NewExternal(ptr) External::New(Isolate::GetCurrent(), ptr)
 #define ThrowException(value) Isolate::GetCurrent()->ThrowException(value)
+
 
 #define BEGIN_HANDLE_SCOPE(_this) \
 { \

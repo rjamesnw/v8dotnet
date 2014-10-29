@@ -435,7 +435,7 @@ HandleProxy* V8EngineProxy::Call(HandleProxy *subject, const uint16_t *functionN
 
 	auto hThis = _this->Handle();
 	if (hThis.IsEmpty() || !hThis->IsObject())
-		throw exception("Call: The target instance handle ('this') does not represent an object.");
+		throw runtime_error("Call: The target instance handle ('this') does not represent an object.");
 
 	auto hSubject = subject->Handle();
 	Handle<Function> hFunc;
@@ -443,17 +443,17 @@ HandleProxy* V8EngineProxy::Call(HandleProxy *subject, const uint16_t *functionN
 	if (functionName != nullptr) // (if no name is given, assume the subject IS a function object, otherwise get the property as a function)
 	{
 		if (hSubject.IsEmpty() || !hSubject->IsObject())
-			throw exception("Call: The subject handle does not represent an object.");
+			throw runtime_error("Call: The subject handle does not represent an object.");
 
 		auto hProp = hSubject.As<Object>()->Get(NewUString(functionName));
 
 		if (hProp.IsEmpty() || !hProp->IsFunction())
-			throw exception("Call: The specified property does not represent a function.");
+			throw runtime_error("Call: The specified property does not represent a function.");
 
 		hFunc = hProp.As<Function>();
 	}
 	else if (hSubject.IsEmpty() || !hSubject->IsFunction())
-		throw exception("Call: The subject handle does not represent a function.");
+		throw runtime_error("Call: The subject handle does not represent a function.");
 	else
 		hFunc = hSubject.As<Function>();
 
@@ -507,14 +507,14 @@ HandleProxy* V8EngineProxy::CreateString(const uint16_t* str)
 
 HandleProxy* V8EngineProxy::CreateError(const uint16_t* message, JSValueType errorType)
 {
-	if (errorType >= 0) throw exception("Invalid error type.");
+	if (errorType >= 0) throw runtime_error("Invalid error type.");
 	auto h = GetHandleProxy(NewUString(message));
 	h->_Type = errorType;
 	return h;
 }
 HandleProxy* V8EngineProxy::CreateError(const char* message, JSValueType errorType)
 {
-	if (errorType >= 0) throw exception("Invalid error type.");
+	if (errorType >= 0) throw runtime_error("Invalid error type.");
 	auto h = GetHandleProxy(NewString(message));
 	h->_Type = errorType;
 	return h;
