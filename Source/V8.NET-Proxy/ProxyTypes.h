@@ -36,7 +36,7 @@ using namespace std;
 #define FREE_MANAGED_MEM(ptr) g_free(ptr)
 // according to http://stackoverflow.com/questions/3054257/is-there-stdcall-in-linux
 #define STDCALL
-typedef unsigned char byte;
+typedef uint8_t byte;
 #endif
 
 #define USING_V8_SHARED 1
