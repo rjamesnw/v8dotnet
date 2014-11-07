@@ -60,45 +60,19 @@ using namespace v8;
 
 template <class T> struct CopyablePersistent {
     v8::Persistent<T, CopyablePersistentTraits<T>> Value;
-
     CopyablePersistent() { }
-
-    CopyablePersistent(CopyablePersistent &p) {
-        Value = p;
-     }
-
-    CopyablePersistent(Handle<T> &h) { 
-        Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); 
-    }
-
-    ~CopyablePersistent() { 
-        if (!Value.IsEmpty())
-                Value.Reset(); 
-    }
-
-    CopyablePersistent& operator= (const Local<T>& h) 
-    { 
-        Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; 
-    }
-    operator Local<T>() const { 
-        return Handle(); 
-    }
-    T* operator ->() const { 
-        return *Handle(); 
-    }
-    // /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
-    Local<T> Handle() const { 
-        return Local<T>::New(Isolate::GetCurrent(), Value); 
-    }
-    bool IsEmpty() const { 
-        return Value.IsEmpty(); 
-    }
-    void Reset() { 
-        return Value.Reset(); 
-    }
-    template <class S> Local<S> As() { 
-        return Handle().As<S>(); 
-    }
+    CopyablePersistent(CopyablePersistent &p) { Value = p; }
+    CopyablePersistent(Handle<T> &h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
+    CopyablePersistent(Local<T> h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
+    ~CopyablePersistent() { if (!Value.IsEmpty()) Value.Reset(); }
+    CopyablePersistent& operator= (const Handle<T>& h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; }
+    operator Local<T>() const { return Handle(); }
+    T* operator ->() const { return *Handle(); }
+    /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
+    Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
+    bool IsEmpty() const { return Value.IsEmpty(); }
+    void Reset() { return Value.Reset(); }
+    template <class S> Local<S> As() { return Handle().As<S>(); }
 };
 
 #define V8Undefined v8::Undefined(Isolate::GetCurrent())
@@ -117,7 +91,6 @@ template <class T> struct CopyablePersistent {
 #define NewFunctionTemplate(callback, data) FunctionTemplate::New(Isolate::GetCurrent(), callback, data)
 #define NewExternal(ptr) External::New(Isolate::GetCurrent(), ptr)
 #define ThrowException(value) Isolate::GetCurrent()->ThrowException(value)
-
 
 #define BEGIN_HANDLE_SCOPE(_this) \
 { \
