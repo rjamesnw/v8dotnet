@@ -143,6 +143,8 @@ namespace V8.Net
 
         public V8Engine()
         {
+           V8NetProxy.InitV8Engine ();         
+
             this.RunMarshallingTests();
 
             lock (_GlobalLock) // (required because engine proxy instance IDs are tracked on the native side in a static '_DisposedEngines' vector [for quick disposal of handles])

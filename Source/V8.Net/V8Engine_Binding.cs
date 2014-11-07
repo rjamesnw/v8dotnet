@@ -1624,9 +1624,10 @@ namespace V8.Net
             object binder;
 
             binder = InstanceTemplate.CreateObject<T>(initializeBinder);
-            ((T)binder).Object = obj;
+            var result = ((T)binder);
+             result.Object = obj;
 
-            return (T)binder;
+            return result;
         }
 
         /// <summary>
