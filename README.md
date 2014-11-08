@@ -30,13 +30,11 @@ To speed up this process you can also use the `build_V8_Net.sh`.
  ```
  ls | grep cpp | awk -F. '{ system("g++  -std=c++11   -w -fpermissive -fPIC  -lstdc++ -Wl,--gc-sections   -c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }
  ```
-
  7. After we have the object files we need to build a shared library called `libV8_Net_Proxy.so`. Copy the following files from V8 into your output  directory `/Source/V8.NET-Proxy/out`. that contain the *.o files.
     - libicui18n.so
     - libicuuc.so 
-    - libv8.so 
-we need the files to specify the symbols of the shared library.
-8. Compile the shared library with the following command. Execute it within your output directory.
+    - libv8.so
+8. Compile the shared library with the following command. Execute it within your output directory. 
 ```
 g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose
 ```
@@ -44,9 +42,9 @@ g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/u
     - libicui18n.so
     - libicuuc.so 
     - libv8.so 
-    - libV8_Net_Proxy.so
+    - libV8_Net_Proxy.so   
 9. Now we can build the C# projects. Build the `V8.Net.MonoDevelop.sln` via MonoDevelop or with the command:
-10. `mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"`
+10.  `mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"`
 11. The last step is to copy all files into one directory
 12. Release Directory
     - libicui18n.so
@@ -58,7 +56,7 @@ g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/u
     - V8.Net.SharedTypes.dll
     - V8.Net-Console.exe
     - V8.Net-Console.exe.config
-13. Start it with mono 8.Net-Console.exe.
+13. Start it with `mono 8.Net-Console.exe`.
 
 
 
