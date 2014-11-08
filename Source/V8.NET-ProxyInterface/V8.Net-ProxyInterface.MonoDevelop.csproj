@@ -8,6 +8,8 @@
     <RootNamespace>V8.NetProxyInterface</RootNamespace>
     <AssemblyName>V8.Net.Proxy.Interface</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,7 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.MonoDevelop.csproj">
       <Project>{2155327D-386A-4F80-81FB-918A4442C834}</Project>
-      <Name>V8.Net-SharedTypes</Name>
+      <Name>V8.Net-SharedTypes.MonoDevelop</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

@@ -1,3 +1,9 @@
+#!/bin/bash
+ printf '\e[1;34m%-6s\e[m \n' "++++++++++++++++++++++++++++++++++++++++++++++++++++"
+ printf '\e[1;34m%-6s\e[m \n' "V8 Build"
+ printf '\e[1;34m%-6s\e[m \n' "++++++++++++++++++++++++++++++++++++++++++++++++++++"
+ printf '\e[1;34m%-6s\e[m \n' "Update V8 Submodule"
+git submodule update --init --recursive
 #project root dir
 currentDir=`pwd`
 mkdir BuildOutput
@@ -5,10 +11,14 @@ cd BuildOutput
 mkdir Release
 mkdir Debug
 cd ../Source/V8.NET-Proxy/V8/
+printf '\e[1;34m%-6s\e[m \n' "Building V8 "
+printf '\e[1;34m%-6s\e[m \n' "Version 3.30.13 (based on bleeding_edge revision r24708) "
+printf '\e[1;34m%-6s\e[m \n' "commit 9a58807030208121b7e9f01aca2b932eb52e249f "
 make builddeps
 make native library=shared
 cd ../
 mkdir out
+printf '\e[1;34m%-6s\e[m \n' "Build V8 Proxy"
 ls | grep cpp | awk -F. '{ system("g++  -std=c++11   -w -fpermissive -fPIC  -lstdc++ -Wl,--gc-sections   -c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }'
 cd out
 cp ../V8/out/native/lib.target/libicui18n.so .
