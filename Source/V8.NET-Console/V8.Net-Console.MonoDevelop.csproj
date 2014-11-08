@@ -9,6 +9,8 @@
     <AssemblyName>V8.Net-Console</AssemblyName>
     <StartupObject>V8.Net.Program</StartupObject>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,7 +41,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Programm.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.MonoDevelop.csproj">
+      <Project>{2155327D-386A-4F80-81FB-918A4442C834}</Project>
+      <Name>V8.Net-SharedTypes.MonoDevelop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface.MonoDevelop.csproj">
+      <Project>{355737A7-E486-4D4C-AA5B-DE432C23AEEE}</Project>
+      <Name>V8.Net-ProxyInterface.MonoDevelop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\V8.Net\V8.Net.MonoDevelop.csproj">
+      <Project>{C898E990-54EB-40AC-9408-E416A838EC77}</Project>
+      <Name>V8.Net.MonoDevelop</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
