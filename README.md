@@ -17,35 +17,48 @@ This project contains Csharp and cpp projects. We using MonoDevelop to build the
 To speed up this process you can also use the `build_V8_Net.sh`. 
  To build the projects execute the script **within** the `v8dotnet` directory.
 
- The build steps are:
- Clone the project
- 1. `git clone git@github.com:chrisber/v8dotnet.git`
- Building Google V8
- 2. `cd Source/V8.NET-Proxy/V8/` 
- 3. `make builddeps`
- 4. `make native library=shared`
- Build V8.NET-Proxy on windows this library is called `V8_Net_Proxy_x64.dll` on Linux it is called libV8_Net_Proxy.so.
- 5. Complile the cpp from `/Source/V8.NET-Proxy/` to object files into an output directory called `/Source/V8.NET-Proxy/out`. You can use the following command for it:
- 6. 
- ```
- ls | grep cpp | awk -F. '{ system("g++  -std=c++11   -w -fpermissive -fPIC  -lstdc++ -Wl,--gc-sections   -c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }
- ```
- 7. After we have the object files we need to build a shared library called `libV8_Net_Proxy.so`. Copy the following files from V8 into your output  directory `/Source/V8.NET-Proxy/out`. that contain the *.o files.
+The build steps are:
+Clone the project
+1. `git clone git@github.com:chrisber/v8dotnet.git`
+Building Google V8
+
+2. `cd Source/V8.NET-Proxy/V8/`
+
+3. `make builddeps`
+
+4. `make native library=shared`
+
+5. Build V8.NET-Proxy on windows this library is called `V8_Net_Proxy_x64.dll` on Linux it is called libV8_Net_Proxy.so.
+
+5. Complile the cpp from `/Source/V8.NET-Proxy/` to object files into an output directory called `/Source/V8.NET-Proxy/out`.
+
+6. You can use the following command for it:   
+
+        ls | grep cpp | awk -F. '{ system("g++  -std=c++11   -w -fpermissive -fPIC  -lstdc++ -Wl,--gc-sections   -c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }
+
+
+7. After we have the object files we need to build a shared library called `libV8_Net_Proxy.so`. Copy the following files from V8 into your output  directory `/Source/V8.NET-Proxy/out`. that contain the *.o files.
     - libicui18n.so
     - libicuuc.so 
     - libv8.so
+
 8. Compile the shared library with the following command. Execute it within your output directory. 
-```
-g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose
-```
+
+        g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose
+
+
 8. Copy all compiled into your release directory.
     - libicui18n.so
     - libicuuc.so 
     - libv8.so 
-    - libV8_Net_Proxy.so   
+    - libV8_Net_Proxy.so
+
 9. Now we can build the C# projects. Build the `V8.Net.MonoDevelop.sln` via MonoDevelop or with the command:
+
 10.  `mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"`
+
 11. The last step is to copy all files into one directory
+
 12. Release Directory
     - libicui18n.so
     - libicuuc.so
