@@ -1,6 +1,6 @@
 v8dotnet
 ========
-#This is a V8.Net port to Mono. 
+#[This is a V8.Net port to Mono](https://v8dotnet.codeplex.com/). 
 
 The Repository contains the following branches:
 - Master (stable releases for windows)
@@ -18,26 +18,24 @@ To speed up this process you can also use the `build_V8_Net.sh`.
  To build the projects execute the script **within** the `v8dotnet` directory.
 
 The build steps are:
-Clone the project
-1. `git clone git@github.com:chrisber/v8dotnet.git`
-Building Google V8
 
-2. `cd Source/V8.NET-Proxy/V8/`
+1. Clone the project
+   - `git clone git@github.com:chrisber/v8dotnet.git` 
+   - `cd v8dotnet`
+   - `git submodule update --init --recursive`
 
-3. `make builddeps`
+2. Building Google V8
+  - `cd Source/V8.NET-Proxy/V8/`
+  - `make builddeps`
+  - `make native library=shared`
 
-4. `make native library=shared`
-
-5. Build V8.NET-Proxy on windows this library is called `V8_Net_Proxy_x64.dll` on Linux it is called libV8_Net_Proxy.so.
-
-5. Complile the cpp from `/Source/V8.NET-Proxy/` to object files into an output directory called `/Source/V8.NET-Proxy/out`.
-
-6. You can use the following command for it:   
+5. Build V8.NET-Proxy library, on windows the library is called `V8_Net_Proxy_x64.dll` on Linux it is called `libV8_Net_Proxy.so`. We start by compiling the cpp from `/Source/V8.NET-Proxy/` to object files into an output directory called `/Source/V8.NET-Proxy/out`.
+You can use the following command for it:   
 
         ls | grep cpp | awk -F. '{ system("g++  -std=c++11   -w -fpermissive -fPIC  -lstdc++ -Wl,--gc-sections   -c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }
 
 
-7. After we have the object files we need to build a shared library called `libV8_Net_Proxy.so`. Copy the following files from V8 into your output  directory `/Source/V8.NET-Proxy/out`. that contain the *.o files.
+7. After we have the object files we need to build a shared library called `libV8_Net_Proxy.so`. Copy the following files from `/Source/V8.NET-Proxy/V8/out/native/lib.target/*.so` into your output  directory `/Source/V8.NET-Proxy/out`.
     - libicui18n.so
     - libicuuc.so 
     - libv8.so
@@ -47,7 +45,7 @@ Building Google V8
         g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose
 
 
-8. Copy all compiled into your release directory.
+8. Copy all compiled `*.so` files into your release directory.
     - libicui18n.so
     - libicuuc.so 
     - libv8.so 
@@ -70,6 +68,26 @@ Building Google V8
     - V8.Net-Console.exe
     - V8.Net-Console.exe.config
 13. Start it with `mono 8.Net-Console.exe`.
+14. For debugging errors these commands can be helpful.
+    - `LD_LIBRARY_PATH="pwd" MONO_LOG_LEVEL=debug MONO_LOG_MASK=all mono V8.Net-Console.exe` for checking if the library gets loaded.
+
+    - `nm -u -C libV8_Net_Proxy.so` checking for undefined symboles.
+
+### Loading the `libV8_Net_Proxy.so` library
+There are three possibilities to load the library
+- adding it in the same place where the executable is. For instance:
+    - V8.Net-Console.exe
+    - libicui18n.so
+    - libicuuc.so
+    - libv8.so
+    - libV8_Net_Proxy.so
+- adding it in the /usr/lib directory
+    - libicui18n.so
+    - libicuuc.so
+    - libv8.so
+    - libV8_Net_Proxy.so
+- or setting the `LD_LIBRARY_PATH="pwd" path.
+    
 
 
 
