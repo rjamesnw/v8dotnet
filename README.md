@@ -1,11 +1,16 @@
-v8dotnet
-========
-#[This is a V8.Net port to Mono](https://v8dotnet.codeplex.com/). 
+V8.Net (v8dotnet) -- Mono runtime 3.10.0
+================
 
 The Repository contains the following branches:
 - Master (stable releases for windows)
 - development (bleeding edge development changes)
 - development-mono (bleeding edge development changes for mono)
+
+V8dotnet is based on the Mono runtime 3.10.0. To install the Runtime 3.10.0 together with Monodevelop on Ubuntu, the fastest way is to use the following link:
+- [Install Monodevelop and Runtime  ](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt)
+
+
+
 
 #Building V8.Net 
 
