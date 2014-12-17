@@ -1,16 +1,16 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("V8.NET")]
-[assembly: AssemblyDescription(".NET Wrapper for the V8 JavaScript engine.")]
+[assembly: AssemblyTitle("WCFServiceTest")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Surreal Logic")]
-[assembly: AssemblyProduct("V8.NET")]
-[assembly: AssemblyCopyright("Copyright © Surreal Logic 2013")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("WCFServiceTest")]
+[assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("e58dbe9e-2b28-4b64-8fda-fa5ab2ac562d")]
+[assembly: Guid("8149b605-2833-4ce6-aa1b-0aae1b7d0e93")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -29,8 +29,8 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-// You can specify all the values or you can default the Build and Revision Numbers 
+// You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.4.2014.12")]
-[assembly: AssemblyFileVersion("1.4.28.16")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

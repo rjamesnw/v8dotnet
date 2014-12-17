@@ -72,6 +72,11 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// The sub-folder that is the root for the dependent libraries required by V8.NET.  This is set to "V8.NET" by default.
+        /// </summary>
+        public static string ASPBINSubFolderName = "V8.NET";
+
         static Assembly Resolver(object sender, ResolveEventArgs args)
         {
             if (args.Name.StartsWith("V8.Net.Proxy.Interface"))
@@ -82,6 +87,9 @@ namespace V8.Net
                     assemblyRoot = HttpContext.Current.Server.MapPath("~/bin");
                 else
                     assemblyRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+                if (Directory.Exists(Path.Combine(assemblyRoot, ASPBINSubFolderName)))
+                    assemblyRoot = Path.Combine(assemblyRoot, ASPBINSubFolderName);
 
                 //// ... validate access to the root folder ...
                 //var permission = new FileIOPermission(FileIOPermissionAccess.Read, assemblyRoot);
@@ -102,7 +110,7 @@ namespace V8.Net
                 try
                 {
                     var path = System.Environment.GetEnvironmentVariable("PATH"); // TODO: Detect other systems if necessary.
-                    System.Environment.SetEnvironmentVariable("PATH", path + ";" + platformLibraryPath);
+                    System.Environment.SetEnvironmentVariable("PATH", platformLibraryPath + ";" + path);
                 }
                 catch { }
 

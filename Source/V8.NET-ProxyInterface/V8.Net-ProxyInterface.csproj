@@ -130,13 +130,13 @@
   <ItemGroup>
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
       <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
-      <Name>V8.Net Shared Types</Name>
+      <Name>V8.Net-SharedTypes</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
-</PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

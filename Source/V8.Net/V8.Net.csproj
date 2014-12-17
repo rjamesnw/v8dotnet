@@ -128,11 +128,11 @@
   <ItemGroup>
     <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface.csproj">
       <Project>{81752b54-1391-44cb-a1f5-eccf7279db71}</Project>
-      <Name>V8.Net Proxy Interface</Name>
+      <Name>V8.Net-ProxyInterface</Name>
     </ProjectReference>
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
       <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
-      <Name>V8.Net Shared Types</Name>
+      <Name>V8.Net-SharedTypes</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
