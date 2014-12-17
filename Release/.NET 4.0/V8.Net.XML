@@ -202,6 +202,11 @@
             Set to the fixed date of Jan 1, 1970. This is used when converting DateTime values to JavaScript Date objects.
             </summary>
         </member>
+        <member name="F:V8.Net.V8Engine.ASPBINSubFolderName">
+            <summary>
+            The sub-folder that is the root for the dependent libraries required by V8.NET.  This is set to "V8.NET" by default.
+            </summary>
+        </member>
         <member name="M:V8.Net.V8Engine.ForceV8GarbageCollection">
             <summary>
             Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.
@@ -243,15 +248,17 @@
             Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
             <para>Note: This is just a shortcut to calling 'Execute()' followed by 'Console.WriteLine()'.</para>
             </summary>
+            <returns>The result of the executed script.</returns>
             <param name="script">The script to run.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
         </member>
         <member name="M:V8.Net.V8Engine.VerboseConsoleExecute(System.String,System.String,System.Boolean)">
             <summary>
-            Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
+            Executes JavaScript on the V8 engine and automatically writes the script given AND the result to the console (only valid for applications that support 'Console' methods).
             The script is output to the console window before it gets executed.
             <para>Note: This is just a shortcut to calling 'Console.WriteLine(script)', followed by 'ConsoleExecute()'.</para>
+            <returns>The result of the executed script.</returns>
             </summary>
             <param name="script">The script to run.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
