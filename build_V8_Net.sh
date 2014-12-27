@@ -1,8 +1,19 @@
 #!/bin/bash
 currentDir=`pwd`
+currentFunction=""
+
+ buildResult(){
+	if [ $? -eq 0 ]
+	then
+	  printf '\e[1;32m%-6s\e[m \n' "+++ $currentFunction Successfull +++"
+	else
+	  printf '\e[1;31m%-6s\e[m \n' "+++ Error +++" >&2
+	  exit $?
+	fi
+ }
 
  buildV8 (){
-
+	currentFunction=" Build V8 Javascript Engine "
  	 printf '\e[1;34m%-6s\e[m \n' "Create Directories"
 	 mkdir -p BuildOutput/{Debug,Release}
 	 mkdir -p Source/V8.NET-Proxy/out
@@ -23,6 +34,7 @@ currentDir=`pwd`
 }
 
  buildV8Proxy (){
+	currentFunction="Build V8 native Proxy"
 	cd $currentDir
 	
      printf '\e[1;34m%-6s\e[m \n' "Create Directories"
@@ -45,15 +57,16 @@ currentDir=`pwd`
 	cp *.so ../../../BuildOutput/Release
 }
 
- buildV8DotNet (){
+ buildV8DotNetWrapper (){
+	currentFunction="Build V8DotNet Wrapper"
 	cd $currentDir
 
 	 printf '\e[1;34m%-6s\e[m \n' "Create Directories"
 	 mkdir -p BuildOutput/{Debug,Release}
 	 mkdir -p Source/V8.NET-Proxy/out
 	
-	/opt/monodevelop/lib/monodevelop/bin/mdtool.exe -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
-	/opt/monodevelop/lib/monodevelop/bin/mdtool.exe -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
+	/opt/monodevelop/lib/monodevelop/bin/mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
+	/opt/monodevelop/lib/monodevelop/bin/mdtool -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
 	cp Source/V8.NET-Console/bin/Debug/* BuildOutput/Debug/
 	cp Source/V8.NET-Console/bin/Release/* BuildOutput/Release/
 }
@@ -91,22 +104,28 @@ shift
 case $key in
     -l|--lib)
     buildV8Proxy
+    buildResult
     shift
     ;;
     -d|--default)
 	JOBSV8=$1
     buildV8
+    buildResult
     buildV8Proxy
-    buildV8DotNet
+    buildResult
+    buildV8DotNetWrapper
+    buildResult
     shift
     ;;
     -v8|--v8)
 	JOBSV8=$1
     buildV8
+    buildResult
     shift
     ;;
     -w|--w)
-    buildV8DotNet
+    buildV8DotNetWrapper
+    buildResult
     shift
     ;;
     -h|--help)

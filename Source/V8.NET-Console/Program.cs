@@ -134,7 +134,7 @@ namespace V8.Net
 
                     Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
                     _JSServer.VerboseConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
-                    _JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
+                    //_JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
 
                     Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
                     _JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
