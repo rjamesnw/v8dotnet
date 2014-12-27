@@ -65,8 +65,8 @@ currentFunction=""
 	 mkdir -p BuildOutput/{Debug,Release}
 	 mkdir -p Source/V8.NET-Proxy/out
 	
-	/opt/monodevelop/lib/monodevelop/bin/mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
-	/opt/monodevelop/lib/monodevelop/bin/mdtool -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
+	/opt/monodevelop/lib/monodevelop/bin/mdtool.exe -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
+	/opt/monodevelop/lib/monodevelop/bin/mdtool.exe -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
 	cp Source/V8.NET-Console/bin/Debug/* BuildOutput/Debug/
 	cp Source/V8.NET-Console/bin/Release/* BuildOutput/Release/
 }

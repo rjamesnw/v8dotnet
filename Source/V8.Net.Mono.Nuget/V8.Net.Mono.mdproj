@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ItemType>PackagingProject</ItemType>
+    <ProjectGuid>{7736C6FC-D20C-4D5C-8104-855B72FB913D}</ProjectGuid>
+  </PropertyGroup>
+</Project>
