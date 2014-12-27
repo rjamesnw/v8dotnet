@@ -138,7 +138,7 @@ namespace V8.Net
 
         static V8Engine()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += Resolver;
+//           AppDomain.CurrentDomain.AssemblyResolve += Resolver;
         }
 
         public V8Engine()
@@ -183,7 +183,7 @@ namespace V8.Net
 
                 for (var i = 0; i < _HandleProxies.Length; i++)
                 {
-                    hProxy = _HandleProxies[i];
+                    hProxy = (HandleProxy*)_HandleProxies[i];
                     if (hProxy != null && !hProxy->IsDisposed)
                         hProxy->_ObjectID = -2; // (note: this must be <= -2, otherwise the ID auto updates -1 to -2 to flag the ID as already processed)
                 }
@@ -647,7 +647,7 @@ namespace V8.Net
             itemsEnum.Reset();
 
             int strPtrBufSize = Marshal.SizeOf(typeof(IntPtr)) * itemsCount; // start buffer size with size needed for all string pointers.
-            char** oneBigStringBlock = (char**)Utilities.AllocNativeMemory(strPtrBufSize + Marshal.SystemDefaultCharSize * strBufSize);
+            char** oneBigStringBlock = (char**)Utilities.AllocNativeMemory(strPtrBufSize + 2 * strBufSize);
             char** ptrWritePtr = oneBigStringBlock;
             char* strWritePtr = (char*)(((byte*)oneBigStringBlock) + strPtrBufSize);
             int itemLength;
