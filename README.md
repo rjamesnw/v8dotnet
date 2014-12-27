@@ -6,22 +6,49 @@ The Repository contains the following branches:
 - development (bleeding edge development changes)
 - development-mono (bleeding edge development changes for mono)
 
+#Use V8 from Binaries
+
+```
+wget http://download.opensuse.org/repositories/home:tpokorra:mono/xUbuntu_14.10/Release.key
+sudo apt-key add - < Release.key 
+
+sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/tpokorra:/mono/xUbuntu_14.10/ /' >> /etc/apt/sources.list.d/monodevelop-opt.list"
+
+sudo apt-get update
+sudo apt-get install mono-opt
+/opt/mono/bin/mono V8.Net-Console.exe
+```
+
+
 #Build Dependencies
 ```
-sudo aptitude install build-essential subversion scons
+sudo aptitude install build-essential subversion scons git git-svn
 sudo apt-get install libglib2.0-dev
 ```
 V8dotnet is based on the Mono runtime 3.10.0. To install the Runtime 3.10.0 together with Monodevelop on Ubuntu, the fastest way is to use the following link:
 - [Install Monodevelop and Runtime  ](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt)
 
 
+```
+wget http://download.opensuse.org/repositories/home:tpokorra:mono/xUbuntu_14.10/Release.key
+sudo apt-key add - < Release.key 
+
+sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/tpokorra:/mono/xUbuntu_14.10/ /' >> /etc/apt/sources.list.d/monodevelop-opt.list"
+
+sudo apt-get update
+sudo apt-get install mono-opt
+sudo apt-get install monodevelop-opt
+```
+#Building V8.Net Script
+
+`cd v8dotnet`
+`./build_V8_Net.sh --default 2`      (where 2 stands for the available core to build V8 )
+Start the V8 Console app with:
+/opt/mono/bin/mono V8.Net-Console.exe
 
 
-#Building V8.Net 
 
-Prerequisites
-Make sure git and git-svn are installed. To install using apt-get:
-`apt-get install git git-svn`
+#Building V8.Net manually
 
 This project contains Csharp and cpp projects. We using MonoDevelop to build the Csharp projects and g++ via commandline to build the cpp project.
 To speed up this process you can also use the `build_V8_Net.sh`. 
