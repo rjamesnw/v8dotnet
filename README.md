@@ -6,6 +6,11 @@ The Repository contains the following branches:
 - development (bleeding edge development changes)
 - development-mono (bleeding edge development changes for mono)
 
+#Build Dependencies
+```
+sudo aptitude install build-essential subversion scons
+sudo apt-get install libglib2.0-dev
+```
 V8dotnet is based on the Mono runtime 3.10.0. To install the Runtime 3.10.0 together with Monodevelop on Ubuntu, the fastest way is to use the following link:
 - [Install Monodevelop and Runtime  ](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt)
 
