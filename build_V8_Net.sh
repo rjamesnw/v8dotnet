@@ -27,10 +27,10 @@ currentFunction=""
 	printf '\e[1;34m%-6s\e[m \n' "commit 21d700eedcdd6570eff22ece724b63a5eefe78cb"
 	printf '\e[1;34m%-6s\e[m \n' "make builddeps -j ${JOBSV8=$1}"
 	make builddeps -j ${JOBSV8=$1}
-	printf '\e[1;34m%-6s\e[m \n' "make native library=shared gdbjit=on -j ${JOBSV8=$1}"
+	printf '\e[1;34m%-6s\e[m \n' "make library=shared gdbjit=on -j ${JOBSV8=$1}"
 	#Debug
 	#make native library=shared gdbjit=on -g -j ${JOBSV8=$1}
-	make native library=shared -j ${JOBSV8=$1}
+	make library=shared -j ${JOBSV8=$1}
 }
 
  buildV8Proxy (){
@@ -65,8 +65,8 @@ currentFunction=""
 	 mkdir -p BuildOutput/{Debug,Release}
 	 mkdir -p Source/V8.NET-Proxy/out
 	
-	/opt/monodevelop/lib/monodevelop/bin/mdtool.exe -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
-	/opt/monodevelop/lib/monodevelop/bin/mdtool.exe -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
+	mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
+	mdtool -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
 	cp Source/V8.NET-Console/bin/Debug/* BuildOutput/Debug/
 	cp Source/V8.NET-Console/bin/Release/* BuildOutput/Release/
 }
