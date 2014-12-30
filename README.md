@@ -65,24 +65,27 @@ The g++ option to compile `libV8_Net_Proxy.so` are:
   `'cflags':[ '-Werror -Wall -std=c++11 -w -fpermissive -fPIC -c',],`
 The linke options are:
 `'ldflags':[ '-Wall -std=c++11 -shared -fPIC',],`   
-`'libraries:['-Wl,-rpath,. -L. -L../ -lpthread -lstdc++ -lv8 -licui18n -licuuc -lglib-2.0 -lrt libgmock.a ...*a']`   
- Example:   
-        `ls | grep cpp | awk -F. '{ system("g++  -std=c++11 -w -fpermissive -fPIC -Wl,--gc-sections-c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }`
-`g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose`   
+`'libraries:['-Wl,-rpath,. -L. -L../ -lpthread -lstdc++ -lv8 -licui18n -licuuc -lglib-2.0 -lrt libgmock.a ...*a']`  
+Compiling:
+ ```
+ls | grep cpp | awk -F. '{ system("g++  -std=c++11 -w -fpermissive -fPIC -Wl,--gc-sections-c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }
+```   
+Linking:
+```g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose```   
 
-or use the provided v8dotnet.gyp file for compiling and linking the shared library.   
+Or use the provided v8dotnet.gyp file for compiling and linking the shared library.   
 ```
     ./gyp/gyp  -Dbase_dir=`pwd` -Dtarget_arch="x64" -Dbuild_option="release" -f make --depth=. v8dotnet.gyp  --generator-output=./Build/x64.release/makefiles
      V=1 make -C ./Build/x64.release/makefiles
 ```   
 
-9. Now we can build the C# projects. Build the `V8.Net.MonoDevelop.sln` via MonoDevelop or with the command:
+6. Now we can build the C# projects. Build the `V8.Net.MonoDevelop.sln` via MonoDevelop or with the command:
 
-10.  `mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"`
+7.  `mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"`
 
-11. The last step is to copy all files into one directory
+8. The last step is to copy all files into one directory
 
-12. Release Directory
+9. Release Directory
     - libicui18n.so
     - libicuuc.so
     - libv8.so
@@ -91,8 +94,8 @@ or use the provided v8dotnet.gyp file for compiling and linking the shared libra
     - V8.Net.Proxy.Interface.dll
     - V8.Net.SharedTypes.dll
     - V8.Net-Console.exe
-13. Start it with `mono V8.Net-Console.exe`.
-14. For debugging errors these commands can be helpful.
+10. Start it with `mono V8.Net-Console.exe`.
+11. For debugging errors these commands can be helpful.
     - `LD_LIBRARY_PATH="pwd" MONO_LOG_LEVEL=debug MONO_LOG_MASK=all mono V8.Net-Console.exe` for checking if the library gets loaded.
 
     - `nm -u -C libV8_Net_Proxy.so` checking for undefined symboles.
