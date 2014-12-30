@@ -6,7 +6,7 @@ The Repository contains the following branches:
 - development (bleeding edge development changes)
 - development-mono (bleeding edge development changes for mono)
 
-#Use V8.Net from Binaries
+##Use V8.Net from Binaries
 Install the current Monodevelop and Runtime for (x)Ubuntu from [tpokorra](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt):
 
 `wget http://download.opensuse.org/repositories/home:tpokorra:mono/xUbuntu_14.10/Release.key`
@@ -25,7 +25,7 @@ or
 
 
 
-#Build Dependencies
+##Build Dependencies
 
 ```
 sudo aptitude install build-essential subversion git git-svn
@@ -35,7 +35,7 @@ V8dotnet is based on the Mono Runtime 3.10.0. To install the Runtime 3.10.0 toge
 - [Install Monodevelop and Runtime  ](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt)
 
 
-#Building with the V8.Net Buildscript
+##Building with the V8.Net Buildscript
 
 `cd v8dotnet`
 `./build_V8_Net.sh --default 2`      (where 2 stands for the available core to build V8 )
@@ -46,7 +46,7 @@ and
 
 
 
-#Building V8.Net manually
+##Building V8.Net manually
 
 This project contains Csharp and cpp projects. We are using MonoDevelop to build the Csharp projects and gyp to build the cpp project.
 
@@ -100,7 +100,7 @@ Or use the provided v8dotnet.gyp file for compiling and linking the shared libra
 
     - `nm -u -C libV8_Net_Proxy.so` checking for undefined symboles.
 
-### Loading the `libV8_Net_Proxy.so` library
+## Loading the `libV8_Net_Proxy.so` library
 There are three possibilities to load the library
 - adding it in the same place where the executable is. For instance:
     - V8.Net-Console.exe
