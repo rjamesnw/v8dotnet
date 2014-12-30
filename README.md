@@ -5,6 +5,20 @@ The Repository contains the following branches:
 - Master (stable releases for windows)
 - development (bleeding edge development changes)
 - development-mono (bleeding edge development changes for mono)
+##Project structure
+
+├── Build (Native V8 Proxy build dir)
+├── BuildResult (Binaries)
+├── gyp (Build Engine for the native proxy)
+└── Source
+      ├── V8.Net (Manage Wrapper)
+      ├── V8.NET-Console (Test App)
+      ├── V8.Net.Mono.Nuget
+      ├── V8.NET-Proxy (Native files)
+      |     ├── V8 (Google V8)
+      ├── V8.NET-ProxyInterface (Managed Interface for p/invoke)
+      └── V8.Net-SharedTypes (Managed defined types)
+
 
 ##Use V8.Net from Binaries
 Install the current Monodevelop and Runtime for (x)Ubuntu from [tpokorra](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt):
