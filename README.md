@@ -100,7 +100,7 @@ Or use the provided v8dotnet.gyp file for compiling and linking the shared libra
 
     - `nm -u -C libV8_Net_Proxy.so` checking for undefined symboles.
 
-## Loading the `libV8_Net_Proxy.so` library
+###Loading the libV8_Net_Proxy.so library
 There are three possibilities to load the library
 - adding it in the same place where the executable is. For instance:
     - V8.Net-Console.exe
