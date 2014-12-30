@@ -4,20 +4,21 @@ V8.Net (v8dotnet) -- Mono runtime 3.10.0
 The Repository contains the following branches:
 - Master (stable releases for windows)
 - development (bleeding edge development changes)
-- development-mono (bleeding edge development changes for mono)
+- development-mono (bleeding edge development changes for mono)   
+
 ##Project structure
 
-- Build (Native V8 Proxy build dir)    
-- BuildResult (Binaries)   
-- gyp (Build Engine for the native proxy)   
+- Build (Native V8 Proxy build directory)
+- BuildResult (Binaries)
+- gyp (Build Engine for the native proxy)
 - Source
-  - V8.Net (Manage Wrapper)   
-  - V8.NET-Console (Test App)   
-  - V8.Net.Mono.Nuget   
-  - V8.NET-Proxy (Native files)   
-    - V8 (Google V8)   
-  - V8.NET-ProxyInterface (Managed Interface for p/invoke)   
-  - V8.Net-SharedTypes (Managed defined types)   
+  - V8.Net (Manage Wrapper)
+  - V8.NET-Console (Test App)
+  - V8.Net.Mono.Nuget
+  - V8.NET-Proxy (Native files)
+    - V8 (Google V8)
+  - V8.NET-ProxyInterface (Managed Interface for p/invoke)
+  - V8.Net-SharedTypes (Managed defined types)
 
 
 ##Use V8.Net from Binaries
@@ -32,6 +33,7 @@ Install the current Monodevelop and Runtime for (x)Ubuntu from [tpokorra](http:/
 and
 `sudo apt-get install mono-opt`
 
+Download the [Binaries here:](https://github.com/chrisber/v8dotnet/releases)
 Run the  V8.Net Console with following command:
 `/opt/mono/bin/mono V8.Net-Console.exe`
 or 
