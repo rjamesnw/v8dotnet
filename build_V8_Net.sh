@@ -140,6 +140,8 @@ case $key in
     buildResult
     buildV8DotNetWrapper
     buildResult
+    buildV8DotNetNuget
+    buildResult
     shift
     ;;
     -v8|--v8)
