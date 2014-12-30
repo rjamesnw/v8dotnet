@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>V8.Net.Mono</id>
+    <version>0.0.4</version>
+    <authors>James Wilkins,Sergiy Byelozyorov,Christian Karl Bernasko</authors>
+    <owners>James Wilkins,Christian Karl Bernasko</owners>
+    <licenseUrl>https://v8dotnet.codeplex.com/license</licenseUrl>
+    <projectUrl>https://v8dotnet.codeplex.com/</projectUrl>
+    <iconUrl>https://v8dotnet.codeplex.com/</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>V8.Net package for Mono. A fairly non-abstracted wrapper for Google's V8 JavaScript engine</description>
+    <releaseNotes>Initial beta port of V8.Net for Mono native library built for linux x64.</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>V8 Javascript Wrapper Mono</tags>
+  </metadata>
+    <files>
+      <file src="Source/V8.Net/bin/Release/*.dll" target="lib/net45" /> 
+      <file src="BuildResult/Release/*.so" target="content/V8EngineLibs/x64"/>
+      <file src="BuildResult/Release/*.so" target="content/V8EngineLibs/x86"/>
+      <file src="Source/V8.Net.Mono.Nuget/tools/*.*" target="tools" />
+
+    </files>
+</package>

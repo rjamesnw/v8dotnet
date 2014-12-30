@@ -8,7 +8,6 @@
 *.sln.docstates
 
 # Build results
-gyp/
 Build/
 BuildResult/
 BuildResult/**/*

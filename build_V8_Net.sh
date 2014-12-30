@@ -14,10 +14,6 @@ currentFunction=""
 
  buildV8 (){
 	currentFunction=" Build V8 Javascript Engine "
- 	 printf '\e[1;34m%-6s\e[m \n' "Create Directories"
-	 mkdir -p BuildOutput/{Debug,Release}
-	 mkdir -p Source/V8.NET-Proxy/out
-
 	printf '\e[1;34m%-6s\e[m \n' "Init V8 Submodule"
  	git submodule update --init --recursive
 	cd $currentDir
@@ -37,58 +33,80 @@ currentFunction=""
 	currentFunction="Build V8 native Proxy"
 	cd $currentDir
 	
-     printf '\e[1;34m%-6s\e[m \n' "Create Directories"
-	 mkdir -p BuildOutput/{Debug,Release}
-	 mkdir -p Source/V8.NET-Proxy/out
+    printf '\e[1;34m%-6s\e[m \n' "Create Directories BuildResult/{Debug,Release}"
+	mkdir -p BuildResult/{Debug,Release}
 
-	cd Source/V8.NET-Proxy/
-	printf '\e[1;34m%-6s\e[m \n' "Build V8DotNet Proxy"
+	printf '\e[1;34m%-6s\e[m \n' "Build V8.Net native proxy (libV8_Net_Proxy.so )"
+
+    ./gyp/gyp  -Dbase_dir=`pwd` -Dtarget_arch="x64" -Dbuild_option="release" -f make --depth=. v8dotnet.gyp  --generator-output=./Build/x64.release/makefiles
+     V=1 make -C ./Build/x64.release/makefiles
+     currentFunction="make x64.release"
+     buildResult
+    
+    ./gyp/gyp -debug -Dbase_dir=`pwd` -Dtarget_arch="x64" -Dbuild_option="debug" -f make --depth=. v8dotnet.gyp  --generator-output=./Build/x64.debug/makefiles
+ 	 V=1 make -C ./Build/x64.debug/makefiles
+     currentFunction="make x64.debug"
+     buildResult
+	
+	#copy resulting files
+	#Release
+	cp Build/x64.release/makefiles/out/Release/lib.target/*.so BuildResult/Release
+	cp Build/x64.release/makefiles/*.so BuildResult/Release
 	#Debug
-	# 	ls | grep cpp | awk -F. '{ system("g++ -g -std=c++11 -w -fpermissive -fPIC  -lstdc++ -Wl,--gc-sections   -c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }'
-	ls | grep cpp | awk -F. '{ system("g++ -std=c++11 -w -fpermissive -fPIC  -lstdc++ -Wl,--gc-sections   -c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }'
-	cd out
-	cp ../V8/out/native/lib.target/libicui18n.so .
-	cp ../V8/out/native/lib.target/libicuuc.so .
-	cp ../V8/out/native/lib.target/libv8.so .
-	#Debug
-	# 	g++  -g -Wall -std=c++11 -shared -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose
-	g++ -Wall -std=c++11 -shared -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose
-	cp *.so ../../../BuildOutput/Debug
-	cp *.so ../../../BuildOutput/Release
+	cp Build/x64.debug/makefiles/out/Release/lib.target/*.so BuildResult/Debug
+	cp Build/x64.debug/makefiles/*.so BuildResult/Debug
+	currentFunction="Build V8 native Proxy"
 }
 
  buildV8DotNetWrapper (){
-	currentFunction="Build V8DotNet Wrapper"
+	currentFunction="Build V8.Net Wrapper"
 	cd $currentDir
 
 	 printf '\e[1;34m%-6s\e[m \n' "Create Directories"
-	 mkdir -p BuildOutput/{Debug,Release}
-	 mkdir -p Source/V8.NET-Proxy/out
+	 mkdir -p BuildResult/{Debug,Release}
 	
 	mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
 	mdtool -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
-	cp Source/V8.NET-Console/bin/Debug/* BuildOutput/Debug/
-	cp Source/V8.NET-Console/bin/Release/* BuildOutput/Release/
+	cp Source/V8.NET-Console/bin/Debug/* BuildResult/Debug/
+	cp Source/V8.NET-Console/bin/Release/* BuildResult/Release/
 }
- function helptext {
+
+buildV8DotNetNuget () {
+	currentFunction="Build V8.Net Nuget"
+    printf '\e[1;34m%-6s\e[m \n' "Create Directories Build/{Debug,Release}"
+	mkdir -p BuildResult/{Debug,Release}
+	mkdir -p Build/V8dotNetNuget
+
+	cp -r BuildResult/Release Build/V8dotNetNuget/
+	cp -r Source/V8.Net.Mono.Nuget/* Build/V8dotNetNuget/
+
+	if [ ! -f Build/V8dotNetNuget/nuget.exe ]
+	  then
+	    wget --directory-prefix=Build/V8dotNetNuget/ http://nuget.org/nuget.exe
+	fi
+	
+	 mono Build/V8dotNetNuget/nuget.exe pack Build/V8dotNetNuget/v8dotnet.nuspec  -Verbosity detailed
+}
+
+  helptext (){
      echo -e $USAGE
     exit 1;
 }
 
 
-USAGE="$(basename "$0") [-h] [-l] [-d jobs] [-v8 jobs] -- program to build V8DotNet\n\n
+USAGE="$(basename "$0") [-h] [-l] [-d cores] [-v8 cores] -- program to build V8.Net\n\n
 
-Use: [$(basename "$0") --default 4] to build all\n\n
+Use: [ $(basename "$0") --default 4 ] to build all with 4 cores \n\n
 
 where:\n
     -h,  --help:     \t Show this help text\n
-    -l,  --lib:      \t libV8_Net_Proxy.so only\n
+    -l,  --lib:      \t Build V8.Net native proxy (libV8_Net_Proxy.so )\n
     -v8, --v8:       \t Build Google V8 only \n
-    -w, --w:         \t Build v8 wrapper \n
-    -d, --default:   Build V8DotNet with extern Google V8\n\n
+    -w, --wrapper:\t Build V8.Net (managed wrapper)\n
+    -d, --default:\t Build all (V8.Net and Google V8)\n\n
 
-    param jobs: specifies the number of parallel build processes. Set it (roughly) to the number of CPU cores your machine has. 
-    The GYP/make based V8 build also supports distcc, so you can compile with -j100 or so, provided you have enough machines around." 
+    param jobs: specifies the number of parallel build processes. Set it (roughly) to the number of CPU cores your machine has."
+    
     
 if [ $# == 0 ] ; then
     echo -e $USAGE
@@ -123,8 +141,13 @@ case $key in
     buildResult
     shift
     ;;
-    -w|--w)
+    -w|--wrapper)
     buildV8DotNetWrapper
+    buildResult
+    shift
+    ;;
+    -n|--nugget)
+    buildV8DotNetNuget
     buildResult
     shift
     ;;
