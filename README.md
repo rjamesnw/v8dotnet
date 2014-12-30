@@ -6,45 +6,43 @@ The Repository contains the following branches:
 - development (bleeding edge development changes)
 - development-mono (bleeding edge development changes for mono)
 
-#Use V8 from Binaries
+#Use V8.Net from Binaries
+Install the current Monodevelop and Runtime for (x)Ubuntu from [tpokorra](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt):
 
-```
-wget http://download.opensuse.org/repositories/home:tpokorra:mono/xUbuntu_14.10/Release.key
-sudo apt-key add - < Release.key 
+`wget http://download.opensuse.org/repositories/home:tpokorra:mono/xUbuntu_14.10/Release.key`
+`sudo apt-key add - < Release.key`
 
-sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/tpokorra:/mono/xUbuntu_14.10/ /' >> /etc/apt/sources.list.d/monodevelop-opt.list"
+`sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/tpokorra:/mono/xUbuntu_14.10/ /' >> /etc/apt/sources.list.d/monodevelop-opt.list"`
 
-sudo apt-get update
-sudo apt-get install mono-opt
-/opt/mono/bin/mono V8.Net-Console.exe
-```
+`sudo apt-get update`
+and
+`sudo apt-get install mono-opt`
+
+Run the  V8.Net Console with following command:
+`/opt/mono/bin/mono V8.Net-Console.exe`
+or 
+`LD_LIBRARY_PATH="pwd" MONO_LOG_LEVEL=debug MONO_LOG_MASK=all /opt/mono/bin/mono V8.Net-Console.exe`
+
 
 
 #Build Dependencies
+
 ```
-sudo aptitude install build-essential subversion scons git git-svn
+sudo aptitude install build-essential subversion git git-svn
 sudo apt-get install libglib2.0-dev
 ```
-V8dotnet is based on the Mono runtime 3.10.0. To install the Runtime 3.10.0 together with Monodevelop on Ubuntu, the fastest way is to use the following link:
+V8dotnet is based on the Mono Runtime 3.10.0. To install the Runtime 3.10.0 together with Monodevelop on Ubuntu, the fastest way is to use the following link:
 - [Install Monodevelop and Runtime  ](http://software.opensuse.org/download/package?project=home:tpokorra:mono&package=monodevelop-opt)
 
 
-```
-wget http://download.opensuse.org/repositories/home:tpokorra:mono/xUbuntu_14.10/Release.key
-sudo apt-key add - < Release.key 
-
-sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/tpokorra:/mono/xUbuntu_14.10/ /' >> /etc/apt/sources.list.d/monodevelop-opt.list"
-
-sudo apt-get update
-sudo apt-get install mono-opt
-sudo apt-get install monodevelop-opt
-```
-#Building V8.Net Script
+#Building with the V8.Net Buildscript
 
 `cd v8dotnet`
 `./build_V8_Net.sh --default 2`      (where 2 stands for the available core to build V8 )
 Start the V8 Console app with:
-/opt/mono/bin/mono V8.Net-Console.exe
+`cd BuildResutl/Release` 
+and 
+`LD_LIBRARY_PATH="pwd" MONO_LOG_LEVEL=debug MONO_LOG_MASK=all /opt/mono/bin/mono V8.Net-Console.exe`
 
 
 
