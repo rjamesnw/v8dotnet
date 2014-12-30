@@ -15,10 +15,10 @@
     <tags>V8 Javascript Wrapper Mono</tags>
   </metadata>
     <files>
-      <file src="Source/V8.Net/bin/Release/*.dll" target="lib/net45" /> 
-      <file src="BuildResult/Release/*.so" target="content/V8EngineLibs/x64"/>
-      <file src="BuildResult/Release/*.so" target="content/V8EngineLibs/x86"/>
-      <file src="Source/V8.Net.Mono.Nuget/tools/*.*" target="tools" />
+      <file src="Release/*.dll" target="lib/net45" /> 
+      <file src="Release/*.so" target="content/V8EngineLibs/x64"/>
+      <file src="Release/*.so" target="content/V8EngineLibs/x86"/>
+      <file src="tools/*.*" target="tools" />
 
     </files>
 </package>

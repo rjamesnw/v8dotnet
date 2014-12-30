@@ -73,7 +73,7 @@ currentFunction=""
 
 buildV8DotNetNuget () {
 	currentFunction="Build V8.Net Nuget"
-    printf '\e[1;34m%-6s\e[m \n' "Create Directories Build/{Debug,Release}"
+    printf '\e[1;34m%-6s\e[m \n' "Create Directories BuildResult/{Debug,Release}"
 	mkdir -p BuildResult/{Debug,Release}
 	mkdir -p Build/V8dotNetNuget
 
@@ -86,6 +86,13 @@ buildV8DotNetNuget () {
 	fi
 	
 	 mono Build/V8dotNetNuget/nuget.exe pack Build/V8dotNetNuget/v8dotnet.nuspec  -Verbosity detailed
+	 rm V8.Net.Mono.*.nupkg
+	if [ ! -f Build/V8dotNetNuget/*.nupkg ]
+	  then
+	    cp Build/V8dotNetNuget/V8.Net.Mono.*.nupkg BuildResult
+	  else
+	  	exit 1
+	fi	 
 }
 
   helptext (){
