@@ -1,5 +1,6 @@
-language: cpp
+language: csharp
+solution: Source/V8.Net.MonoDevelop.sln
 install: 
- - sudo apt-get install build-essential subversion git git-svn libglib2.0-dev g++-multilib
- script:
-    - build_V8_Net.sh.sh -d 1
+- sudo apt-get install build-essential subversion git git-svn libglib2.0-dev g++-multilib
+script:
+- ./build_V8_Net.sh -d 2

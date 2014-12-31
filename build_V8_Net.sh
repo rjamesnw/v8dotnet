@@ -65,8 +65,8 @@ currentFunction=""
 	 printf '\e[1;34m%-6s\e[m \n' "Create Directories"
 	 mkdir -p BuildResult/{Debug,Release}
 	
-	mdtool -v build "--configuration:Release" "Source/V8.Net.MonoDevelop.sln"
-	mdtool -v build "--configuration:Debug" "Source/V8.Net.MonoDevelop.sln"
+	xbuild /p:Configuration=Release Source/V8.Net.MonoDevelop.sln /verbosity:detailed
+	xbuild /p:Configuration=Debug Source/V8.Net.MonoDevelop.sln /verbosity:detailed
 	cp Source/V8.NET-Console/bin/Debug/* BuildResult/Debug/
 	cp Source/V8.NET-Console/bin/Release/* BuildResult/Release/
 }
