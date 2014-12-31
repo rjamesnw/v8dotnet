@@ -37,9 +37,10 @@ sudo aptitude install build-essential subversion git git-svn
 sudo apt-get install libglib2.0-dev g++-multilib
 ```
 OpenSuse
+```
 sudo zypper install --type pattern devel_basis
 sudo zypper in gcc48-32bit libstdc++48-devel-32bit  compat-32bit glibc-devel-32bit
-
+```
 
 V8dotnet is based on the Mono Runtime 3.10.0. To install the Runtime 3.10.0 together with [Monodevelop](http://www.monodevelop.com/download/) on Ubuntu
 
