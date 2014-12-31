@@ -34,7 +34,7 @@ or
 
 ```
 sudo aptitude install build-essential subversion git git-svn
-sudo apt-get install libglib2.0-dev
+sudo apt-get install libglib2.0-dev g++-multilib
 ```
 V8dotnet is based on the Mono Runtime 3.10.0. To install the Runtime 3.10.0 together with [Monodevelop](http://www.monodevelop.com/download/) on Ubuntu
 
