@@ -85,7 +85,7 @@ buildV8DotNetNuget () {
 	    wget --directory-prefix=Build/V8dotNetNuget/ http://nuget.org/nuget.exe
 	fi
 	
-	 mono Build/V8dotNetNuget/nuget.exe pack Build/V8dotNetNuget/v8dotnet.nuspec  -Verbosity detailed
+	 mono Build/V8dotNetNuget/nuget.exe pack Build/V8dotNetNuget/v8dotnet.nuspec   -OutputDirectory "${currentDir}/Build/V8dotNetNuget/" -Verbosity detailed 
 	 rm V8.Net.Mono.*.nupkg
 	if [ ! -f Build/V8dotNetNuget/*.nupkg ]
 	  then
