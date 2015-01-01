@@ -3,10 +3,14 @@ os:
   - osx
 language: csharp
 solution: Source/V8.Net.MonoDevelop.sln
-install: 
+before_install:
+# We need this line to have g++4.8 available in apt
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get -qq update
-  - sudo apt-get -qq install g++-4.8   
-  - sudo apt-get install build-essential subversion git git-svn libglib2.0-dev g++-multilib 
+  - sudo apt-get update -qq
+install: 
+  - sudo apt-get -qq install -qq gcc-4.8 g++-4.8  g++-multilib 
+# We want to compile with g++ 4.8 when rather than the default g++
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90 
+  - sudo apt-get install build-essential subversion git git-svn libglib2.0-dev
 script:
   - ./build_V8_Net.sh -d x64.release 2
