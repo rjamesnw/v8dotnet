@@ -74,7 +74,6 @@ buildV8Proxy (){
 	fi
 
 	debugInfo 0 "Build V8.Net native Proxy"
-	exit 0
 
 }
 
