@@ -103,6 +103,7 @@ buildV8DotNetWrapper (){
 buildV8DotNetNuget () {
 
 	debugInfo 2 "Build V8.Net Nuget"
+	cd $currentDir
 	printf '\e[1;34m%-6s\e[m \n' "Create Directories BuildResult/{Debug,Release}"
 	mkdir -p BuildResult/{Debug,Release}
 	mkdir -p Build/V8dotNetNuget
@@ -118,7 +119,7 @@ buildV8DotNetNuget () {
 	mono Build/V8dotNetNuget/nuget.exe pack Build/V8dotNetNuget/v8dotnet.nuspec   -OutputDirectory "${currentDir}/Build/V8dotNetNuget/" -Verbosity detailed 
 	debugInfo $? "Pack Nuget"
 
-	if [ ! -f Build/V8dotNetNuget/*.nupkg ]
+	if [ -f Build/V8dotNetNuget/*.nupkg ]
 		then
 		cp Build/V8dotNetNuget/V8.Net.Mono.*.nupkg BuildResult
 	else
