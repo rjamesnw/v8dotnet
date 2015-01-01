@@ -177,6 +177,9 @@ do
 		buildV8Proxy
 		buildV8DotNetWrapper
 		buildV8DotNetNuget
+		cd BuildResult/Release/
+		mono V8.Net-Console.exe \all
+		cd $currentDir
 		shift
 		;;
 		-v8|--v8)
