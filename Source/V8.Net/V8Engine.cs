@@ -101,7 +101,12 @@ namespace V8.Net
 
                 var bitStr = IntPtr.Size == 8 ? "x64" : "x86";
                 var platformLibraryPath = Path.Combine(assemblyRoot, bitStr);
-                var fileName = Path.Combine(platformLibraryPath, "V8.Net.Proxy.Interface." + bitStr + ".dll");
+                string fileName;
+                // ... if the platform folder doesn't exist, try loading assemblies from the current folder ...
+                if (Directory.Exists(platformLibraryPath))
+                    fileName = Path.Combine(platformLibraryPath, "V8.Net.Proxy.Interface." + bitStr + ".dll");
+                else
+                    fileName = Path.Combine(assemblyRoot, "V8.Net.Proxy.Interface." + bitStr + ".dll");
 
                 // ... attempt to update environment variable automatically for the native DLLs ...
                 // (see: http://stackoverflow.com/questions/7996263/how-do-i-get-iis-to-load-a-native-dll-referenced-by-my-wcf-service

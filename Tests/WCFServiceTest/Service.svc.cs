@@ -17,7 +17,7 @@ namespace WCFServiceTest
      *    content is required for the application.
      * 3. Set any DLLs that you have already referenced in the "$(ProjectDir)V8.NET" root folder to "Do not copy" - the build action will copy referenced DLLs by default.
      * 
-     * When setup correcly, Visual Studio will replicate the folder structure for the DLLs in the "V8.NET" folder into the 'bin' folder, and the referenced DLLs will end
+     * When setup correctly, Visual Studio will replicate the folder structure for the DLLs in the "V8.NET" folder into the 'bin' folder, and the referenced DLLs will end
      * up in the root of the 'bin' folder.  Thus, you will have this folder structure:
      * - bin\V8.Net.dll
      * - bin\V8.Net.SharedTypes.dll (if referenced)
