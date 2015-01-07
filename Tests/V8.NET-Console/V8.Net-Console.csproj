@@ -32,7 +32,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\bin\Release\</OutputPath>
+    <OutputPath>..\..\Source\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -77,11 +77,11 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
+    <ProjectReference Include="..\..\Source\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
       <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
       <Name>V8.Net-SharedTypes</Name>
     </ProjectReference>
-    <ProjectReference Include="..\V8.Net\V8.Net.csproj">
+    <ProjectReference Include="..\..\Source\V8.Net\V8.Net.csproj">
       <Project>{8d612c41-7d95-499c-a82d-c5c3c82225b3}</Project>
       <Name>V8.Net</Name>
     </ProjectReference>
