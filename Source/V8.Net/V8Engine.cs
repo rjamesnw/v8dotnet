@@ -86,7 +86,14 @@ namespace V8.Net
                 if (HttpContext.Current != null)
                     assemblyRoot = HttpContext.Current.Server.MapPath("~/bin");
                 else
-                    assemblyRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                {
+                    var codebaseuri = Assembly.GetExecutingAssembly().CodeBase;
+                    Uri codebaseURI = null;
+                    if (Uri.TryCreate(codebaseuri, UriKind.Absolute, out codebaseURI))
+                        assemblyRoot = Path.GetDirectoryName(codebaseURI.LocalPath); // (check pre-shadow copy location first)
+                    if (!Directory.Exists(assemblyRoot))
+                        assemblyRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location); // (check loaded assembly location next)
+                }
 
                 if (Directory.Exists(Path.Combine(assemblyRoot, ASPBINSubFolderName)))
                     assemblyRoot = Path.Combine(assemblyRoot, ASPBINSubFolderName);
