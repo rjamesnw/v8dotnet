@@ -24,7 +24,7 @@ using System.Web.Routing;
  * V8.Net.dll will look for the "V8.NET" folder in the 'bin' folder, and if found, will use that instead to locate dependent libraries.  If NOT found, it will expect
  * the 'x86' and 'x64' folders to be in the same folder as V8.Net.dll, as normal.
  * 
- * Note: ASP.NET may shadow copy the 'bin' folder (http://goo.gl/vXbwGp).  This means that whatever is in the 'bin' folder may end up elsewhere in a temporary folder
+ * Note: ASP.NET may shadow copy some DLLs in the 'bin' folder (http://goo.gl/vXbwGp).  This means that those DLLs may end up elsewhere in a temporary folder
  * during runtime.
  */
 
