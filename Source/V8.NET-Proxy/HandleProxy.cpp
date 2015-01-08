@@ -223,13 +223,13 @@ int32_t HandleProxy::GetManagedObjectID()
             {
                 auto field = obj->GetInternalField(1); // (may be faster than hidden values)
                 if (field->IsExternal())
-                    _ObjectID = (int32_t)field.As<External>()->Value();
+                    _ObjectID = (uintptr_t)field.As<External>()->Value();
             }
             else
             {
                 auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
                 if (!handle.IsEmpty() && handle->IsInt32())
-                    _ObjectID = (int32_t)handle->Int32Value();
+                    _ObjectID = (uintptr_t)handle->Int32Value();
             }
 
             if (_ObjectID == -1)

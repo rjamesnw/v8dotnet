@@ -72,7 +72,7 @@ template <class T> struct CopyablePersistent {
     Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
     bool IsEmpty() const { return Value.IsEmpty(); }
     void Reset() { return Value.Reset(); }
-    template <class S> Local<S> As() { return Handle().As<S>(); }
+    template <class S> Local<S> As() { return Handle().template As<S>(); }
 };
 
 #define V8Undefined v8::Undefined(Isolate::GetCurrent())
@@ -531,7 +531,7 @@ public:
     HandleProxy* CreateObject(int32_t managedObjectID);
 
     void SetAccessor(int32_t managedObjectID, const uint16_t *name,
-        ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+        ManagedAccessorGetter *getter, ManagedAccessorSetter *setter,
         v8::AccessControl access, v8::PropertyAttribute attributes);
 
     void Set(const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes);

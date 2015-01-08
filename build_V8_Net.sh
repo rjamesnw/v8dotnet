@@ -65,7 +65,7 @@ buildV8Proxy (){
 	debugInfo $? "make V8.Net Proxy for ${v8_net_target}.${v8_net__mode}"
 	
 	#copy resulting files
-	if ! cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Release"/lib.target/*.so BuildResult/Release
+	if ! cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default"/lib.target/*.so BuildResult/Release
 		then  debugInfo 1 "Copy libV8_Net_Proxy.so"
 	fi
 
@@ -177,6 +177,9 @@ do
 		buildV8Proxy
 		buildV8DotNetWrapper
 		buildV8DotNetNuget
+		cd BuildResult/Release/
+		mono V8.Net-Console.exe \all
+		cd $currentDir	 		
 		shift
 		;;
 		-v8|--v8)

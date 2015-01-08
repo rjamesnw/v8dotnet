@@ -1,6 +1,6 @@
 {  
       "includes": [
-        "common.gypi"
+
     ],
    'variables':{  
       'base_dir%':'<(base_dir)',
@@ -69,15 +69,51 @@
                      '/usr/lib/x86_64-linux-gnu/glib-2.0/include/',
                      '/usr/lib64/glib-2.0/include/'
                   ],
-               }],
-               ['OS=="win"',
-                  {  
-                     'defines':[  
-                        'WINDOWS_SPECIFIC_DEFINE',
+               }
+            ],
+            ['OS=="mac"',
+            {
+               'xcode_settings': {
+                     'OTHER_CPLUSPLUSFLAGS' : ['-Werror -Wall -Wc++11-extensions -std=c++11 -w -fpermissive -fPIC -c'],
+                     'OTHER_LDFLAGS': ['-Wall -w  -std=c++11 -shared -fPIC'],
+               },
+
+                  'copies':[  
+                     {  
+                        'destination':'<(PRODUCT_DIR)/../../',
+                        'files':[  
+                           'Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libicui18n.dylib',
+                           'Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libicuuc.dylib',
+                           'Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8.dylib',
+                        ],
+                     }
+                  ],
+                  'link_settings':{  
+                     'libraries':[  
+                        '-Wl,-rpath,. -L. -L../',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libgmock.a',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libgtest.a',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libicudata.a',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_base.a',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_libbase.a',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_libplatform.a',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_nosnapshot.a',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_snapshot.a',
+                        '-lpthread -lstdc++ -lv8 -licui18n -licuuc -lglib-2.0 -lrt'
                      ]
-                  }
-               ]
-            ]
+                  },
+                  'include_dirs':[  
+                     '/usr/local/Cellar/glib/2.42.1/',
+                     '/usr/local/Cellar/glib/2.42.1/lib/',
+                     '/usr/local/Cellar/glib/2.42.1/lib/glib-2.0',
+                     '/usr/local/Cellar/glib/2.42.1/include/glib-2.0',
+                     '/usr/local/Cellar/glib/2.42.1/lib/glib-2.0/include',
+                     '/usr/local/Cellar/glib/2.42.1/include/glib-2.0',
+                     '/usr/local/Cellar/glib/2.42.1/include/glib-2.0/glib',
+                  ],
+               }
+            ]            
+         ]
       } 
    ]
 }
