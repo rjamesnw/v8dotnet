@@ -71,6 +71,7 @@
   <ItemGroup>
     <Content Include="Service.svc" />
     <Content Include="V8.NET\V8.Net Tests.dll" />
+    <Content Include="V8.NET\V8.Net.dll" />
     <Content Include="V8.NET\V8.Net.SharedTypes.dll" />
     <Content Include="V8.NET\x64\icudt.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
