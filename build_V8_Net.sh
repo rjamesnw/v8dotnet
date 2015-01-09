@@ -38,7 +38,7 @@ buildV8 (){
 	cd Source/V8.NET-Proxy/V8/
 	make builddeps -j ${JOBSV8}
 	debugInfo 2 "make ${v8_net_target}.${v8_net__mode} library=shared gdbjit=on -j ${JOBSV8}"
-	make  "${v8_net_target}.${v8_net__mode}" library=shared -j ${JOBSV8}
+	make  "${v8_net_target}.${v8_net__mode}" library=shared -j ${JOBSV8} i18nsupport=off
 	debugInfo $? "make ${v8_net_target}.${v8_net__mode} library=shared Build V8 Javascript Engine"
 
 	cd $currentDir

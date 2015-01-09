@@ -28,12 +28,11 @@ using namespace std;
 #define FREE_MARSHALLED_STRING(ptr) { CoTaskMemFree(ptr); ptr = nullptr; }
 #define STDCALL __stdcall
 #else
-#include <glib.h>
 #include <string.h>
 #include <functional>
-#define ALLOC_MANAGED_MEM(size) g_malloc(size)
-#define REALLOC_MANAGED_MEM(ptr, size) g_realloc(ptr, size)
-#define FREE_MANAGED_MEM(ptr) g_free(ptr)
+#define ALLOC_MANAGED_MEM(size) malloc(size)
+#define REALLOC_MANAGED_MEM(ptr, size) realloc(ptr, size)
+#define FREE_MANAGED_MEM(ptr) free(ptr)
 // according to http://stackoverflow.com/questions/3054257/is-there-stdcall-in-linux
 #define STDCALL
 typedef uint8_t byte;
