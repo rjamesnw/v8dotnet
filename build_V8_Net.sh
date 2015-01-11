@@ -59,14 +59,22 @@ buildV8Proxy (){
 		then 	./gyp/gyp -debug -Dbase_dir=`pwd` -Dtarget_arch="${v8_net_target}" -Dbuild_option="${v8_net__mode}"  -f make --depth=. v8dotnet.gyp  --generator-output="./Build/${v8_net_target}.${v8_net__mode}/makefiles"
 	fi
 
-	./gyp/gyp  -Dbase_dir=`pwd` -Dtarget_arch="${v8_net_target}" -Dbuild_option="${v8_net__mode}"  -f make --depth=. v8dotnet.gyp  --generator-output="./Build/${v8_net_target}.${v8_net__mode}/makefiles"
-	make -C "./Build/${v8_net_target}.${v8_net__mode}/makefiles"
+	 ./gyp/gyp  -Dbase_dir="`pwd`" -Darch="${v8_net_target}" -Dtarget_arch="${v8_net_target}" -Dbuild_option="${v8_net__mode}"  -f make --depth=. v8dotnet.gyp  --generator-output="./Build/${v8_net_target}.${v8_net__mode}/makefiles"
+	V=1 make -C "./Build/${v8_net_target}.${v8_net__mode}/makefiles"
 	echo $?
 	debugInfo $? "make V8.Net Proxy for ${v8_net_target}.${v8_net__mode}"
 	
 	#copy resulting files
-	if ! cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default"/lib.target/*.so BuildResult/Release
-		then  debugInfo 1 "Copy libV8_Net_Proxy.so"
+	if [ -f "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default/lib.target"/libV8_Net_Proxy.so ]
+		then
+	    		cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default/lib.target"/libV8_Net_Proxy.so BuildResult/Release
+		else
+			if [ -f "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default"/libV8_Net_Proxy.dylib ]
+				then
+					cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default"/libV8_Net_Proxy.so BuildResult/Release
+				else
+					debugInfo 1 "Copy libV8_Net_Proxy.so"
+			fi
 	fi
 
 	if ! cp "Build/${v8_net_target}.${v8_net__mode}"/makefiles/*.so BuildResult/Release

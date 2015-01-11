@@ -66,8 +66,9 @@
             ['OS=="mac"',
             {
                'xcode_settings': {
-                     'OTHER_CPLUSPLUSFLAGS' : ['-w -std=c++11 -stdlib=libstdc+ +-Wc++11-extensions '],
-                     'OTHER_LDFLAGS': ['-Wall -w  -shared '],
+                     'ARCHS': ['i386'],
+                     'OTHER_CPLUSPLUSFLAGS' : ['-w  -Wc++11-extensions'],
+                     'OTHER_LDFLAGS': ['-Wall -w'],
                },
 
                   'copies':[  
@@ -90,7 +91,7 @@
                         '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_libplatform.a',
                         '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_nosnapshot.a',
                         '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/libv8_snapshot.a',
-                        '-lv8 -licui18n -licuuc '
+                        '-lv8'
                      ]
                   },
                }

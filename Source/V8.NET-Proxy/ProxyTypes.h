@@ -10,7 +10,8 @@
 #endif
 #include <include/v8stdint.h>
 #include "Platform.h"
-
+#include <stdlib.h> // pulls in declaration of malloc, free
+#include <string.h> // pulls in declaration for strlen.
 using namespace std;
 
 #if (_MSC_PLATFORM_TOOLSET < 110)
