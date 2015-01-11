@@ -56,19 +56,44 @@ or
 Ubuntu 14.04.01
 ```
 sudo aptitude install build-essential subversion git git-svn
-sudo apt-get install libglib2.0-dev g++-multilib
+sudo apt-get install g++-multilib
 ```
 OpenSuse
 ```
 sudo zypper install --type pattern devel_basis
-sudo zypper in gcc48-32bit libstdc++48-devel-32bit  compat-32bit glibc-devel-32bit
+sudo zypper in gcc48-32bit libstdc++48-devel-32bit  compat-32bit
+```
+Mac OSX 10.10
+```
+xcode-select --install
+Install Xcode IDE
 ```
 
 V8dotnet is based on the Mono Runtime 3.10.0. To install the Runtime 3.10.0 together with [Monodevelop](http://www.monodevelop.com/download/) on Ubuntu
 
 
 ##Building with the V8.Net Buildscript
-The build script defines a number of targets for each target architecture (ia32, x64, arm, arm64) and mode (debug or release). So your basic command for building is:   
+Add gyp and c/c++/linking configuration to your environment, we use clang for compiling V8 and V8 proxy libaries
+```
+export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
+export CC="`which clang`          -v "
+export CPP="`which clang`      -E -v "
+export LINK="`which clang++`      -v -std=c++11 -stdlib=libc++"
+export CXX_host="`which clang++`  -v "
+export CC_host="`which clang`     -v "
+export CPP_host="`which clang` -E -v "
+export LINK_host="`which clang++` -v "
+```
+For debian systems export also:   
+```
+export GYP_DEFINES="clang=1"
+```
+For mac osx:   
+```
+export GYP_DEFINES="clang=1  mac_deployment_target=10.10"
+```
+
+The build script defines a number of targets for each target architecture (ia32, x64, ) and mode (debug or release). So your basic command for building is:   
 `cd v8dotnet`   
 `./build_V8_Net.sh --default x64.release 2`      (where 2 stands for the available core to build V8 )   
 or   
