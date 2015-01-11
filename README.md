@@ -74,6 +74,20 @@ V8dotnet is based on the Mono Runtime 3.10.0. To install the Runtime 3.10.0 toge
 
 ##Building with the V8.Net Buildscript
 Add gyp and c/c++/linking configuration to your environment, we use clang for compiling V8 and V8 proxy libaries
+
+For debian systems export:   
+```
+export GYP_DEFINES="clang=1"
+export CXX="`which clang++`       -v -std=c++11 -stdlib=libstdc++"
+export CC="`which clang`          -v "
+export CPP="`which clang`      -E -v "
+export LINK="`which clang++`      -v -std=c++11 -stdlib=libstdc++"
+export CXX_host="`which clang++`  -v "
+export CC_host="`which clang`     -v "
+export CPP_host="`which clang` -E -v "
+export LINK_host="`which clang++` -v "
+```   
+For mac osx:      
 ```
 export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
 export CC="`which clang`          -v "
@@ -83,13 +97,6 @@ export CXX_host="`which clang++`  -v "
 export CC_host="`which clang`     -v "
 export CPP_host="`which clang` -E -v "
 export LINK_host="`which clang++` -v "
-```
-For debian systems export also:   
-```
-export GYP_DEFINES="clang=1"
-```
-For mac osx:   
-```
 export GYP_DEFINES="clang=1  mac_deployment_target=10.10"
 ```
 
