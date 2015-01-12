@@ -34,7 +34,7 @@ exportMac (){
 	export CC_host="`which clang`     -v "
 	export CPP_host="`which clang` -E -v "
 	export LINK_host="`which clang++` -v "
-	exit 0
+
 }
 
 exportLinux (){
@@ -48,7 +48,7 @@ exportLinux (){
 	export CPP_host="`which clang` -E -v "
 	export LINK_host="`which clang++` -v "
 	export GYP_DEFINES="clang=1  mac_deployment_target=10.10"
-	exit 0
+
 }
 
 
