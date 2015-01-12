@@ -211,8 +211,14 @@ do
 		v8_net_target="${TARGETARCHITECTURE%.*}"
 		v8_net__mode="${TARGETARCHITECTURE##*.}"
 		JOBSV8=$2
-		if [[ $TRAVIS_OS_NAME == 'linux' ]]; then exportLinux ; fi
-		if [[ $TRAVIS_OS_NAME == 'osx' ]]; then exportmac ; fi
+		if [ ! -z "$TRAVIS_OS_NAME" ]; 
+			then
+				if [[ $TRAVIS_OS_NAME == 'linux' ]]; then exportLinux ; fi
+				if [[ $TRAVIS_OS_NAME == 'osx' ]]; then exportmac ; fi
+			else
+				exportLinux
+		fi
+
 		buildV8
 		buildV8Proxy
 		buildV8DotNetWrapper
