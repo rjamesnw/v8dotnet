@@ -24,6 +24,7 @@ debugInfo (){
 		}
 
 exportMac (){
+	echo "Export Mac defines"
 	export GYP_DEFINES="clang=1"
 	export CXX="`which clang++`       -v -std=c++11 -stdlib=libstdc++"
 	export CC="`which clang`          -v "
@@ -37,6 +38,7 @@ exportMac (){
 }
 
 exportLinux (){
+	echo "Export Linux defines"
 	export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
 	export CC="`which clang`          -v "
 	export CPP="`which clang`      -E -v "
@@ -209,6 +211,8 @@ do
 		v8_net_target="${TARGETARCHITECTURE%.*}"
 		v8_net__mode="${TARGETARCHITECTURE##*.}"
 		JOBSV8=$2
+		if [[ $TRAVIS_OS_NAME == 'linux' ]]; then exportLinux ; fi
+		if [[ $TRAVIS_OS_NAME == 'osx' ]]; then exportmac ; fi
 		buildV8
 		buildV8Proxy
 		buildV8DotNetWrapper
