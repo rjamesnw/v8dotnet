@@ -38,7 +38,7 @@
                      '-Werror -Wall -std=c++11 -w -fpermissive -fPIC -c',
                   ],
                   'ldflags':[  
-                     '-Wall -std=c++11 -shared -fPIC',
+                     '-Wall',
                   ],
                   'copies':[  
                      {  
@@ -58,7 +58,7 @@
                         '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/obj.target/tools/gyp/libv8_libplatform.a',
                         '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/obj.target/tools/gyp/libv8_nosnapshot.a',
                         '<(base_dir)/Source/V8.NET-Proxy/V8/out/<(target_arch).<(build_option)/obj.target/tools/gyp/libv8_snapshot.a',
-                        '-lpthread -lstdc++ -lv8 -licui18n -licuuc -lglib-2.0 -lrt'
+                        '-lv8'
                      ]
                   },
                }

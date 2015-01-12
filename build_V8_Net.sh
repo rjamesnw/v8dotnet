@@ -23,6 +23,33 @@ debugInfo (){
 		esac	  
 		}
 
+exportMac (){
+	export GYP_DEFINES="clang=1"
+	export CXX="`which clang++`       -v -std=c++11 -stdlib=libstdc++"
+	export CC="`which clang`          -v "
+	export CPP="`which clang`      -E -v "
+	export LINK="`which clang++`      -v -std=c++11 -stdlib=libstdc++"
+	export CXX_host="`which clang++`  -v "
+	export CC_host="`which clang`     -v "
+	export CPP_host="`which clang` -E -v "
+	export LINK_host="`which clang++` -v "
+	exit 0
+}
+
+exportLinux (){
+	export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
+	export CC="`which clang`          -v "
+	export CPP="`which clang`      -E -v "
+	export LINK="`which clang++`      -v -std=c++11 -stdlib=libc++"
+	export CXX_host="`which clang++`  -v "
+	export CC_host="`which clang`     -v "
+	export CPP_host="`which clang` -E -v "
+	export LINK_host="`which clang++` -v "
+	export GYP_DEFINES="clang=1  mac_deployment_target=10.10"
+	exit 0
+}
+
+
 buildV8 (){
 
 	debugInfo 2 "Build V8 Javascript Engine"
@@ -38,7 +65,7 @@ buildV8 (){
 	cd Source/V8.NET-Proxy/V8/
 	make builddeps -j ${JOBSV8}
 	debugInfo 2 "make ${v8_net_target}.${v8_net__mode} library=shared gdbjit=on -j ${JOBSV8}"
-	make  "${v8_net_target}.${v8_net__mode}" library=shared -j ${JOBSV8} i18nsupport=off
+	make  "${v8_net_target}.${v8_net__mode}" library=shared -j ${JOBSV8}  snapshot=yes i18nsupport=off
 	debugInfo $? "make ${v8_net_target}.${v8_net__mode} library=shared Build V8 Javascript Engine"
 
 	cd $currentDir
@@ -78,7 +105,7 @@ buildV8Proxy (){
 	fi
 
 	if ! cp "Build/${v8_net_target}.${v8_net__mode}"/makefiles/*.so BuildResult/Release
-		then  debugInfo 1 "Copy V8 natives: libicui18n.so libicuuc.so libv8.so"
+		then  debugInfo 1 "Copy V8 natives:  libv8.so"
 	fi
 
 	debugInfo 0 "Build V8.Net native Proxy"
@@ -205,6 +232,15 @@ do
 		;;
 		-n|--nugget)
 		buildV8DotNetNuget
+		shift
+		;;
+		-em|--exportmac)
+		exportmac
+		shift
+		;;
+		-el|--exportlinux)
+		echo "exportlinux"
+		exportLinux
 		shift
 		;;
 		-h|--help)
