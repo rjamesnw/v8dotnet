@@ -24,7 +24,7 @@ debugInfo (){
 		}
 
 exportLinux (){
-	echo "Export Mac defines"
+	echo "Export Linux defines"
 	export GYP_DEFINES="clang=1"
 	export CXX="`which clang++`       -v -std=c++11 -stdlib=libstdc++"
 	export CC="`which clang`          -v "
@@ -38,7 +38,7 @@ exportLinux (){
 }
 
 exportMac (){
-	echo "Export Linux defines"
+	echo "Export Mac defines"
 	export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
 	export CC="`which clang`          -v "
 	export CPP="`which clang`      -E -v "
