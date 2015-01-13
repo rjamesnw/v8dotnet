@@ -23,7 +23,7 @@ debugInfo (){
 		esac	  
 		}
 
-exportMac (){
+exportLinux (){
 	echo "Export Mac defines"
 	export GYP_DEFINES="clang=1"
 	export CXX="`which clang++`       -v -std=c++11 -stdlib=libstdc++"
@@ -37,7 +37,7 @@ exportMac (){
 
 }
 
-exportLinux (){
+exportMac (){
 	echo "Export Linux defines"
 	export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
 	export CC="`which clang`          -v "
