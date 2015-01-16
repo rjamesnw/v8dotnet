@@ -106,10 +106,6 @@ buildV8Proxy (){
 			fi
 	fi
 
-	if ! cp "Build/${v8_net_target}.${v8_net__mode}"/makefiles/*.so BuildResult/Release
-		then  debugInfo 1 "Copy V8 natives:  libv8.so"
-	fi
-
 	debugInfo 0 "Build V8.Net native Proxy"
 
 
