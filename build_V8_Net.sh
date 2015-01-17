@@ -173,7 +173,7 @@ testV8 () {
 
 helptext (){
 	echo -e $USAGE
-	exit 1;
+	exit 0;
 }
 
 
@@ -195,7 +195,7 @@ param mode:\t specifies the target and mode for each architecture.\n \t\t (ia32,
 
 if [ $# == 0 ] ; then
 	echo -e $USAGE
-	exit 1;
+	exit 0;
 fi
 #######################################
 
@@ -266,3 +266,4 @@ do
             ;;
         esac
     done
+exit 0
