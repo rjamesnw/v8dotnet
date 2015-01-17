@@ -161,6 +161,16 @@ buildV8DotNetNuget () {
 	fi	 
 }
 
+testV8 () {
+
+		cd $currentDir
+		cd BuildResult/Release/
+		mono V8.Net-Console.exe \all
+		cd $currentDir
+		exit 0
+
+}
+
 helptext (){
 	echo -e $USAGE
 	exit 1;
@@ -219,9 +229,7 @@ do
 		buildV8Proxy
 		buildV8DotNetWrapper
 		buildV8DotNetNuget
-		cd BuildResult/Release/
-		mono V8.Net-Console.exe \all
-		cd $currentDir
+		testV8
 		shift
 		;;
 		-v8|--v8)
