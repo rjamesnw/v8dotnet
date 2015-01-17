@@ -152,7 +152,7 @@ namespace V8.Net
 
 
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
-                Queue<string> commands = new Queue<string>(new string[]{@"\test", @"\gc",@"\gctest",@"\speedtest",@"\mtest",@"\newenginetest", @"\exit"});
+                Queue<string> commands = new Queue<string>(new string[]{@"\test", @"\gc",@"\gctest",@"\mtest",@"\newenginetest", @"\exit"});
                 string input, lcInput;
                 input = @"\cls";
                 while (true)
