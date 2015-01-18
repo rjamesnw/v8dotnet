@@ -86,6 +86,7 @@ export CXX_host="`which clang++`  -v "
 export CC_host="`which clang`     -v "
 export CPP_host="`which clang` -E -v "
 export LINK_host="`which clang++` -v "
+export TRAVIS_OS_NAME=linux
 ```   
 For mac osx:      
 ```
@@ -98,13 +99,18 @@ export CC_host="`which clang`     -v "
 export CPP_host="`which clang` -E -v "
 export LINK_host="`which clang++` -v "
 export GYP_DEFINES="clang=1  mac_deployment_target=10.10"
+export TRAVIS_OS_NAME=osx
 ```
 
 The build script defines a number of targets for each target architecture (ia32, x64, ) and mode (debug or release). So your basic command for building is:   
 `cd v8dotnet`   
-`./build_V8_Net.sh --default x64.release 2`      (where 2 stands for the available core to build V8 )   
+set `export TRAVIS_OS_NAME=osx` mandatory if you build on osx (hotfix to allow travis ci to build automatical both os, so set the variable manual to indicate on which plattform you are the [coresspondin symboles](https://github.com/chrisber/v8dotnet/blob/development-mono/build_V8_Net.sh#L220) specified above will den get exported automatically)    
+`./build_V8_Net.sh --default x64.release 2`      (where 2 stands for the available core to build V8 )  
 or   
-`./build_V8_Net.sh --default ia32.debug 4`      
+`./build_V8_Net.sh --default ia32.debug 4`   
+Note:
+The mono runtime on OSX is only available with the x86 architecture to not run into the error (An attempt was made to load a program with an incorrect format) compile ia32 for osx.   
+`./build_V8_Net.sh --default ia32.release 2`   
 Start the V8 Console app with:   
 `cd BuildResutl/Release`   
 and   
