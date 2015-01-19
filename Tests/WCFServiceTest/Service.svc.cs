@@ -10,7 +10,7 @@ using V8.Net;
 namespace WCFServiceTest
 
     /* V8.NET integration into ASP.NET:
-     * 1. Create a folder specifically named "V8.NET", or change the name using 'V8Engine.ASPBINSubFolderName'.
+     * 1. Create a project folder specifically named "V8.NET", or change the name using 'V8Engine.ASPBINSubFolderName'.
      *    Note: This test project has a PRE-Build event that copies files to "$(ProjectDir)V8.NET" - this must match 'V8Engine.ASPBINSubFolderName'.
      *    Note: 'V8Engine.ASPBINSubFolderName' is set to "V8.NET"  by default.
      * 2. For all DLLS in "x86" and "x64" under "$(ProjectDir)V8.NET", change "Copy to Output Directory" to "Copy if newer".  This should also tell Visual Studio that this
