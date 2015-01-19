@@ -1,0 +1,2785 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>V8.Net</name>
+    </assembly>
+    <members>
+        <member name="T:V8.Net.V8Engine">
+            <summary>
+            Creates a new managed V8Engine wrapper instance and associates it with a new native V8 engine.
+            The engine does not implement locks, so to make it thread safe, you should lock against an engine instance (i.e. lock(myEngine){...}).  The native V8
+            environment, however, is thread safe (but blocks to allow only one thread at a time).
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.RunMarshallingTests">
+            <summary>
+            If there's any marshalling incompatibility, this will throw an exception.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine._StoreAccessor``1(System.Int32,System.String,``0)">
+            <summary>
+            This is required in order prevent accessor delegates from getting garbage collected when used with P/Invoke related callbacks (a process called "thunking").
+            </summary>
+            <typeparam name="T">The type of delegate ('d') to store and return.</typeparam>
+            <param name="key">A native pointer (usually a proxy object) to associated the delegate to.</param>
+            <param name="d">The delegate to keep a strong reference to (expected to be of type 'T').</param>
+            <returns>The same delegate passed in, cast to type of 'T'.</returns>
+        </member>
+        <member name="M:V8.Net.V8Engine._HasAccessors(System.Int32)">
+            <summary>
+            Returns true if there are any delegates associated with the given object reference.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine._ClearAccessors(System.Int32)">
+            <summary>
+            Clears any accessor delegates associated with the given object reference.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine.DefaultMemberBindingSecurity">
+            <summary>
+            This is a global setting for this engine instance for binding members of types that do not have one of the 'ScriptObject' or 'ScriptMember' security attributes.
+            Using this default security, if you call a function in script that returns an unregistered managed type, the type will be available by reference only,
+            and no members will be bound (no properties will exist).
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine._Binders">
+            <summary>
+            Holds a list of all binders that can operate on an instance of a given type.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine._RegisteredTypes">
+            <summary>
+            Provides an ID for each registered type binder for internal use (to prevent having to re-construct the type object more than once).
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.IsTypeRegistered(System.Type)">
+            <summary>
+            Returns true if a binding exists for the specified type.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.RegisterType(System.Type,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Registers binding related schema for the given type on top an 'ObjectTemplate' instance.  If a type already exists that doesn't match the given parameters, it is replaced.
+            <para>This is done implicitly, so there's no need to register types before binding them; however, explicitly registering a type using this
+            method gives the user more control over the behaviour of the binding process.</para>
+            </summary>
+            <param name="type">The type to create and cache a binding for.</param>
+            <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">When an object is bound, only the object instance itself is bound (and not any reference members). If true, then nested object references are included.</param>
+            <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.RegisterType``1(System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Registers a binding for the given type.  If a type already exists that doesn't match the given parameters, it is replaced.
+            <para>This is done implicitly, so there's no need to register types before binding them; however, explicitly registering a type using this
+            method gives the user more control over the behaviour of the binding process.</para>
+            </summary>
+            <typeparam name="T">The type to create and cache a binding for.</typeparam>
+            <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">When an object is bound, only the object instance itself is bound (and not any reference members). If true, then nested object references are included.</param>
+            <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.GetTypeBinder(System.Type)">
+            <summary>
+            Returns the TypeBinder for the given type.  If nothing is found, 'null' will be returned.
+            </summary>
+            <param name="type">The type to search for.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateBinding(System.Type,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Creates a binding for a given CLR type to expose it in the JavaScript environment.
+            The type returned is a function (V8Function) object that can be used to create the underlying type.
+            <para>Note: Creating bindings is a much slower process than creating your own function templates.</para>
+            </summary>
+            <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
+            If true, then nested object references are included.</param>
+            <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:V8.Net.V8Engine.CreateBinding``1(System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})" -->
+        <member name="M:V8.Net.V8Engine.CreateBinding(System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity},System.Boolean)">
+            <summary>
+            Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are not bound however).
+            The type returned is an object with property accessors for the object's public fields, properties, and methods.
+            <para>Note: Creating bindings is a much slower process than creating your own 'V8NativeObject' types.</para>
+            </summary>
+            <param name="obj">The object to create a binder for.</param>
+            <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
+            If true, then nested object references are included.</param>
+            <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
+            <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        </member>
+        <member name="F:V8.Net.V8Engine._WeakObjects">
+            <summary>
+            When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine._DoWorkStep">
+            <summary>
+            Does one step in the work process (mostly garbage collection for freeing up unused handles).
+            True is returned if more work is pending, and false otherwise.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.PauseWorker">
+            <summary>
+            Pauses the worker thread (usually for debug purposes). (Note: The worker thread manages object GC along with the native V8 GC.)
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine._TerminateWorker">
+            <summary>
+            Terminates the worker thread, without a 3 second timeout to be sure.
+            This is called when the engine is shutting down. (Note: The worker thread manages object GC along with the native V8 GC.)
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.ResumeWorker">
+            <summary>
+            Unpauses the worker thread (see <see cref="M:V8.Net.V8Engine.PauseWorker"/>).
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine._HandleProxies">
+            <summary>
+            Holds an index of all handle proxies created for this engine instance.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine._Objects">
+            <summary>
+            Holds an index of all the created objects.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine._CreateManagedObject``1(V8.Net.ITemplate,V8.Net.InternalHandle,System.Boolean)">
+            <summary>
+            Creates an uninitialized managed object ONLY (does not attempt to associate it with a JavaScript object, regardless of the supplied handle).
+            <para>Warning: The managed wrapper is not yet initialized.  When returning the new managed object to the user, make sure to call
+            '_ObjectInfo.Initialize()' first. Note however that new objects should only be initialized AFTER setup is completed so the users
+            (developers) can write initialization code on completed objects (see source as example for 'FunctionTemplate.GetFunctionObject()').</para>
+            </summary>
+            <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
+            <param name="template">The managed template reference that owns the native object, if applicable.</param>
+            <param name="handle">The handle to the native V8 object.</param>
+            <param name="connectNativeObject">If true (the default), then a native function is called to associate the native V8 object with the new managed object.
+            Set this to false if native V8 objects will be associated manually for special cases.  This parameter is ignored if no handle is given (hNObj == null).</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.GetObject``1(V8.Net.InternalHandle,System.Boolean,System.Boolean)">
+            <summary>
+            Gets the managed object that wraps the native V8 object for the specific handle.
+            <para>Warning: You MUST pass a handle for objects only created from this V8Engine instance, otherwise you may get errors, or a wrong object (without error).</para>
+            </summary>
+            <typeparam name="T">You can derive your own object from V8NativeObject, or implement IV8NativeObject yourself.
+            In either case, you can specify the type here to have it created for new object handles.</typeparam>
+            <param name="handle">A handle to a native object that contains a valid managed object ID.</param>
+            <param name="createIfNotFound">If true, then an IV8NativeObject of type 'T' will be created if an existing IV8NativeObject object cannot be found, otherwise 'null' is returned.</param>
+            <param name="initializeOnCreate">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created wrapper.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.GetObject(V8.Net.InternalHandle,System.Boolean,System.Boolean)">
+            <summary>
+            Returns a 'V8NativeObject' or 'V8Function' object based on the handle.
+            <see cref="M:V8.Net.V8Engine.GetObject``1(V8.Net.InternalHandle,System.Boolean,System.Boolean)"/>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine._GetObject``1(V8.Net.ITemplate,V8.Net.InternalHandle,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Same as "GetObject()", but used internally for getting objects that are associated with templates (such as getting function prototype objects).
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.GetObjectByID(System.Int32)">
+            <summary>
+            Returns an object based on its ID (an object ID is simply an index value, so the lookup is fast, but it does not protect the object from
+            garbage collection).
+            <para>Note: If the ID is invalid, or the managed object has been garbage collected, then this will return null (no errors will occur).</para>
+            <para>WARNING: Do not rely on this method unless you are sure the managed object is persisted. It's very possible for an object to be deleted and a
+            new object put in the same place as identified by the same ID value. As long as you keep a reference/handle, or perform no other V8.NET actions
+            between the time you read an object's ID, and the time this method is called, then you can safely use this method.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.GetObjects(V8.Net.ITemplate)">
+            <summary>
+            Returns all the objects associated with a template reference.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine.Epoch">
+            <summary>
+            Set to the fixed date of Jan 1, 1970. This is used when converting DateTime values to JavaScript Date objects.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine.ASPBINSubFolderName">
+            <summary>
+            The sub-folder that is the root for the dependent libraries required by V8.NET.  This is set to "V8.NET" by default.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.ForceV8GarbageCollection">
+            <summary>
+            Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.
+            The work performed helps to reduce the memory footprint within the native V8 engine.
+            <para>(See also: <seealso cref="M:V8.Net.V8Engine.DoIdleNotification(System.Int32)"/>)</para>
+            <para>Note: You CANNOT GC CLR objects using this method.  This only applies to collection of native V8 handles that are no longer in use.
+            To *force* the disposal of an object, do this: "{Handle}.ReleaseManagedObject(); {Handle}.Dispose(); GC.Collect();"</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.DoIdleNotification(System.Int32)">
+            <summary>
+            Calling this method notifies the native V8 engine to perform up to 1000 pending work tasks before returning (this is the default setting in V8).
+            The work performed helps to reduce the memory footprint within V8.
+            This helps the garbage collector know when to start collecting objects and values that are no longer in use.
+            This method returns true if there is still more work pending.
+            <para>(See also: <seealso cref="M:V8.Net.V8Engine.ForceV8GarbageCollection"/>)</para>
+            </summary>
+            <param name="hint">Gives the native V8 engine a hint on how much work can be performed before returning (V8's default is 1000 work tasks).</param>
+            <returns>True if more work is pending.</returns>
+        </member>
+        <member name="M:V8.Net.V8Engine.Execute(System.String,System.String,System.Boolean)">
+            <summary>
+            Executes JavaScript on the V8 engine and returns the result.
+            </summary>
+            <param name="script">The script to run.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.Execute(V8.Net.Handle,System.Boolean)">
+            <summary>
+            Executes JavaScript on the V8 engine and returns the result.
+            </summary>
+            <param name="script">The script to run.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.ConsoleExecute(System.String,System.String,System.Boolean)">
+            <summary>
+            Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
+            <para>Note: This is just a shortcut to calling 'Execute()' followed by 'Console.WriteLine()'.</para>
+            </summary>
+            <returns>The result of the executed script.</returns>
+            <param name="script">The script to run.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.VerboseConsoleExecute(System.String,System.String,System.Boolean)">
+            <summary>
+            Executes JavaScript on the V8 engine and automatically writes the script given AND the result to the console (only valid for applications that support 'Console' methods).
+            The script is output to the console window before it gets executed.
+            <para>Note: This is just a shortcut to calling 'Console.WriteLine(script)', followed by 'ConsoleExecute()'.</para>
+            <returns>The result of the executed script.</returns>
+            </summary>
+            <param name="script">The script to run.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.Compile(System.String,System.String,System.Boolean)">
+            <summary>
+            Compiles JavaScript on the V8 engine and returns the result.
+            Since V8 JIT-compiles script every time, repeated tasks can take advantage of re-executing pre-compiled scripts for a speed boost.
+            </summary>
+            <param name="script">The script to run.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+            <returns>A handle to the compiled script.</returns>
+        </member>
+        <member name="M:V8.Net.V8Engine.LoadScript(System.String,System.String,System.Boolean)">
+            <summary>
+            Loads a JavaScript file from the current working directory (or specified absolute path) and executes it in the V8 engine, then returns the result.
+            </summary>
+            <param name="scriptFile">The script file to load.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.LoadScriptCompiled(System.String,System.String,System.Boolean)">
+            <summary>
+            Loads a JavaScript file from the current working directory (or specified absolute path) and compiles it in the V8 engine, then returns the compiled script.
+            You will need to call 'Execute(...)' with the script handle to execute it.
+            </summary>
+            <param name="scriptFile">The script file to load.</param>
+            <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
+            <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateObjectTemplate``1(System.Boolean)">
+            <summary>
+            Creates a new native V8 ObjectTemplate and associates it with a new managed ObjectTemplate.
+            <para>Object templates are required in order to generate objects with property interceptors (that is, all property access is redirected to the managed side).</para>
+            </summary>
+            <param name="registerPropertyInterceptors">If true (default) then property interceptors (call-backs) will be used to support 'IV8ManagedObject' objects.
+            <para>Note: Setting this to false provides a huge performance increase because all properties will be stored on the native side only (but 'IV8ManagedObject'
+            objects created by this template will not intercept property access).</para></param>
+            <typeparam name="T">Normally this is always 'ObjectTemplate', unless you have a derivation of it.</typeparam>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateObjectTemplate">
+            <summary>
+            Creates a new native V8 ObjectTemplate and associates it with a new managed ObjectTemplate.
+            <para>Object templates are required in order to generate objects with property interceptors (that is, all property access is redirected to the managed side).</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateFunctionTemplate``1(System.String)">
+            <summary>
+            Creates a new native V8 FunctionTemplate and associates it with a new managed FunctionTemplate.
+            <para>Function templates are required in order to associated managed delegates with JavaScript functions within V8.</para>
+            </summary>
+            <typeparam name="T">Normally this is always 'FunctionTemplate', unless you have a derivation of it.</typeparam>
+            <param name="className">The "class name" in V8 is the type name returned when "valueOf()" is used on an object. If this is null then 'V8Function' is assumed.</param>
+            <param name="callbackSource">A delegate to call when the function is executed.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateFunctionTemplate(System.String)">
+            <summary>
+            Creates a new native V8 FunctionTemplate and associates it with a new managed FunctionTemplate.
+            <para>Function templates are required in order to associated managed delegates with JavaScript functions within V8.</para>
+            </summary>
+            <param name="className">The "class name" in V8 is the type name returned when "valueOf()" is used on an object. If this is null (default) then 'V8Function' is assumed.</param>
+            <param name="callbackSource">A delegate to call when the function is executed.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.Boolean)">
+            <summary>
+            Calls the native V8 proxy library to create the value instance for use within the V8 JavaScript environment.
+            It's ok to use 'WithHandleScope' with this method.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.Int32)">
+            <summary>
+            Calls the native V8 proxy library to create a 32-bit integer for use within the V8 JavaScript environment.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.Double)">
+            <summary>
+            Calls the native V8 proxy library to create a 64-bit number (double) for use within the V8 JavaScript environment.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.String)">
+            <summary>
+            Calls the native V8 proxy library to create a string for use within the V8 JavaScript environment.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateError(System.String,V8.Net.JSValueType)">
+            <summary>
+            Calls the native V8 proxy library to create an error string for use within the V8 JavaScript environment.
+            <para>Note: The error flag exists in the associated proxy object only.  If the handle is passed along to another operation, only the string message will get passed.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.TimeSpan)">
+            <summary>
+            Calls the native V8 proxy library to create a date for use within the V8 JavaScript environment.
+            </summary>
+            <param name="ms">The number of milliseconds since epoch (Jan 1, 1970). This is the same value as 'SomeDate.getTime()' in JavaScript.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.DateTime)">
+            <summary>
+            Calls the native V8 proxy library to create a date for use within the V8 JavaScript environment.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine._CreateObject``1(V8.Net.ITemplate,V8.Net.InternalHandle,System.Boolean,System.Boolean)">
+            <summary>
+            Wraps a given object handle with a managed object, and optionally associates it with a template instance.
+            <para>Note: Any other managed object associated with the given handle will cause an error.
+            You should check '{Handle}.HasManagedObject', or use the "GetObject()" methods to make sure a managed object doesn't already exist.</para>
+            <para>This was method exists to support the following cases: 1. The V8 context auto-generates the global object, and
+            2. V8 function objects are not generated from templates, but still need a managed wrapper.</para>
+            <para>Note: </para>
+            </summary>
+            <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
+            <param name="v8Object">A handle to a native V8 object.</param>
+            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateObject``1(V8.Net.InternalHandle,System.Boolean)">
+            <summary>
+            Wraps a given object handle with a managed object.
+            <para>Note: Any other managed object associated with the given handle will cause an error.
+            You should check '{Handle}.HasManagedObject', or use the "GetObject()" methods to make sure a managed object doesn't already exist.</para>
+            <para>This was method exists to support the following cases: 1. The V8 context auto-generates the global object, and
+            2. V8 function objects are not generated from templates, but still need a managed wrapper.</para>
+            <para>Note: </para>
+            </summary>
+            <typeparam name="T">The wrapper type to create (such as V8ManagedObject).</typeparam>
+            <param name="v8Object">A handle to a native V8 object.</param>
+            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateObject(V8.Net.InternalHandle,System.Boolean)">
+            <summary>
+            See <see cref="M:V8.Net.V8Engine.CreateObject``1(V8.Net.InternalHandle,System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateObject``1(System.Boolean)">
+            <summary>
+            Creates a new CLR object which will be tracked by a new V8 native object.
+            </summary>
+            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created wrapper before returning.</param>
+            <typeparam name="T">A custom 'V8NativeObject' type, or just use 'V8NativeObject' as a default.</typeparam>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateObject(System.Int32)">
+            <summary>
+            Creates a new native V8 object only.
+            </summary>
+            <param name="objectID">You can associate arbitrary NEGATIVE numbers with objects to use for tracking purposes.  The numbers have to be less than or
+            equal to -2. Values greater or equal to 0 are used for internal tracking of V8NativeObject instances. -1 is a default value that is set automatically
+            when new objects are created (which simply means "no ID is set").</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateArray(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the native V8 proxy library to create a JavaScript array for use within the V8 JavaScript environment.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.Collections.IEnumerable,System.Boolean)">
+            <summary>
+            Converts an enumeration of values (usually from a collection, list, or array) into a JavaScript array.
+            By default, an exception will occur if any type cannot be converted.
+            </summary>
+            <param name="enumerable">An enumerable object to convert into a native V8 array.</param>
+            <returns>A native V8 array.</returns>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Calls the native V8 proxy library to create the value instance for use within the V8 JavaScript environment.
+            <para>This overload provides a *quick way* to construct an array of strings.
+            One big memory block is created to marshal the given strings at one time, which is many times faster than having to create an array of individual native strings.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateNullValue">
+            <summary>
+            Simply creates and returns a 'null' JavaScript value.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.CreateValue(System.Object,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Creates a native V8 JavaScript value that the best represents the given managed value.
+            Object instance values will be bound to a 'V8NativeObject' wrapper and returned.
+            To include implicit wrapping of object-type fields and properties for object instances, set 'recursive' to true, otherwise they will be skipped.
+            <para>Warning: Integers are 32-bit, and Numbers (double) are 64-bit.  This means converting 64-bit integers may result in data loss.</para>
+            </summary>
+            <param name="value">One of the supported value types: bool, byte, Int16-64, Single, float, double, string, char, StringBuilder, DateTime, or TimeSpan. (Warning: Int64 will be converted to Int32 [possible data loss])</param>
+            <param name="recursive">For object instances, if true, then nested objects are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+            <returns>A native value that best represents the given managed value.</returns>
+        </member>
+        <member name="P:V8.Net.V8Engine.TotalHandles">
+            <summary>
+            Total number of handle proxy references in the V8.NET system (for proxy use).
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8Engine.TotalHandlesPendingDisposal">
+            <summary>
+            Total number of handle proxy references in the V8.NET system that are ready to be disposed by the V8.NET garbage collector (the worker thread).
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8Engine.TotalHandlesCached">
+            <summary>
+            Total number of handles in the V8.NET system that are cached and ready to be reused.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8Engine.Engines">
+            <summary>
+            A static array of all V8 engines created.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8Engine.IsDisposed">
+            <summary>
+            Returns true once this engine has been disposed.
+            </summary>
+        </member>
+        <member name="T:V8.Net.InternalHandle">
+            <summary>
+            Keeps track of native V8 handles (C++ native side).
+            <para>DO NOT STORE THIS HANDLE. Use "Handle" instead (i.e. "Handle h = someInternalHandle;"), or use the value with the "using(someInternalHandle){}" statement.</para>
+            </summary>
+        </member>
+        <member name="T:V8.Net.IHandle">
+            <summary>
+            Represents a handle type for tracking native objects.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IHandle.Set(V8.Net.InternalHandle)">
+            <summary>
+            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+            to convert it to a handle object that will dispose itself.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IHandle.Dispose">
+            <summary>
+            Attempts to dispose of the internally wrapped handle proxy and makes this handle empty.
+            If other handles exist, then they will still be valid, and this handle instance will become empty.
+            <para>This is useful to use with "using" statements to quickly release a handle into the cache for reuse.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandle.IsDisposed">
+            <summary>
+            Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
+            </summary>
+        </member>
+        <member name="T:V8.Net.IHandleBased">
+            <summary>
+            Represents a type that uses or supports a handle.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IHandleBased.AsHandle">
+            <summary>
+            Returns the underlying handle object associated with this instance.  If no 'Handle' object exists, one is created and returned.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandleBased.Engine">
+            <summary>
+            Returns the engine associated with this instance.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandleBased.AsInternalHandle">
+            <summary>
+            Returns a handle value associated with this instance (note: this is not a clone, but an exact copy).
+            End users should use "AsHandle", unless they are confident in making sure the InternalHandle they use is properly set and later disposed.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandleBased.Object">
+            <summary>
+            Returns the object for this instance, or 'null' if not applicable/available.
+            </summary>
+        </member>
+        <member name="T:V8.Net.IV8Object">
+            <summary>
+            Represents methods that can be called on V8 objects.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.IV8Object.SetProperty(System.Int32,V8.Net.InternalHandle)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.SetProperty(System.String,System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
+            the specified property name.
+            Returns true if successful.
+            </summary>
+            <param name="name">The property name.</param>
+            <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types.</param>
+            <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.IV8Object.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
+            Returns true if successful.
+            </summary>
+            <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+            <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.IV8Object.GetProperty(System.String)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.GetProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.DeleteProperty(System.String)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.DeleteProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.SetAccessor(System.String,V8.Net.V8NativeObjectPropertyGetter,V8.Net.V8NativeObjectPropertySetter,V8.Net.V8PropertyAttributes,V8.Net.V8AccessControl)">
+            <summary>
+            Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.GetPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (including all objects in the prototype chain).
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.GetOwnPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (excluding the prototype chain).
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:V8.Net.IV8Object.GetPropertyAttributes(System.String)" -->
+        <member name="M:V8.Net.IV8Object.Call(System.String,V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls an object property with a given name on a specified object as a function and returns the result.
+            The '_this' property is the "this" object within the function when called.
+            If the function name is null or empty, then the current object is assumed to be a function object.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Object.StaticCall(System.String,V8.Net.InternalHandle[])">
+            <summary>
+            Calls an object property with a given name on a specified object as a function and returns the result.
+            If the function name is null or empty, then the current object is assumed to be a function object.
+            </summary>
+        </member>
+        <member name="T:V8.Net.IBasicHandle">
+            <summary>
+            The basic handle interface is a higher level interface that implements members that can be common to many handle types for various 3rd-party script
+            implementations.  It's primary purpose is to support the DreamSpace.NET development framework, which can support various scripting engines, and is
+            designed to be non-V8.NET specific.  Third-party scripts should implement this interface for their handles, or create and return value wrappers that
+            implement this interface.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IBasicHandle.As``1">
+            <summary>
+            Returns the 'Value' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IBasicHandle.LastAs``1">
+            Returns the 'LastValue' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+        </member>
+        <member name="P:V8.Net.IBasicHandle.Value">
+            <summary>
+            Returns the underlying value of this handle.
+            If the handle represents an object, the the object OR a value represented by the object is returned.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.Object">
+            <summary>
+            Returns the underlying object associated with this handle.
+            This exists because 'Value' my not return the underlying object, depending on implementation.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.HasObject">
+            <summary>
+            Returns true if this handle is associated with a CLR object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsEmpty">
+            <summary>
+            Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists.
+            <para>An empty state is when a handle is set to 'Handle.Empty' and has no valid native V8 handle assigned.
+            This is similar to "undefined"; however, this property will be true if a valid native V8 handle exists that is set to "undefined".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsUndefined">
+            <summary>
+            Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty').
+            <para>"Undefined" does not mean "null".  A variable (handle) can be defined and set to "null".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsNull">
+            <summary>
+            Returns 'true' if this handle represents a 'null' value (that is, an explicitly defined 'null' value).
+            This will return 'false' if 'IsEmpty' or 'IsUndefined' is true.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsBoolean">
+            <summary>
+            The handle represents a Boolean value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsInt32">
+            <summary>
+            The handle represents an Int32 value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsNumber">
+            <summary>
+            The handle represents a number value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsString">
+            <summary>
+            The handle represents a string value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsObject">
+            <summary>
+            The handle represents a *script* object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsFunction">
+            <summary>
+            The handle represents a function/procedure/method value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsDate">
+            <summary>
+            The handle represents a date value.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsArray">
+            <summary>
+            The handle represents an array object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsRegExp">
+            <summary>
+            The handle represents a regular expression object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsObjectType">
+            <summary>
+            Returns true of the handle represents ANY *script* object type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.IsError">
+            <summary>
+            Returns true of this handle represents an error.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsBoolean">
+            <summary>
+            Returns the underlying value converted if necessary to a Boolean type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsInt32">
+            <summary>
+            Returns the underlying value converted if necessary to an Int32 type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsDouble">
+            <summary>
+            Returns the underlying value converted if necessary to a double type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsString">
+            <summary>
+            Returns the underlying value converted if necessary to a string type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IBasicHandle.AsDate">
+            <summary>
+            Returns the underlying value converted if necessary to a DateTime type.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.#ctor(V8.Net.HandleProxy*,System.Boolean)">
+            <summary>
+            Wraps a given native handle proxy to provide methods to operate on it.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.#ctor(V8.Net.InternalHandle)">
+            <summary>
+            Sets this instance to the same specified handle value.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle._WrapOnly(V8.Net.HandleProxy*)">
+            <summary>
+            Creates an internal handle that only wraps the given handle proxy and does not increment the reference counter.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Set(V8.Net.InternalHandle)">
+            <summary>
+            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+            to convert it to a handle object that will dispose itself.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Set(V8.Net.Handle)">
+            <summary>
+            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+            to convert it to a handle object that will dispose itself.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Clone">
+            <summary>
+            Handles should be set in either two ways: 1. by using the "Set()" method on the left side handle, or 2. using the "Clone()' method on the right side.
+            Using the "=" operator to set a handle may cause memory leaks if not used correctly.
+            See also: <seealso cref="M:V8.Net.InternalHandle.Set(V8.Net.InternalHandle)"/>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Dispose">
+            <summary>
+            Internal handle values are a bit faster than having to create handle objects, but they MUST be explicitly disposed
+            when no longer needed.  One rule of thumb is to always call "Set()" to set/update an internal value, and call
+            "Dispose()" either within a class's finalization (destructor), or use it in a "using(){}" statement. Both of these
+            will dispose of the handle in case exceptions occur. You may also use "try..finally", but that is not preferred
+            best practice for V8.NET handles.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle._DisposeIfFirst">
+            <summary>
+            Disposes this handle if it is the first one (the first one is disposed automatically when passed back into the engine).
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.PassOn">
+            <summary>
+            This is used internally to pass on the internal handle values to internally called methods.
+            This is required because the last method in a call chain is responsible to dispose first-time handles.
+            (first-time handles are handles created internally immediately after native proxy calls)
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.__TryDispose">
+            <summary>
+            Attempts to dispose of this handle (add it back into the native proxy cache for reuse).  If the handle represents a managed object with strong
+            references, then the dispose request is placed into a "pending disposal" queue monitored by a worker thread. When the associated managed object
+            no longer has any references, this method will be call.
+            <para>*** NOTE: This is called by Dispose() when the reference count becomes zero and should not be called directly. ***</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle._CompleteDisposal">
+            <summary>
+            Completes the disposal of the native handle.
+            <para>Note: A disposed native handle is simply cached for reuse, and always points back to the same managed handle.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.ReleaseManagedObject">
+            <summary>
+            Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
+            place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
+            any associated handles later.  The released object is returned, or null if there is no object.
+            </summary>
+            <returns>The object released.</returns>
+        </member>
+        <member name="M:V8.Net.InternalHandle.As``1">
+            <summary>
+            Returns the 'Value' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.LastAs``1">
+            Returns the 'LastValue' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+        </member>
+        <member name="M:V8.Net.InternalHandle.AsJSProperty">
+            <summary>
+            Returns this handle as a new JSProperty instance with default property attributes.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Equals(System.Object)">
+            <summary>
+            Checks if the wrapped handle reference is the same as the one compared with. This DOES NOT compare the underlying JavaScript values for equality.
+            To test for JavaScript value equality, convert to a desired value-type instead by first casting as needed (i.e. (int)jsv1 == (int)jsv2).
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.ThrowOnError">
+            <summary>
+            Checks if the handle represents an error, and if so, throws one of the corresponding derived V8Exception exceptions.
+            See 'JSValueType' for possible exception states.  You can check the 'IsError' property to see if this handle represents an error.
+            <para>Exceptions thrown: V8InternalErrorException, V8CompilerErrorException, V8ExecutionErrorException, and V8Exception (for any general V8-related exceptions).</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.InternalHandle.SetProperty(System.Int32,V8.Net.InternalHandle)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.SetProperty(System.String,System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
+            the specified property name.
+            Returns true if successful.
+            </summary>
+            <param name="name">The property name. If 'null', then the name of the object type is assumed.</param>
+            <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types, unless the object is already a handle, in which case it is set directly.</param>
+            <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.InternalHandle.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
+            Returns true if successful.
+            </summary>
+            <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+            <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.InternalHandle.GetProperty(System.String)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.GetProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.DeleteProperty(System.String)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.DeleteProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.SetAccessor(System.String,V8.Net.V8NativeObjectPropertyGetter,V8.Net.V8NativeObjectPropertySetter,V8.Net.V8PropertyAttributes,V8.Net.V8AccessControl)">
+            <summary>
+            Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.GetPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (including all objects in the prototype chain).
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.GetOwnPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (excluding the prototype chain).
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:V8.Net.InternalHandle.GetPropertyAttributes(System.String)" -->
+        <member name="M:V8.Net.InternalHandle.Call(System.String,V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the specified function property on the underlying object.
+            The '_this' parameter is the "this" reference within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.StaticCall(System.String,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the specified function property on the underlying object.
+            The 'this' property will not be specified, which will default to the global scope as expected.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The '_this' parameter is the "this" reference within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.StaticCall(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The 'this' property will not be specified, which will default to the global scope as expected.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsDisposed">
+            <summary>
+            Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.ID">
+            <summary>
+            The ID (index) of this handle on both the native and managed sides.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.ValueType">
+            <summary>
+            The JavaScript type this handle represents.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.ReferenceCount">
+            <summary>
+            Used internally to determine the number of references to a handle.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.Engine">
+            <summary>
+            A reference to the V8Engine instance that owns this handle.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.ObjectID">
+            <summary>
+            The ID of the managed object represented by this handle.
+            This ID is expected when handles are passed to 'V8ManagedObject.GetObject()'.
+            If this value is less than 0, then there is no associated 'V8NativeObject' object (and the 'Object' property will be null).
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle._CurrentObjectID">
+            <summary>
+            Returns the managed object ID "as is".
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.Object">
+            <summary>
+            A reference to the managed object associated with this handle. This property is only valid for object handles, and will return null otherwise.
+            Upon reading this property, if the managed object has been garbage collected (because no more handles or references exist), then a new basic 'V8NativeObject' instance will be created.
+            <para>Instead of checking for 'null' (which may not work as expected), query 'HasManagedObject' instead.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.BoundObject">
+            <summary>
+            If this handle represents an object instance binder, then this returns the bound object.
+            Bound objects are usually custom user objects (non-V8.NET objects) wrapped in ObjectBinder instances.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.CLRTypeID">
+            <summary>
+            Returns the registered type ID for objects that represent registered CLR types.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.TypeBinder">
+            <summary>
+            If this handle represents a type binder, then this returns the associated 'TypeBinder' instance.
+            <para>Bound types are usually non-V8.NET types that are wrapped and exposed in the JavaScript environment for use with the 'new' operator.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.HasObject">
+            <summary>
+            Returns true if this handle is associated with a managed object.
+            <para>Note: This can be false even though 'IsObjectType' may be true.
+            A handle can represent a native V8 object handle without requiring an associated managed object.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.Value">
+            <summary>
+            Reading from this property causes a native call to fetch the current V8 value associated with this handle.
+            <param>For objects, this returns the in-script type text as a string - unless this handle represents an object binder, in which case this will return the bound object instead.</param>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.LastValue">
+            <summary>
+            Once "Value" is accessed to retrieve the JavaScript value in real time, there's no need to keep accessing it.  Just call this property
+            instead (a small bit faster). Note: If the value changes again within the engine (i.e. another scripts executes), you may need to call
+            'Value' again to make sure any changes are reflected.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.ArrayLength">
+            <summary>
+            Returns the array length for handles that represent arrays. For all other types, this returns 0.
+            Note: To get the items of the array, use 'GetProperty(#)'.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsWeakManagedObject">
+            <summary>
+            Returns true if this handle is associated with a managed object that has no other references and is ready to be disposed.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsWeakHandle">
+            <summary>
+            Returns true if the handle is weak and ready to be disposed.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsInPendingDisposalQueue">
+            <summary>
+            True if this handle is place into a queue to be made weak and eventually disposed (cached) on the native side.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsNativelyWeak">
+            <summary>
+            True if this handle was made weak on the native side (for object handles only).  Once a handle is weak, the V8 garbage collector can collect the
+            handle (and any associated managed object) at any time.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsDisposeReady">
+            <summary>
+            Returns true if this handle has no references (usually a primitive type), or is weak AND is associated with a weak managed object reference.
+            When a handle is ready to be disposed, then calling "Dispose()" will succeed and cause the handle to be placed back into the cache on the native side.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsEmpty">
+            <summary>
+            Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists.
+            <para>An empty state is when a handle is set to 'InternalHandle.Empty' and has no valid native V8 handle assigned.
+            This is similar to "undefined"; however, this property will be true if a valid native V8 handle exists that is set to "undefined".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsUndefined">
+            <summary>
+            Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty').
+            <para>"Undefined" does not mean "null".  A variable (handle) can be defined and set to "null".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsNull">
+            <summary>
+            Returns 'true' if this handle represents a ''ull' value (that is, an explicitly defined 'null' value).
+            This will return 'false' if 'IsEmpty' or 'IsUndefined' is true.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsObjectType">
+            <summary>
+            Returns true of the handle represents ANY object type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsBinder">
+            <summary>
+            Used internally to quickly determine when an instance represents a binder object type (faster than reflection!).
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.BindingMode">
+            <summary>
+            Returns the binding mode (Instance, Static, or None) represented by this handle.  The return is 'None' (0) if not applicable.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.AsBoolean">
+            <summary>
+            Returns the underlying value converted if necessary to a Boolean type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.AsInt32">
+            <summary>
+            Returns the underlying value converted if necessary to an Int32 type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.AsDouble">
+            <summary>
+            Returns the underlying value converted if necessary to a double type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.AsString">
+            <summary>
+            Returns the underlying value converted if necessary to a string type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.AsDate">
+            <summary>
+            Returns the underlying value converted if necessary to a DateTime type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsError">
+            <summary>
+            Returns true if this handle contains an error message (the string value is the message).
+            If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.Prototype">
+            <summary>
+            The prototype of the object (every JavaScript object implicitly has a prototype).
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8NativeObjectPropertyGetter">
+            <summary>
+            Intercepts JavaScript access for properties on the associated JavaScript object for retrieving a value.
+            <para>To allow the V8 engine to perform the default get action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8NativeObjectPropertySetter">
+            <summary>
+            Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
+            <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="F:V8.Net.BindingMode.None">
+            <summary>
+            The V8NativeObject is not a binding object.
+            </summary>
+        </member>
+        <member name="F:V8.Net.BindingMode.Instance">
+            <summary>
+            The V8NativeObject is a binding object for instances (i.e. ObjectBinder).
+            </summary>
+        </member>
+        <member name="F:V8.Net.BindingMode.Static">
+            <summary>
+            The V8NativeObject is not a binding object for types  (i.e. V8Function).
+            </summary>
+        </member>
+        <member name="T:V8.Net.TypeBinderFunction">
+            <summary>
+            Represent a TypeBinder JavaScript function (for static properties, and creating new objects in script).
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8Function">
+            <summary>
+            Represents a basic JavaScript function object.  By default, this object is used for the global environment.
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8NativeObject">
+            <summary>
+            Represents a basic JavaScript object. This class wraps V8 functionality for operations required on any native V8 object (including managed ones).
+            <para>This class implements 'DynamicObject' to make setting properties a bit easier.</para>
+            </summary>
+        </member>
+        <member name="T:V8.Net.IV8NativeObject">
+            <summary>
+            An interface for objects wrapped by V8NativeObject instances.
+            <para>These methods are called in proxy to the V8NativeObject's related methods ('Initialize(...)' and 'Dispose(...)').</para>
+            The arguments passed to 'Initialize(...)' ('isConstructCall' and 'args') are the responsibility of the developer - except for the binder, which will
+            pass in the values as expected.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8NativeObject.Initialize(V8.Net.V8NativeObject,System.Boolean,V8.Net.InternalHandle[])">
+            <summary>
+            Called immediately after creating an object instance and setting the V8Engine property.
+            Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
+            In the constructor, the object only exists as an empty shell.
+            It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
+            <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
+            the 'IsInitilized' property.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8NativeObject.Dispose">
+            <summary>
+            Called when there are no more references (on either the managed or native side) and the object is ready to be deleted from the V8.NET system.
+            You should never call this from code directly unless you need to force the release of native resources associated with a custom implementation
+            (and if so, a custom internal flag should be kept indicating whether or not the resources have been disposed).
+            You should always override/implement this if you need to dispose of any native resources in custom implementations.
+            DO NOT rely on the destructor (finalizer) - the object can still survive it.
+            <para>Note: This can be triggered either by the worker thread, or on the call-back from the V8 garbage collector.  In either case, tread it as if
+            it was called from the GC finalizer (not on the main thread).</para>
+            *** If overriding, DON'T call back to this method, otherwise it will call back and end up in a cyclical call (and a stack overflow!). ***
+            </summary>
+        </member>
+        <member name="T:V8.Net.IFinalizable">
+            <summary>
+            Applied to V8 related objects to take control of the finalization process from the GC so it can be better coordinated with the native V8 engine.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.Initialize(System.Boolean,V8.Net.InternalHandle[])">
+            <summary>
+            Called immediately after creating an object instance and setting the V8Engine property.
+            Derived objects should override this for construction instead of using the constructor, and be sure to call back to this base method just before exiting (not at the beginning).
+            In the constructor, the object only exists as an empty shell.
+            It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
+            <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
+            the 'IsInitilized' property.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.Initialize(V8.Net.V8NativeObject,System.Boolean,V8.Net.InternalHandle[])">
+            <summary>
+            (Exists only to support the 'IV8NativeInterface' interface and should not be called directly - call 'Initialize(isConstructCall, args)' instead.)
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.Finalize">
+            <summary>
+            This is called on the GC finalizer thread to flag that this managed object entry can be collected.
+            <para>Note: There are no longer any managed references to the object at this point; HOWEVER, there may still be NATIVE ones.
+            This means the object may survive this process, at which point it's up to the worker thread to clean it up when the native V8 GC is ready.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.Dispose">
+            <summary>
+            Called when there are no more references (on either the managed or native side) and the object is ready to be deleted from the V8.NET system.
+            You should never call this from code directly unless you need to force the release of native resources associated with a custom implementation
+            (and if so, a custom internal flag should be kept indicating whether or not the resources have been disposed).
+            You should always override/implement this if you need to dispose of any native resources in custom implementations.
+            DO NOT rely on the destructor (finalizer) - the object can still survive it.
+            <para>Note: This can be triggered either by the worker thread, or on the call-back from the V8 garbage collector.  In either case, tread it as if
+            it was called from the GC finalizer (not on the main thread).</para>
+            *** If overriding, DON'T call back to this method, otherwise it will call back and end up in a cyclical call (and a stack overflow!). ***
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject._TryDisposeNativeHandle">
+            <summary>
+            This is called automatically when both the handle AND reference for the managed object are weak [no longer in use], in which case this object
+            info instance is ready to be removed.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject._MakeWeak">
+            <summary>
+            Called by the worker thread to make the native handle weak.  Once the native GC attempts to collect the underlying native object, then
+            '_OnNativeGCRequested()' will get called to finalize the disposal of the managed object.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.SetProperty(System.Int32,V8.Net.InternalHandle)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.SetProperty(System.String,System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
+            the specified property name.
+            Returns true if successful.
+            </summary>
+            <param name="name">The property name.</param>
+            <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types.</param>
+            <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
+            Returns true if successful.
+            </summary>
+            <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+            <param name="className">A custom in-script function name for the specified type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+            don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.GetProperty(System.String)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.GetProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.DeleteProperty(System.String)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.DeleteProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.SetAccessor(System.String,V8.Net.V8NativeObjectPropertyGetter,V8.Net.V8NativeObjectPropertySetter,V8.Net.V8PropertyAttributes,V8.Net.V8AccessControl)">
+            <summary>
+            Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.GetPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (including all objects in the prototype chain).
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.GetOwnPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (excluding the prototype chain).
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:V8.Net.V8NativeObject.GetPropertyAttributes(System.String)" -->
+        <member name="M:V8.Net.V8NativeObject.Call(System.String,V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls an object property with a given name on a specified object as a function and returns the result.
+            The '_this' property is the "this" object within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.StaticCall(System.String,V8.Net.InternalHandle[])">
+            <summary>
+            Calls an object property with a given name on a specified object as a function and returns the result.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The '_this' parameter is the "this" reference within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8NativeObject.StaticCall(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The 'this' property will not be specified, which will default to the global scope as expected.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.Engine">
+            <summary>
+            A reference to the V8Engine instance that owns this object.
+            The default implementation for 'V8NativeObject' is to cache and return 'base.Engine', since it inherits from 'Handle'.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.Template">
+            <summary>
+            The V8.NET ObjectTemplate or FunctionTemplate instance associated with this object, if any, or null if this object was not created using a V8.NET template.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.ID">
+            <summary>
+            The V8.NET managed object ID used to track this object instance on both the native and managed sides.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.Proxy">
+            <summary>
+            Another object of the same interface to direct actions to (such as 'Initialize()').
+            If the generic type 'V8NativeObject&lt;T>' is used, then this is set to an instance of "T", otherwise this is set to "this" instance.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.IsInitilized">
+            <summary>
+            True if this object was initialized and is ready for use.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.Handle">
+            <summary>
+            A reference to the managed object handle that wraps the native V8 handle for this managed object.
+            The default implementation for 'V8NativeObject' is to return itself, since it inherits from 'Handle'.
+            Setting this property will call the inherited 'Set()' method to replace the handle associated with this object instance (this should never be done on
+            objects created from templates ('V8ManagedObject' objects), otherwise callbacks from JavaScript to the managed side will not act as expected, if at all).
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.AsDynamic">
+            <summary>
+            Returns a "dynamic" reference to this object (which is simply the handle instance, which has dynamic support).
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.Prototype">
+            <summary>
+            The prototype of the object (every JavaScript object implicitly has a prototype).
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.IsManagedObjectWeak">
+            <summary>
+            Returns true if this object is ready to be garbage collected by the native side.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8NativeObject.BindingType">
+            <summary>
+            Used internally to quickly determine when an instance represents a binder object type, or static type binder function (faster than reflection!).
+            </summary>
+        </member>
+        <member name="T:V8.Net.IV8Function">
+            <summary>
+            The 'V8Function' inherits from V8NativeObject, which implements 'DynamicObject' for you, but if dynamic objects are not required,
+            feel free to implement the 'IV8Function' interface for your own classes instead.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Function.StaticCall(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the native side to invoke the function associated with this managed function wrapper.
+            <para>Note: This simply calls 'base.Call()' without a function name.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8Function.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the native side to invoke the function associated with this managed function wrapper.
+            The '_this' property is the "this" object within the function when called.
+            <para>Note: This simply calls 'base.Call()' without a function name.</para>
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:V8.Net.IV8Function.FunctionTemplate" -->
+        <member name="P:V8.Net.IV8Function.Callback">
+            <summary>
+            A managed callback reference, which is called when the javaScript function is called.
+            You can dynamically update this at any time, or even set it to null.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Function.StaticCall(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the native side to invoke the function associated with this managed function wrapper.
+            <para>Note: This method simply calls 'Handle.Call()' without a function name.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Function.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the native side to invoke the function associated with this managed function wrapper.
+            The '_this' property is the "this" object within the function when called.
+            <para>Note: This method simply calls 'Handle.Call()' without a function name.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Function.Call(System.String,V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            If the function object has a function property in itself (usually considered a static property in theory), you can use this to invoke it.
+            </summary>
+        </member>
+        <member name="T:V8.Net.TypeLibrary`1">
+            <summary>
+            Keeps track of object references based on an array of one or more related types.
+            The object references are stored based on a tree of nested types for fast dictionary-tree-style lookup.
+            Currently, this class is used to cache new generic types in the type binder.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ArgInfo">
+            <summary>
+            Wraps a script value with strong CLR type information for use with generics and method invocation.
+            <para>
+            This struct represents an argument passed from script to V8.NET binding logic. If the argument represents type information, it is extracted.
+            In either case, 'Value' will be the requested strong-typed value, or the default value, whichever is detected first (in that order).
+            This can be used to pass arguments to methods, where the value is converted to a specific type if necessary.
+            </para>
+            <para>Warning: The struct only extracts information, converting the script argument if necessary, and does not own the 'ArgInfoSource' handle.
+            As such, the caller is still responsible to release it.</para>
+            </summary>
+        </member>
+        <member name="F:V8.Net.ArgInfo.HasValue">
+            <summary>
+            Returns true if a valid value exists.  If false is returned, this usually means this is a type-only ArgInfo object.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ArgInfo.GetArguments(V8.Net.InternalHandle[],System.UInt32,System.Reflection.ParameterInfo[])">
+            <summary>
+            Returns an array of ArgInfo values for the given handles.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ArgInfo.GetTypes(V8.Net.InternalHandle[],System.UInt32,System.Type[])">
+            <summary>
+            Returns an array of ArgInfo values for the expected types.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ArgInfo.GetSystemTypes(System.Collections.Generic.IEnumerable{V8.Net.ArgInfo})">
+            <summary>
+            Returns an array of ArgInfo values for the expected types.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ArgInfo.GetHandles(V8.Net.ArgInfo[])">
+            <summary>
+            Extracts and returns an array of all handles from the specified arguments.
+            </summary>
+            <param name="argInfoArgs"></param>
+            <returns></returns>
+        </member>
+        <member name="P:V8.Net.ArgInfo.IsValid">
+            <summary>
+            Returns true if this ArgInfo value has valid type information.  This will be false for empty instances.
+            </summary>
+        </member>
+        <member name="P:V8.Net.ArgInfo.IsSourceFromArgInfoObject">
+            <summary>
+            Returns true if the information was taken from a native ArgInfo object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.ArgInfo.ValueOrDefault">
+            <summary>
+            Returns either the underlying argument value (in converted form), or the default value, whichever is detected first (in that order).
+            This can be used to pass arguments to methods, where a specific CLR type is required.
+            </summary>
+        </member>
+        <member name="T:V8.Net.TypeBinder">
+            <summary>
+            A V8.NET binder for CLR types.
+            </summary>
+        </member>
+        <member name="F:V8.Net.TypeBinder.Engine">
+            <summary>
+            The engine that will own the 'ObjectTemplate' instance.
+            </summary>
+        </member>
+        <member name="F:V8.Net.TypeBinder.BaseTypeBinder">
+            <summary>
+            A reference to the type binder for the immediate base type inherited by the bound type.
+            </summary>
+        </member>
+        <member name="F:V8.Net.TypeBinder.InstanceTemplate">
+            <summary>
+            Represents a V8 template object used for generating native V8 objects which will correspond to the binding for instances of the underlying type.
+            </summary>
+        </member>
+        <member name="F:V8.Net.TypeBinder.TypeTemplate">
+            <summary>
+            Represents a V8 template object used for generating native V8 function objects which will correspond to the binding for the underlying type (for creating new instances within script).
+            </summary>
+        </member>
+        <member name="F:V8.Net.TypeBinder.BoundType">
+            <summary>
+            The type represented by this type binder.
+            </summary>
+        </member>
+        <member name="F:V8.Net.TypeBinder.ClassName">
+            <summary>
+            The name that will be displayed when invoking 'Object.valueOf()' in JavaScript on function objects which represent this type.
+            This is also the name that will be used for the property created from this type binder.
+            </summary>
+        </member>
+        <member name="M:V8.Net.TypeBinder._GetBindingForDataMember(V8.Net.TypeBinder._MemberDetails,V8.Net.V8NativeObjectPropertyGetter@,V8.Net.V8NativeObjectPropertySetter@)">
+            <summary>
+            Binds a getter and setter to read and/or write to the specified data member (field or property only).
+            </summary>
+            <param name="memberName">The name of a member on '{ObjectBinder}.Object', or a new in-script name if 'fieldInfo' is supplied.</param>
+            <param name="getter">Returns the getter delegate to use for a native callback.</param>
+            <param name="setter">Returns the setter delegate to use for a native callback.</param>
+            <param name="fieldInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the field name.</param>
+            <returns>An exception on error, or null on success.</returns>
+        </member>
+        <member name="M:V8.Net.TypeBinder._GetBindingForProperty(V8.Net.TypeBinder._MemberDetails,V8.Net.V8NativeObjectPropertyGetter@,V8.Net.V8NativeObjectPropertySetter@)">
+            <summary>
+            Binds a getter and setter to read and/or write to the specified data member.
+            </summary>
+            <param name="memberName">The name of a member on '{ObjectBinder}.Object', or a new in-script name if 'propInfo' is supplied.</param>
+            <param name="getter">Returns the getter delegate to use for a native callback.</param>
+            <param name="setter">Returns the setter delegate to use for a native callback.</param>
+            <param name="propInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the property name.</param>
+            <returns>An exception on error, or null on success.</returns>
+        </member>
+        <member name="M:V8.Net.TypeBinder._GetBindingForMethod(V8.Net.TypeBinder._MemberDetails,V8.Net.V8Function@,System.String)">
+            <summary>
+            Binds a specific or named method of the specified object to a 'V8Function' callback wrapper.
+            The returns function can be used in setting native V8 object properties to function values.
+            </summary>
+            <param name="obj">The object that contains the method to bind to, or null if 'methodInfo' is supplied and specifies a static method.</param>
+            <param name="memberName">Required only if 'methodInfo' is null.</param>
+            <param name="func">The 'V8Function' wrapper for specified method.</param>
+            <param name="methods">An array of one MethodInfo, for strong binding, or more than one for dynamic invocation.</param>
+            <param name="className">An optional name to return when 'valueOf()' is called on a JS object (this defaults to the method's name).</param>
+            <param name="genericTarget">Allows binding a specific handle to the 'this' of a callback (for static bindings).</param>
+            <param name="genericInstanceTargetUpdater">Allows binding a specific instance to the 'this' of a callback (for static bindings).</param>
+        </member>
+        <member name="M:V8.Net.TypeBinder.CreateObject``2(``1,System.Boolean)">
+            <summary>
+            Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
+            It's an error to pass an object instance that is not of the same underlying type as this type binder.
+            </summary>
+            <param name="obj">An object instance for the object binder (required).</param>
+            <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+            <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
+        </member>
+        <member name="M:V8.Net.TypeBinder.CreateObject(System.Object,System.Boolean)">
+            <summary>
+            Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
+            It's an error to pass an object instance that is not of the same underlying type as this type binder.
+            </summary>
+            <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+            <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
+        </member>
+        <member name="M:V8.Net.TypeBinder.ChangeMemberSecurity(System.Reflection.MemberInfo,V8.Net.ScriptMemberSecurity)">
+            <summary>
+            Changes the security of a specific member for the underlying type represented by this TypeBinder instance.
+            </summary>
+            <param name="member">A specific MemberInfo instance.  If this is not found/supported on the local type, an exception will be thrown.</param>
+            <param name="memberSecurity">The new security to apply.</param>
+        </member>
+        <member name="M:V8.Net.TypeBinder.ChangeMemberSecurity(System.String,V8.Net.ScriptMemberSecurity)">
+            <summary>
+            Changes the security of a specific member for the underlying type represented by this TypeBinder instance.
+            </summary>
+            <param name="memberName">A specific member name.  If this is not found/supported on the local type, or the name has too many matches, an exception will be thrown.
+            <para>Note: The name you enter here is the in-script name, including any "${type #}" suffixes for generic types (for example, "Join$1", where '1' is the
+            number of expected generic types).  If a member has overloads, the security attribute will apply to all of them.</para></param>
+            <param name="security">The new security to apply.</param>
+        </member>
+        <member name="P:V8.Net.TypeBinder.TypeFunction">
+            <summary>
+            The function used to represent this bound type in script.
+            </summary>
+        </member>
+        <member name="P:V8.Net.TypeBinder.TypeID">
+            <summary>
+            A unique internal ID used to quickly identify the type for best performance.
+            </summary>
+        </member>
+        <member name="P:V8.Net.TypeBinder.Recursive">
+            <summary>
+            If true, then nested object references are included, otherwise they are ignored.  By default, the references are ignored for security reasons.
+            <param>When an object is bound, only the object instance itself is bound (and not any reference members).</param>
+            </summary>
+        </member>
+        <member name="P:V8.Net.TypeBinder.DefaultMemberSecurity">
+            <summary>
+            Default member attributes for members that don't have the 'ScriptMember' attribute.
+            </summary>
+        </member>
+        <member name="P:V8.Net.TypeBinder.Indexer">
+            <summary>
+            The indexer for this type, if applicable, otherwise this is null.
+            </summary>
+        </member>
+        <member name="P:V8.Net.TypeBinder.ScriptObjectAttribute">
+            <summary>
+            The ScriptObject attribute if one exists for the underlying type, otherwise this is null.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ObjectBinder">
+            <summary>
+            'ObjectBinder' instances represent JavaScript object properties that are bound to CLR objects or types.
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8ManagedObject">
+            <summary>
+            Represents a C# (managed) JavaScript object.  Properties are set on the object within the class itself, and not within V8.
+            This is done by using V8 object interceptors (callbacks).  By default, this object is used for the global environment.
+            <para>The inherited 'V8NativeObject' base class implements 'DynamicObject' for you, but if dynamic objects are not required, 
+            feel free to implement the 'IV8ManagedObject' interface for your own classes instead; however, you also will have to call the
+            V8NetProxy static methods yourself if you need functionality supplied by V8NativeObject.</para>
+            <para>Note: It's faster to work with the properties on the managed side using this object, but if a lot of properties won't be changing,
+            it may be faster to access properties within V8 itself.  To do so, simply create a basic V8NativeObject using 'V8Engine.CreateObject()'
+            instead.</para>
+            </summary>
+        </member>
+        <member name="T:V8.Net.IV8ManagedObject">
+            <summary>
+            The 'V8ManagedObject' class implements 'DynamicObject' for you, but if dynamic objects are not required, feel free to implement
+            the 'IV8ManagedObject' interface for your own classes instead.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.NamedPropertyGetter(System.String@)">
+            <summary>
+            Intercepts JavaScript access for properties on the associated JavaScript object for retrieving a value.
+            <para>To allow the V8 engine to perform the default get action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.NamedPropertySetter(System.String@,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
+            <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.NamedPropertyQuery(System.String@)">
+            <summary>
+            Let's the V8 engine know the attributes for the specified property.
+            <para>To allow the V8 engine to perform the default get action, return "null".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.NamedPropertyDeleter(System.String@)">
+            <summary>
+            Intercepts JavaScript request to delete a property.
+            <para>To allow the V8 engine to perform the default get action, return "null".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.NamedPropertyEnumerator">
+            <summary>
+            Returns the results of enumeration (such as when "for..in" is used).
+            <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.IndexedPropertyGetter(System.Int32)">
+            <summary>
+            Intercepts JavaScript access for properties on the associated JavaScript object for retrieving a value.
+            <para>To allow the V8 engine to perform the default get action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.IndexedPropertySetter(System.Int32,V8.Net.InternalHandle)">
+            <summary>
+            Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
+            <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.IndexedPropertyQuery(System.Int32)">
+            <summary>
+            Let's the V8 engine know the attributes for the specified property.
+            <para>To allow the V8 engine to perform the default get action, return "null".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.IndexedPropertyDeleter(System.Int32)">
+            <summary>
+            Intercepts JavaScript request to delete a property.
+            <para>To allow the V8 engine to perform the default get action, return "null".</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IV8ManagedObject.IndexedPropertyEnumerator">
+            <summary>
+            Returns the results of enumeration (such as when "for..in" is used).
+            <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IV8ManagedObject.Properties">
+            <summary>
+            Holds a Key->Value reference to all property names and values for the JavaScript object that this managed object represents.
+            Accessing the 'Properties' property without setting it first creates a new dictionary object by default.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8ManagedObject.Handle">
+            <summary>
+            A reference to the managed object handle that wraps the native V8 handle for this managed object (this simply returns 'base.Handle'). 
+            You should never change handles on managed objects because they are usually associated with object interceptors,
+            and changing the handle will break the call-back system.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8ManagedObject.ObjectTemplate">
+            <summary>
+            A reference to the ObjectTemplate instance that owns this object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8ManagedObject.Properties">
+            <summary>
+            Holds a Key->Value reference to all property names and values for the JavaScript object that this managed object represents.
+            Accessing the 'Properties' property without setting it first creates a new dictionary object by default.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ObservableWeakReference`1">
+            <summary>
+            Notifies handlers that an object is ready to be garbage collected.
+            To use this you must 1. wrap it in your class and pass it your class reference, 2. override the finalize method for your class and call "Finalize"
+            on this weak reference object, and 3. keep a strong reference to this weak reference object so you can check it later (if needed).
+            <para>Warning: This event is triggered in the GC thread!</para>
+            </summary>
+            <typeparam name="T">The object type to keep a reference for.</typeparam>
+        </member>
+        <member name="F:V8.Net.ObservableWeakReference`1.NullWaitEvent">
+            <summary>
+            When a finalizer runs on an object, the GC has already cleared all weak references. This means the main thread can read a null object reference
+            before the callback has a chance to reset the reference.  To protect against this, any call on a null reference will block until this event has
+            been signalled.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObservableWeakReference`1.SetTarget(`0)">
+            <summary>
+            Changes the underlying target object of the internal weak reference instance.
+            Warning: If the previous reference is "near death", it will be reset in order to set the new value.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObservableWeakReference`1.Reset">
+            <summary>
+            If 'IsGCReady' is true, then this moves the near death reference back into the weak reference. If not, this method does nothing.
+            <para>In either case, the underlying object is returned.</para>
+            </summary>
+        </member>
+        <member name="E:V8.Net.ObservableWeakReference`1.GCReady">
+            <summary>
+            Triggered when the GC wants to collect the object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.ObservableWeakReference`1.IsGCReady">
+            <summary>
+            Set to true when the GC wants to collect the object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.ObservableWeakReference`1.CanCollect">
+            <summary>
+            This is false by default, which prevents the object from being finalized in the garbage collection process.
+            If you set this to true in an event handler, then upon return the object will continue being finalized.
+            </summary>
+        </member>
+        <member name="P:V8.Net.ObservableWeakReference`1.Object">
+            <summary>
+            Returns a reference to the object wrapped by this instance.
+            This is a weak reference at first, but will return the strong reference when the object is being finalized.
+            <para>Note: The finalizer clears all weak references before running finalizers on all the objects, which means it's possible that main thread
+            code may attempt to read this property, which would end up being 'null'.  However, this would be invalid, due to the fact 'DoFinalize()' hasn't been
+            called yet.  To prevent this, this property is blocking if the target is set to null by the finalizer, until the finalizer triggers a call to
+            'DoFinalize()'.  As such, this property never returns 'null'.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.ObservableWeakReference`1.NearDeathReference">
+            <summary>
+            If 'IsGCReady' returns true, then this is the only reference that is keeping the object alive.
+            </summary>
+        </member>
+        <member name="P:V8.Net.ObservableWeakReference`1.IsNearDeathReference">
+            <summary>
+            Returns true if an attempt was made to garbage collect the object (see <see cref="P:V8.Net.ObservableWeakReference`1.NearDeathReference"/>).
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8NativeObject`1">
+            <summary>
+            This generic version of 'V8NativeObject' allows injecting your own class by implementing the 'IV8NativeObject' interface.
+            </summary>
+            <typeparam name="T">Your own class, which implements the 'IV8NativeObject' interface.  Don't use the generic version if you are able to inherit from 'V8NativeObject' instead.</typeparam>
+        </member>
+        <member name="M:V8.Net.Exceptions.GetFullErrorMessage(System.Exception,System.Boolean)">
+            <summary>
+            A simple utility method which formats and returns an exception error object.
+            The stack trace is also included. The inner exceptions are also recursed and added.
+            </summary>
+            <param name="ex">The exception object with error message to format and return.</param>
+        </member>
+        <member name="M:V8.Net.ExtensionMethods.IsConstructedGenericType(System.Type)">
+            <summary>
+            '{Type}.IsConstructedGenericType' is only supported in .NET 4.5+, so this is a cross-version supported implementation.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ExtensionMethods.Join(System.Collections.IEnumerable,System.String)">
+            <summary>
+            Convert a list of enumerable items into strings and return the concatenated result.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.AllocNativeMemory(System.Int32)">
+            <summary>
+            Allocates native memory.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.AllocPointerArray(System.Int32)">
+            <summary>
+            Allocates native memory for storing pointers.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.FreeNativeMemory(System.IntPtr)">
+            <summary>
+            Frees native memory allocated with any of the 'Utilities.Alloc???()' methods.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.MakeHandleProxyArray(V8.Net.InternalHandle[])">
+            <summary>
+            Allocates native memory to marshal an array of proxy handles.
+            Uses 'Utilities.AllocPointerArray()', so be sure to call 'Utilities.FreeNativeMemory()' when done.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.ND(System.Object,System.String)">
+            <summary>
+            Null Default (used mostly with database related data): Returns the value passed, or a default 
+            value if the value passed is null, or equal to DBNull.Value.
+            </summary>
+            <param name="val">Value to check.</param>
+            <param name="default_val">New value if "val" is null or DBNull.Value.</param>
+            <returns></returns>
+        </member>
+        <member name="M:V8.Net.Strings.IsNullOrEmpty(System.Object)">
+            <summary>
+            Returns true if the given object is null, or its string conversion results in an empty/null string.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.IsNullOrWhiteSpace(System.String)">
+            <summary>
+            Returns true if the string value is null or contains white space (contains all characters less than or equal Unicode value 32).
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.SelectNonEmptyString(System.String,System.String,System.String)">
+            <summary>
+            Selects the first non-null/empty string found in the parameter order given, and returns a default value if
+            both are null/empty.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.Join(System.String,System.Object[])">
+            <summary>
+            Convert a list of objects into strings and return the concatenated result.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.Join(System.String[],System.String[])">
+            <summary>
+            Join two strings arrays into one big array. The new array is returned.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.CopyTo(System.String[],System.String[],System.Int32)">
+            <summary>
+            Copies a given source string array into another (destination), returning the destination array.
+            </summary>
+            <param name="src">The array to copy.</param>
+            <param name="dest">The target of the copy.</param>
+            <param name="destIndex">The array index into the destination in which copy starts.</param>
+        </member>
+        <member name="M:V8.Net.Strings.Add(System.String,System.String[])">
+            <summary>
+            Copies the given string and string array to a new array. The new array is returned.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.S(System.Int32,System.String,System.String,System.String)">
+            <summary>
+            Returns the singular or plural of a word based on a numerical value.
+            </summary>
+            <param name="value">Number value.</param>
+            <param name="word">Base word, singular.</param>
+            <param name="suffix_if_plural">Suffix to use if "value" is not 1.</param>
+            <param name="numberFormatting">The number format, if any (optional).</param>
+        </member>
+        <member name="M:V8.Net.Strings.S(System.Double,System.String,System.String,System.String)">
+            <summary>
+            Returns the singular or plural of a word based on a numerical value.
+            </summary>
+            <param name="value">Number value.</param>
+            <param name="word">Base word, singular.</param>
+            <param name="suffix_if_plural">Suffix to use if "value" is not 1.</param>
+            <param name="numberFormatting">The number format, if any (optional).</param>
+        </member>
+        <member name="M:V8.Net.Strings.Append(System.String,System.String,System.String,System.Boolean)">
+            <summary>
+            Appends the source string to the target string and returns the result.
+            If 'target' and 'source' are both not empty, then the delimiter is inserted between them, and the resulting string returned.
+            </summary>
+            <param name="target">The string to append to.</param>
+            <param name="source">The string to append.</param>
+            <param name="delimiter">If specified, the delimiter is placed between the target and source if the target is NOT empty.</param>
+            <param name="onlyAddDelimiterIfMissing">Only inserts the delimiter if it is missing from the end of the target and beginning of the source.</param>
+            <returns>The new string.</returns>
+        </member>
+        <member name="M:V8.Net.Strings.CharCount(System.String,System.Char)">
+            <summary>
+            Returns the number of occurrences of the given character in the given string.
+            </summary>
+            <param name="str">The string to look in.</param>
+            <param name="chr">The character to count.</param>
+        </member>
+        <member name="M:V8.Net.Strings.TextEqual(System.String,System.String)">
+            <summary>
+            Performs a textual comparison, where the letter casing is ignored, and returns 'true' if the specified strings are a match.
+            </summary>
+            <param name="strA">The first string to compare.</param>
+            <param name="strB">The second string to compare.</param>
+        </member>
+        <member name="M:V8.Net.Strings.Limit(System.String,System.UInt32,System.Boolean)">
+            <summary>
+            Returns the given string up to a maximum of 'maxlength' characters.
+            If more than 'maxlength' characters exist, an ellipse character is appended to the returned substring.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Arrays.Concat``1(``0[][])">
+            <summary>
+            Concatenate a list of arrays. Specify one array for each parameter.
+            To concatenate one list of arrays, use Join().
+            </summary>
+            <typeparam name="T">Array type for each argument.</typeparam>
+            <param name="args">A concatenated array made form the specified arrays.</param>
+            <returns></returns>
+        </member>
+        <member name="M:V8.Net.Arrays.Join``1(``0[][])">
+            <summary>
+            Concatenate a list of arrays.
+            </summary>
+            <typeparam name="T">Array type for each argument.</typeparam>
+            <param name="arrays">A concatenated array made form the specified arrays.</param>
+            <returns></returns>
+        </member>
+        <member name="M:V8.Net.Arrays.FromEnd``1(``0[],System.Int32)">
+            <summary>
+            Select an item from the end of the array.
+            </summary>
+            <typeparam name="T">Array type.</typeparam>
+            <param name="items">The array.</param>
+            <param name="index">0, or a negative value, that is the offset of the item to retrieve.</param>
+        </member>
+        <member name="M:V8.Net.Arrays.FromEnd``1(System.Collections.Generic.IList{``0},System.Int32)">
+            <summary>
+            Select an item from the end of the list.
+            </summary>
+            <typeparam name="T">List type.</typeparam>
+            <param name="items">The list.</param>
+            <param name="index">0, or a negative value, that is the offset of the item to retrieve.</param>
+        </member>
+        <member name="T:V8.Net.Types">
+            <summary>
+            Provides utility methods for types.
+            This class was originally created to support the 'ThreadController" class's "Dispatch()" methods.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Types.Arg(System.Type,System.Object)">
+            <summary>
+            If not null, returns either the argument, otherwise returns argument's 'null' type.
+            This is needed in cases where an argument is null, but the argument type is needed.
+            <para>
+            Example: MyMethod(typeof(DateTime).Arg(value)); - If 'value' is null, then the type is passed instead as 'Types.Null'
+            </para>
+            </summary>
+            <param name="type">Argument type.</param>
+            <param name="value">Argument value.</param>
+            <returns>Argument value, or the type if null.</returns>
+        </member>
+        <member name="M:V8.Net.Types.GetTypes(System.Object[])">
+            <summary>
+            Attempts to get the types of the values passed.
+            If a value is 'null', then the call will fail, and 'null' will be returned.
+            Note: This method recognizes Types.Null values.
+            </summary>
+            <param name="args">Argument values to get types for.</param>
+        </member>
+        <member name="M:V8.Net.Types.ConvertNullsToNullReferences(System.Object[])">
+            <summary>
+            Converts any Types.Null objects into simple 'null' references.
+            This is helpful after using Types.GetTypes() on the same items - once the types are
+            retrieved, this method helps to convert Types.Null items back to 'null'.
+            </summary>
+        </member>
+        <member name="T:V8.Net.Types.Null">
+            <summary>
+            A structure which represents a 'typed' null value.
+            This is required for cases where a type is just 'object', in which 'null' may be passed,
+            but the type still needs to be known. An example usage is with methods that accept variable
+            number of parameters, but need to know the argument type, even if null.
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8Function`1">
+            <summary>
+            This generic version of 'V8ManagedObject' allows injecting your own class by implementing the 'IV8ManagedObject' interface.
+            </summary>
+            <typeparam name="T">Your own class, which implements the 'IV8ManagedObject' interface.  Don't use the generic version if you are able to inherit from 'V8ManagedObject' instead.</typeparam>
+        </member>
+        <member name="T:V8.Net.IndexedObjectList`1">
+            <summary>
+            Implements a way to store managed objects which can be tracked by index for quick lookup.
+            <param>Note: The indexes are similar to native pointers, and thus, an index is REQUIRED in order to retrieve or remove a reference.</param>
+            </summary>
+        </member>
+        <member name="M:V8.Net.IndexedObjectList`1.#ctor(System.Int32)">
+            <summary>
+            Create an indexed object list with the given capacity.
+            <para>Warning: There are 3 lists created internally with the given capacity:  One for indexed storage, one for quick query of consecutive items, and
+            another for unused index positions.  These 3 lists ensure maximum speed for most needed operations.</para>
+            </summary>
+            <param name="capacity">The capacity allows to pre-allocate the internal list's initial length to reduce the need to keep reallocating memory as objects are added.</param>
+        </member>
+        <member name="M:V8.Net.IndexedObjectList`1.Add(`0)">
+            <summary>
+            Add object and return the index position.
+            </summary>
+        </member>
+        <member name="M:V8.Net.IndexedObjectList`1.Remove(System.Int32)">
+            <summary>
+            Removes the object at the given index and sets the entry to 'default(T)' (which is usually 0 or null).
+            </summary>
+        </member>
+        <member name="M:V8.Net.IndexedObjectList`1.Compact">
+            <summary>
+            The internal lists never shrink capacity for speed reasons.
+            If a large number of objects where added and later removed, call this method to shrink the memory used (if possible).
+            </summary>
+        </member>
+        <member name="M:V8.Net.IndexedObjectList`1.Clear">
+            <summary>
+            Clears the internal lists and resets them to default initial capacity.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IndexedObjectList`1.Objects">
+            <summary>
+            Allows enumerating 
+            </summary>
+        </member>
+        <member name="P:V8.Net.IndexedObjectList`1.Count">
+            <summary>
+            The number of managed references indexed in this instance.
+            <para>Warning: this is NOT the indexed object array size.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IndexedObjectList`1.ObjectIndexListCount">
+            <summary>
+            The current size of the list which stores the object references (this can be much larger that the actual number of objects stored).
+            </summary>
+        </member>
+        <member name="P:V8.Net.IndexedObjectList`1.Capacity">
+            <summary>
+            Gets or sets the capacity of the internal reference list.  You cannot set a capacity to less than the last object in the list.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IndexedObjectList`1.UnusedIndexCount">
+            <summary>
+            The number of unused index positions.
+            This occurs when an object is removed from within the list, and not from the end.
+            <para>Note: Fragmenting does not slow down any operations.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IndexedObjectList`1.Fragmentation">
+            <summary>
+            The percentage amount of unused index positions as compared to the total object list length.
+            <para>When the last object in the internal reference list is not removed when removing other objects, the internal reference list count cannot be reduced.
+            In such case, another list keeps track of the unused index positions for quick lookup.
+            The fragmentation value is a simple percentage of "unused index positions" to "internal reference list count".</para>]
+            <para>Note: This value is for informative purposes only.  Fragmentation does not reduce the speed additions, removals, or lookups;
+            However, the internal reference list cannot reduce capacity when fragmentation exists.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IndexedObjectList`1.Item(System.Int32)">
+            <summary>
+            Returns the object at the given object index.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IJSProperty.Value">
+            <summary>
+            A JavaScript associated value.
+            Call one of the "Create???()" methods to create/build a required type for the JavaScript value that represents 'Source'.
+            <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IJSProperty.Attributes">
+            <summary>
+            'V8PropertyAttributes' flags combined to describe the value, such as visibility, or what kind of access is allowed.
+            </summary>
+        </member>
+        <member name="T:V8.Net.JSProperty`1">
+            <summary>
+            A convenient JavaScript property wrapper which also holds JavaScript property attribute flags. The generic type 'TSourceValue' is the type of value to be stored on the managed side.
+            This JSProperty object also allows storing an associated V8 value handle. Having both a managed source value and a separate V8 value allows the source
+            value to be represented in JavaScript as a different type. For example, a value may exist locally as a string, but in JavaScript as a number (or vice versa).
+            Developers can inherit from this class if desired, or choose to go with a custom implementation using the IJSProperty interface instead.
+            </summary>
+            <typeparam name="TValueSource">When implementing properties for an IV8ManagedObject, this is the type that will store the property source value/details (such as 'object' - as already implemented in the derived 'JSProperty' class [the non-generic version]).</typeparam>
+        </member>
+        <member name="F:V8.Net.JSProperty`1.Source">
+            <summary>
+            This is a developer-defined source reference for the JavaScript 'Value' property if needed. It is not used by V8.Net.
+            </summary>
+        </member>
+        <member name="M:V8.Net.JSProperty`1.#ctor(V8.Net.V8PropertyAttributes)">
+            <summary>
+            Create a new JSProperty instance to help keep track of JavaScript object properties on managed objects.
+            </summary>
+        </member>
+        <member name="P:V8.Net.JSProperty`1.V8#Net#IJSProperty#Value">
+            <summary>
+            A JavaScript associated value.  By default, this returns 'Handle.Empty' (which means 'Value' is 'null' internally).
+            Call one of the "V8Engine.Create???()" methods to create/build a required type for the JavaScript value that represents 'Source'.
+            <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.JSProperty`1.V8#Net#IJSProperty#Attributes">
+            <summary>
+            'V8PropertyAttributes' flags combined to describe the value, such as visibility, or what kind of access is allowed.
+            </summary>
+        </member>
+        <member name="T:V8.Net.JSProperty">
+            <summary>
+            A convenient 'MemberInfo' specific wrapper which holds JavaScript property value and attribute flags for managed object members.
+            For custom implementations, see <see cref="T:V8.Net.JSProperty`1"/>.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSProperty.Empty">
+            <summary>
+            Represents an empty JSProperty, which is simply used to return an empty 'Value' property (as 'Handle.Empty').
+            <para>The purpose is to prevent having to perform null reference checks when needing to reference the 'Value' property.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.JSProperty.#ctor(V8.Net.V8PropertyAttributes)">
+            <summary>
+            Create a new JSProperty instance to help keep track of JavaScript object properties on managed objects.
+            </summary>
+        </member>
+        <member name="T:V8.Net.JSFunction">
+            <summary>
+            Represents a JavaScript callback function for a managed class method.
+            </summary>
+            <param name="isConstructCall">True only if this function is being called to construct a new object (such as using the "new" operator within JavaScript).
+            If this is true, the function is expected to create and return a new object (as the constructor for that object).</param>
+            <param name="args">The arguments supplied for the JavaScript function call.</param>
+        </member>
+        <member name="P:V8.Net.ITemplate.Engine">
+            <summary>
+            The V8Engine instance associated with this template.
+            </summary>
+        </member>
+        <member name="M:V8.Net.TemplateBase`1._SetDelegate``1(``0)">
+            <summary>
+            Keeps callback delegates alive.
+            <para>If delegates are used as callbacks (for reverse P/Invoke), then they will become GC'd if there's no managed reference keeping them alive.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.TemplateBase`1.Parent">
+            <summary>
+            Returns the parent to this template, if any.
+            This is currently only set on object template instances associated with function templates (where {FunctionTemplate} is the parent).
+            </summary>
+        </member>
+        <member name="P:V8.Net.TemplateBase`1.V8#Net#ITemplateInternal#_ReferenceCount">
+            <summary>
+            The number of objects that reference this object.
+            This is required because of the way the GC resets all weak references to null, and finalizes in no special order.
+            Dependent objects are required to update this when they are finally collected (as some may become re-registered with the finalizer).
+            </summary>
+        </member>
+        <member name="F:V8.Net.FunctionTemplate._FunctionsByType">
+            <summary>
+            Set this to an object that implements a call-back to execute when the function associated with this FunctionTemplate is called within JavaScript.
+            </summary>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate.OnInitialized">
+            <summary>
+            Called when the object is initialized instance is ready for use.
+            </summary>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate.GetFunctionObject``1(V8.Net.JSFunction)">
+            <summary>
+            Returns the specified V8Function object type associated with this function template.
+            There can only ever be one native V8 function object per native V8 function template in a single native V8 JavaScript context;
+            however, V8.NET (the managed side) does allow one function type per template. In this case, a single call triggers all derived types at once.
+            The first callback to return a value terminates the cycle and any following callbacks are ignored.
+            <para>WARNING: The returned function object will be garbage collected if you don't store the reference anywhere. If this happens, then calling 
+            the function object in JavaScript will return "undefined".</para>
+            </summary>
+            <typeparam name="T">A type that implements IV8Function, or derives from V8Function.</typeparam>
+            <param name="callback">When a new instance of type 'T' is created, it's 'Callback' property will overwritten by this value (replacing anything that may be set when it was created).
+            It is expect to provide a callback method when using the default 'V8Function' object, but if you have a custom derivation you can set this to 'null'.</param>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate.GetFunctionObject(V8.Net.JSFunction)">
+            <summary>
+            Returns a JavaScript V8Function object instance associated with this function template.
+            There can only ever be ONE V8 function object per V8 function template in a single V8 JavaScript context;
+            however, V8.NET does allow one MANAGED function type per managed template. In this case, a single call triggers all derived types at once.
+            The first callback to return a value terminates the cycle and any following callbacks are ignored.
+            <para>WARNING: The returned function object will be garbage collected if you don't store the reference anywhere. If this happens, then calling 
+            the function object in JavaScript will return "undefined". This is because function object callbacks are dynamic and are only valid when
+            the calling object is still in use.</para>
+            </summary>
+            <param name="callback">When a new instance of V8Function is created, it's 'Callback' property will set to the specified value.
+            If you don't provide a callback, then calling the function in JavaScript will simply do nothing and return "undefined".</param>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate.CreateNativeInstance(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying native function to create a new native object and return its handle.
+            Use this method if you only need the native object and not a managed wrapper.
+            </summary>
+            <param name="args">Arguments to pass to the function to construct the new native instance.</param>
+            <returns>A handle to the new object.</returns>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate.CreateInstance``1(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying native function to create and return a new instance, which will be wrapped in the specified managed object type.
+            </summary>
+            <typeparam name="T">A managed object type to wrap the new native object handle.</typeparam>
+            <param name="args">Arguments to pass to the function to construct the new native instance.</param>
+            <returns>A new instance of 'T'.</returns>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate.CreateInstance(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying native function to create and return a new instance, which will be wrapped in a 'V8ManagedObject' instance.
+            </summary>
+            <param name="args">Arguments to pass to the function to construct the new native instance.</param>
+            <returns>A new instance of 'V8ManagedObject'.</returns>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate._RemoveFunctionType(System.Int32)">
+            <summary>
+            This is called by '{V8NativeObject}._OnNativeGCRequested()' when the managed function object is ready to be deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.FunctionTemplate.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native function template to set properties that will exist on all function objects created from this template.
+            </summary>
+        </member>
+        <member name="P:V8.Net.FunctionTemplate.InstanceTemplate">
+            <summary>
+            The V8 engine automatically creates two templates with every function template: one for object creation (instances) and one for function object itself (prototype inheritance).
+            This property returns the ObjectTemplate wrapper associated with the V8 native instance template for creating new objects using the function in this template as the constructor.
+            </summary>
+        </member>
+        <member name="P:V8.Net.FunctionTemplate.PrototypeTemplate">
+            <summary>
+            The V8 engine automatically creates two templates with every function template: one for object creation (instances) and one for object inheritance (prototypes).
+            This property returns the ObjectTemplate wrapper associated with the prototype template for the function object in this template.
+            </summary>
+        </member>
+        <member name="T:V8.Net.Handle">
+            <summary>
+            Keeps track of native V8 handles (C++ native side).
+            When no more handles are in use, the native handle can be disposed when the V8.NET system is ready.
+            If the handle is a value, the native handle side is disposed immediately - but if the handle represents a managed object, it waits until the managed
+            object is also no longer in use.
+            <para>Handles are very small values that can be passed around quickly on the stack, and as a result, the garbage collector is not involved as much.
+            This helps prevent the GC from kicking in and slowing down applications when a lot of processing is in effect.
+            Another benefit is that thread locking is required for heap memory allocation (for obvious reasons), so stack allocation is faster within a
+            multi-threaded context.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.Set(V8.Net.Handle)">
+            <summary>
+            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+            to convert it to a handle object that will dispose itself.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.Set(V8.Net.InternalHandle)">
+            <summary>
+            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
+            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
+            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
+            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
+            to convert it to a handle object that will dispose itself.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.Clone">
+            <summary>
+            Creates another copy of this handle and increments the reference count to the native handle.
+            Handles should be set in either two ways: 1. by using the "Set()" method on the left side handle, or 2. using the "Clone()' method on the right side.
+            Using the "=" operator to set a handle may cause memory leaks if not used correctly.
+            See also: <seealso cref="M:V8.Net.Handle.Set(V8.Net.InternalHandle)"/>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.Dispose">
+            <summary>
+            Attempts to dispose of the internally wrapped handle proxy and makes this handle empty.
+            If other handles exist, then they will still be valid, and this handle instance will become empty.
+            <para>This is useful to use with "using" statements to quickly release a handle into the cache for reuse.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.__TryDispose">
+            <summary>
+            Attempts to dispose of this handle (add it back into the native proxy cache for reuse).  If the handle represents a managed object,
+            the dispose request is placed into a "pending disposal" queue. When the associated managed object
+            no longer has any references, this method will be .
+            <para>*** NOTE: This is called by Dispose() when the reference count becomes zero and should not be called directly. ***</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle._CompleteDisposal">
+            <summary>
+            Completes the disposal of the native handle.
+            <para>Note: A disposed native handle is simply cached for reuse, and always points back to the same managed handle.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.ReleaseManagedObject">
+            <summary>
+            Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
+            place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
+            any associated handles later.  The released object is returned, or null if there is no object.
+            </summary>
+            <returns>The object released.</returns>
+        </member>
+        <member name="M:V8.Net.Handle.As``1">
+            <summary>
+            Returns the 'Value' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.LastAs``1">
+            Returns the 'LastValue' property type cast to the expected type.
+            Warning: No conversion is made between different value types.
+        </member>
+        <member name="M:V8.Net.Handle.AsJSProperty">
+            <summary>
+            Returns this handle as a new JSProperty instance with default property attributes.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.Equals(System.Object)">
+            <summary>
+            Checks if the wrapped handle reference is the same as the one compared with. This DOES NOT compare the underlying JavaScript values for equality.
+            To test for JavaScript value equality, convert to a desired value-type instead by first casting as needed (i.e. (int)jsv1 == (int)jsv2).
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.ThrowOnError">
+            <summary>
+            Checks if the handle represents an error, and if so, throws one of the corresponding derived V8Exception exceptions.
+            See 'JSValueType' for possible exception states.  You can check the 'IsError' property to see if this handle represents an error.
+            <para>Exceptions thrown: V8InternalErrorException, V8CompilerErrorException, V8ExecutionErrorException, and V8Exception (for any general V8-related exceptions).</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsDisposed">
+            <summary>
+            Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.Engine">
+            <summary>
+            A reference to the V8Engine instance that owns this handle.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.ID">
+            <summary>
+            The ID (index) of this handle on both the native and managed sides.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.ValueType">
+            <summary>
+            The JavaScript type this handle represents.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.ReferenceCount">
+            <summary>
+            Used internally to determine the number of references to a handle.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.ObjectID">
+            <summary>
+            The ID of the managed object represented by this handle.
+            This ID is expected when handles are passed to 'V8ManagedObject.GetObject()'.
+            If this value is less than 0 (usually -1), then there is no associated managed object.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle._CurrentObjectID">
+            <summary>
+            Returns the managed object ID "as is".
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.Object">
+            <summary>
+            A reference to the managed object associated with this handle. This property is only valid for object handles, and will return null otherwise.
+            Upon reading this property, if the managed object has been garbage collected (because no more handles or references exist), then a new basic 'V8NativeObject' instance will be created.
+            <para>Instead of checking for 'null' (which may not work as expected), query 'HasManagedObject' instead.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.BoundObject">
+            <summary>
+            If this handle represents an object instance binder, then this returns the bound object.
+            Bound objects are usually custom user objects (non-V8.NET objects) wrapped in ObjectBinder instances.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.CLRTypeID">
+            <summary>
+            Returns the registered type ID for objects that represent registered CLR types.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.TypeBinder">
+            <summary>
+            If this handle represents a type binder, then this returns the associated 'TypeBinder' instance.
+            <para>Bound types are usually non-V8.NET types that are wrapped and exposed in the JavaScript environment for use with the 'new' operator.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.HasObject">
+            <summary>
+            Returns true if this handle is associated with a managed object.
+            <para>Note: This can be false even though 'IsObjectType' may be true.
+            A handle can represent a native V8 object handle without requiring an associated managed object.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.Value">
+            <summary>
+            Reading from this property causes a native call to fetch the current V8 value associated with this handle.
+            <param>For objects, this returns the in-script type text as a string - unless this handle represents an object binder, in which case this will return the bound object instead.</param>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.LastValue">
+            <summary>
+            Once "Value" is accessed to retrieve the JavaScript value in real time, there's no need to keep accessing it.  Just call this property
+            instead (a small bit faster). Note: If the value changes again within the engine (i.e. another scripts executes), you may need to call
+            'Value' again to make sure any changes are reflected.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.ArrayLength">
+            <summary>
+            Returns the array length for handles that represent arrays. For all other types, this returns 0.
+            Note: To get the items of the array, use '{ObjectHandle|InternalHandle|V8NativeObject}.GetProperty(#)'.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsWeakManagedObject">
+            <summary>
+            Returns true if this handle is associated with a managed object that has no other references and is ready to be disposed.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsWeakHandle">
+            <summary>
+            Returns true if the handle is weak and ready to be disposed.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsInPendingDisposalQueue">
+            <summary>
+            True if this handle is place into a queue to be made weak and eventually disposed (cached) on the native side.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsNativelyWeak">
+            <summary>
+            True if this handle was made weak on the native side (for object handles only).  Once a handle is weak, the V8 garbage collector can collect the
+            handle (and any associated managed object) at any time.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsDisposeReady">
+            <summary>
+            Returns true if this handle is weak AND is associated with a weak managed object reference.
+            When a handle is ready to be disposed, then calling "Dispose()" will succeed and cause the handle to be placed back into the cache on the native side.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsEmpty">
+            <summary>
+            Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists.
+            <para>An empty state is when a handle is set to 'Handle.Empty' and has no valid native V8 handle assigned.
+            This is similar to "undefined"; however, this property will be true if a valid native V8 handle exists that is set to "undefined".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsUndefined">
+            <summary>
+            Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty').
+            <para>"Undefined" does not mean "null".  A variable (handle) can be defined and set to "null".</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsNull">
+            <summary>
+            Returns 'true' if this handle represents a 'null' value (that is, an explicitly defined 'null' value).
+            This will return 'false' if 'IsEmpty' or 'IsUndefined' is true.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsObjectType">
+            <summary>
+            Returns true of the handle represents ANY object type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsBinder">
+            <summary>
+            Used internally to quickly determine when an instance represents a binder object type (faster than reflection!).
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.BindingMode">
+            <summary>
+            Returns the binding mode (Instance, Static, or None) represented by this handle.  The return is 'None' (0) if not applicable.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.AsBoolean">
+            <summary>
+            Returns the underlying value converted if necessary to a Boolean type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.AsInt32">
+            <summary>
+            Returns the underlying value converted if necessary to an Int32 type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.AsDouble">
+            <summary>
+            Returns the underlying value converted if necessary to a double type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.AsString">
+            <summary>
+            Returns the underlying value converted if necessary to a string type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.AsDate">
+            <summary>
+            Returns the underlying value converted if necessary to a DateTime type.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsError">
+            <summary>
+            Returns true if this handle contains an error message (the string value is the message).
+            If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.SetProperty(System.Int32,V8.Net.InternalHandle)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object.
+            Returns true if successful.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.SetProperty(System.String,System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
+            the specified property name.
+            Returns true if successful.
+            </summary>
+            <param name="name">The property name.</param>
+            <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types.</param>
+            <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
+            <summary>
+            Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
+            Returns true if successful.
+            </summary>
+            <param name="type">The type to wrap.</param>
+            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+            <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
+            <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+            <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.GetProperty(System.String)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.GetProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Get()' function on the underlying native object.
+            If the property doesn't exist, the 'IsUndefined' property will be true.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.DeleteProperty(System.String)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.DeleteProperty(System.Int32)">
+            <summary>
+            Calls the V8 'Delete()' function on the underlying native object.
+            Returns true if the property was deleted.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.SetAccessor(System.String,V8.Net.V8NativeObjectPropertyGetter,V8.Net.V8NativeObjectPropertySetter,V8.Net.V8PropertyAttributes,V8.Net.V8AccessControl)">
+            <summary>
+            Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.GetPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (including all objects in the prototype chain).
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.GetOwnPropertyNames">
+            <summary>
+            Returns a list of all property names for this object (excluding the prototype chain).
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:V8.Net.ObjectHandle.GetPropertyAttributes(System.String)" -->
+        <member name="M:V8.Net.ObjectHandle.Call(System.String,V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls an object property with a given name on a specified object as a function and returns the result.
+            The '_this' property is the "this" object within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.StaticCall(System.String,V8.Net.InternalHandle[])">
+            <summary>
+            Calls an object property with a given name on a specified object as a function and returns the result.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The '_this' parameter is the "this" reference within the function when called.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectHandle.StaticCall(V8.Net.InternalHandle[])">
+            <summary>
+            Calls the underlying object as a function.
+            The 'this' property will not be specified, which will default to the global scope as expected.
+            </summary>
+        </member>
+        <member name="P:V8.Net.ObjectHandle.Prototype">
+            <summary>
+            The prototype of the object (every JavaScript object implicitly has a prototype).
+            </summary>
+        </member>
+        <member name="T:V8.Net.DynamicHandle">
+            <summary>
+            This is a class used internally to create a meta object for dynamic access to 
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.OnInitialized">
+            <summary>
+            Called when the object is initialized instance is ready for use.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.RegisterNamedPropertyInterceptors">
+            <summary>
+            Registers handlers that intercept access to properties on ALL objects created by this template.  The native V8 engine only supports this on 'ObjectTemplate's.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.RegisterIndexedPropertyInterceptors">
+            <summary>
+            Registers handlers that intercept access to properties on ALL objects created by this template.  The native V8 engine only supports this on 'ObjectTemplate's.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.UnregisterPropertyInterceptors">
+            <summary>
+            Unregisters handlers that intercept access to properties on ALL objects created by this template.  See <see cref="M:V8.Net.ObjectTemplate.RegisterNamedPropertyInterceptors"/> and <see cref="M:V8.Net.ObjectTemplate.RegisterIndexedPropertyInterceptors"/>.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.RegisterInvokeHandler(V8.Net.JSFunction)">
+            <summary>
+            Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
+            </summary>
+            <param name="callback">A callback that gets invoked </param>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.CreateObject``1(System.Boolean)">
+            <summary>
+            Creates an object of the specified type and returns it.  A V8 object is also created and associated with it.
+            <para>Performance note: Creating 'V8NativeObject' type objects are allowed, but an object template is not needed for those.  If you create a
+            'V8NativeObject' object from a template, it simply wraps the native object create by the template, and property interceptors (call-backs) are still
+            triggered.  While native objects are faster than managed ones, creating 'V8NativeObject' objects using 'V8Engine.CreateObject()' does not use
+            interceptors and is many times faster than template objects.  If it is desired to create 'V8NativeObject' objects from templates, consider calling
+            '<seealso cref="M:V8.Net.ObjectTemplate.UnregisterPropertyInterceptors"/>' on the object template to make them the same speed as if 'V8Engine.CreateObject()' was used.</para>
+            </summary>
+            <typeparam name="T">The type of managed object to create, which must implement 'IV8NativeObject',</typeparam>
+            <param name="initialize">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:V8.Net.ObjectTemplate.CreateObject(System.Boolean)" -->
+        <member name="M:V8.Net.ObjectTemplate.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
+            <summary>
+            Calls the V8 'Set()' function on the underlying native object template to set properties that will exist on all objects created from this template.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ObjectTemplate.SetAccessor(System.String,V8.Net.V8NativeObjectPropertyGetter,V8.Net.V8NativeObjectPropertySetter,V8.Net.V8PropertyAttributes,V8.Net.V8AccessControl)">
+            <summary>
+            Calls the V8 'SetAccessor()' function on the underlying native 'v8::ObjectTenplate' instance to create a property that is controlled by "getter" and "setter" callbacks.
+            <para>Note: This is template related, which means all objects created from this template will be affected by these special properties.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.ObjectTemplate.NamedPropertyInterceptorsRegistered">
+            <summary>
+            Returns true if this function template has any name-based interceptors (callbacks) registered.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:V8.Net.ObjectTemplate.IndexedPropertyInterceptorsRegistered" -->
+        <member name="T:V8.Net.V8ManagedObject`1">
+            <summary>
+            This generic version of 'V8ManagedObject' allows injecting your own class by implementing the 'IV8ManagedObject' interface.
+            </summary>
+            <typeparam name="T">Your own class, which implements the 'IV8ManagedObject' interface.  Don't use the generic version if you are able to inherit from 'V8ManagedObject' instead.</typeparam>
+        </member>
+    </members>
+</doc>

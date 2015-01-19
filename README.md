@@ -1,5 +1,5 @@
-v8dotnet
-========
+V8.NET
+======
 
 **Summary:** A fairly non-abstracted wrapper for Google's V8 JavaScript engine.
 

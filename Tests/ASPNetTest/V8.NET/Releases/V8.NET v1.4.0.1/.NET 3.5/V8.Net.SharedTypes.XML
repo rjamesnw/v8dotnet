@@ -1,0 +1,335 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>V8.Net.SharedTypes</name>
+    </assembly>
+    <members>
+        <member name="T:V8.Net.ScriptMemberSecurity">
+            <summary>
+            Flags which Determine the script accessibility.
+            </summary>
+        </member>
+        <member name="F:V8.Net.ScriptMemberSecurity.NoAcccess">
+            <summary>
+            Used internally to prevent access to a script member.
+            </summary>
+        </member>
+        <member name="F:V8.Net.ScriptMemberSecurity.ReadWrite">
+            <summary>
+            If this flag is set, then the property can be read and/or written to.
+            <para>Note: This is the default behaviour, and doesn't need to be explicitly set.</para>
+            </summary>
+        </member>
+        <member name="F:V8.Net.ScriptMemberSecurity.ReadOnly">
+            <summary>
+            If this flag is set, then the Property can only be read (takes precedence over 'ReadWrite').
+            </summary>
+        </member>
+        <member name="F:V8.Net.ScriptMemberSecurity.Hidden">
+            <summary>
+            If this flag is set, then the property is hidden from enumeration (but not from access).
+            </summary>
+        </member>
+        <member name="F:V8.Net.ScriptMemberSecurity.Permanent">
+            <summary>
+            If this flag is set, then the property cannot be deleted (from within the script).
+            </summary>
+        </member>
+        <member name="F:V8.Net.ScriptMemberSecurity.Locked">
+            <summary>
+            If this flag is set, then the property cannot be deleted OR overwritten (from within the script; this is equal to setting both 'Permanent|ReadOnly' flags).
+            </summary>
+        </member>
+        <member name="T:V8.Net.ScriptMember">
+            <summary>
+            By default, public class members are NOT accessible by script for security reasons (unless the 'ScriptObject' attribute is used).
+            This attribute allows controlling how class members are exposed to the scripting environment.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ScriptMember.#ctor(System.String,V8.Net.ScriptMemberSecurity)">
+            <summary>
+            Allows controlling how this class member is exposed to the scripting environment.
+            </summary>
+            <param name="inScriptName">The type name to expose to the scripting environment for this member (default is null/empty, which means use the member name as is).</param>
+            <param name="security">The script access security for this member.</param>
+        </member>
+        <member name="M:V8.Net.ScriptMember.#ctor(V8.Net.ScriptMemberSecurity)">
+            <summary>
+            Allows controlling how this class member is exposed to the scripting environment.
+            </summary>
+            <param name="security">The script access security for this member.</param>
+        </member>
+        <member name="T:V8.Net.ScriptObject">
+            <summary>
+            This attribute allows specifying the default member access for all public members of a class at once.
+            If just the attribute name is used, the security defaults to 'None' (the V8 default) for each member where possible.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ScriptObject.#ctor(System.String,V8.Net.ScriptMemberSecurity)">
+            <summary>
+            Allows specifying the default member access for all public members of this class at once.
+            </summary>
+            <param name="typeName">The function name to use when exposing a class to the scripting environment (default is null/empty, which means use the class name as is).</param>
+            <param name="security">The global default access for all public class members (default is read/write).</param>
+        </member>
+        <member name="M:V8.Net.ScriptObject.#ctor(V8.Net.ScriptMemberSecurity)">
+            <summary>
+            Allows specifying the default member access for all public members of a class at once.
+            </summary>
+            <param name="security">The global default access for all public class members.</param>
+        </member>
+        <member name="T:V8.Net.V8PropertyAttributes">
+            <summary>
+            Flags that describe JavaScript properties.  They must be 'OR'd together as needed.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8PropertyAttributes.Undefined">
+            <summary>
+            No valid attribute exists (unlike 'None', which *explicitly* defines that no attributes are set).
+            The native PROXY (not V8) will interpret this to mean "let V8 continue on to the default behavior".
+            <para>Warning: This cannot be bitwise "OR"ed with the other enum values.</para>
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8PropertyAttributes.None">
+            <summary>
+            No attribute is set - keeps the default behaviour of all attributes NOT set.
+            <para>Note: When checking object properties for attributes, V8 will return 'None' if a property doesn't exist. 'Undefined' is for V8.Net usage only
+            (used with interceptor callbacks/hooks).</para>
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8PropertyAttributes.ReadOnly">
+            <summary>
+            The property can only be read from.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8PropertyAttributes.DontEnum">
+            <summary>
+            The property is visible, but should not be returned during enumeration.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8PropertyAttributes.DontDelete">
+            <summary>
+            The property cannot be deleted.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8PropertyAttributes.Locked">
+            <summary>
+            This is equal to "ReadOnly | DontDelete", and is a V8.NET specific attribute name.
+            It's here because locking down properties is a common operation when adding some fixed global types and objects.
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8AccessControl">
+            <summary>
+            V8 Access control specification flags.  If some accessors should be accessible across native V8 contexts, then these accessors need an explicit access
+            control parameter set which specifies the kind of cross-context access that should be allowed.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8AccessControl.Undefined">
+            <summary>
+            No valid access value exists (unlike 'Default', which *explicitly* defines to use the default behavior).
+            <para>Note: This value is used internally by V8.NET and is not part of the native V8 system.</para>
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8AccessControl.Default">
+            <summary>
+            Keeps the default behaviour of "no flags set".
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8AccessControl.AllCanRead">
+            <summary>
+            The property can be read from all contexts.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8AccessControl.AllCanWrite">
+            <summary>
+            The property can be written to by all contexts.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8AccessControl.ProhibitsOverwriting">
+            <summary>
+            The accessor cannot be replaced by other contexts.
+            </summary>
+        </member>
+        <member name="T:V8.Net.JSValueType">
+            <summary>
+            The type of JavaScript values marshalled from the native side.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.ExecutionError">
+            <summary>
+            An error has occurred while attempting to execute the compiled script.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.CompilerError">
+            <summary>
+            An error has occurred compiling the script (usually a syntax error).
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.InternalError">
+            <summary>
+            An internal error has occurred (before or after script execution).
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Undefined">
+            <summary>
+            The value is undefined (no value set).  This is NOT the same as 'null'.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Script">
+            <summary>
+            The handle proxy represents pre-compiled JavaScript.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Null">
+            <summary>
+            The value is null (a null object reference).  This is NOT the same as 'undefined' (no value set).
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Bool">
+            <summary>
+            The value is a Boolean, as supported within JavaScript for true/false conditions.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.BoolObject">
+            <summary>
+            The value is a Boolean object (object reference), as supported within JavaScript when executing "new Boolean()".
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Int32">
+            <summary>
+            The value is a 32-bit Integer, as supported within JavaScript for bit operations.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Number">
+            <summary>
+            The value is a JavaScript 64-bit number.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.NumberObject">
+            <summary>
+            The value is a JavaScript 64-bit Number object (object reference), as supported within JavaScript when executing "new Number()".
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.String">
+            <summary>
+            The value is a UTF16 string.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.StringObject">
+            <summary>
+            The value is a JavaScript String object (object reference), as supported within JavaScript when executing "new String()".
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Object">
+            <summary>
+            The value is a non-value (object reference).
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Function">
+            <summary>
+            The value is a reference to a JavaScript function (object reference).
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Date">
+            <summary>
+            The date value is the number of milliseconds since epoch [1970-01-01 00:00:00 UTC+00] (a double value stored in 'Number').
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.Array">
+            <summary>
+            The value proxy represents a JavaScript array of various values.
+            </summary>
+        </member>
+        <member name="F:V8.Net.JSValueType.RegExp">
+            <summary>
+            The value proxy represents a JavaScript regular expression object (object reference).
+            </summary>
+        </member>
+        <member name="T:V8.Net.ProxyObjectType">
+            <summary>
+            Type of native proxy object (for native class instances only).
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedNamedPropertyGetter">
+            <summary>
+            NamedProperty[Getter|Setter] are used as interceptors on object.
+            See ObjectTemplate::SetNamedPropertyHandler.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedNamedPropertySetter">
+            <summary>
+            Returns the value if the setter intercepts the request.
+            Otherwise, returns an empty handle.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedNamedPropertyQuery">
+            <summary>
+            Returns a non-empty value (>=0) if the interceptor intercepts the request.
+            The result is an integer encoding property attributes (like v8::None,
+            v8::DontEnum, etc.)
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedNamedPropertyDeleter">
+            <summary>
+            Returns a value indicating if the deleter intercepts the request.
+            The return value is true (>0) if the property could be deleted and false (0)
+            otherwise.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedNamedPropertyEnumerator">
+            <summary>
+            Returns an array containing the names of the properties the named
+            property getter intercepts.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedIndexedPropertyGetter">
+            <summary>
+            Returns the value of the property if the getter intercepts __stdcall
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedIndexedPropertySetter">
+            <summary>
+            Returns the value if the setter intercepts the request.
+            Otherwise, returns an empty handle.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedIndexedPropertyQuery">
+            <summary>
+            Returns a non-empty value (>=0) if the interceptor intercepts the request.
+            The result is an integer encoding property attributes.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedIndexedPropertyDeleter">
+            <summary>
+            Returns a value indicating if the deleter intercepts the request.
+            The return value is true (>0) if the property could be deleted and false (0)
+            otherwise.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedIndexedPropertyEnumerator">
+            <summary>
+            Returns an array containing the indices of the properties the
+            indexed property getter intercepts.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedAccessorSetter">
+            <summary>
+            Returns the value if the setter intercepts the request.
+            Otherwise, returns an empty handle.
+            </summary>
+        </member>
+        <member name="T:V8.Net.ManagedAccessorGetter">
+            <summary>
+            Returns the value if the setter intercepts the request.
+            Otherwise, returns an empty handle.
+            </summary>
+        </member>
+        <member name="T:V8.Net.V8GarbageCollectionRequestCallback">
+            <summary>
+            Intercepts a request to garbage collect a persistent V8 handle associated with the specified proxy handle.
+            Return true to allow the collection, or false to prevent it.
+            <para>Note: Internally, this is used to remove the strong reference to managed objects, leaving only a week one.</para>
+            </summary>
+        </member>
+    </members>
+</doc>
