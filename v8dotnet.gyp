@@ -33,7 +33,8 @@
          ],
          'conditions':[  
             ['OS=="linux"',
-               {  
+               { 
+                  'defines': ['_LINUX'],
                   'cflags':[  
                      '-Werror -Wall -std=c++11 -w -fpermissive -fPIC -c',
                   ],
@@ -65,6 +66,7 @@
             ],
             ['OS=="mac"',
             {
+               'defines': ['_OSX'],
                'xcode_settings': {
                      'ARCHS': ['i386'],
                      'OTHER_CPLUSPLUSFLAGS' : ['-w  -Wc++11-extensions'],

@@ -530,8 +530,8 @@ void ObjectTemplateProxy::SetAccessor(int32_t managedObjectID, const uint16_t *n
 {
     auto accessors = NewArray(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
     accessors->Set(0, NewInteger(managedObjectID));
-    accessors->Set(1, NewExternal(getter));
-    accessors->Set(2, NewExternal(setter));
+    accessors->Set(1, NewExternal((void *)getter));
+    accessors->Set(2, NewExternal((void *)setter));
     _ObjectTemplate->SetAccessor(NewUString(name), AccessorGetterCallbackProxy, AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
 }
 

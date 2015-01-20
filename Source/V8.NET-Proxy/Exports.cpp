@@ -370,7 +370,7 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
-		proxy->SetAccessor(managedObjectID, name, &getter, &setter, access, attributes);  // TODO: Check how this affects objects created from templates!
+		proxy->SetAccessor(managedObjectID, name, getter, setter, access, attributes);  // TODO: Check how this affects objects created from templates!
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;

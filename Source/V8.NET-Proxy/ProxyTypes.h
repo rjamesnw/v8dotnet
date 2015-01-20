@@ -28,7 +28,9 @@ using namespace std;
 //??#define ALLOC_MANAGED_STRING(size) CoTaskMemAlloc(GMEM_FIXED|GMEM_ZEROINIT, size)
 #define FREE_MARSHALLED_STRING(ptr) { CoTaskMemFree(ptr); ptr = nullptr; }
 #define STDCALL __stdcall
-#else
+#endif
+#if _LINUX || _OSX
+#include <mutex>
 #include <stdlib.h> // pulls in declaration of malloc, free
 #include <string.h> // pulls in declaration for strlen
 #include <include/v8stdint.h>
@@ -54,7 +56,9 @@ using namespace v8;
 
 #if _WIN32 || _WIN64
 #define EXPORT __declspec(dllexport)
-#else
+#endif
+
+#if _LINUX || _OSX
 #define EXPORT
 #endif
 

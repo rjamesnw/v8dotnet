@@ -124,12 +124,12 @@ buildV8DotNetWrapper (){
 	xbuild /p:Configuration=Debug Source/V8.Net.MonoDevelop.sln
 	debugInfo $? "xbuild debug" 
 	
-	if ! cp Source/V8.NET-Console/bin/Debug/* BuildResult/Debug/
-		then  debugInfo 1 "Copy V8 natives: libicui18n.so libicuuc.so libv8.so"
+	if ! cp Tests/V8.NET-Console/bin/Debug/* BuildResult/Debug/
+		then  debugInfo 1 "V8 debug binaries"
 	fi
 
-	if ! cp Source/V8.NET-Console/bin/Release/* BuildResult/Release/
-		then  debugInfo 1 "Copy V8 natives: libicui18n.so libicuuc.so libv8.so"
+	if ! cp Tests/V8.NET-Console/bin/Release/* BuildResult/Release/
+		then  debugInfo 1 "V8 release binaries"
 	fi
 	
 }

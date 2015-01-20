@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface.MonoD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-SharedTypes.MonoDevelop", "V8.Net-SharedTypes\V8.Net-SharedTypes.MonoDevelop.csproj", "{2155327D-386A-4F80-81FB-918A4442C834}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-Console.MonoDevelop", "V8.NET-Console\V8.Net-Console.MonoDevelop.csproj", "{A8FD3CD3-E579-4AE3-8041-8A4B55E9536C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-Console.MonoDevelop", "..\Tests\V8.NET-Console\V8.Net-Console.MonoDevelop.csproj", "{A8FD3CD3-E579-4AE3-8041-8A4B55E9536C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +33,6 @@ Global
 		{C898E990-54EB-40AC-9408-E416A838EC77}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = V8.NET-Console\V8.Net-Console.MonoDevelop.csproj
+		StartupItem = V8.Net\V8.Net.MonoDevelop.csproj
 	EndGlobalSection
 EndGlobal
