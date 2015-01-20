@@ -23,7 +23,7 @@ namespace V8.Net
         /// <summary>
         /// Holds an index of all handle proxies created for this engine instance.
         /// </summary>
-        internal HandleProxy*[] _HandleProxies = new HandleProxy*[1000];
+        internal IntPtr[] _HandleProxies = new IntPtr[1000];
 
         /// <summary>
         /// Total number of handle proxy references in the V8.NET system (for proxy use).
@@ -53,7 +53,7 @@ namespace V8.Net
                 {
                     var c = 0;
                     foreach (var item in _HandleProxies)
-                        if (item != null && item->IsDisposeReady) c++;
+                        if (((HandleProxy*)item) != null && ((HandleProxy*)item)->IsDisposeReady) c++;
                     return c;
                 }
             }
@@ -71,7 +71,7 @@ namespace V8.Net
                 {
                     var c = 0;
                     foreach (var item in _HandleProxies)
-                        if (item != null && item->IsDisposed) c++;
+                        if (((HandleProxy*)item) != null && ((HandleProxy*)item)->IsDisposed) c++;
                     return c;
                 }
             }

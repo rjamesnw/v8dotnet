@@ -156,13 +156,27 @@ namespace V8.Net
             return null;
         }
 
+        public static bool IsLinux
+        {
+            get
+            {
+                int p = (int) Environment.OSVersion.Platform;
+                return (p == 4) || (p == 6) || (p == 128);
+            }
+        }
+
         static V8Engine()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += Resolver;
+            if (!IsLinux) {
+              AppDomain.CurrentDomain.AssemblyResolve += Resolver;
+            }
         }
 
         public V8Engine()
         {
+
+           V8NetProxy.InitV8Engine ();         
+
             this.RunMarshallingTests();
 
             lock (_GlobalLock) // (required because engine proxy instance IDs are tracked on the native side in a static '_DisposedEngines' vector [for quick disposal of handles])

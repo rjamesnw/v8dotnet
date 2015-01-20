@@ -14,6 +14,16 @@ namespace V8.Net
     public unsafe static class V8NetProxy
     {
         // --------------------------------------------------------------------------------------------------------------------
+
+#if x86
+[DllImport("V8_Net_Proxy_x86")]
+#elif x64
+[DllImport("V8_Net_Proxy_x64")]
+#else
+[DllImport("V8_Net_Proxy")]
+#endif
+public static extern void InitV8Engine();
+
 #if x86
         [DllImport("V8_Net_Proxy_x86")]
 #elif x64

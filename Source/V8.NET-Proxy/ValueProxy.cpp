@@ -18,7 +18,7 @@ void HandleValue::Dispose()
 
     if (V8String != nullptr)
     {
-        FREE_MANAGED_MEM(V8String)
+        FREE_MANAGED_MEM(V8String);
             V8String = nullptr;
     }
 

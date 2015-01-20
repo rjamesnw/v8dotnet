@@ -62,7 +62,7 @@ void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<V
         engine = ((ObjectTemplateProxy*)proxy)->_EngineProxy;
         callback = ((ObjectTemplateProxy*)proxy)->_ManagedCallback;
     }
-    else throw exception("'args.Data()' is not recognized.");
+    else throw runtime_error("'args.Data()' is not recognized.");
 
     if (callback != nullptr) // (note: '_ManagedCallback' may not be set on the proxy, and thus 'callback' may be null)
     {

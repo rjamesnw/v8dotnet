@@ -113,13 +113,13 @@ namespace V8.Net
 
                     if (handleID >= engine._HandleProxies.Length)
                     {
-                        HandleProxy*[] handleProxies = new HandleProxy*[(100 + handleID) * 2];
+                        IntPtr[] handleProxies = new IntPtr[(100 + handleID) * 2];
                         for (var i = 0; i < engine._HandleProxies.Length; i++)
                             handleProxies[i] = engine._HandleProxies[i];
                         engine._HandleProxies = handleProxies;
                     }
 
-                    engine._HandleProxies[handleID] = _HandleProxy;
+                    engine._HandleProxies[handleID] = (IntPtr)_HandleProxy;
 
                     if (checkIfFirst)
                         _First = (_HandleProxy->ManagedReferenceCount == 0);
