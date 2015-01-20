@@ -1,17 +1,7 @@
 // V8 proxy exports header for the Dream Space internet development framework.
 // This source is released under LGPL.
-
-
-#if (_MSC_PLATFORM_TOOLSET >= 110)
-#include <mutex>
-#endif
 #include "Platform.h"
 
-
-
-#if (_MSC_PLATFORM_TOOLSET < 110)
-#define nullptr NULL
-#endif
 
 #if _WIN32 || _WIN64
 #include <exception>
@@ -38,10 +28,10 @@
 #endif
 
 #if _LINUX
-#include <vector>
+#include <iostream>
 #include <mutex>
-#include <string> 
-#include <functional>
+#include <vector>
+#include <cstring>
 #endif
 
 #if _LINUX || _OSX
@@ -61,8 +51,13 @@ typedef uint8_t byte;
 #define V8_USE_UNSAFE_HANDLES 1 // (see https://groups.google.com/forum/#!topic/v8-users/oBE_DTpRC08)
 
 
-using namespace std;
-using namespace v8;
+#if (_MSC_PLATFORM_TOOLSET >= 110)
+#include <mutex>
+#endif
+
+#if (_MSC_PLATFORM_TOOLSET < 110)
+#define nullptr NULL
+#endif
 
 #if _WIN32 || _WIN64
 #define EXPORT __declspec(dllexport)
@@ -72,7 +67,8 @@ using namespace v8;
 #define EXPORT
 #endif
 
-
+using namespace std;
+using namespace v8;
 
 // ========================================================================================================================
 
