@@ -69,7 +69,7 @@
                'defines': ['_OSX'],
                'xcode_settings': {
                      'ARCHS': ['i386'],
-                     'OTHER_CPLUSPLUSFLAGS' : ['-w  -Wc++11-extensions'],
+                     'OTHER_CPLUSPLUSFLAGS' : ['-w -std=c++11  -Wc++11-extensions -fPIC -c '],
                      'OTHER_LDFLAGS': ['-Wall -w'],
                },
 

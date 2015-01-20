@@ -1,20 +1,21 @@
 // V8 proxy exports header for the Dream Space internet development framework.
 // This source is released under LGPL.
 
-#include <exception>
-#include <vector>
+
 #if (_MSC_PLATFORM_TOOLSET >= 110)
 #include <mutex>
 #endif
 #include "Platform.h"
 
-using namespace std;
+
 
 #if (_MSC_PLATFORM_TOOLSET < 110)
 #define nullptr NULL
 #endif
 
 #if _WIN32 || _WIN64
+#include <exception>
+#include <vector>
 #include <windows.h>
 #include <include\v8stdint.h>
 #include <include\v8.h>
@@ -29,16 +30,25 @@ using namespace std;
 #define FREE_MARSHALLED_STRING(ptr) { CoTaskMemFree(ptr); ptr = nullptr; }
 #define STDCALL __stdcall
 #endif
-#if _LINUX || _OSX
+
+#if _OSX
+#include <iostream>
 #include <mutex>
-#include <stdlib.h> // pulls in declaration of malloc, free
-#include <string.h> // pulls in declaration for strlen
+#include <vector>
+#endif
+
+#if _LINUX
+#include <vector>
+#include <mutex>
+#include <string> 
+#include <functional>
+#endif
+
+#if _LINUX || _OSX
 #include <include/v8stdint.h>
 #include <include/v8.h>
 #include <include/v8-debug.h>
 #include <include/libplatform/libplatform.h>
-#include <string.h>
-#include <functional>
 #define ALLOC_MANAGED_MEM(size) malloc(size)
 #define REALLOC_MANAGED_MEM(ptr, size) realloc(ptr, size)
 #define FREE_MANAGED_MEM(ptr) free(ptr)
@@ -51,7 +61,7 @@ typedef uint8_t byte;
 #define V8_USE_UNSAFE_HANDLES 1 // (see https://groups.google.com/forum/#!topic/v8-users/oBE_DTpRC08)
 
 
-
+using namespace std;
 using namespace v8;
 
 #if _WIN32 || _WIN64
@@ -67,13 +77,13 @@ using namespace v8;
 // ========================================================================================================================
 
 template <class T> struct CopyablePersistent {
-    v8::Persistent<T, CopyablePersistentTraits<T>> Value;
+    v8::Persistent<T, CopyablePersistentTraits<T> > Value;
     CopyablePersistent() { }
     CopyablePersistent(CopyablePersistent &p) { Value = p; }
-    CopyablePersistent(Handle<T> &h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
-    CopyablePersistent(Local<T> h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); }
+    CopyablePersistent(Handle<T> &h) { Value = v8::Persistent<T, CopyablePersistentTraits<T> >(Isolate::GetCurrent(), h); }
+    CopyablePersistent(Local<T> h) { Value = v8::Persistent<T, CopyablePersistentTraits<T> >(Isolate::GetCurrent(), h); }
     ~CopyablePersistent() { if (!Value.IsEmpty()) Value.Reset(); }
-    CopyablePersistent& operator= (const Handle<T>& h) { Value = v8::Persistent<T, CopyablePersistentTraits<T>>(Isolate::GetCurrent(), h); return *this; }
+    CopyablePersistent& operator= (const Handle<T>& h) { Value = v8::Persistent<T, CopyablePersistentTraits<T> >(Isolate::GetCurrent(), h); return *this; }
     operator Local<T>() const { return Handle(); }
     T* operator ->() const { return *Handle(); }
     /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */

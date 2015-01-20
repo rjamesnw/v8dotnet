@@ -220,7 +220,7 @@ do
 		if [ ! -z "$TRAVIS_OS_NAME" ]; 
 			then
 				if [[ $TRAVIS_OS_NAME == 'linux' ]]; then exportLinux ; fi
-				if [[ $TRAVIS_OS_NAME == 'osx' ]]; then exportmac ; fi
+				if [[ $TRAVIS_OS_NAME == 'osx' ]]; then exportMac ; fi
 			else
 				exportLinux
 		fi
@@ -249,7 +249,7 @@ do
 		shift
 		;;
 		-em|--exportmac)
-		exportmac
+		exportMac
 		shift
 		;;
 		-el|--exportlinux)
