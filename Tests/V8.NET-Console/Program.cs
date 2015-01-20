@@ -30,7 +30,7 @@ namespace V8.Net
 
         static void Main(string[] args)
         {
-            AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
+            //AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             try
@@ -131,10 +131,11 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Dumping global properties ...");
                     _JSServer.VerboseConsoleExecute(@"dump(this)");
 
+					if (!V8Engine.IsLinux) {
                     Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
                     _JSServer.VerboseConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
                     _JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
-
+					}
                     Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
                     _JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
                     _JSServer.VerboseConsoleExecute(@"System.String.Empty;");
@@ -147,16 +148,20 @@ namespace V8.Net
                 }
 
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
-
+                Queue<string> commands = new Queue<string>(new string[]{@"\test", @"\gc",@"\gctest",@"\mtest",@"\speedtest",@"\newenginetest", @"\exit"});
                 string input, lcInput;
-
+                input = @"\cls";
                 while (true)
                 {
                     try
                     {
-                        Console.Write(Environment.NewLine + "> ");
+                        if(args.Length == 0){
+                            Console.Write(Environment.NewLine + "> ");
+                            input = Console.ReadLine();
+                        }else if(args[0] == @"all"){
+                            input = commands.Dequeue();
+                        }
 
-                        input = Console.ReadLine();
                         lcInput = input.Trim().ToLower();
 
                         if (lcInput == @"\help" || lcInput == @"\")
@@ -231,7 +236,7 @@ namespace V8.Net
 
                                     Console.WriteLine("\r\n===============================================================================");
                                     Console.WriteLine("Ready to run the tester, press any key to proceed ...\r\n");
-                                    Console.ReadKey();
+//                                    Console.ReadKey();
 
                                     tester.Execute();
 
@@ -243,7 +248,7 @@ namespace V8.Net
                                 Console.WriteLine("Test completed successfully! Any errors would have interrupted execution.");
                                 Console.WriteLine("Note: The 'dump(obj)' function is available to use for manual inspection.");
                                 Console.WriteLine("Press any key to dump the global properties ...");
-                                Console.ReadKey();
+//                                Console.ReadKey();
                                 _JSServer.VerboseConsoleExecute("dump(this);");
                             }
                             catch
@@ -397,7 +402,9 @@ namespace V8.Net
                             Console.WriteLine("User requested exit, disposing the engine instance ...");
                             _JSServer.Dispose();
                             Console.WriteLine("Engine disposed successfully. Press any key to continue ...");
-                            Console.ReadKey();
+                            if(args.Length == 0){
+                                Console.ReadKey();
+                            }
                             Console.WriteLine("Goodbye. :)");
                             break;
                         }
@@ -476,12 +483,12 @@ shared.InstanceDoNothing();
                             catch (OutOfMemoryException ex)
                             {
                                 Console.WriteLine(ex);
-                                Console.ReadKey();
+//                                Console.ReadKey();
                             }
                             catch (Exception ex)
                             {
                                 Console.WriteLine(ex);
-                                Console.ReadKey();
+//                                Console.ReadKey();
                             }
                             //?catch
                             //{
@@ -509,7 +516,7 @@ shared.InstanceDoNothing();
                                 Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
                                 Console.WriteLine();
                                 Console.WriteLine("Error!  Press any key to continue ...");
-                                Console.ReadKey();
+//                                Console.ReadKey();
                             }
                         }
                     }
@@ -520,7 +527,7 @@ shared.InstanceDoNothing();
                         Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
                         Console.WriteLine();
                         Console.WriteLine("Error!  Press any key to continue ...");
-                        Console.ReadKey();
+//                        Console.ReadKey();
                     }
                 }
             }
@@ -531,7 +538,7 @@ shared.InstanceDoNothing();
                 Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
                 Console.WriteLine();
                 Console.WriteLine("Error!  Press any key to exit ...");
-                Console.ReadKey();
+//                Console.ReadKey();
             }
 
             if (_TitleUpdateTimer != null)
@@ -734,7 +741,7 @@ public class V8DotNetTester : V8ManagedObject
             Console.WriteLine("Expected exception came through - pass.\r\n");
 
         Console.WriteLine("\r\nPress any key to begin testing properties on 'this.tester' ...\r\n");
-        Console.ReadKey();
+//        Console.ReadKey();
 
         // ... test the non-function/object propertied ...
 
@@ -775,7 +782,7 @@ public class V8DotNetTester : V8ManagedObject
         Engine.ConsoleExecute("assert('Testing obj1[4].toUTCString()', obj1[4].toUTCString(), 'Wed, 02 Jan 2013 03:04:05 GMT')", this.GetType().Name, true);
 
         Console.WriteLine("\r\nPress any key to test dynamic handle property access ...\r\n");
-        Console.ReadKey();
+//        Console.ReadKey();
 
         // ... get a handle to an in-script only object and test the dynamic handle access ...
 
@@ -790,7 +797,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\nPress any key to test handle reuse ...");
         Console.WriteLine("(1000 native object handles will be created, but one V8NativeObject wrapper will be used)");
-        Console.ReadKey();
+//        Console.ReadKey();
         Console.Write("Running ...");
         var obj = new V8NativeObject();
         for (var i = 0; i < 1000; i++)
