@@ -1,3 +1,6 @@
 [submodule "Source/V8.NET-Proxy/V8"]
 	path = Source/V8.NET-Proxy/V8
 	url = http://github.com/v8/v8-git-mirror
+[submodule "gyp"]
+	path = gyp
+	url = https://chromium.googlesource.com/external/gyp.git
