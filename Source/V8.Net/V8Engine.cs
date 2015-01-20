@@ -137,7 +137,7 @@ namespace V8.Net
 
                 try
                 {
-                    return Assembly.LoadFile(fileName);
+                    return Assembly.LoadFrom(fileName);
                 }
                 catch (Exception ex)
                 {
