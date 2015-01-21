@@ -1,6 +1,13 @@
 V8.NET
 ======
 
+
+1. [Compilation and Installation](https://github.com/chrisber/v8dotnet/tree/development-mono#v8net-v8dotnet----mono-runtime-3100)
+2. [Using V8.Net with Mono](https://github.com/chrisber/v8dotnet/tree/development-mono#use-v8net-from-binaries)
+3. [Configuration Options](https://github.com/chrisber/v8dotnet/tree/development-mono#building-with-the-v8net-buildscript)
+
+
+
 **Summary:** A fairly non-abstracted wrapper for Google's V8 JavaScript engine.
 
 *Note: The project is hosted at [CodePlex](https://v8dotnet.codeplex.com/) officially, so the files here are only updated after posting there first.*
@@ -86,9 +93,6 @@ I'll also be looking into the WebRTC SDK in the near future as well to help supp
 V8.Net (v8dotnet) -- Mono runtime 3.10.0
 ================
 
-1. [Compilation and Installation](#Compilation and Installation)
-2. [Using V8.Net with Mono](#Using V8.Net with Mono)
-3. [Configuration Options]()
 
 ##Build Status
 Linux |  Mac OS X
@@ -143,7 +147,7 @@ xcode-select --install
 Install Xcode IDE
 ```
 
-V8dotnet is based on the Mono Runtime 3.10.0. To install the Runtime 3.10.0 together with [Monodevelop](http://www.monodevelop.com/download/) on Ubuntu
+V8dotnet is based on the Mono Runtime <= 3.10.0. To install the Runtime 3.10.0 together with [Monodevelop](http://www.monodevelop.com/download/) on Ubuntu
 
 
 ##Building with the V8.Net Buildscript
