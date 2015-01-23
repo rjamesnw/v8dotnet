@@ -9,7 +9,7 @@ v8_build_dir = base_dir + os.path.join ("/Source/V8.NET-Proxy/V8/") #v8 base dir
 VSTools= "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\Tools\\"
 VSVer=2013
 choice=["ia32.debug", "ia32.release", "x64.release","x64.debug"]
-msbuild_arc = {"ia32":"x86", "x64":"x64"}
+msbuild_arc = {"ia32":"Win32", "x64":"x64"}
 class Debug:
     """Info ouput"""
     HEADER = '\033[95m'
@@ -63,14 +63,17 @@ def exportVariables( ):
             VSTools=os.environ["VS120COMNTOOLS"] 
             VSVer="2013"
             os.environ["GYP_MSVS_VERSION"]=VSVer
+            print("Visual Studio Version: " + VSVer)
         elif not os.environ["VS110COMNTOOLS"] == "": 
-         VSTools=os.environ["VS110COMNTOOLS"] 
-         VSVer="2012"
-         os.environ["GYP_MSVS_VERSION"]= VSVer
+            VSTools=os.environ["VS110COMNTOOLS"] 
+            VSVer="2012"
+            os.environ["GYP_MSVS_VERSION"]= VSVer
+            print("Visual Studio Version: " + VSVer)
         elif not  os.environ["VS100COMNTOOLS"] == "": 
-         VSTools=os.environ["VS100COMNTOOLS"] 
-         VSVer="2010"
-         os.environ["GYP_MSVS_VERSION"] = VSVer
+            VSTools=os.environ["VS100COMNTOOLS"] 
+            VSVer="2010"
+            os.environ["GYP_MSVS_VERSION"] = VSVer
+            print("Visual Studio Version: " + VSVer)
         else:
             raise Exception( "Failed to detect correct version of Visual Studio.\
               Please open the developer prompt and run the command file there.")
@@ -126,7 +129,7 @@ def buildV8 ():
     pr = os.system("git submodule update --init --recursive")
     makeBuildDeps()
 
-    os.chdir(v8_build_dir)
+    
     
     debug.info("Create project V8 \n\
     Version 3.29.40 (based on bleeding_edge revision r23628)\n\
@@ -141,14 +144,15 @@ def buildV8 ():
         else:
             command  =os.path.join(v8_build_dir, "third_party/python_26/python build/gyp_v8")  + " -Dtarget_arch=%s \
              -Dcomponent=shared_library  -Dv8_use_snapshot=true -Dv8_enable_i18n_support=false  " % (v8_target)
-
+        os.chdir(v8_build_dir)
         execute(command)
         #build from solution
         execute(VSTools +"VsDevCmd.bat")
-        command = "msbuild /p:Configuration=%s /p:Platform=%s /p:TreatWarningsAsErrors=false %s" % (v8_mode.title(), msbuild_arc[v8_target], os.path.join (v8_build_dir , "tools/gyp/v8.sln"))
+        command = "msbuild /v:detailed /p:Configuration=%s /p:Platform=%s /p:TreatWarningsAsErrors=false %s" % (v8_mode.title(), msbuild_arc[v8_target], os.path.join (v8_build_dir , "tools/gyp/v8.sln"))
         execute(command)
+        os.chdir(base_dir)
     else:
-
+        os.chdir(v8_build_dir)
         command = "make builddeps -j %s " % (v8_jobs)
         debug.command(command)
         pr = subprocess.Popen( command,  shell = True,  stderr = subprocess.PIPE )
@@ -161,7 +165,7 @@ def buildV8 ():
         error = pr.communicate()
         if pr.poll()  != 0: 
             raise Exception( "Faild Downloading %s ...  " % (error[1].decode('utf-8')))
-    os.chdir(base_dir)
+        os.chdir(base_dir)
 
 
 def buildV8Proxy ():
