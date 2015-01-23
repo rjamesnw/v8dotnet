@@ -1,8 +1,15 @@
 #!/usr/bin/python3
 import argparse, sys, os,platform, shutil, subprocess
  
-
-
+v8_jobs=1
+v8_target="ia32"
+v8_mode="release"
+base_dir = os.getcwd() # get current directory
+v8_build_dir = base_dir + os.path.join ("/Source/V8.NET-Proxy/V8/") #v8 base dir
+VSTools= "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\Tools\\"
+VSVer=2013
+choice=["ia32.debug", "ia32.release", "x64.release","x64.debug"]
+msbuild_arc = {"ia32":"x86", "x64":"x64"}
 class Debug:
     """Info ouput"""
     HEADER = '\033[95m'
@@ -17,13 +24,8 @@ class Debug:
         print (Debug.HEADER + s + Debug.ENDC)
     def command(_self,s):
         print (Debug.OKBLUE + s + Debug.ENDC)    
-
 debug = Debug()
-choice=["ia32.debug", "ia32.release", "x64.release","x64.debug"]
-base_dir = os.getcwd() # get current directory
-v8_jobs=1
-v8_target="ia32"
-v8_mode="release"
+
 
 def exportVariables( ):
     if platform.system() == 'Linux':
@@ -56,17 +58,39 @@ def exportVariables( ):
         os.environ['CC_host'] = clang + "  -v"
         os.environ['CPP_host'] = clang + "  -E -v"
         os.environ['LINK_host'] = clangpp + "   -v"
-    print('GYP_DEFINES=' + os.environ['GYP_DEFINES']);
-    print('CXX=' + os.environ['CXX']);
-    print('CC=' + os.environ['CC']);
-    print('CPP=' + os.environ['CPP']);
-    print('LINK=' + os.environ['LINK']);
-    print('CXX_host=' + os.environ['CXX_host']);
-    print('CC_host=' + os.environ['CC_host']);
-    print('CPP_host=' + os.environ['CPP_host']);
-    print('LINK_host=' + os.environ['LINK_host']);
+    elif  platform.system() == 'Windows':
+        if not os.environ["VS120COMNTOOLS"] == "": 
+            VSTools=os.environ["VS120COMNTOOLS"] 
+            VSVer="2013"
+            os.environ["GYP_MSVS_VERSION"]=VSVer
+        elif not os.environ["VS110COMNTOOLS"] == "": 
+         VSTools=os.environ["VS110COMNTOOLS"] 
+         VSVer="2012"
+         os.environ["GYP_MSVS_VERSION"]= VSVer
+        elif not  os.environ["VS100COMNTOOLS"] == "": 
+         VSTools=os.environ["VS100COMNTOOLS"] 
+         VSVer="2010"
+         os.environ["GYP_MSVS_VERSION"] = VSVer
+        else:
+            raise Exception( "Failed to detect correct version of Visual Studio.\
+              Please open the developer prompt and run the command file there.")
+    if not platform.system() == 'Windows':    
+        print('GYP_DEFINES=' + os.environ['GYP_DEFINES']);
+        print('CXX=' + os.environ['CXX']);
+        print('CC=' + os.environ['CC']);
+        print('CPP=' + os.environ['CPP']);
+        print('LINK=' + os.environ['LINK']);
+        print('CXX_host=' + os.environ['CXX_host']);
+        print('CC_host=' + os.environ['CC_host']);
+        print('CPP_host=' + os.environ['CPP_host']);
+        print('LINK_host=' + os.environ['LINK_host']);
 
-
+def execute(command ):
+    debug.info("Execute: " + command)
+    pr = subprocess.Popen( command,  shell = True,  stderr = subprocess.PIPE )
+    error = pr.communicate()
+    if pr.poll()  != 0: 
+        raise Exception( "Faild to execute command:\n %s " % (error[1].decode('utf-8')))
 
 
 def clone (library, command):
@@ -81,47 +105,50 @@ def clone (library, command):
 
 def makeBuildDeps ():
     debug.info("Downloading V8 build dependencies")
-    os.chdir('Source/V8.NET-Proxy/V8/')
-    os.chdir(base_dir)
 
-    libraries = {  'GYP': 'git clone https://chromium.googlesource.com/external/gyp  build/gyp', 
-                'Cygwin': 'git clone https://chromium.googlesource.com/chromium/deps/cygwin third_party/cygwin',
-                'python_26' : 'git clone https://chromium.googlesource.com/chromium/deps/python_26 third_party/python_26',
-                'ICU' : 'git clone https://chromium.googlesource.com/chromium/deps/icu52 third_party/icu',
-                'GTest' : 'git clone https://chromium.googlesource.com/chromium/testing/gtest  testing/gtest',
-                'GMock' : 'git clone https://chromium.googlesource.com/external/gmock  testing/gmock',
+    libraries = {  'GYP': 'git clone https://chromium.googlesource.com/external/gyp ' + os.path.join(v8_build_dir,  'build/gyp') , 
+                'Cygwin': 'git clone https://chromium.googlesource.com/chromium/deps/cygwin ' + os.path.join(v8_build_dir,  'third_party/cygwin'),
+                'python_26' : 'git clone https://chromium.googlesource.com/chromium/deps/python_26 ' + os.path.join(v8_build_dir,  'third_party/python_26'),
+                'ICU' : 'git clone https://chromium.googlesource.com/chromium/deps/icu52 ' + os.path.join(v8_build_dir,  'third_party/icu'),
+                'GTest' : 'git clone https://chromium.googlesource.com/chromium/testing/gtest  ' + os.path.join(v8_build_dir,  'testing/gtest'),
+                'GMock' : 'git clone https://chromium.googlesource.com/external/gmock  ' + os.path.join(v8_build_dir,  'testing/gmock'),
             }
     for library, command in libraries.items():
         clone (library, command)
         
-    os.chdir(base_dir)
+
 
 
 def buildV8 ():
     debug.info("Build V8 Javascript Engine")
-
+    
     debug.info("Init V8 Submodule")
     pr = os.system("git submodule update --init --recursive")
-    debug.info("Building V8 \n\
+    makeBuildDeps()
+
+    os.chdir(v8_build_dir)
+    
+    debug.info("Create project V8 \n\
     Version 3.29.40 (based on bleeding_edge revision r23628)\n\
     commit 21d700eedcdd6570eff22ece724b63a5eefe78cb\n")
-    os.chdir('Source/V8.NET-Proxy/V8/')
+    
  
     if platform.system() == 'Windows':
-        makeBuildDeps()
+        #create the solution
         if v8_mode == 'debug':
-            command  = "third_party/python_26/python build/gyp_v8 -debug -Dtarget_arch=%s \
+            command  = os.path.join(v8_build_dir, "third_party/python_26/python build/gyp_v8")  + " -debug -Dtarget_arch=%s \
              -Dcomponent=shared_library  -Dv8_use_snapshot=true -Dv8_enable_i18n_support=false " % (v8_target ) 
         else:
-            command  = "third_party/python_26/python build/gyp_v8 -Dtarget_arch=%s \
+            command  =os.path.join(v8_build_dir, "third_party/python_26/python build/gyp_v8")  + " -Dtarget_arch=%s \
              -Dcomponent=shared_library  -Dv8_use_snapshot=true -Dv8_enable_i18n_support=false  " % (v8_target)
-       
-        debug.command(command)
-        pr = subprocess.Popen( command,  shell = True,  stderr = subprocess.PIPE )
-        error = pr.communicate()
-        if pr.poll()  != 0: 
-            raise Exception( "Faild  %s ...  " % (error[1].decode('utf-8')))
+
+        execute(command)
+        #build from solution
+        execute(VSTools +"VsDevCmd.bat")
+        command = "msbuild /p:Configuration=%s /p:Platform=%s /p:TreatWarningsAsErrors=false %s" % (v8_mode.title(), msbuild_arc[v8_target], os.path.join (v8_build_dir , "tools/gyp/v8.sln"))
+        execute(command)
     else:
+
         command = "make builddeps -j %s " % (v8_jobs)
         debug.command(command)
         pr = subprocess.Popen( command,  shell = True,  stderr = subprocess.PIPE )
@@ -146,13 +173,20 @@ def buildV8Proxy ():
         os.makedirs(destDir)
      
     makeBuildDeps()
-
-    if v8_mode == 'debug':
-        command =    "./Source/V8.NET-Proxy/V8/build/gyp/gyp -debug -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
-          -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
+    if platform.system() == 'Windows':
+        if v8_mode == 'debug':
+            command =    "./Source/V8.NET-Proxy/V8/build/gyp/gyp -debug -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
+            -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
+        else:
+            command ="/Source/V8.NET-Proxy/V8/build/gyp/gyp  -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
+            -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
     else:
-        command ="./Source/V8.NET-Proxy/V8/build/gyp/gyp  -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
-          -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
+        if v8_mode == 'debug':
+            command =    "./Source/V8.NET-Proxy/V8/build/gyp/gyp -debug -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
+              -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
+        else:
+            command ="/Source/V8.NET-Proxy/V8/build/gyp/gyp  -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
+              -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
     
     debug.command(command)
     pr = subprocess.Popen( command,  shell = True,  stderr = subprocess.PIPE )
