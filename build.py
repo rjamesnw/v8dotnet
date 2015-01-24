@@ -1,15 +1,19 @@
 #!/usr/bin/python3
+from __future__ import print_function
 import argparse, sys, os,platform, shutil, subprocess
+import itertools
  
 v8_jobs=1
 v8_target="ia32"
 v8_mode="release"
 base_dir = os.getcwd() # get current directory
 v8_build_dir = base_dir + os.path.join ("/Source/V8.NET-Proxy/V8/") #v8 base dir
-VSTools= "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\Tools\\"
+VSTools= "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\Tools\\VsDevCmd.bat"
 VSVer=2013
 choice=["ia32.debug", "ia32.release", "x64.release","x64.debug"]
 msbuild_arc = {"ia32":"Win32", "x64":"x64"}
+
+
 class Debug:
     """Info ouput"""
     HEADER = '\033[95m'
@@ -25,6 +29,59 @@ class Debug:
     def command(_self,s):
         print (Debug.OKBLUE + s + Debug.ENDC)    
 debug = Debug()
+
+
+def validate_pair(ob):
+    try:
+        if not (len(ob) == 2):
+            print("Unexpected result:", ob, file=sys.stderr)
+            raise ValueError
+    except:
+        return False
+    return True
+
+def consume(iter):
+    try:
+        while True: next(iter)
+    except StopIteration:
+        pass
+
+def get_environment_from_batch_command(env_cmd, initial=None):
+    """
+    Take a command (either a single command or list of arguments)
+    and return the environment created after running that command.
+    Note that if the command must be a batch file or .cmd file, or the
+    changes to the environment will not be captured.
+
+    If initial is supplied, it is used as the initial environment passed
+    to the child process.
+    """
+    if not isinstance(env_cmd, (list, tuple)):
+        env_cmd = [env_cmd]
+    # construct the command that will alter the environment
+    env_cmd = subprocess.list2cmdline(env_cmd)
+    # create a tag so we can tell in the output when the proc is done
+    tag = 'Done running command'
+    # construct a cmd.exe command to do accomplish this
+    cmd = 'cmd.exe /s /c "{env_cmd} && echo "{tag}" && set"'.format(**vars())
+    # launch the process
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=initial)
+    # parse the output sent to stdout
+    lines = proc.stdout
+    # consume whatever output occurs until the tag is reached
+    consume(itertools.takewhile(lambda l: tag not in l, lines))
+    # define a way to handle each KEY=VALUE line
+    handle_line = lambda l: l.rstrip().split('=',1)
+    # parse key/values into pairs
+    pairs = map(handle_line, lines)
+    # make sure the pairs are valid
+    valid_pairs = filter(validate_pair, pairs)
+    # construct a dictionary of the pairs
+    result = dict(valid_pairs)
+    # let the process finish
+    proc.communicate()
+    return result
+
 
 
 def exportVariables( ):
@@ -95,6 +152,13 @@ def execute(command ):
     if pr.poll()  != 0: 
         raise Exception( "Faild to execute command:\n %s " % (error[1].decode('utf-8')))
 
+def executeMsbuild(command ):
+    env = get_environment_from_batch_command(VSTools)
+    debug.info("Execute: " + command)
+    pr = subprocess.Popen( command, env=env,  shell = True,  stderr = subprocess.PIPE )
+    error = pr.communicate()
+    if pr.poll()  != 0: 
+        raise Exception( "Faild to execute command:\n %s " % (error[1].decode('utf-8')))
 
 def clone (library, command):
     debug.info("Downloading  %s ..." % (library))
@@ -147,9 +211,10 @@ def buildV8 ():
         os.chdir(v8_build_dir)
         execute(command)
         #build from solution
-        execute(VSTools +"VsDevCmd.bat")
+        
+
         command = "msbuild /v:detailed /p:Configuration=%s /p:Platform=%s /p:TreatWarningsAsErrors=false %s" % (v8_mode.title(), msbuild_arc[v8_target], os.path.join (v8_build_dir , "tools/gyp/v8.sln"))
-        execute(command)
+        executeMsbuild(command)
         os.chdir(base_dir)
     else:
         os.chdir(v8_build_dir)
