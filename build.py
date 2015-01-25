@@ -212,7 +212,6 @@ def buildV8 ():
         execute(command)
         #build from solution
         
-
         command = "msbuild /v:detailed /p:Configuration=%s /p:Platform=%s /p:TreatWarningsAsErrors=false %s" % (v8_mode.title(), msbuild_arc[v8_target], os.path.join (v8_build_dir , "tools/gyp/v8.sln"))
         executeMsbuild(command)
         os.chdir(base_dir)
@@ -234,41 +233,56 @@ def buildV8 ():
 
 
 def buildV8Proxy ():
+    makeBuildDeps()
+
+    if platform.system() == 'Windows':
+        buildV8ProxyWindows()
+    else:
+        buildV8ProxyUnix ()
+
+
+
+
+def buildV8ProxyWindows():
     srcDir = "Build/%s.%s/makefiles/out/Default/lib.target/"% (v8_target, v8_mode)
     destDir = "BuildResult/" + v8_mode
-
     debug.info('Build V8.Net native Proxy %s.%s' % (v8_target, v8_mode))
     if not os.path.exists(destDir):
         os.makedirs(destDir)
-     
-    makeBuildDeps()
-    if platform.system() == 'Windows':
-        if v8_mode == 'debug':
-            command =    "./Source/V8.NET-Proxy/V8/build/gyp/gyp -debug -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
-            -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
-        else:
-            command ="/Source/V8.NET-Proxy/V8/build/gyp/gyp  -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
-            -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
-    else:
-        if v8_mode == 'debug':
-            command =    "./Source/V8.NET-Proxy/V8/build/gyp/gyp -debug -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
-              -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
-        else:
-            command ="/Source/V8.NET-Proxy/V8/build/gyp/gyp  -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
-              -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
-    
-    debug.command(command)
-    pr = subprocess.Popen( command,  shell = True,  stderr = subprocess.PIPE )
-    error = pr.communicate()
-    if pr.poll()  != 0: 
-        raise Exception( "Create Project Faild  %s ...  " % (error[1].decode('utf-8')))
 
-    command = "V=1 make -C ./Build/%s.%s/makefiles" % (v8_target, v8_mode)
-    debug.command(command)
-    pr = subprocess.Popen( command,  shell = True,  stderr = subprocess.PIPE )
-    error = pr.communicate()
-    if pr.poll()  != 0: 
-        raise Exception( "Building Faild  %s ...  " % (error[1].decode('utf-8')))
+    python = os.path.join(v8_build_dir, "third_party/python_26/python ")
+    gyp = os.path.join(v8_build_dir, "build/gyp_v8")
+    buildoptions =  "  -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s -f msvs -G msvs_version=%s --depth=. v8dotnet.gyp  --generator-output=" %  (base_dir, v8_target, v8_mode,VSVer) 
+    srddir = "Build\%s.%s\makefiles" % (v8_target, v8_mode)
+    outdir =  os.path.join(base_dir, srddir) 
+   
+    if v8_mode == 'debug':
+        command =  python + gyp + " -debug " + buildoptions +outdir
+    else:
+        command = python + gyp + buildoptions +outdir
+    
+    #create project
+    execute(command)
+
+#    command = "msbuild /v:detailed /p:Configuration=%s /p:Platform=%s /p:TreatWarningsAsErrors=false %s" % (v8_mode.title(), msbuild_arc[v8_target], os.path.join (v8_build_dir , "tools/gyp/v8.sln"))
+  #  executeMsbuild(command)
+
+
+def buildV8ProxyUnix ():
+    srcDir = "Build/%s.%s/makefiles/out/Default/lib.target/"% (v8_target, v8_mode)
+    destDir = "BuildResult/" + v8_mode
+    debug.info('Build V8.Net native Proxy %s.%s' % (v8_target, v8_mode))
+    if not os.path.exists(destDir):
+        os.makedirs(destDir)
+    if v8_mode == 'debug':
+        command =    "./Source/V8.NET-Proxy/V8/build/gyp/gyp -debug -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
+          -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
+    else:
+        command ="/Source/V8.NET-Proxy/V8/build/gyp/gyp  -Dbase_dir=%s -Dtarget_arch=%s -Dbuild_option=%s \
+          -f make --depth=. v8dotnet.gyp  --generator-output=./Build/%s.%s/makefiles" % (base_dir, v8_target, v8_mode,v8_target, v8_mode)
+        command = "V=1 make -C ./Build/%s.%s/makefiles" % (v8_target, v8_mode)
+        #build
+        execute(command)
 
     if  os.path.isfile(srcDir + "libV8_Net_Proxy.so"):
         shutil.copy2(srcDir + "libV8_Net_Proxy.so", destDir)
@@ -276,8 +290,9 @@ def buildV8Proxy ():
         shutil.copy2(srcDir + "libV8_Net_Proxy.dylib", destDir)
 
 
-def buildV8DotNetWrapper ():
 
+
+def buildV8DotNetWrapper ():
     debug.info("Building V8.Net Wrapper....")
     destDir = "BuildResult/" + v8_mode
     if not os.path.exists(destDir):

@@ -95,7 +95,32 @@
                      ]
                   },
                }
-            ]            
+            ] ,
+            ['OS=="win"',
+            {
+               'defines': ['_WIN'],
+                  'copies':[  
+                     {  
+                        'destination':'<(PRODUCT_DIR)/../../',
+                        'files':[  
+                           'Source/V8.NET-Proxy/V8/build/v8.dll',
+                        ],
+                     }
+                  ],
+                  'link_settings':{  
+                     'libraries':[  
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/mksnapshot.lib',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/v8.lib',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/v8_base.lib',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/v8_external_snapshot.lib',                        
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/v8_libbase.lib',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/v8_libplatform.lib',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/v8_nosnapshot.lib',
+                        '<(base_dir)/Source/V8.NET-Proxy/V8/build/Debug/lib/v8_snapshot.lib',
+                     ]
+                  },
+               }
+            ],           
          ]
       } 
    ]
