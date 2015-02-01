@@ -51,7 +51,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(4);
             data = new byte[4];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((ulong)mem + i), data[i] = (byte)(ofs + i));
             Int32* _val = (Int32*)mem;
             Int32 result = *_val;
             Marshal.FreeCoTaskMem(mem);
@@ -63,7 +63,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(8);
             data = new byte[8];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((ulong)mem + i), data[i] = (byte)(ofs + i));
             Int64* _val = (Int64*)mem;
             Int64 result = *_val;
             Marshal.FreeCoTaskMem(mem);
@@ -75,7 +75,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(8);
             data = new byte[8];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((ulong)mem + i), data[i] = (byte)(ofs + i));
             double* _val = (double*)mem;
             double result = *_val;
             Marshal.FreeCoTaskMem(mem);
@@ -87,7 +87,7 @@ namespace V8.Net
             IntPtr mem = Marshal.AllocCoTaskMem(8);
             data = new byte[IntPtr.Size];
             for (byte i = 0; i < data.Length; i++)
-                Marshal.WriteByte((IntPtr)((int)mem + i), data[i] = (byte)(ofs + i));
+                Marshal.WriteByte((IntPtr)((ulong)mem + i), data[i] = (byte)(ofs + i));
             Int32* _val32 = (Int32*)mem;
             Int64* _val64 = (Int64*)mem;
             Int64 result = data.Length == 8 ? *_val64 : *_val32;
