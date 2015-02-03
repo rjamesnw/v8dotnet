@@ -31,7 +31,7 @@ namespace V8.Net
                     badData[i] = badValues[i];
                 details += " \r\nBytes received (sequential order in memory): " + badData.Join(", ");
             }
-            throw new ContextMarshalException(string.Format("The field value for '{0}->{1}' (offset {2}) on the native side proxy struct does not align with the managed side struct." + details,
+            throw new Exception(string.Format("The field value for '{0}->{1}' (offset {2}) on the native side proxy struct does not align with the managed side struct." + details,
                 structName, fieldName, offset));
         }
 
