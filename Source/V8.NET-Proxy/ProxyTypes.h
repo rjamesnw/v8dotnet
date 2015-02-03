@@ -32,7 +32,7 @@ using namespace std;
 #define STDCALL __stdcall
 #endif
 
-#define USING_V8_SHARED 1
+//(make static instead) #define USING_V8_SHARED 1
 #define V8_USE_UNSAFE_HANDLES 1 // (see https://groups.google.com/forum/#!topic/v8-users/oBE_DTpRC08)
 
 #include <include\v8.h>
@@ -670,7 +670,7 @@ public:
     HandleProxy* Execute(Handle<Script> script);
     HandleProxy* Compile(const uint16_t* script, uint16_t* sourceName);
 
-	HandleProxy* Call(HandleProxy *subject, const uint16_t *functionName, HandleProxy *_this, uint16_t argCount, HandleProxy** args);
+    HandleProxy* Call(HandleProxy *subject, const uint16_t *functionName, HandleProxy *_this, uint16_t argCount, HandleProxy** args);
 
     HandleProxy* CreateNumber(double num);
     HandleProxy* CreateInteger(int32_t num);

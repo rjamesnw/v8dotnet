@@ -226,7 +226,7 @@ xcopy v8\*.* v8-ia32\ /e /y >nul
 if errorlevel 1 goto Error
 cd v8-ia32
 echo Generating Visual Studio project files for the 32-bit libraries...
-third_party\python_26\python build\gyp_v8 -Dtarget_arch=ia32 -Dcomponent=shared_library
+third_party\python_26\python build\gyp_v8 -Dtarget_arch=ia32 -Dcomponent=static_library
 REM -Dcomponent=shared_library -Dv8_use_snapshot=false
 if errorlevel 1 goto Error
 if not exist "build\all.sln" echo "Error: build\all.sln was not created." & goto Error
@@ -268,7 +268,7 @@ xcopy v8\*.* v8-x64\ /e /y >nul
 if errorlevel 1 goto Error
 cd v8-x64
 echo Generating Visual Studio project files for the 64-bit libraries...
-third_party\python_26\python build\gyp_v8 -Dtarget_arch=x64 -Dcomponent=shared_library
+third_party\python_26\python build\gyp_v8 -Dtarget_arch=x64 -Dcomponent=static_library
 REM -Dcomponent=shared_library -Dv8_use_snapshot=false
 if not exist "build\all.sln" echo "Error: build\all.sln was not created." & goto Error
 if errorlevel 1 goto Error
