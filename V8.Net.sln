@@ -84,7 +84,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{5123B905-C89
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{E1EE6B1C-CBBE-48C8-AD7F-2F402EF9C32D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.NET-Console-ObjectExamples", "Tests\chrisber01-Test-Console\V8.NET-Console-ObjectExamples.csproj", "{6B5492AB-611F-4DED-84D1-5A67981B5A38}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.NET-Console-ObjectExamples", "Tests\V8.NET-Console-ObjectExamples\V8.NET-Console-ObjectExamples.csproj", "{6B5492AB-611F-4DED-84D1-5A67981B5A38}"
 	ProjectSection(ProjectDependencies) = postProject
 		{33E19C30-D103-45B3-8A89-5986F195F605} = {33E19C30-D103-45B3-8A89-5986F195F605}
 	EndProjectSection
