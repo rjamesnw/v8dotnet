@@ -97,7 +97,7 @@ V8.Net (v8dotnet) -- Mono runtime 3.10.0
 ##Build Status
 Linux |  Mac OS X
 ------------- | -------------
-[![Build Status](https://travis-ci.org/chrisber/v8dotnet.svg?branch=development-mono)](https://travis-ci.org/chrisber/v8dotnet)  | In progress
+[![Build Status](https://travis-ci.org/chrisber/v8dotnet.svg?branch=development-mono)](https://travis-ci.org/chrisber/v8dotnet)  | Working
 
 
 #Compilation and Installation
@@ -143,15 +143,16 @@ sudo zypper in gcc48-32bit libstdc++48-devel-32bit  compat-32bit
 ```
 Mac OSX 10.10
 ```
+brew install gcc49
 xcode-select --install
-Install Xcode IDE
+Install Xcode IDE 6.x
 ```
 
 V8dotnet is based on the Mono Runtime <= 3.10.0. To install the Runtime 3.10.0 together with [Monodevelop](http://www.monodevelop.com/download/) on Ubuntu
 
 
 ##Building with the V8.Net Buildscript
-Add gyp and c/c++/linking configuration to your environment, we use clang for compiling V8 and V8 proxy libaries
+Add gyp and c/c++/linking configuration to your environment.
 
 For debian systems export:   
 ```
@@ -164,30 +165,23 @@ export CXX_host="`which clang++`  -v "
 export CC_host="`which clang`     -v "
 export CPP_host="`which clang` -E -v "
 export LINK_host="`which clang++` -v "
-export TRAVIS_OS_NAME=linux
 ```   
+
 For mac osx:      
 ```
-export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
-export CC="`which clang`          -v "
-export CPP="`which clang`      -E -v "
-export LINK="`which clang++`      -v -std=c++11 -stdlib=libc++"
-export CXX_host="`which clang++`  -v "
-export CC_host="`which clang`     -v "
-export CPP_host="`which clang` -E -v "
-export LINK_host="`which clang++` -v "
-export GYP_DEFINES="clang=1  mac_deployment_target=10.10"
-export TRAVIS_OS_NAME=osx
+export CXX=/usr/local/bin/g++-4.9 
+export LINK=/usr/local/bin/g++-4.9 
 ```
 
-The build script defines a number of targets for each target architecture (ia32, x64, ) and mode (debug or release). So your basic command for building is:   
+The build script defines a number of targets for each target architecture (ia32, x64, ) and mode (debug, release). The basic commands for building are:   
 `cd v8dotnet`   
-set `export TRAVIS_OS_NAME=osx` mandatory if you build on osx (hotfix to allow travis ci to build automatical both os, so set the variable manual to indicate on which plattform you are the [coresspondin symboles](https://github.com/chrisber/v8dotnet/blob/development-mono/build_V8_Net.sh#L220) specified above will den get exported automatically)    
+
 `./build_V8_Net.sh --default x64.release 2`      (where 2 stands for the available core to build V8 )  
 or   
 `./build_V8_Net.sh --default ia32.debug 4`   
 Note:
-The mono runtime on OSX is only available with the x86 architecture to not run into the error (An attempt was made to load a program with an incorrect format) compile ia32 for osx.   
+The mono runtime on OSX is only available with the x86 architecture to not run into the error (An attempt was made to load a program with an incorrect format) compile ia32 for osx.  
+Also only build v8dotnet with stdlibc++ because libc++ is incompatible to mono when it comes to handling p/invoke calls;
 `./build_V8_Net.sh --default ia32.release 2`   
 Start the V8 Console app with:   
 `cd BuildResutl/Release`   
@@ -219,10 +213,10 @@ The linke options are:
 `'libraries:['-Wl,-rpath,. -L. -L../ -lpthread -lstdc++ -lv8 -licui18n -licuuc -lglib-2.0 -lrt libgmock.a ...*a']`  
 Compiling:
  ```
-ls | grep cpp | awk -F. '{ system("g++  -std=c++11 -w -fpermissive -fPIC -Wl,--gc-sections-c -IV8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ "$1".cpp -o out/"$1".o ") }
+ls | grep cpp | awk -F. '{ system("g++  -std=c++11 -w -fpermissive -fPIC -Wl,--gc-sections-c -IV8/ "$1".cpp -o out/"$1".o ") }
 ```   
 Linking:
-```g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/   -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose```   
+```g++ -Wall -std=c++11 -shared  -fPIC -I../ -I../V8/ -Wl,-soname,libV8_Net_Proxy.so  -o libV8_Net_Proxy.so *.o ../V8/out/native/obj.host/testing/libgtest.a ../V8/out/native/obj.target/testing/libgmock.a ../V8/out/native/obj.target/testing/libgtest.a ../V8/out/native/obj.target/third_party/icu/libicudata.a ../V8/out/native/obj.target/tools/gyp/libv8_base.a ../V8/out/native/obj.target/tools/gyp/libv8_libbase.a ../V8/out/native/obj.target/tools/gyp/libv8_libplatform.a ../V8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a ../V8/out/native/obj.target/tools/gyp/libv8_snapshot.a  -Wl,-rpath,. -L. -L../  -lpthread  -lstdc++ -licui18n -licuuc -lv8 -lglib-2.0 -lrt  -Wl,--verbose```   
 
 Or use the provided v8dotnet.gyp file for compiling and linking the shared library.   
 ```
