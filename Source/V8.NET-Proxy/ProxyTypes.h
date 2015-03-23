@@ -21,13 +21,7 @@
 #define STDCALL __stdcall
 #endif
 
-#if _OSX
-#include <iostream>
-#include <mutex>
-#include <vector>
-#endif
-
-#if _LINUX
+#if _LINUX || _OSX
 #include <iostream>
 #include <mutex>
 #include <vector>

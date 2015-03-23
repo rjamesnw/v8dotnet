@@ -39,16 +39,8 @@ exportLinux (){
 
 exportMac (){
 	echo "Export Mac defines"
-	export CXX="`which clang++`       -v -std=c++11 -stdlib=libc++"
-	export CC="`which clang`          -v "
-	export CPP="`which clang`      -E -v "
-	export LINK="`which clang++`      -v -std=c++11 -stdlib=libc++"
-	export CXX_host="`which clang++`  -v "
-	export CC_host="`which clang`     -v "
-	export CPP_host="`which clang` -E -v "
-	export LINK_host="`which clang++` -v "
-	export GYP_DEFINES="clang=1  mac_deployment_target=10.10"
-
+    export CXX=/usr/local/bin/g++-4.9 -v -std=gnu++11 -stdlib=libstdc++
+    export LINK=/usr/local/bin/g++-4.9 -v -std=gnu++11 -stdlib=libstdc++
 }
 
 
@@ -85,10 +77,11 @@ buildV8Proxy (){
 	debugFlag=" "
 
 	if [ "${v8_net__mode}" == "debug" ]
-		then 	./gyp/gyp -debug -Dbase_dir=`pwd` -Dtarget_arch="${v8_net_target}" -Dbuild_option="${v8_net__mode}"  -f make --depth=. v8dotnet.gyp  --generator-output="./Build/${v8_net_target}.${v8_net__mode}/makefiles"
+		then 	
+			./gyp/gyp -debug -Dbase_dir="`pwd`" -Darch="${v8_net_target}" -Dtarget_arch="${v8_net_target}" -Dbuild_option="${v8_net__mode}"  -f make --depth=. v8dotnet.gyp  --generator-output="./Build/${v8_net_target}.${v8_net__mode}/makefiles"
+		else
+			./gyp/gyp  -Dbase_dir="`pwd`" -Darch="${v8_net_target}" -Dtarget_arch="${v8_net_target}" -Dbuild_option="${v8_net__mode}"  -f make --depth=. v8dotnet.gyp  --generator-output="./Build/${v8_net_target}.${v8_net__mode}/makefiles"
 	fi
-
-	 ./gyp/gyp  -Dbase_dir="`pwd`" -Darch="${v8_net_target}" -Dtarget_arch="${v8_net_target}" -Dbuild_option="${v8_net__mode}"  -f make --depth=. v8dotnet.gyp  --generator-output="./Build/${v8_net_target}.${v8_net__mode}/makefiles"
 	V=1 make -C "./Build/${v8_net_target}.${v8_net__mode}/makefiles"
 	echo $?
 	debugInfo $? "make V8.Net Proxy for ${v8_net_target}.${v8_net__mode}"

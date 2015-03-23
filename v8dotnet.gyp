@@ -66,13 +66,13 @@
             ],
             ['OS=="mac"',
             {
-               'defines': ['_OSX'],
-               'xcode_settings': {
-                     'ARCHS': ['i386'],
-                     'OTHER_CPLUSPLUSFLAGS' : ['-w -std=c++11  -Wc++11-extensions -fPIC -c '],
-                     'OTHER_LDFLAGS': ['-Wall -w'],
-               },
-
+                   'defines': ['_OSX',],
+                   'xcode_settings': {
+                         'ARCHS': ['i386'],
+                         'OTHER_CPLUSPLUSFLAGS' : ['-std=gnu++11  -fpermissive '],
+                         'OTHER_LDFLAGS': ['-std=gnu++11 -fpermissive '],
+                         'OTHER_CFLAGS': [ '-std=gnu++11 -fpermissive ']
+                   },
                   'copies':[  
                      {  
                         'destination':'<(PRODUCT_DIR)/../../',
