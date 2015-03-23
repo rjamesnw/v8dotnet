@@ -1,7 +1,4 @@
 {  
-      "includes": [
-
-    ],
    'variables':{  
       'base_dir%':'<(base_dir)',
       'target_arch%':'x64',
@@ -69,6 +66,8 @@
                    'defines': ['_OSX',],
                    'xcode_settings': {
                          'ARCHS': ['i386'],
+                         'GCC_CW_ASM_SYNTAX' : ['NO'],
+                         'GCC_ENABLE_PASCAL_STRINGS' : ['NO'],
                          'OTHER_CPLUSPLUSFLAGS' : ['-std=gnu++11  -fpermissive '],
                          'OTHER_LDFLAGS': ['-std=gnu++11 -fpermissive '],
                          'OTHER_CFLAGS': [ '-std=gnu++11 -fpermissive ']

@@ -90,10 +90,10 @@ buildV8Proxy (){
 	if [ -f "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default/lib.target"/libV8_Net_Proxy.so ]
 		then
 	    		cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default/lib.target"/libV8_Net_Proxy.so BuildResult/Release
-		else
+		else         
 			if [ -f "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default"/libV8_Net_Proxy.dylib ]
 				then
-					cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default"/libV8_Net_Proxy.so BuildResult/Release
+					cp "Build/${v8_net_target}.${v8_net__mode}/makefiles/out/Default"/libV8_Net_Proxy.dylib BuildResult/Release
 				else
 					debugInfo 1 "Copy libV8_Net_Proxy.so"
 			fi
