@@ -39,8 +39,8 @@ exportLinux (){
 
 exportMac (){
 	echo "Export Mac defines"
-    export CXX=/usr/local/bin/g++-4.9 -v -std=gnu++11 -stdlib=libstdc++
-    export LINK=/usr/local/bin/g++-4.9 -v -std=gnu++11 -stdlib=libstdc++
+    export CXX=/usr/local/bin/g++-4.9 
+    export LINK=/usr/local/bin/g++-4.9 
 }
 
 
@@ -210,13 +210,6 @@ do
 		v8_net_target="${TARGETARCHITECTURE%.*}"
 		v8_net__mode="${TARGETARCHITECTURE##*.}"
 		JOBSV8=$2
-		if [ ! -z "$TRAVIS_OS_NAME" ]; 
-			then
-				if [[ $TRAVIS_OS_NAME == 'linux' ]]; then exportLinux ; fi
-				if [[ $TRAVIS_OS_NAME == 'osx' ]]; then exportMac ; fi
-			else
-				exportLinux
-		fi
 
 		buildV8
 		buildV8Proxy
@@ -246,7 +239,6 @@ do
 		shift
 		;;
 		-el|--exportlinux)
-		echo "exportlinux"
 		exportLinux
 		shift
 		;;
