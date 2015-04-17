@@ -173,7 +173,7 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
-    <PreBuildEvent>xcopy "$(SolutionDir)Source\bin\$(ConfigurationName)\*.*" "$(ProjectDir)V8.NET\" /S /I /Y</PreBuildEvent>
+    <PreBuildEvent>xcopy "$(SolutionDir)Source\bin\$(ConfigurationName)\*.*" "$(ProjectDir)V8.NET\" /S /I /Y /D</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
