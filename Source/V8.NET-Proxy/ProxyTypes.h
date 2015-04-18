@@ -6,7 +6,7 @@
 #if (_MSC_PLATFORM_TOOLSET >= 110)
 #include <mutex>
 #endif
-#include <include\v8stdint.h>
+//#include <include\v8stdint.h>
 #include "Platform.h"
 
 using namespace std;

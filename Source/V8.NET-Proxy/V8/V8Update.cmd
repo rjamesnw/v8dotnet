@@ -56,7 +56,9 @@ if exist "getGTest.log" del getGTest.log
 if exist "getGMock.log" del getGMock.log
 
 echo Downloading GYP ...
-svn co http://gyp.googlecode.com/svn/trunk  build/gyp  >getGYP.log
+git clone https://chromium.googlesource.com/external/gyp
+  build/gyp  >getGYP.log
+REM Old Link: http://gyp.googlecode.com/svn/trunk
 if errorlevel 1 goto Error
 
 echo Downloading Python ...
@@ -122,7 +124,8 @@ if errorlevel 1 goto Error
 :BeginSrcDownload
 echo Downloading V8 ...
 REM svn checkout -r %v8rev% http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log ; ISSUE 2882
-git clone https://chromium.googlesource.com/external/v8.git  build\v8
+REM git clone https://chromium.googlesource.com/external/v8.git  build\v8
+git clone https://chromium.googlesource.com/v8/v8.git build\v8 >getv8.log
 if errorlevel 1 goto Error
 
 :UpdateToRev

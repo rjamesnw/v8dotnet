@@ -57,17 +57,9 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 // ------------------------------------------------------------------------------------------------------------------------
 
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
-	:ProxyBase(V8EngineProxyClass), _Isolate(Isolate::New()), _GlobalObjectTemplateProxy(nullptr),
+	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr),
 	_Strings(1000, _StringItem()), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _NextNonTemplateObjectID(-2)
 {
-	BEGIN_ISOLATE_SCOPE(this);
-
-	_Handles.clear();
-	_DisposedHandles.clear();
-	_Strings.clear();
-
-	_ManagedV8GarbageCollectionRequestCallback = nullptr;
-
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
 		v8::V8::InitializePlatform(v8::platform::CreateDefaultPlatform());
@@ -75,6 +67,16 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 		v8::V8::Initialize();
 		_V8Initialized = true;
 	}
+
+	_Isolate = Isolate::New();
+
+	BEGIN_ISOLATE_SCOPE(this);
+
+	_Handles.clear();
+	_DisposedHandles.clear();
+	_Strings.clear();
+
+	_ManagedV8GarbageCollectionRequestCallback = nullptr;
 
 	_Isolate->SetData(0, this); // (sets a reference in the isolate to the proxy [useful within callbacks])
 
