@@ -12,17 +12,6 @@ using V8.Net;
 
 namespace V8.Net
 {
-    public class SamplePointFunctionTemplate : FunctionTemplate
-    {
-        public SamplePointFunctionTemplate() { }
-
-        protected override void OnInitialized()
-        {
-            base.OnInitialized();
-        }
-    }
-
-
     public class Program
     {
         static V8Engine _JSServer;
@@ -282,9 +271,9 @@ namespace V8.Net
                                 Handle testHandle = internalHandle;
                                 _JSServer.DynamicGlobalObject.tempObj = tempObj;
 
-                                // ... because we have a strong reference to the handle, the managed and native objects are safe; however,
-                                // this block has the only strong reference, so once the reference goes out of scope, the managed GC will attempt to
-                                // collect it, which will mark the handle as ready for collection (but it will not be destroyed just yet) ...
+                                // ... because we have a strong reference to the handle in 'testHandle', the managed and native objects are safe; however,
+                                // this block has the only strong reference, so once the reference goes out of scope, the managed GC should attempt to
+                                // collect it, which will mark the handle as ready for collection (but it will not be destroyed just yet until V8 is ready) ...
 
                                 Console.WriteLine("Clearing managed references and running the garbage collector ...");
                                 testHandle = null;
@@ -304,11 +293,11 @@ namespace V8.Net
                             Console.WriteLine("Success! The managed handle instance is pending disposal.");
                             Console.WriteLine("Clearing the handle object reference next ...");
 
-                            // ... because we still have a reference to 'tempObj' at this point, the managed and native objects are safe (and the handle
-                            // above!); however, this block has the only strong reference keeping everything alive (including the handle), so once the
-                            // reference goes out of scope, the managed GC will collect it, which will mark the managed object as ready for collection.
-                            // Once both the managed object and handle are marked, this in turn marks the native handle as weak. When the native V8
-                            // engine's garbage collector is ready to dispose of the handle, as call back is triggered and the native object and
+                            // ... because we still have a reference to 'tempObj' at this point, the managed and native objects are safe; however, this 
+                            // block scope has the only strong reference to the managed object keeping everything alive (including the underlying handle),
+                            // so once the reference goes out of scope, the managed GC will collect it, which will mark the managed object as ready for
+                            // collection. Once both the managed object and handle are marked, this in turn marks the native handle as weak. When the native
+                            // V8 engine's garbage collector is ready to dispose of the handle, as call back is triggered and the native object and
                             // handles will finally be removed ...
 
                             tempObj = null;
@@ -325,6 +314,7 @@ namespace V8.Net
                             if (!internalHandle.IsNativelyWeak)
                                 throw new Exception("Object is not weak yet ... something is wrong.");
 
+                            Console.WriteLine("The native side object is now weak and ready to be collected by V8.");
 
                             Console.WriteLine("Forcing V8 garbage collection ... ");
                             _JSServer.DynamicGlobalObject.tempObj = null;
@@ -829,6 +819,18 @@ public class V8DotNetTester : V8ManagedObject
         else return args.Length > 0 ? args[0] : InternalHandle.Empty;
     }
 }
+
+public class SamplePointFunctionTemplate : FunctionTemplate
+{
+    public SamplePointFunctionTemplate() { }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+}
+
+
 
 //!!public class __UsageExamplesScratchArea__ // (just here to help with writing examples for documentation, etc.)
 //{

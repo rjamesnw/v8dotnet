@@ -59,7 +59,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         internal NativeV8EngineProxy* _NativeV8EngineProxy;
-        V8GarbageCollectionRequestCallback ___V8GarbageCollectionRequestCallback; // (need to keep a reference to this otherwise the reverse p/invoke will fail)
+        V8GarbageCollectionRequestCallback ___V8GarbageCollectionRequestCallback; // (need to keep a reference to this delegate object, otherwise the reverse p/invoke will fail)
         static readonly object _GlobalLock = new object();
 
         ObjectTemplate _GlobalObjectTemplateProxy;
@@ -384,7 +384,7 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle._HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._Handle.__HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
             return result;
         }
@@ -411,7 +411,7 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle._HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._Handle.__HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
             return result;
         }

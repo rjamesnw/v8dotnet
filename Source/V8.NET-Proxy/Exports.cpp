@@ -36,20 +36,19 @@ extern "C"
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
-		//!engine->Isolate()->LowMemoryNotification();
-		//!while (!engine->Isolate()->IdleNotification(1000)) {}
+		engine->Isolate()->LowMemoryNotification();
+		while (!engine->Isolate()->IdleNotification(1000)) {}
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
 
 	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1000)
 	{
-		return false;
-		/*BEGIN_ISOLATE_SCOPE(engine);
+		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		return engine->Isolate()->IdleNotification(hint);
 		END_CONTEXT_SCOPE;
-		END_ISOLATE_SCOPE;*///!
+		END_ISOLATE_SCOPE;
 	}
 
 	EXPORT HandleProxy* STDCALL V8Execute(V8EngineProxy *engine, uint16_t *script, uint16_t *sourceName)
