@@ -236,7 +236,7 @@ private:
 
     int64_t _ManagedReferenceCount; // The number of references on the managed side.
 
-    int32_t _Disposed; // (0: handle is active, 1: managed disposing in progress, 2: handle was made weak, 3: VIRTUALLY disposed [cached on native side for reuse])
+    int32_t _Disposed; // (0: handle is in use, 1: managed disposing in progress, 2: handle was made weak, 3: VIRTUALLY disposed [cached on native side for reuse])
 
     int32_t _EngineID;
 

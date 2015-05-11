@@ -209,9 +209,11 @@ void HandleProxy::_DisposeCallback(const WeakCallbackData<Value, HandleProxy>& d
 // To force a re-check, simply set the value back to -1.
 int32_t HandleProxy::GetManagedObjectID()
 {
-    if (_ObjectID < -1 || _ObjectID >= 0)
-        return _ObjectID;
-    else {
+	if (_Disposed >= 3)
+		return -1; // (no longer in use!)
+	else if (_ObjectID < -1 || _ObjectID >= 0)
+		return _ObjectID;
+	else {
         if (_Handle->IsObject())
         {
             // ... if this was created by a template then there will be at least 2 fields set, so assume the second is a managed ID value, 

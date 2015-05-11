@@ -777,4 +777,69 @@ namespace V8.Net
     }
 
     // ========================================================================================================================
+
+#if (V1_1 || V2 || V3 || V3_5)
+    /// <summary>
+    /// This is a wrapper to support a basic .NET 4.0 SortedSet implementation that is not available in earlier versions of .NET.
+    /// </summary>
+    public class SortedSet<T> : IEnumerable<T>
+    {
+        SortedList<T, T> _SortedList = new SortedList<T, T>();
+
+        public SortedSet()
+        {
+        }
+
+        public T Min
+        {
+            get
+            {
+                if (_SortedList.Count >= 1)
+                    return _SortedList.Keys[0];
+                else
+                    return default(T);
+            }
+        }
+
+        public int Count { get { return _SortedList.Count; } }
+
+        public T Max
+        {
+            get
+            {
+                if (_SortedList.Count >= 1)
+                    return _SortedList.Keys[_SortedList.Keys.Count - 1];
+                else
+                    return default(T);
+            }
+        }
+
+        public void Add(T value)
+        {
+            _SortedList.Add(value, value);
+        }
+
+        public void Remove(T value)
+        {
+            _SortedList.Remove(value);
+        }
+
+        public bool Contains(T value)
+        {
+            return _SortedList.ContainsKey(value);
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _SortedList.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _SortedList.Values.GetEnumerator();
+        }
+    }
+#endif
+
+    // ========================================================================================================================
 }

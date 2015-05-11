@@ -316,7 +316,7 @@ namespace V8.Net
 
         ~Handle()
         {
-            if (!((IFinalizable)this).CanFinalize && Engine != null)
+            if (Engine != null && !((IFinalizable)this).CanFinalize) // (ALWAYS check Engine first, in case the whole system is gone, and this is a rogue handle)
                 lock (Engine._ObjectsToFinalize)
                 {
                     var isLastHandleForObject = (_CurrentObjectID >= 0 && ReferenceCount == 1);

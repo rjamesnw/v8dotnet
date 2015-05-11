@@ -688,6 +688,16 @@
             <para>DO NOT STORE THIS HANDLE. Use "Handle" instead (i.e. "Handle h = someInternalHandle;"), or use the value with the "using(someInternalHandle){}" statement.</para>
             </summary>
         </member>
+        <member name="F:V8.Net.InternalHandle._First">
+            <summary>
+            This is true if this is the FIRST handle to wrap the proxy (first handles may become automatically disposed internally if another handle is not created from it).
+            </summary>
+        </member>
+        <member name="F:V8.Net.InternalHandle._EngineID">
+            <summary>
+            The ID of the engine this handle belongs to.
+            </summary>
+        </member>
         <member name="M:V8.Net.InternalHandle.#ctor(V8.Net.HandleProxy*,System.Boolean)">
             <summary>
             Wraps a given native handle proxy to provide methods to operate on it.
@@ -1209,7 +1219,7 @@
         </member>
         <member name="F:V8.Net.V8Engine._WeakObjects">
             <summary>
-            When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.
+            When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.  
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine._DoWorkStep">
@@ -2455,6 +2465,11 @@
             This is required for cases where a type is just 'object', in which 'null' may be passed,
             but the type still needs to be known. An example usage is with methods that accept variable
             number of parameters, but need to know the argument type, even if null.
+            </summary>
+        </member>
+        <member name="T:V8.Net.SortedSet`1">
+            <summary>
+            This is a wrapper to support a basic .NET 4.0 SortedSet implementation that is not available in earlier versions of .NET.
             </summary>
         </member>
         <member name="T:V8.Net.V8Function`1">

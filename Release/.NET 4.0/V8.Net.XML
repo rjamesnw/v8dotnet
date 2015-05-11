@@ -112,7 +112,7 @@
         </member>
         <member name="F:V8.Net.V8Engine._WeakObjects">
             <summary>
-            When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.
+            When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.  
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine._DoWorkStep">
@@ -763,6 +763,16 @@
         <member name="P:V8.Net.IBasicHandle.AsDate">
             <summary>
             Returns the underlying value converted if necessary to a DateTime type.
+            </summary>
+        </member>
+        <member name="F:V8.Net.InternalHandle._First">
+            <summary>
+            This is true if this is the FIRST handle to wrap the proxy (first handles may become automatically disposed internally if another handle is not created from it).
+            </summary>
+        </member>
+        <member name="F:V8.Net.InternalHandle._EngineID">
+            <summary>
+            The ID of the engine this handle belongs to.
             </summary>
         </member>
         <member name="M:V8.Net.InternalHandle.#ctor(V8.Net.HandleProxy*,System.Boolean)">

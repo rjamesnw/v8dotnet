@@ -33,10 +33,9 @@ namespace V8.Net
         internal Thread _Worker;
 
         /// <summary>
-        /// When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.
+        /// When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.  
         /// </summary>
-        internal readonly List<int> _WeakObjects = new List<int>(100);
-        int _WeakObjects_Index = -1;
+        internal readonly SortedSet<int> _WeakObjects = new SortedSet<int>(); // (note: a 'SortedSet' is used to prevent duplicates getting added)
 
         internal readonly List<IFinalizable> _ObjectsToFinalize = new List<IFinalizable>(100);
         int _ObjectsToFinalize_Index = -1;
@@ -56,7 +55,7 @@ namespace V8.Net
 
         void _WorkerLoop()
         {
-            bool workPending;
+            bool workPending = false;
 
             while (true)
             {
@@ -91,20 +90,15 @@ namespace V8.Net
         {
             // ... do one weak object ...
 
-            int objID = -1;
+            int objID = -1, weakObjectsRemaining = 0;
 
             lock (_WeakObjects)
             {
-                if (_WeakObjects_Index < 0)
-                    _WeakObjects_Index = _WeakObjects.Count - 1;
-
-                if (_WeakObjects_Index >= 0)
+                if (_WeakObjects.Count > 0)
                 {
-                    objID = _WeakObjects[_WeakObjects_Index];
-
-                    _WeakObjects.RemoveAt(_WeakObjects_Index);
-
-                    _WeakObjects_Index--;
+                    objID = _WeakObjects.Min();
+                    _WeakObjects.Remove(objID);
+                    weakObjectsRemaining = _WeakObjects.Count;
                 }
             }
 
@@ -140,7 +134,7 @@ namespace V8.Net
             if (objectToFinalize != null)
                 objectToFinalize.DoFinalize();
 
-            return _WeakObjects_Index >= 0 || _ObjectsToFinalize_Index >= 0;
+            return weakObjectsRemaining > 0 || _ObjectsToFinalize_Index >= 0;
         }
 
         /// <summary>
