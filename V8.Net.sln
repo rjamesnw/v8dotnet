@@ -385,6 +385,7 @@ Global
 		{A5F5584E-F9A5-49A1-A068-F3452E8926DE}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{A5F5584E-F9A5-49A1-A068-F3452E8926DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5F5584E-F9A5-49A1-A068-F3452E8926DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5F5584E-F9A5-49A1-A068-F3452E8926DE}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{A5F5584E-F9A5-49A1-A068-F3452E8926DE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A5F5584E-F9A5-49A1-A068-F3452E8926DE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{A5F5584E-F9A5-49A1-A068-F3452E8926DE}.Release|Win32.ActiveCfg = Release|Any CPU
