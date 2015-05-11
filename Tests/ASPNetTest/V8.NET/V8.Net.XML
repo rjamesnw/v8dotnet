@@ -112,7 +112,7 @@
         </member>
         <member name="F:V8.Net.V8Engine._WeakObjects">
             <summary>
-            When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.
+            When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.  
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine._DoWorkStep">

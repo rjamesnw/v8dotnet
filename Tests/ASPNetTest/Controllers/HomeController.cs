@@ -11,6 +11,8 @@ namespace ASPNetTest.Controllers
     {
         public ActionResult Index()
         {
+            var engine = new V8.Net.V8Engine();
+            ViewBag.Result = engine.Execute("2*3", "V8.NET ASP Test").AsString;
             return View();
         }
 
