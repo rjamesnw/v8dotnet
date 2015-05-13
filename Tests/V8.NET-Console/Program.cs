@@ -39,7 +39,7 @@ namespace V8.Net
                 {
                     if (!_JSServer.IsDisposed)
                         Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
-                            + " / Pending Native GC: " + _JSServer.TotalHandlesPendingDisposal
+                            + " / Pending Native GC: " + _JSServer.TotalHandlesBeingDisposed
                             + " / Cached: " + _JSServer.TotalHandlesCached
                             + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
                     else
@@ -606,7 +606,7 @@ public sealed class SealedObject : IV8NativeObject
     {
     }
 
-    public void Dispose()
+    public void OnDispose()
     {
     }
 }
@@ -786,7 +786,7 @@ public class V8DotNetTester : V8ManagedObject
         var obj = new V8NativeObject();
         for (var i = 0; i < 1000; i++)
         {
-            obj.Handle = Engine.GlobalObject.GetProperty("obj");
+            obj.Handle = Engine.GlobalObject.GetProperty("obj"); // (note here that 'obj.Handle' is a *property* and must be assigned, instead of calling 'Set()', in order to change the object's handle)
         }
         Console.WriteLine(" Done.");
     }

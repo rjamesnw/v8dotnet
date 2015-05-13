@@ -448,6 +448,14 @@
             don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
             <returns>A native value that best represents the given managed value.</returns>
         </member>
+        <member name="P:V8.Net.V8Engine.Handles_All">
+            <summary>
+            Returns all the handles currently known on the managed side.
+            Each InternalHandle is only a wrapper for a tracked HandleProxy native object and does not need to be disposed.
+            Because of this, no reference counts are incremented, and thus, disposing them may destroy handles in use.
+            This list is mainly provided for debugging purposes only.
+            </summary>
+        </member>
         <member name="P:V8.Net.V8Engine.TotalHandles">
             <summary>
             Total number of handle proxy references in the V8.NET system (for proxy use).

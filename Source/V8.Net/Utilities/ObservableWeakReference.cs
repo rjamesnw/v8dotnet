@@ -21,7 +21,7 @@ namespace V8.Net
         public event Action<ObservableWeakReference<T>, T> GCReady;
 
         /// <summary>
-        /// Set to true when the GC wants to collect the object.
+        /// Is set to true when the GC wants to collect the object.
         /// </summary>
         public bool IsGCReady { get { return _IsGCReady; } }
         volatile bool _IsGCReady;
@@ -35,10 +35,10 @@ namespace V8.Net
         /// <summary>
         /// Returns a reference to the object wrapped by this instance.
         /// This is a weak reference at first, but will return the strong reference when the object is being finalized.
-        /// <para>Note: The finalizer clears all weak references before running finalizers on all the objects, which means it's possible that main thread
+        /// <para>Note: The GC finalizer clears all weak references before running finalizers on all the objects, which means it's possible that main thread
         /// code may attempt to read this property, which would end up being 'null'.  However, this would be invalid, due to the fact 'DoFinalize()' hasn't been
-        /// called yet.  To prevent this, this property is blocking if the target is set to null by the finalizer, until the finalizer triggers a call to
-        /// 'DoFinalize()'.  As such, this property never returns 'null'.</para>
+        /// called yet.  To prevent this, this property is blocking (with a 1.5 second timeout) if the target is set to null by the finalizer, until the finalizer 
+        /// triggers a call to 'DoFinalize()'.  As such, this property should never return 'null', unless a timeout occurs (may happen if viewed in a debugger).</para>
         /// </summary>
         public T Object
         {
@@ -46,7 +46,7 @@ namespace V8.Net
             {
                 T o;
                 while ((o = (T)_ObjectRef.Target ?? NearDeathReference) == null)
-                    NullWaitEvent.WaitOne();
+                        NullWaitEvent.WaitOne(1500); // (both '_ObjectRef.Target' AND 'NearDeathReference' CANNOT be null, since '_ObjectRef' being 'WeakReference' requires a non-null reference to start, so assume we must wait)
                 return o;
             }
         }

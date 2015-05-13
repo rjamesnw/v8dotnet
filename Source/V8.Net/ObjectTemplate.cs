@@ -99,7 +99,8 @@ namespace V8.Net
                 if (obj == null)
                     return null;
                 var mo = obj.Reset() as IV8ManagedObject; // (this acts also as a test because native object wrappers are also supported)
-                return mo != null ? mo.NamedPropertyGetter(ref propertyName) : null;
+                var result = mo != null ? mo.NamedPropertyGetter(ref propertyName) : null;
+                return result.Clone();
             }
             catch (Exception ex)
             {
@@ -117,7 +118,8 @@ namespace V8.Net
                     if (obj == null)
                         return null;
                     var mo = obj.Reset() as IV8ManagedObject;
-                    return mo != null ? mo.NamedPropertySetter(ref propertyName, hValue, V8PropertyAttributes.Undefined) : null;
+                    var result = mo != null ? mo.NamedPropertySetter(ref propertyName, hValue, V8PropertyAttributes.Undefined) : null;
+                    return result.Clone();
                 }
             }
             catch (Exception ex)
@@ -188,7 +190,8 @@ namespace V8.Net
                 if (obj == null)
                     return null;
                 var mo = obj.Reset() as IV8ManagedObject;
-                return mo != null ? mo.IndexedPropertyGetter(index) : null;
+                var result = mo != null ? mo.IndexedPropertyGetter(index) : null;
+                return result.Clone();
             }
             catch (Exception ex)
             {
@@ -206,7 +209,8 @@ namespace V8.Net
                     if (obj == null)
                         return null;
                     var mo = obj.Reset() as IV8ManagedObject;
-                    return mo != null ? mo.IndexedPropertySetter(index, hValue) : null;
+                    var result = mo != null ? mo.IndexedPropertySetter(index, hValue) : null;
+                    return result.Clone();
                 }
             }
             catch (Exception ex)
@@ -272,7 +276,7 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>, IFinalizable
+    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>, IV8Disposable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -322,35 +326,28 @@ namespace V8.Net
 
         ~ObjectTemplate()
         {
-            if (!((IFinalizable)this).CanFinalize)
-                lock (_Engine._ObjectsToFinalize)
-                {
-                    _Engine._ObjectsToFinalize.Add(this);
-                    GC.ReRegisterForFinalize(this);
-                }
+            this.Finalizing();
         }
 
-        bool IFinalizable.CanFinalize { get; set; }
-
-        void IFinalizable.DoFinalize()
+        public bool CanDispose
         {
-            if (((ITemplateInternal)this)._ReferenceCount == 0
-            && _Engine.GetObjects(this).Length == 0
-            && Parent != null && _Engine.GetObjects(Parent).Length == 0)
-                Dispose();
+            get
+            {
+                return (((ITemplateInternal)this)._ReferenceCount == 0
+                    && _Engine.GetObjects(this).Length == 0
+                    && (Parent == null || _Engine.GetObjects(Parent).Length == 0));
+            }
         }
-
-        public void Dispose() // TODO: !!! This will cause issues if removed while the native object exists. !!!
+        public void Dispose() // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
         {
-            if (_NativeObjectTemplateProxy != null)
+            if (_NativeObjectTemplateProxy != null && CanDispose)
             {
                 _Engine._ClearAccessors(_NativeObjectTemplateProxy->ObjectID);
 
                 V8NetProxy.DeleteObjectTemplateProxy(_NativeObjectTemplateProxy); // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
+
                 _NativeObjectTemplateProxy = null;
             }
-
-            ((IFinalizable)this).CanFinalize = true;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -460,7 +457,7 @@ namespace V8.Net
 
             try
             {
-                obj.Handle._Set(V8NetProxy.CreateObjectFromTemplate(_NativeObjectTemplateProxy, obj.ID));
+                obj._Handle._Set(V8NetProxy.CreateObjectFromTemplate(_NativeObjectTemplateProxy, obj.ID), false);
                 // (note: setting '_NativeObject' also updates it's '_ManagedObject' field if necessary.
             }
             catch (Exception ex)

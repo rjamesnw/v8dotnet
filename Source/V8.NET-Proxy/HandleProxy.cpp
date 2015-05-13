@@ -8,198 +8,211 @@ v8::Handle<Script> HandleProxy::Script() { return _Script; }
 // ------------------------------------------------------------------------------------------------------------------------
 
 HandleProxy::HandleProxy(V8EngineProxy* engineProxy, int32_t id)
-    : ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReferenceCount(0), _ObjectID(-1), _CLRTypeID(-1), __EngineProxy(0)
+	: ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReferenceCount(0), _ObjectID(-1), _CLRTypeID(-1), __EngineProxy(0)
 {
-    _EngineProxy = engineProxy;
-    _EngineID = _EngineProxy->_EngineID;
+	_EngineProxy = engineProxy;
+	_EngineID = _EngineProxy->_EngineID;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
 HandleProxy::~HandleProxy()
 {
-    if (Type != 0) // (type is 0 if this class was wiped with 0's {if used in a marshalling test})
-    {
-        _ClearHandleValue();
-        _ObjectID = -1;
-        _Disposed = 3;
-    }
+	if (Type != 0) // (type is 0 if this class was wiped with 0's {if used in a marshalling test})
+	{
+		_ClearHandleValue();
+		_ObjectID = -1;
+		_Disposed = 3;
+	}
 }
 
 // Sets the state if this instance to disposed (for safety, the handle is NOT deleted, only cached).
 // (registerDisposal is false when called within 'V8EngineProxy.DisposeHandleProxy()' (to prevent a cyclical loop), or by the engine's destructor)
 bool HandleProxy::_Dispose(bool registerDisposal)
 {
-    std::lock_guard<std::recursive_mutex>(_EngineProxy->_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+	std::lock_guard<std::recursive_mutex>(_EngineProxy->_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
 
-    if (V8EngineProxy::IsDisposed(_EngineID))
-        delete this; // (the engine is gone, so just destroy the memory [the managed side owns UNDISPOSED proxy handles - they are not deleted with the engine)
-    else
-        if (_Disposed == 1 || _Disposed == 2)
-        {
-            if (registerDisposal)
-            {
-                _EngineProxy->DisposeHandleProxy(this);
-                return true;
-            }
+	if (V8EngineProxy::IsDisposed(_EngineID))
+		delete this; // (the engine is gone, so just destroy the memory [the managed side owns UNDISPOSED proxy handles - they are not deleted with the engine)
+	else
+		if (_Disposed == 1 || _Disposed == 2)
+		{
+			if (registerDisposal)
+			{
+				_EngineProxy->DisposeHandleProxy(this);
+				return true;
+			}
 
-            _ClearHandleValue();
-            _ObjectID = -1;
-            _Disposed = 3;
+			_ClearHandleValue();
+			_ObjectID = -1;
+			_Disposed = 3;
 
-            return true;
-        };;
+			return true;
+		};;
 
-    return false; // (already disposed, or engine is gone)
+	return false; // (already disposed, or engine is gone)
 }
 
 bool HandleProxy::Dispose()
 {
-    return _Dispose(true);
+	return _Dispose(true);
+}
+
+bool HandleProxy::DisposeAsCallbackResult()
+{
+	if (_Disposed == 0) {
+		if (_ManagedReferenceCount > 0)
+			_ManagedReferenceCount--;
+		if (_ManagedReferenceCount == 0) {
+			_Disposed = 1;
+			return Dispose();
+		}
+	}
+	return false; // (already disposed, or the managed side has cloned it)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
 HandleProxy* HandleProxy::Initialize(v8::Handle<Value> handle)
 {
-    if (_Disposed > 0) _Dispose(false); // (just resets whatever is needed)
+	if (_Disposed > 0) _Dispose(false); // (just resets whatever is needed)
 
-    SetHandle(handle);
+	SetHandle(handle);
 
-    _Disposed = 0;
+	_Disposed = 0;
 
-    return this;
+	return this;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
 void HandleProxy::_ClearHandleValue()
 {
-    if (!_Handle.IsEmpty())
-    {
-        _Handle.Reset();
-    }
-    if (!_Script.IsEmpty())
-    {
-        _Script.Reset();
-    }
-    _Value.Dispose();
-    _Type = JSV_Undefined;
+	if (!_Handle.IsEmpty())
+	{
+		_Handle.Reset();
+	}
+	if (!_Script.IsEmpty())
+	{
+		_Script.Reset();
+	}
+	_Value.Dispose();
+	_Type = JSV_Undefined;
 }
 
 HandleProxy* HandleProxy::SetHandle(v8::Handle<v8::Script> handle)
 {
-    _ClearHandleValue();
+	_ClearHandleValue();
 
-    _Script = CopyablePersistent<v8::Script>(handle);
-    _Type = JSV_Script;
+	_Script = CopyablePersistent<v8::Script>(handle);
+	_Type = JSV_Script;
 
-    return this;
+	return this;
 }
 
 HandleProxy* HandleProxy::SetHandle(v8::Handle<Value> handle)
 {
-    _ClearHandleValue();
+	_ClearHandleValue();
 
-    _Handle = CopyablePersistent<Value>(handle);
+	_Handle = CopyablePersistent<Value>(handle);
 
-    if (_Handle.IsEmpty())
-    {
-        _Type = JSV_Undefined;
-    }
-    else if (_Handle->IsBoolean())
-    {
-        _Type = JSV_Bool;
-    }
-    else if (_Handle->IsBooleanObject()) // TODO: Validate this is correct.
-    {
-        _Type = JSV_BoolObject;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsInt32())
-    {
-        _Type = JSV_Int32;
-    }
-    else if (_Handle->IsNumber())
-    {
-        _Type = JSV_Number;
-    }
-    else if (_Handle->IsNumberObject()) // TODO: Validate this is correct.
-    {
-        _Type = JSV_NumberObject;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsString())
-    {
-        _Type = JSV_String;
-    }
-    else if (_Handle->IsStringObject())// TODO: Validate this is correct.
-    {
-        _Type = JSV_StringObject;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsDate())
-    {
-        _Type = JSV_Date;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsArray())
-    {
-        _Type = JSV_Array;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsRegExp())
-    {
-        _Type = JSV_RegExp;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsNull())
-    {
-        _Type = JSV_Null;
-    }
-    else if (_Handle->IsFunction())
-    {
-        _Type = JSV_Function;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsExternal())
-    {
-        _Type = JSV_Undefined;
-    }
-    else if (_Handle->IsNativeError())
-    {
-        _Type = JSV_Undefined;
-    }
-    else if (_Handle->IsUndefined())
-    {
-        _Type = JSV_Undefined;
-    }
-    else if (_Handle->IsObject()) // WARNING: Do this AFTER any possible object type checks (example: creating functions makes this return true as well!!!)
-    {
-        _Type = JSV_Object;
-        GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
-    }
-    else if (_Handle->IsFalse()) // TODO: Validate this is correct.
-    {
-        _Type = JSV_Bool;
-    }
-    else if (_Handle->IsTrue()) // TODO: Validate this is correct.
-    {
-        _Type = JSV_Bool;
-    }
-    else
-    {
-        _Type = JSV_Undefined;
-    }
+	if (_Handle.IsEmpty())
+	{
+		_Type = JSV_Undefined;
+	}
+	else if (_Handle->IsBoolean())
+	{
+		_Type = JSV_Bool;
+	}
+	else if (_Handle->IsBooleanObject()) // TODO: Validate this is correct.
+	{
+		_Type = JSV_BoolObject;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsInt32())
+	{
+		_Type = JSV_Int32;
+	}
+	else if (_Handle->IsNumber())
+	{
+		_Type = JSV_Number;
+	}
+	else if (_Handle->IsNumberObject()) // TODO: Validate this is correct.
+	{
+		_Type = JSV_NumberObject;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsString())
+	{
+		_Type = JSV_String;
+	}
+	else if (_Handle->IsStringObject())// TODO: Validate this is correct.
+	{
+		_Type = JSV_StringObject;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsDate())
+	{
+		_Type = JSV_Date;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsArray())
+	{
+		_Type = JSV_Array;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsRegExp())
+	{
+		_Type = JSV_RegExp;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsNull())
+	{
+		_Type = JSV_Null;
+	}
+	else if (_Handle->IsFunction())
+	{
+		_Type = JSV_Function;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsExternal())
+	{
+		_Type = JSV_Undefined;
+	}
+	else if (_Handle->IsNativeError())
+	{
+		_Type = JSV_Undefined;
+	}
+	else if (_Handle->IsUndefined())
+	{
+		_Type = JSV_Undefined;
+	}
+	else if (_Handle->IsObject()) // WARNING: Do this AFTER any possible object type checks (example: creating functions makes this return true as well!!!)
+	{
+		_Type = JSV_Object;
+		GetManagedObjectID(); // (best to call this now for objects to prevent calling back into the native side again [also, prevents debugger errors when inspecting in a GC finalizer])
+	}
+	else if (_Handle->IsFalse()) // TODO: Validate this is correct.
+	{
+		_Type = JSV_Bool;
+	}
+	else if (_Handle->IsTrue()) // TODO: Validate this is correct.
+	{
+		_Type = JSV_Bool;
+	}
+	else
+	{
+		_Type = JSV_Undefined;
+	}
 
-    return this;
+	return this;
 }
 
 void HandleProxy::_DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data)
 {
-    //auto engineProxy = (V8EngineProxy*)isolate->GetData();
-    //auto handleProxy = parameter;
-    //?object.Reset();
+	//auto engineProxy = (V8EngineProxy*)isolate->GetData();
+	//auto handleProxy = parameter;
+	//?object.Reset();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -214,47 +227,47 @@ int32_t HandleProxy::GetManagedObjectID()
 	else if (_ObjectID < -1 || _ObjectID >= 0)
 		return _ObjectID;
 	else {
-        if (_Handle->IsObject())
-        {
-            // ... if this was created by a template then there will be at least 2 fields set, so assume the second is a managed ID value, 
-            // but if not, then check for a hidden property for objects not created by templates ...
+		if (_Handle->IsObject())
+		{
+			// ... if this was created by a template then there will be at least 2 fields set, so assume the second is a managed ID value, 
+			// but if not, then check for a hidden property for objects not created by templates ...
 
-            auto obj = _Handle.As<Object>();
+			auto obj = _Handle.As<Object>();
 
-            if (obj->InternalFieldCount() > 1)
-            {
-                auto field = obj->GetInternalField(1); // (may be faster than hidden values)
-                if (field->IsExternal())
-                    _ObjectID = (int32_t)field.As<External>()->Value();
-            }
-            else
-            {
-                auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
-                if (!handle.IsEmpty() && handle->IsInt32())
-                    _ObjectID = (int32_t)handle->Int32Value();
-            }
+			if (obj->InternalFieldCount() > 1)
+			{
+				auto field = obj->GetInternalField(1); // (may be faster than hidden values)
+				if (field->IsExternal())
+					_ObjectID = (int32_t)field.As<External>()->Value();
+			}
+			else
+			{
+				auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
+				if (!handle.IsEmpty() && handle->IsInt32())
+					_ObjectID = (int32_t)handle->Int32Value();
+			}
 
-            if (_ObjectID == -1)
-                _ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // (must return something to associate accessor delegates, etc.)
+			if (_ObjectID == -1)
+				_ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // (must return something to associate accessor delegates, etc.)
 
-            // ... detect if this is a special "type" object ...
+			// ... detect if this is a special "type" object ...
 
-            if (_ObjectID < -2)
-            {
-                // ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
-                auto hTypeID = obj->Get(NewString("$__TypeID"));
-                if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
-                {
-                    int32_t typeID = hTypeID->Int32Value();
-                    if (obj->Has(NewString("$__Value")))
-                    {
-                        _CLRTypeID = typeID;
-                    }
-                }
-            }
-        }
-    }
-    return _ObjectID;
+			if (_ObjectID < -2)
+			{
+				// ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
+				auto hTypeID = obj->Get(NewString("$__TypeID"));
+				if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
+				{
+					int32_t typeID = hTypeID->Int32Value();
+					if (obj->Has(NewString("$__Value")))
+					{
+						_CLRTypeID = typeID;
+					}
+				}
+			}
+		}
+	}
+	return _ObjectID;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -262,18 +275,18 @@ int32_t HandleProxy::GetManagedObjectID()
 // This is called when the managed side is ready to destroy the V8 handle.
 void HandleProxy::MakeWeak()
 {
-    if (GetManagedObjectID() >= 0)
-    {
-        _Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback);
-        _Disposed = 2;
-    }
+	if (GetManagedObjectID() >= 0)
+	{
+		_Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback);
+		_Disposed = 2;
+	}
 }
 
 // This is called when the managed side is no longer ready to destroy this V8 handle.
 void HandleProxy::MakeStrong()
 {
-    _Handle.Value.ClearWeak();
-    if (_Disposed == 2) _Disposed = 1; // (roll back to managed-side "dispose ready" status; note: the managed side worker currently doesn't track this yet, so it's not supported)
+	_Handle.Value.ClearWeak();
+	if (_Disposed == 2) _Disposed = 1; // (roll back to managed-side "dispose ready" status; note: the managed side worker currently doesn't track this yet, so it's not supported)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -282,93 +295,93 @@ void HandleProxy::MakeStrong()
 
 void HandleProxy::_RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data)
 {
-    auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
-    auto handleProxy = data.GetParameter();
+	auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
+	auto handleProxy = data.GetParameter();
 
-    auto dispose = true;
+	auto dispose = true;
 
-    if (engineProxy->_ManagedV8GarbageCollectionRequestCallback != nullptr)
-    {
-        if (handleProxy->_ObjectID >= 0)
-            dispose = engineProxy->_ManagedV8GarbageCollectionRequestCallback(handleProxy);
-    }
+	if (engineProxy->_ManagedV8GarbageCollectionRequestCallback != nullptr)
+	{
+		if (handleProxy->_ObjectID >= 0)
+			dispose = engineProxy->_ManagedV8GarbageCollectionRequestCallback(handleProxy);
+	}
 
-    if (dispose) // (Note: the managed callback may have already cached the handle, but the handle *value* will not be disposed yet)
-    {
-        handleProxy->_ClearHandleValue();
-        // (V8 handle is no longer tracked on the managed side, so let it go within this GC request [better here while idle])
-    }
+	if (dispose) // (Note: the managed callback may have already cached the handle, but the handle *value* will not be disposed yet)
+	{
+		handleProxy->_ClearHandleValue();
+		// (V8 handle is no longer tracked on the managed side, so let it go within this GC request [better here while idle])
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
 void HandleProxy::UpdateValue()
 {
-    if (_Type == JSV_Script) return;
+	if (_Type == JSV_Script) return;
 
-    _Value.Dispose();
+	_Value.Dispose();
 
-    switch (_Type)
-    {
-        // (note: ';' is prepended to prevent Visual Studio from formatting "switch..case" statements in a retarded manner (at least in VS2012!) )
-        ;case JSV_Null:
-        {
-            _Value.V8Number = 0; 
-            break;
-        }
-        ;case JSV_Bool:
-        {
-            _Value.V8Boolean = _Handle->BooleanValue(); 
-            break;
-        }
-        ;case JSV_BoolObject:
-        {
-            _Value.V8Boolean = _Handle->BooleanValue(); 
-            break;
-        }
-        ;case JSV_Int32:
-        {
-            _Value.V8Integer = _Handle->Int32Value(); 
-            break;
-        }
-        ;case JSV_Number:
-        {
-            _Value.V8Number = _Handle->NumberValue(); 
-            break;
-        }
-        ;case JSV_NumberObject:
-        {
-            _Value.V8Number = _Handle->NumberValue();
-            break;
-        }
-        ;case JSV_String:
-        {
-            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; // (note: string is not disposed by struct object and becomes owned by this proxy!)
-            break;
-        }
-        ;case JSV_StringObject:
-        {
-            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
-            break;
-        }
-        ;case JSV_Date:
-        {
-            _Value.V8Number = _Handle->NumberValue(); 
-            _Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
-            break;
-        }
-        ;case JSV_Undefined:
-        {
-            _Value.V8Number = 0; // (make sure this is cleared just in case...)
-            break;
-        }
-        ;default: // (by default, an "object" type is assumed (warning: this includes functions); however, we can't translate it (obviously), so we just return a reference to this handle proxy instead)
-        {
-            if (!_Handle.IsEmpty())
-                _Value.V8String = _StringItem(_EngineProxy, *_Handle->ToString()).String;
-            break;
-        }
-    }
+	switch (_Type)
+	{
+		// (note: ';' is prepended to prevent Visual Studio from formatting "switch..case" statements in a retarded manner (at least in VS2012!) )
+		; case JSV_Null:
+		{
+			_Value.V8Number = 0;
+			break;
+		}
+		; case JSV_Bool:
+		{
+			_Value.V8Boolean = _Handle->BooleanValue();
+			break;
+		}
+		; case JSV_BoolObject:
+		{
+			_Value.V8Boolean = _Handle->BooleanValue();
+			break;
+		}
+		; case JSV_Int32:
+		{
+			_Value.V8Integer = _Handle->Int32Value();
+			break;
+		}
+		; case JSV_Number:
+		{
+			_Value.V8Number = _Handle->NumberValue();
+			break;
+		}
+		; case JSV_NumberObject:
+		{
+			_Value.V8Number = _Handle->NumberValue();
+			break;
+		}
+		; case JSV_String:
+		{
+			_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; // (note: string is not disposed by struct object and becomes owned by this proxy!)
+			break;
+		}
+		; case JSV_StringObject:
+		{
+			_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
+			break;
+		}
+		; case JSV_Date:
+		{
+			_Value.V8Number = _Handle->NumberValue();
+			_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
+			break;
+		}
+		; case JSV_Undefined:
+		{
+			_Value.V8Number = 0; // (make sure this is cleared just in case...)
+			break;
+		}
+		; default: // (by default, an "object" type is assumed (warning: this includes functions); however, we can't translate it (obviously), so we just return a reference to this handle proxy instead)
+		{
+			if (!_Handle.IsEmpty())
+				_Value.V8String = _StringItem(_EngineProxy, *_Handle->ToString()).String;
+			break;
+		}
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

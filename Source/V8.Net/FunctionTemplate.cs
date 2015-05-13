@@ -24,7 +24,7 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe class FunctionTemplate : TemplateBase<IV8Function>, IFinalizable
+    public unsafe class FunctionTemplate : TemplateBase<IV8Function>, IV8Disposable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -57,28 +57,23 @@ namespace V8.Net
 
         ~FunctionTemplate()
         {
-            if (!((IFinalizable)this).CanFinalize)
-                lock (_Engine._ObjectsToFinalize)
-                {
-                    _Engine._ObjectsToFinalize.Add(this);
-                    GC.ReRegisterForFinalize(this);
-                }
+            this.Finalizing();
         }
 
-        bool IFinalizable.CanFinalize { get; set; }
-
-        void IFinalizable.DoFinalize()
+        public bool CanDispose
         {
-            if (((ITemplateInternal)this)._ReferenceCount == 0
-                && _Engine.GetObjects(this).Length == 0
-                && _Engine.GetObjects(PrototypeTemplate).Length == 0
-                && _Engine.GetObjects(InstanceTemplate).Length == 0)
-                Dispose();
+            get
+            {
+                return ((ITemplateInternal)this)._ReferenceCount == 0
+                    && _Engine.GetObjects(this).Length == 0
+                    && _Engine.GetObjects(PrototypeTemplate).Length == 0
+                    && _Engine.GetObjects(InstanceTemplate).Length == 0;
+            }
         }
 
         public void Dispose()
         {
-            if (_NativeFunctionTemplateProxy != null)
+            if (_NativeFunctionTemplateProxy != null && CanDispose)
             {
                 V8NetProxy.DeleteFunctionTemplateProxy(_NativeFunctionTemplateProxy); // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
                 _NativeFunctionTemplateProxy = null;
@@ -88,8 +83,6 @@ namespace V8.Net
                 PrototypeTemplate = null;
                 InstanceTemplate = null;
             }
-
-            ((IFinalizable)this).CanFinalize = true;
         }
 
         internal void _Initialize(V8Engine v8EngineProxy, string className)
@@ -138,13 +131,16 @@ namespace V8.Net
 
         HandleProxy* _CallBack(Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount)
         {
-            var functions = from f in
-                                (from t in _FunctionsByType.Keys.ToArray() // (need to convert this to an array in case the callbacks modify the dictionary!)
-                                 select _Engine._GetObjectWeakReference(_FunctionsByType[t]))
-                            where f != null && f.Object != null && ((V8Function)f.Object).Callback != null
-                            select ((V8Function)f.Object).Callback;
+            lock (_FunctionsByType)
+            {
+                var functions = from f in
+                                    (from t in _FunctionsByType.Keys.ToArray() // (need to convert this to an array in case the callbacks modify the dictionary!)
+                                     select _Engine._GetObjectWeakReference(_FunctionsByType[t]))
+                                where f != null && f.Object != null && ((V8Function)f.Object).Callback != null
+                                select ((V8Function)f.Object).Callback;
 
-            return _CallBack(managedObjectID, isConstructCall, _this, args, argCount, functions.ToArray());
+                return _CallBack(managedObjectID, isConstructCall, _this, args, argCount, functions.ToArray());
+            }
         }
 
         internal static HandleProxy* _CallBack(Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount, params JSFunction[] functions)
@@ -174,15 +170,19 @@ namespace V8.Net
 
                         if (!result.IsEmpty) break;
                     }
+
+                    // ... if the "hThis" reference is returned, make sure to clone it, otherwise it will be disposed at the end of the 'using' scope! ...
+
+                    result = result.Clone(); // (result will try to be disposed on the native side for returns)
                 }
                 finally
                 {
                     for (i = 0; i < _args.Length; i++)
-                        if (_args[i] != result)
-                            _args[i].Dispose();
+                        //?if (_args[i] != result)
+                        _args[i].Dispose();
                 }
 
-                if (isConstructCall && result.HasObject && result.Object is V8ManagedObject && result.Object.Handle._Handle == hThis)
+                if (isConstructCall && result.HasObject && result.Object is V8ManagedObject && result.Object.Handle == hThis)
                     throw new InvalidOperationException("You've attempted to return the type '" + result.Object.GetType().Name
                         + "' which implements/extends IV8ManagedObject/V8ManagedObject in a construction call (using 'new' in JavaScript) to wrap the new native object."
                         + " The native V8 engine only supports interceptor hooks for objects generated from ObjectTemplate instances.  You will need to first derive/implement from V8NativeObject/IV8NativeObject"
@@ -216,12 +216,15 @@ namespace V8.Net
             int funcID;
             V8Function func;
 
-            if (_FunctionsByType.TryGetValue(typeof(T), out funcID))
+            lock (_FunctionsByType)
             {
-                var weakRef = _Engine._GetObjectWeakReference(funcID);
-                func = weakRef != null ? weakRef.Reset() as V8Function : null;
-                if (func != null)
-                    return (T)func;
+                if (_FunctionsByType.TryGetValue(typeof(T), out funcID))
+                {
+                    var weakRef = _Engine._GetObjectWeakReference(funcID);
+                    func = weakRef != null ? weakRef.Reset() as V8Function : null;
+                    if (func != null)
+                        return (T)func;
+                }
             }
 
             // ... get the v8 "Function" object ...
@@ -240,7 +243,10 @@ namespace V8.Net
 
             func._Prototype = V8NetProxy.GetObjectPrototype(func._Handle);
 
-            _FunctionsByType[typeof(T)] = func.ID; // (this exists to index functions by type)
+            lock (_FunctionsByType)
+            {
+                _FunctionsByType[typeof(T)] = func.ID; // (this exists to index functions by type)
+            }
 
             func.Initialize(false, null);
 
@@ -352,10 +358,13 @@ namespace V8.Net
         /// </summary>
         internal void _RemoveFunctionType(int objectID)
         {
-            var callbackTypes = _FunctionsByType.Keys.ToArray();
-            for (var i = 0; i < callbackTypes.Length; i++)
-                if (_FunctionsByType[callbackTypes[i]] == objectID)
-                    _FunctionsByType[callbackTypes[i]] = -1;
+            lock (_FunctionsByType)
+            {
+                var callbackTypes = _FunctionsByType.Keys.ToArray();
+                for (var i = 0; i < callbackTypes.Length; i++)
+                    if (_FunctionsByType[callbackTypes[i]] == objectID)
+                        _FunctionsByType[callbackTypes[i]] = -1;
+            }
         }
 
         // --------------------------------------------------------------------------------------------------------------------

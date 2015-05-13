@@ -100,10 +100,10 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
         // Properties for interpretation of fields.
 
-        public bool IsDisposeReady
+        public bool IsBeingDisposed
         {
             get { return Disposed == 1 || Disposed == 2; }
-            set { if (Disposed <= 1) Disposed = value ? 1 : 0; } // (once disposed is > 1, the process cannot be stopped)
+            set { if (Disposed <= 1) Disposed = value ? 1 : 0; } // (once disposed is > 1, the process cannot be stopped, and thus this must never change)
         }
 
         public bool IsWeak { get { return Disposed == 2; } }

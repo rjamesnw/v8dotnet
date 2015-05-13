@@ -26,6 +26,32 @@ namespace V8.Net
         internal HandleProxy*[] _HandleProxies = new HandleProxy*[1000];
 
         /// <summary>
+        /// Returns all the handles currently known on the managed side.
+        /// Each InternalHandle is only a wrapper for a tracked HandleProxy native object and does not need to be disposed.
+        /// Because of this, no reference counts are incremented, and thus, disposing them may destroy handles in use.
+        /// This list is mainly provided for debugging purposes only.
+        /// </summary>
+        public IEnumerable<InternalHandle> Handles_All
+        {
+            get
+            {
+                lock (_HandleProxies)
+                {
+                    List<InternalHandle> handles = new List<InternalHandle>(_HandleProxies.Length);
+                    for (var i = 0; i < _HandleProxies.Length; ++i)
+                        if (_HandleProxies[i] != null)
+                            handles.Add(InternalHandle._WrapOnly(_HandleProxies[i]));
+                    return handles.ToArray();
+                }
+            }
+        }
+
+        public IEnumerable<InternalHandle> Handles_Active { get { return from h in Handles_All where h.__HandleProxy->Disposed == 0 select h; } }
+        public IEnumerable<InternalHandle> Handles_ManagedSideDisposeReady { get { return from h in Handles_All where h.__HandleProxy->Disposed == 1 select h; } }
+        public IEnumerable<InternalHandle> Handles_NativeSideWeak { get { return from h in Handles_All where h.__HandleProxy->Disposed == 2 select h; } }
+        public IEnumerable<InternalHandle> Handles_DisposedAndCached { get { return from h in Handles_All where h.__HandleProxy->Disposed == 3 select h; } }
+
+        /// <summary>
         /// Total number of handle proxy references in the V8.NET system (for proxy use).
         /// </summary>
         public int TotalHandles
@@ -43,9 +69,9 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Total number of handle proxy references in the V8.NET system that are ready to be disposed by the V8.NET garbage collector (the worker thread).
+        /// Total number of handle proxy references in the V8.NET system that are in the process of being disposed by the V8.NET garbage collector (the worker thread).
         /// </summary>
-        public int TotalHandlesPendingDisposal
+        public int TotalHandlesBeingDisposed
         {
             get
             {
@@ -53,7 +79,7 @@ namespace V8.Net
                 {
                     var c = 0;
                     foreach (var item in _HandleProxies)
-                        if (item != null && item->IsDisposeReady) c++;
+                        if (item != null && item->IsBeingDisposed) c++;
                     return c;
                 }
             }

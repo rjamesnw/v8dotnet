@@ -276,6 +276,11 @@ public:
     // Disposes of the handle that is wrapped by this proxy instance.
     bool Dispose();
 
+    // Disposes handles returned from the managed side.
+    // By default, handle proxies returned from callbacks to the managed side must be disposed, just like arguments.  The
+	// managed side is responsible for cloning them if needed later.
+    bool DisposeAsCallbackResult();
+
     // (expected to be called by a managed garbage collection thread [of some sort, but not the main thread])
     void _ManagedGCCallback();
 

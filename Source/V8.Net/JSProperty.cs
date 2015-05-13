@@ -30,12 +30,14 @@ namespace V8.Net
     /// Developers can inherit from this class if desired, or choose to go with a custom implementation using the IJSProperty interface instead.
     /// </summary>
     /// <typeparam name="TValueSource">When implementing properties for an IV8ManagedObject, this is the type that will store the property source value/details (such as 'object' - as already implemented in the derived 'JSProperty' class [the non-generic version]).</typeparam>
-    public class JSProperty<TValueSource> : IJSProperty, IHandleBased, IFinalizable
+    public class JSProperty<TValueSource> : IJSProperty, IHandleBased, IV8Disposable
     {
         /// <summary>
         /// This is a developer-defined source reference for the JavaScript 'Value' property if needed. It is not used by V8.Net.
         /// </summary>
         public TValueSource Source;
+
+        public V8Engine Engine { get { return _Value.Engine; } }
 
         /// <summary>
         /// A JavaScript associated value.  By default, this returns 'Handle.Empty' (which means 'Value' is 'null' internally).
@@ -66,17 +68,12 @@ namespace V8.Net
 
         ~JSProperty()
         {
-            if (!((IFinalizable)this).CanFinalize && _Value.Engine != null)
-                lock (_Value.Engine._ObjectsToFinalize)
-                {
-                    _Value.Engine._ObjectsToFinalize.Add(this);
-                    GC.ReRegisterForFinalize(this);
-                }
+            this.Finalizing();
         }
 
-        bool IFinalizable.CanFinalize { get { return _Value.IsEmpty; } set { } }
+        public bool CanDispose { get { return _Value.CanDispose; } }
 
-        void IFinalizable.DoFinalize()
+        public void Dispose()
         {
             _Value.Dispose();
         }

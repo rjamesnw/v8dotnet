@@ -171,8 +171,8 @@ namespace V8.Net
 
                 _RegisterEngine(_NativeV8EngineProxy->ID);
 
-                _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>();
-                _GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
+                _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>(false);
+                //?_GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
                 GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
             }
 
@@ -267,8 +267,11 @@ namespace V8.Net
             if (persistedObjectHandle->_ObjectID >= 0)
             {
                 var weakRef = _GetObjectWeakReference(persistedObjectHandle->_ObjectID);
-                if (weakRef != null)
-                    return weakRef.Object._OnNativeGCRequested(); // (notify the object that a V8 GC is requested)
+                if (weakRef != null && weakRef.Object != null)
+                    lock (weakRef.Object)
+                    {
+                        return weakRef.Object._OnNativeGCRequested(); // (notify the object that a V8 GC is requested; the worker thread should pick it up later)
+                    }
             }
             return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])
         }

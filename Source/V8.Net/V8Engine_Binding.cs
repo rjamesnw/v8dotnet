@@ -331,12 +331,14 @@ namespace V8.Net
         public readonly TypeBinder BaseTypeBinder;
 
         /// <summary>
-        /// Represents a V8 template object used for generating native V8 objects which will correspond to the binding for instances of the underlying type.
+        /// Represents a V8 template object used for generating native V8 objects which will correspond to the binding for 
+        /// instances of the underlying type.
         /// </summary>
         public readonly ObjectTemplate InstanceTemplate;
 
         /// <summary>
-        /// Represents a V8 template object used for generating native V8 function objects which will correspond to the binding for the underlying type (for creating new instances within script).
+        /// Represents a V8 template object used for generating native V8 function objects which will correspond to the binding 
+        /// for the underlying type (for creating new instances within script).
         /// </summary>
         public readonly FunctionTemplate TypeTemplate;
 
@@ -526,14 +528,15 @@ namespace V8.Net
             // ... setup the templates needed ...
 
             InstanceTemplate = Engine.CreateObjectTemplate<ObjectTemplate>(false);
-            InstanceTemplate.RegisterNamedPropertyInterceptors();
+            InstanceTemplate.RegisterNamedPropertyInterceptors(); // (only the named interceptors for named members)
 
             TypeTemplate = Engine.CreateFunctionTemplate<FunctionTemplate>(ClassName);
 
             // ... extract the members and apply to the templates ...
 
             _BindInstanceMembers();
-            // (note: the instance member reflection includes static members during the process, which is why '_BindTypeMembers()' must be called AFTER) 
+            // (note: the instance member reflection includes static members during the process, which is why 
+            // '_BindTypeMembers()' must be called AFTER, since it relies on the'_Members' being properly mapped out) 
 
             _BindTypeMembers();
         }
@@ -589,9 +592,9 @@ namespace V8.Net
                 var baseInstanceMembers = from md in tb._Members.Values where md.BindingMode == BindingMode.Instance select md;
                 foreach (var baseInstanceMemberDetails in baseInstanceMembers)
                 {
-                    var md = _Members.GetValueOrDefault(baseInstanceMemberDetails.MemberName);
+                    var md = _Members.GetValueOrDefault(baseInstanceMemberDetails.MemberName); // (find a local member by the same name as this base member name, if any)
                     if (md == null)
-                        _Members[baseInstanceMemberDetails.MemberName] = baseInstanceMemberDetails; // (adopt the member into this instance as well for fast lookup)
+                        _Members[baseInstanceMemberDetails.MemberName] = baseInstanceMemberDetails; // (adopt the base member into this local member list for quick reference [i.e. all base names will exist in this subtype])
                     else
                         if (md.BaseDetails == null && md.TypeBinder == this)
                             md.BaseDetails = baseInstanceMemberDetails; // (the iteration goes up the inheritance chain, so once 'BaseDetails' is set, it is ignored [because the base type binders would have already linked the details])
@@ -600,10 +603,22 @@ namespace V8.Net
         }
 
         // --------------------------------------------------------------------------------------------------------------------
+        // Note: The following method use to be used in more than one place, and is now used in only one currently.
 
+        /// <summary>
+        /// Used to help update a '_MemberDetails' dictionary with the supplied member information via supplied callbacks.
+        /// The members are tracked by name (via the 'getExisting()' callback), and as such, only a single '_MemberDetails'
+        /// instance should exist per name.  Other members are added as overloads to the instance returned from 'getExisting()',
+        /// if any.
+        /// </summary>
+        /// <param name="memberName">The name of the member to create the details for.</param>
+        /// <param name="memberSecurity">The member security to apply.</param>
+        /// <param name="memberInfo">The type's member information details.</param>
+        /// <param name="getExisting">A callback to check if there's an existing member by the same name.</param>
+        /// <param name="set">A callback for when no member exists and needs to be added (i.e. no existing member details were updated).</param>
+        /// <returns>The resulting '_MemberDetails' instance, which may be an already existing one.</returns>
         internal _MemberDetails _CreateMemberDetails(string memberName, ScriptMemberSecurity? memberSecurity, MemberInfo memberInfo,
-            Func<string, _MemberDetails> getExisting, // (called to check if there's an existing member by the same name)
-            Action<_MemberDetails> set) // (called when no member exists and needs to be added [i.e. no existing member details were updated])
+            Func<string, _MemberDetails> getExisting, Action<_MemberDetails> set)
         {
             if (memberName.IsNullOrWhiteSpace())
                 memberName = memberInfo.Name;
@@ -1247,7 +1262,7 @@ namespace V8.Net
 
         /// <summary>
         /// Binds a specific or named method of the specified object to a 'V8Function' callback wrapper.
-        /// The returns function can be used in setting native V8 object properties to function values.
+        /// The returned function can be used in setting native V8 object properties to function values.
         /// </summary>
         /// <param name="obj">The object that contains the method to bind to, or null if 'methodInfo' is supplied and specifies a static method.</param>
         /// <param name="memberName">Required only if 'methodInfo' is null.</param>
@@ -1340,6 +1355,9 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Binds the constructor and all static members on the underlying type.
+        /// </summary>
         void _BindTypeMembers()
         {
             // (note: if abstract, '_Constructors' will be 'null')
@@ -1595,6 +1613,9 @@ namespace V8.Net
         }
         Type _ObjectType;
 
+        /// <summary>
+        /// The static TypeBinder reference that this ObjectBinder instance represents.
+        /// </summary>
         public TypeBinder TypeBinder { get; private set; }
 
         public ObjectBinder() { _BindingMode = BindingMode.Instance; }

@@ -26,6 +26,14 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+        ///// <summary>
+        ///// A list of objects that no longer have any CLR references.  These objects will sit indefinitely until the V8 GC says
+        ///// to removed them.
+        ///// </summary>
+        //?internal readonly IEnumerable<IV8NativeObject> _AbandondObjects; // (objects are abandoned when {ObservableWeakReference}.IsGCReady becomes true)
+
+        // --------------------------------------------------------------------------------------------------------------------
+
         internal ObservableWeakReference<V8NativeObject> _GetObjectWeakReference(Int32 objectID) // (performs the lookup in a lock block)
         {
             using (_ObjectsLocker.ReadLock()) { return _Objects[objectID]; } // (Note: if index is outside bounds, then null is returned.)
@@ -80,7 +88,7 @@ namespace V8.Net
                 newObject = new T();
                 newObject._Engine = this;
                 newObject.Template = template;
-                newObject.Handle = handle;
+                newObject._Handle._Set(handle, false);
 
                 using (_ObjectsLocker.WriteLock()) // (need a lock because of the worker thread)
                 {
@@ -199,7 +207,7 @@ namespace V8.Net
         /// new object put in the same place as identified by the same ID value. As long as you keep a reference/handle, or perform no other V8.NET actions
         /// between the time you read an object's ID, and the time this method is called, then you can safely use this method.</para>
         /// </summary>
-        public V8NativeObject GetObjectByID(int objectID)
+        public IV8NativeObject GetObjectByID(int objectID)
         { 
             var weakRef = _Objects[objectID]; 
             return weakRef != null ? weakRef.Reset() : null; 

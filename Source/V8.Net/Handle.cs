@@ -11,76 +11,6 @@ namespace V8.Net
 #if !(V1_1 || V2 || V3 || V3_5)
     using System.Dynamic;
     using System.Reflection;
-
-    //public unsafe class DynamicHandleMetaObject : DynamicMetaObject
-    //{
-    //    InternalHandle _Handle;
-
-    //    internal DynamicHandleMetaObject(InternalHandle handle, Expression parameter)
-    //        : base(parameter, BindingRestrictions.Empty, handle)
-    //    {
-    //        _Handle = handle;
-    //    }
-
-    //    public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
-    //    {
-    //        return base.BindGetMember(binder);
-    //    }
-
-    //    public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
-    //    {
-    //        if (_Handle.IsObjectType)
-    //        {
-    //            V8NetProxy.SetObjectPropertyByName(_Handle, binder.Name, _Handle.Engine.CreateValue(value.Value));
-    //            return;
-    //        }
-    //        return base.BindSetMember(binder, value);
-    //    }
-
-    //    public override DynamicMetaObject BindInvoke(InvokeBinder binder, DynamicMetaObject[] args)
-    //    {
-    //        return base.BindInvoke(binder, args);
-    //    }
-
-    //    public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
-    //    {
-    //        return base.BindInvokeMember(binder, args);
-    //    }
-
-    //    public override DynamicMetaObject BindGetIndex(GetIndexBinder binder, DynamicMetaObject[] indexes)
-    //    {
-    //        return base.BindGetIndex(binder, indexes);
-    //    }
-
-    //    public override DynamicMetaObject BindSetIndex(SetIndexBinder binder, DynamicMetaObject[] indexes, DynamicMetaObject value)
-    //    {
-    //        return base.BindSetIndex(binder, indexes, value);
-    //    }
-
-    //    public override DynamicMetaObject BindDeleteMember(DeleteMemberBinder binder)
-    //    {
-    //        return base.BindDeleteMember(binder);
-    //    }
-
-    //    public override DynamicMetaObject BindDeleteIndex(DeleteIndexBinder binder, DynamicMetaObject[] indexes)
-    //    {
-    //        return base.BindDeleteIndex(binder, indexes);
-    //    }
-
-    //    public override IEnumerable<string> GetDynamicMemberNames()
-    //    {
-    //        return base.GetDynamicMemberNames();
-    //    }
-
-    //    public override DynamicMetaObject BindConvert(ConvertBinder binder)
-    //    {
-    //        if (binder.ReturnType == typeof(string))
-    //            return new DynamicMetaObject(Expression, Restrictions, _Handle.AsString);
-    //        else
-    //            return new DynamicMetaObject(Expression, Restrictions, null);
-    //    }
-    //}
-
 #else
     public interface IDynamicMetaObjectProvider { }
     public partial class Expression { public static Expression Empty() { return null; } }
@@ -93,11 +23,11 @@ namespace V8.Net
 
     /// <summary>
     /// The basic handle interface is a higher level interface that implements members that can be common to many handle types for various 3rd-party script
-    /// implementations.  It's primary purpose is to support the DreamSpace.NET development framework, which can support various scripting engines, and is
+    /// implementations.  It's primary purpose is to support the DreamSpace.Net development framework, which can support various scripting engines, and is
     /// designed to be non-V8.NET specific.  Third-party scripts should implement this interface for their handles, or create and return value wrappers that
     /// implement this interface.
     /// </summary>
-    public interface IBasicHandle : IDisposable, IConvertible
+    public interface IBasicHandle : IV8Disposable, IConvertible
     {
         /// <summary>
         /// Returns the underlying value of this handle.
@@ -229,8 +159,14 @@ namespace V8.Net
     /// <summary>
     /// Represents a handle type for tracking native objects.
     /// </summary>
-    public interface IHandle
+    public interface IHandle : IHandleBased
     {
+        /// <summary>
+        /// The ID of that native side proxy handle that this managed side handle represents.
+        /// </summary>
+        int ID { get; }
+
+
         /// <summary>
         /// Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
         /// <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
@@ -251,6 +187,11 @@ namespace V8.Net
         /// Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
         /// </summary>
         bool IsDisposed { get; }
+
+        /// <summary>
+        /// Returns true if this handle is empty (not associated with a native side handle).
+        /// </summary>
+        bool IsEmpty { get; }
     }
 
     /// <summary>
@@ -265,6 +206,8 @@ namespace V8.Net
 
         /// <summary>
         /// Returns the underlying handle object associated with this instance.  If no 'Handle' object exists, one is created and returned.
+        /// <para>This is a method instead of a property because converting from 'InternalHandle' to 'Handle' can cause handle
+        /// reference counts to increase - which can easily happen in the inspector while debugging.</para>
         /// </summary>
         Handle AsHandle();
 
@@ -292,7 +235,7 @@ namespace V8.Net
     /// Another benefit is that thread locking is required for heap memory allocation (for obvious reasons), so stack allocation is faster within a
     /// multi-threaded context.</para>
     /// </summary>
-    public unsafe class Handle : IHandle, IHandleBased, IDynamicMetaObjectProvider, IBasicHandle, IFinalizable
+    public unsafe class Handle : IHandle, IHandleBased, IDynamicMetaObjectProvider, IBasicHandle
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -316,21 +259,7 @@ namespace V8.Net
 
         ~Handle()
         {
-            if (Engine != null && !((IFinalizable)this).CanFinalize) // (ALWAYS check Engine first, in case the whole system is gone, and this is a rogue handle)
-                lock (Engine._ObjectsToFinalize)
-                {
-                    var isLastHandleForObject = (_CurrentObjectID >= 0 && ReferenceCount == 1);
-                    if (!isLastHandleForObject) // (there should ALWAYS be at least one handle associated with an object)
-                        Engine._ObjectsToFinalize.Add(this);
-                    GC.ReRegisterForFinalize(this);
-                }
-        }
-
-        bool IFinalizable.CanFinalize { get { return IsEmpty || IsDisposed; } set { } }
-
-        void IFinalizable.DoFinalize()
-        {
-            _Handle._Dispose(true);
+            this.Finalizing();
         }
 
         /// <summary>
@@ -384,11 +313,17 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
+        /// Any handle can be disposed, except the only handle left on a managed object. In this case, false is returned,
+        /// since the managed object is responsible for it.
+        /// </summary>
+        public bool CanDispose { get { return _Handle.CanDispose; } }
+
+        /// <summary>
         /// Attempts to dispose of the internally wrapped handle proxy and makes this handle empty.
         /// If other handles exist, then they will still be valid, and this handle instance will become empty.
         /// <para>This is useful to use with "using" statements to quickly release a handle into the cache for reuse.</para>
         /// </summary>
-        public void Dispose() { _Handle._Dispose(false); }
+        public void Dispose() { _Handle.Dispose(); }
 
         /// <summary>
         /// Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
@@ -581,19 +516,19 @@ namespace V8.Net
         public bool IsWeakManagedObject { get { return _Handle.IsWeakManagedObject; } }
 
         /// <summary>
-        /// Returns true if the handle is weak and ready to be disposed.
+        /// Returns true if this is the only handle referencing the enclosed handle proxy, and has not yet been disposed.
         /// </summary>
-        public bool IsWeakHandle { get { return _Handle.IsWeakHandle; } }
+        public bool IsOnlyReference { get { return _Handle.IsOnlyReference; } }
 
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// True if this handle is place into a queue to be made weak and eventually disposed (cached) on the native side.
+        /// True if this handle is place into a queue to be disposed.
         /// </summary>
-        public bool IsInPendingDisposalQueue
+        public bool IsBeingDisposed
         {
-            get { return _Handle.IsInPendingDisposalQueue; }
-            internal set { _Handle.IsInPendingDisposalQueue = value; }
+            get { return _Handle.IsBeingDisposed; }
+            internal set { _Handle.IsBeingDisposed = value; }
         }
 
         /// <summary>
@@ -610,20 +545,6 @@ namespace V8.Net
         /// When a handle is ready to be disposed, then calling "Dispose()" will succeed and cause the handle to be placed back into the cache on the native side.
         /// </summary>
         public bool IsDisposeReady { get { return _Handle.IsDisposeReady; } }
-
-        /// <summary>
-        /// Attempts to dispose of this handle (add it back into the native proxy cache for reuse).  If the handle represents a managed object,
-        /// the dispose request is placed into a "pending disposal" queue. When the associated managed object
-        /// no longer has any references, this method will be .
-        /// <para>*** NOTE: This is called by Dispose() when the reference count becomes zero and should not be called directly. ***</para>
-        /// </summary>
-        internal bool __TryDispose() { return _Handle.__TryDispose(); }
-
-        /// <summary>
-        /// Completes the disposal of the native handle.
-        /// <para>Note: A disposed native handle is simply cached for reuse, and always points back to the same managed handle.</para>
-        /// </summary>
-        internal void _CompleteDisposal() { _Handle._CompleteDisposal(); }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -792,7 +713,7 @@ namespace V8.Net
     // ========================================================================================================================
 
     /// <summary>
-    /// Represents methods that can be called on V8 objects.
+    /// Represents methods that can be called on V8 objects (this includes handles).
     /// </summary>
     public interface IV8Object
     {

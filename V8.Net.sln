@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-Console", "Tests\V8.NET-Console\V8.Net-Console.csproj", "{33E19C30-D103-45B3-8A89-5986F195F605}"
-	ProjectSection(ProjectDependencies) = postProject
-		{FDC82668-D6B8-43DE-B287-80B4F295BAFA} = {FDC82668-D6B8-43DE-B287-80B4F295BAFA}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net", "Source\V8.Net\V8.Net.csproj", "{8D612C41-7D95-499C-A82D-C5C3C82225B3}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -85,8 +82,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{E1EE6B1C-CBBE-48C8-AD7F-2F402EF9C32D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.NET-Console-ObjectExamples", "Tests\V8.NET-Console-ObjectExamples\V8.NET-Console-ObjectExamples.csproj", "{6B5492AB-611F-4DED-84D1-5A67981B5A38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.NET-Console-HandleTests", "Tests\V8.NET-Console-HandleTests\V8.NET-Console-HandleTests.csproj", "{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}"
 	ProjectSection(ProjectDependencies) = postProject
-		{33E19C30-D103-45B3-8A89-5986F195F605} = {33E19C30-D103-45B3-8A89-5986F195F605}
+		{8D612C41-7D95-499C-A82D-C5C3C82225B3} = {8D612C41-7D95-499C-A82D-C5C3C82225B3}
+		{EF90724B-3893-4ACF-BFEE-88532485B11A} = {EF90724B-3893-4ACF-BFEE-88532485B11A}
 	EndProjectSection
 EndProject
 Global
@@ -405,6 +405,20 @@ Global
 		{6B5492AB-611F-4DED-84D1-5A67981B5A38}.Release|Win32.ActiveCfg = Release|Any CPU
 		{6B5492AB-611F-4DED-84D1-5A67981B5A38}.Release|x64.ActiveCfg = Release|Any CPU
 		{6B5492AB-611F-4DED-84D1-5A67981B5A38}.Release|x86.ActiveCfg = Release|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Release|Win32.ActiveCfg = Release|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Release|x64.ActiveCfg = Release|Any CPU
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -428,5 +442,9 @@ Global
 		{5123B905-C896-4A1D-BA0E-0C31694E8179} = {677064CB-0ED0-4758-AEEF-73CEEFD3030B}
 		{E1EE6B1C-CBBE-48C8-AD7F-2F402EF9C32D} = {677064CB-0ED0-4758-AEEF-73CEEFD3030B}
 		{6B5492AB-611F-4DED-84D1-5A67981B5A38} = {E1EE6B1C-CBBE-48C8-AD7F-2F402EF9C32D}
+		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2} = {E1EE6B1C-CBBE-48C8-AD7F-2F402EF9C32D}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
