@@ -156,11 +156,11 @@ namespace V8.Net
         /// <summary>
         /// The prototype of the object (every JavaScript object implicitly has a prototype).
         /// </summary>
-        public ObjectHandle Prototype
+        public InternalHandle Prototype
         {
             get
             {
-                if (_Prototype == null && _Handle.IsObjectType)
+                if (_Prototype.IsEmpty && _Handle.IsObjectType)
                 {
                     // ... the prototype is not yet set, so get the prototype and wrap it ...
                     _Prototype = _Handle.Prototype;
@@ -169,7 +169,7 @@ namespace V8.Net
                 return _Prototype;
             }
         }
-        internal ObjectHandle _Prototype;
+        internal InternalHandle _Prototype;
 
         /// <summary>
         /// Returns true if this object is ready to be garbage collected by the native side.
@@ -230,7 +230,7 @@ namespace V8.Net
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
         /// the 'IsInitilized' property.</para>
         /// </summary>
-        public virtual ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+        public virtual InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
         {
             if (_Proxy != this && !IsInitilized)
                 _Proxy.Initialize(this, isConstructCall, args);
@@ -261,7 +261,7 @@ namespace V8.Net
 
         public bool CanDispose
         {
-            get { return _Handle.IsEmpty || _Handle.ReferenceCount <= 1 && !_Handle.IsBeingDisposed; }
+            get { return _Handle.IsEmpty || !_Handle.IsObjectType || _Handle.ReferenceCount == 0 && !_Handle.IsBeingDisposed; }
         }
 
         public void Dispose()
@@ -315,7 +315,7 @@ namespace V8.Net
                 if (_ID != null)
                     engine._RemoveObjectWeakReference(_ID.Value);
 
-                Template = null; // (note: this decrements a template counter; allows the GC finalizer to collect the object)
+                Template = null; // (note: this decrements a template counter, allowing the template object to be finally allowed to dispose)
                 _ID = null; // (also allows the GC finalizer to collect the object)
 
                 GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)

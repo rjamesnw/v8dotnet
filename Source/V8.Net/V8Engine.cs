@@ -581,7 +581,7 @@ namespace V8.Net
             try
             {
                 // ... create a new native object and associated it with the new managed object ID ...
-                obj._Handle._Set(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID));
+                obj._Handle._Set(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID), false);
 
                 /* The V8 object will have an associated internal field set to the index of the created managed object above for quick lookup.  This index is used
                  * to locate the associated managed object when a call-back occurs. The lookup is a fast O(1) operation using the custom 'IndexedObjectList' manager.

@@ -73,6 +73,7 @@ namespace V8.Net
                             if (v8Object is V8NativeObject)
                             {
                                 var v8Obj = v8Object as V8NativeObject;
+                                v8Obj._Handle.IsBeingDisposed = true;
 
                                 if (v8Obj.ID >= 0)
                                 {
@@ -131,30 +132,31 @@ namespace V8.Net
 
         volatile int _PauseWorker;
 
+        const int _THREAD_SLEEP_DELAY = 100;
+
         void _WorkerLoop()
         {
             bool workPending = false;
 
             while (true)
             {
-                //??if (GlobalObject.AsInternalHandle._HandleProxy->Disposed > 0)
-                //    System.Diagnostics.Debugger.Break();
-
                 if (_PauseWorker == 1) _PauseWorker = 2;
                 else if (_PauseWorker == -1) break;
                 else
                 {
-                    workPending = _WeakObjects.Count > 0 || _DisposalQueue.Count > 0;
+                    workPending = _WeakObjects.Count > 0 || _DisposalQueue.Count > 0 || _AbandondObjects.Count > 0;
 
                     while (workPending && _PauseWorker == 0)
                     {
                         workPending = _DoWorkStep();
-                        DoIdleNotification(1);
-                        Thread.Sleep(0);
+                        // (note: the above does not consider '_AbandondObjects.Count' upon return so that the thread can sleep more for the abandoned ones)
+                        Thread.Sleep(0); // (give time to other threads while looping)
                     }
                 }
-                Thread.Sleep(100);
-                DoIdleNotification(100);
+
+                Thread.Sleep(_THREAD_SLEEP_DELAY);
+
+                DoIdleNotification(_THREAD_SLEEP_DELAY); // (do this last to allow the worker steps to make objects weak first, if any)
             }
 
             _PauseWorker = -2;
@@ -166,35 +168,51 @@ namespace V8.Net
         /// </summary>
         bool _DoWorkStep()
         {
-            // ... do one weak object ...
+            // ... check one abandoned object ...
 
-            //?int objID = -1;
+            IV8Disposable abandoned = null;
 
-            //?lock (_WeakObjects)
-            //{
-            //    if (_WeakObjects.Count > 0)
-            //    {
-            //        objID = _WeakObjects.Min();
-            //        _WeakObjects.Remove(objID);
-            //    }
-            //}
+            lock (_AbandondObjects)
+            {
+                if (_AbandondObjects.Count > 0)
+                {
+                    abandoned = _AbandondObjects.First.Value; // (take the first abandoned object and try to dispose of it)
+                    _AbandondObjects.RemoveFirst();
+                }
+            }
 
-            //?if (objID >= 0)
-            //{
-            //    IV8NativeObject obj;
-            //    using (_ObjectsLocker.ReadLock())
-            //    {
-            //        obj = _Objects[objID].Object;
-            //    }
-            //}
+            if (abandoned != null)
+            {
+                if (abandoned is Handle || abandoned is InternalHandle)
+                {
+                    var h = ((IHandleBased)abandoned).AsInternalHandle;
+                    if (h.CanDispose)
+                    {
+                        abandoned.Dispose();
+                        abandoned = null;
+                    }
+                }
+                else if (abandoned.CanDispose)
+                {
+                    abandoned.Dispose();
+                    abandoned = null;
+                }
+
+                if (abandoned != null)
+                    lock (_AbandondObjects)
+                    {
+                        _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
+                    }
+            }
 
             // ... and do one handle ready to be disposed ...
 
-            IV8Disposable disposable;
+            IV8Disposable disposable = null;
 
             lock (_DisposalQueue) // TODO: consider using read/write locks in more places
             {
-                disposable = _DisposalQueue.Dequeue();
+                if (_DisposalQueue.Count > 0)
+                    disposable = _DisposalQueue.Dequeue();
             }
 
             if (disposable != null)

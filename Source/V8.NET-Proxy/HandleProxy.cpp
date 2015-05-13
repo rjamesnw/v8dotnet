@@ -44,8 +44,11 @@ bool HandleProxy::_Dispose(bool registerDisposal)
 			}
 
 			_ClearHandleValue();
+
 			_ObjectID = -1;
+			_CLRTypeID = -1;
 			_Disposed = 3;
+			_Type = JSV_Undefined;
 
 			return true;
 		};;
@@ -77,9 +80,9 @@ HandleProxy* HandleProxy::Initialize(v8::Handle<Value> handle)
 {
 	if (_Disposed > 0) _Dispose(false); // (just resets whatever is needed)
 
-	SetHandle(handle);
+	_Disposed = 0; // (MUST do this FIRST in order for any associated managed object ID to be pulled, otherwise it will remain -1)
 
-	_Disposed = 0;
+	SetHandle(handle);
 
 	return this;
 }

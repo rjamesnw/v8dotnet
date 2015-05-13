@@ -320,6 +320,8 @@ namespace V8.Net
     {
         // --------------------------------------------------------------------------------------------------------------------
 
+        public static string TYPE_BINDER_MISSING_MSG = "The ObjectBinder is missing for {0} '{1}' ({2}).";
+
         /// <summary>
         /// The engine that will own the 'ObjectTemplate' instance.
         /// </summary>
@@ -860,7 +862,7 @@ namespace V8.Net
                         return value;
                     }
                     else
-                        return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                 }
                 return value;
             };
@@ -880,7 +882,7 @@ namespace V8.Net
                         if (_this.IsBinder)
                             return Engine.CreateValue((T)fieldInfo.GetValue(_this.BoundObject));
                         else
-                            return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
+                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                     }
                     catch (Exception ex) { return Engine.CreateValue(Exceptions.GetFullErrorMessage(ex)); }
                 };
@@ -891,7 +893,7 @@ namespace V8.Net
                     if (_this.IsBinder)
                         return Engine.CreateValue((T)fieldInfo.GetValue(_this.BoundObject));
                     else
-                        return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                 };
         }
 
@@ -909,7 +911,7 @@ namespace V8.Net
                         if (_this.IsBinder)
                             return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
                         else
-                            return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
+                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                     }
                     catch (Exception ex) { return Engine.CreateValue(Exceptions.GetFullErrorMessage(ex)); }
                 };
@@ -920,7 +922,7 @@ namespace V8.Net
                     if (_this.IsBinder)
                         return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
                     else
-                        return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + fieldInfo.Name + ").", JSValueType.ExecutionError);
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                 };
         }
 
@@ -1028,7 +1030,7 @@ namespace V8.Net
                         propertyInfo.SetValue(_this.BoundObject, _value, null);
                     }
                     else
-                        return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                 }
                 return value;
             };
@@ -1051,7 +1053,7 @@ namespace V8.Net
                             if (_this.IsBinder)
                                 return Engine.CreateValue((T)propertyInfo.GetValue(_this.BoundObject, null));
                             else
-                                return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
+                                return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                         }
                         catch (Exception ex) { return Engine.CreateValue(Exceptions.GetFullErrorMessage(ex)); }
                     }
@@ -1066,7 +1068,7 @@ namespace V8.Net
                         if (_this.IsBinder)
                             return Engine.CreateValue((T)propertyInfo.GetValue(_this.BoundObject, null));
                         else
-                            return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
+                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                     }
                     return InternalHandle.Empty;
                 };
@@ -1088,7 +1090,7 @@ namespace V8.Net
                             if (_this.IsBinder)
                                 return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive);
                             else
-                                return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
+                                return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                         }
                         catch (Exception ex) { return Engine.CreateValue(Exceptions.GetFullErrorMessage(ex)); }
                     }
@@ -1102,7 +1104,7 @@ namespace V8.Net
                         if (_this.IsBinder)
                             return Engine.CreateValue(propertyInfo.GetValue(_this.BoundObject, null), _Recursive);
                         else
-                            return Engine.CreateError("The ObjectBinder is missing for property '" + propertyName + "' (" + propertyInfo.Name + ").", JSValueType.ExecutionError);
+                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                     }
                     return InternalHandle.Empty;
                 };
@@ -1312,7 +1314,7 @@ namespace V8.Net
                 try
                 {
                     if (!_this.IsBinder)
-                        return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberDetails.MemberName + ").", JSValueType.ExecutionError);
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "function", className, memberDetails.MemberName), JSValueType.ExecutionError);
 
                     // ... translate the generic arguments, if applicable ...
 
@@ -1622,7 +1624,7 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+        public override InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
         {
             if (_Object != null)
             {

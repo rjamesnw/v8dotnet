@@ -55,23 +55,17 @@ namespace V8.Net
         {
         }
 
-        ~FunctionTemplate()
-        {
-            this.Finalizing();
-        }
-
-        public bool CanDispose
+        public override bool CanDispose
         {
             get
             {
-                return ((ITemplateInternal)this)._ReferenceCount == 0
-                    && _Engine.GetObjects(this).Length == 0
-                    && _Engine.GetObjects(PrototypeTemplate).Length == 0
-                    && _Engine.GetObjects(InstanceTemplate).Length == 0;
+                return base.CanDispose
+                    && ((ITemplateInternal)PrototypeTemplate)._ReferenceCount == 0
+                    && ((ITemplateInternal)InstanceTemplate)._ReferenceCount == 0;
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             if (_NativeFunctionTemplateProxy != null && CanDispose)
             {
@@ -241,7 +235,7 @@ namespace V8.Net
             // ... get the function's prototype object, wrap it, and give it to the new function object ...
             // (note: this is a special case, because the function object auto generates the prototype object natively using an existing object template)
 
-            func._Prototype = V8NetProxy.GetObjectPrototype(func._Handle);
+            func._Prototype._Set(V8NetProxy.GetObjectPrototype(func._Handle), false);
 
             lock (_FunctionsByType)
             {
@@ -322,7 +316,7 @@ namespace V8.Net
 
             try
             {
-                obj._Handle._Set(V8NetProxy.CreateFunctionInstance(_NativeFunctionTemplateProxy, obj.ID, args.Length, _args));
+                obj._Handle._Set(V8NetProxy.CreateFunctionInstance(_NativeFunctionTemplateProxy, obj.ID, args.Length, _args), false);
                 // (note: setting '_NativeObject' also updates it's '_ManagedObject' field if necessary.
 
                 obj.Initialize(true, args);

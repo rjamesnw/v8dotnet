@@ -15,8 +15,12 @@ namespace V8.Net
 
     public partial class V8Engine
     {
-#if DEBUG
-        public static List<InternalHandle> AllInternalHandlesEverCreated = new List<InternalHandle>();
+#if DEBUG && TRACKHANDLES
+        /// <summary>
+        /// Holds all the InternalHandle values that were set with native proxy handles.
+        /// <para>Note: This list is only available when compiling in debug mode.</para>
+        /// </summary>
+        public static readonly List<InternalHandle> AllInternalHandlesEverCreated = new List<InternalHandle>();
 #endif
     }
 
@@ -67,9 +71,6 @@ namespace V8.Net
             _First = false;
             _EngineID = -1;
             _Set(hp, checkIfFirst);
-#if DEBUG
-            V8Engine.AllInternalHandlesEverCreated.Add(this);
-#endif
         }
 
         /// <summary>
@@ -81,9 +82,6 @@ namespace V8.Net
             _First = false;
             _EngineID = -1;
             Set(handle);
-#if DEBUG
-            V8Engine.AllInternalHandlesEverCreated.Add(this);
-#endif
         }
 
         /// <summary>
@@ -160,11 +158,17 @@ namespace V8.Net
                     currentHandleProxies[handleID] = __HandleProxy;
 
                     if (checkIfFirst)
+                    {
                         _First = (__HandleProxy->ManagedReferenceCount == 0);
+                        if (_First)
+                            GC.AddMemoryPressure((Marshal.SizeOf(typeof(HandleProxy)))); // (many handle instances can share one proxy)
+                    }
 
                     __HandleProxy->ManagedReferenceCount++;
 
-                    GC.AddMemoryPressure((Marshal.SizeOf(typeof(HandleProxy))));
+#if DEBUG && TRACKHANDLES
+                    V8Engine.AllInternalHandlesEverCreated.Add(this);
+#endif
                 }
             }
 
@@ -718,6 +722,71 @@ namespace V8.Net
 
         internal string _IDAndRefStatus { get { return "Engine ID: " + _EngineID + ", Handle ID: " + __HandleProxy->ID + ", References: " + __HandleProxy->ManagedReferenceCount; } }
 
+        /// <summary>
+        /// Returns a string describing the handle (mainly for debugging purposes).
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                try
+                {
+                    if (IsEmpty) return "<empty>";
+                    if (_EngineID < 0 || Engine == null) return "<detached>"; // (doesn't belong anywhere - gone rogue! ;) )
+                    if (IsDisposed) return "<" + _IDAndRefStatus + ", Object ID: " + __HandleProxy->_ObjectID + ",  " + DisposalStatus + ">";
+                    if (IsUndefined) return "undefined";
+
+                    if (IsBinder)
+                    {
+                        if (BindingMode == BindingMode.Static)
+                        {
+                            var typeBinder = ((TypeBinderFunction)Object).TypeBinder;
+                            return "<CLR Type: " + typeBinder.BoundType.FullName + ", " + _IDAndRefStatus + ">";
+                        }
+                        else
+                        {
+                            var obj = BoundObject;
+                            if (obj != null)
+                                return "<" + obj.ToString() + ", " + _IDAndRefStatus + ">";
+                            else
+                                throw new InvalidOperationException("Object binder does not have an object instance.");
+                        }
+                    }
+                    else if (IsObjectType)
+                    {
+                        string managedType = "";
+                        string disposal = !string.IsNullOrEmpty(DisposalStatus) ? " - " + DisposalStatus : "";
+
+                        if (HasObject)
+                        {
+                            var mo = Engine._GetObjectAsIs(ObjectID);
+                            managedType = " (" + (mo != null ? mo.GetType().Name + " [" + mo.ID + "]" : "associated managed object is null") + ")";
+                        }
+
+                        var typeName = Engine.GlobalObject != this ? Enum.GetName(typeof(JSValueType), ValueType) : "global";
+
+                        return "<object: " + typeName + managedType + disposal + ", " + _IDAndRefStatus + ">";
+                    }
+                    else
+                    {
+                        // ... this is a value type ...
+                        var val = Value;
+                        return "<value: " + (string)Types.ChangeType(val, typeof(string)) + ", " + _IDAndRefStatus + ">";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return Exceptions.GetFullErrorMessage(ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// If this handle represents an object, the 'Description' property value is returned, otherwise the primitive value
+        /// is returned as a string.
+        /// <para>Note: This does not pull the same string as calling 'toString()' in JavaScript.  You have to use the 'Call()' 
+        /// method on this handle to call that function - as you would normally.</para>
+        /// </summary>
         public override string ToString()
         {
             try
@@ -726,41 +795,8 @@ namespace V8.Net
                 if (_EngineID < 0 || Engine == null) return "<detached>"; // (doesn't belong anywhere - gone rogue! ;) )
                 if (IsDisposed) return "<" + _IDAndRefStatus + ", Object ID: " + __HandleProxy->_ObjectID + ",  " + DisposalStatus + ">";
                 if (IsUndefined) return "undefined";
-
-                if (IsBinder)
-                {
-                    if (BindingMode == BindingMode.Static)
-                    {
-                        var typeBinder = ((TypeBinderFunction)Object).TypeBinder;
-                        return "<CLR Type: " + typeBinder.BoundType.FullName + ", " + _IDAndRefStatus + ">";
-                    }
-                    else
-                    {
-                        var obj = BoundObject;
-                        if (obj != null)
-                            return "<" + obj.ToString() + ", " + _IDAndRefStatus + ">";
-                        else
-                            throw new InvalidOperationException("Object binder does not have an object instance.");
-                    }
-                }
-                else if (IsObjectType)
-                {
-                    string managedType = "";
-                    string disposal = !string.IsNullOrEmpty(DisposalStatus) ? " - " + DisposalStatus : "";
-
-                    if (HasObject)
-                    {
-                        var mo = Engine._GetObjectAsIs(ObjectID);
-                        managedType = " (" + (mo != null ? mo.GetType().Name + " [" + mo.ID + "]" : "associated managed object is null") + ")";
-                    }
-
-                    var typeName = Engine.GlobalObject != this ? Enum.GetName(typeof(JSValueType), ValueType) : "global";
-
-                    return "<object: " + typeName + managedType + disposal + ", " + _IDAndRefStatus + ">";
-                }
-
+                if (IsObjectType) return Description;
                 var val = Value;
-
                 return val != null ? (string)Types.ChangeType(val, typeof(string)) : "null";
             }
             catch (Exception ex)
@@ -1217,6 +1253,8 @@ namespace V8.Net
 
         /// <summary>
         /// The prototype of the object (every JavaScript object implicitly has a prototype).
+        /// <para>Note: As with any InternalHandle returned, you are responsible to dispose it.  It is recommended to type cast
+        /// this to an ObjectHandle before use.</para>
         /// </summary>
         public InternalHandle Prototype
         {

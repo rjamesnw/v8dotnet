@@ -1,5 +1,10 @@
-﻿using System;
+﻿// Note: V8Engine now has two static properties available *only* when the engine is compiled in DEBUG mode with TRACKHANDLES defined:
+//    V8Engine.AllInternalHandlesEverCreated: All InternalHandle values set with native handle proxies since application start.
+//    V8Engine.AllHandlesEverCreated: All Handle/ObjectHandle objects created since application start.
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
@@ -75,23 +80,18 @@ namespace V8.Net
                         if (lcInput == @"\help" || lcInput == @"\")
                         {
                             Console.WriteLine(@"Special console commands (all commands are triggered via a preceding '\' character so as not to confuse it with script code):");
-                            Console.WriteLine(@"\init - Setup environment for testing.");
+                            Console.WriteLine(@"\init - Setup environment for testing (adds 'dump()' and 'assert()'.");
                             Console.WriteLine(@"\cls - Clears the screen.");
                             Console.WriteLine(@"\gc - Triggers garbage collection (for testing purposes).");
                             Console.WriteLine(@"\v8gc - Triggers garbage collection in V8 (for testing purposes).");
                             Console.WriteLine(@"\gctest - Runs a simple GC test against V8.NET and the native V8 engine.");
                             Console.WriteLine(@"\handles - Dumps the current list of known handles.");
+                            Console.WriteLine(@"\speedtest - Runs a simple test script to test V8.NET performance with the V8 engine.");
                             Console.WriteLine(@"\exit - Exists the console.");
                         }
                         else if (lcInput == @"\init")
                         {
                             Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
-                            _JSServer.ConsoleExecute("1");
-                            _JSServer.ConsoleExecute("2");
-                            _JSServer.ConsoleExecute("3");
-                            _JSServer.Execute("4");
-                            _JSServer.Execute("5");
-                            _JSServer.Execute("6");
                             _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
                                 + @" if (typeof o.valueOf=='undefined') return ""'valueOf()' is missing on '""+(typeof o)+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
                                 + @" if (typeof o.toString=='undefined') return ""'toString()' is missing on '""+o.valueOf()+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
@@ -133,28 +133,28 @@ namespace V8.Net
 
                             foreach (var h in _JSServer.Handles_Active)
                             {
-                                Console.WriteLine(" * " + h.ToString().Replace(Environment.NewLine, "\\r\\n"));
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
                             }
 
                             Console.Write(Environment.NewLine + "Managed side dispose-ready handles (usually due to a GC attempt) ... " + Environment.NewLine);
 
                             foreach (var h in _JSServer.Handles_ManagedSideDisposeReady)
                             {
-                                Console.WriteLine(" * " + h.ToString().Replace(Environment.NewLine, "\\r\\n"));
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
                             }
 
                             Console.Write(Environment.NewLine + "Native side V8 handles now marked 'weak' (though may still be in use) ... " + Environment.NewLine);
 
                             foreach (var h in _JSServer.Handles_NativeSideWeak)
                             {
-                                Console.WriteLine(" * " + h.ToString().Replace(Environment.NewLine, "\\r\\n"));
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
                             }
 
                             Console.Write(Environment.NewLine + "Native side V8 handles that are now cached for reuse ... " + Environment.NewLine);
 
                             foreach (var h in _JSServer.Handles_DisposedAndCached)
                             {
-                                Console.WriteLine(" * " + h.ToString().Replace(Environment.NewLine, "\\r\\n"));
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
                             }
 
                             Console.WriteLine(Environment.NewLine + "Done." + Environment.NewLine);
@@ -185,8 +185,6 @@ namespace V8.Net
 
                             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                             GC.WaitForPendingFinalizers();
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                            GC.WaitForPendingFinalizers();
 
                             // (we wait for the 'testHandle' handle object to be collected, which will dispose the handle)
                             // (note: we do not call 'Set()' on 'internalHandle' because the "Handle" type takes care of the disposal)
@@ -215,8 +213,6 @@ namespace V8.Net
 
                             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                             GC.WaitForPendingFinalizers();
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                            GC.WaitForPendingFinalizers();
 
                             GC.RemoveMemoryPressure(long.MaxValue);
 
@@ -243,6 +239,58 @@ namespace V8.Net
                             if (!internalHandle.IsDisposed) throw new Exception("Managed object was not garbage collected.");
                             // (note: this call is only valid as long as no more objects are created before this point)
                             Console.WriteLine("Success! The managed V8NativeObject instance is disposed.");
+                            Console.WriteLine("\r\nDone.\r\n");
+                        }
+                        else if (lcInput == @"\speedtest")
+                        {
+                            var timer = new Stopwatch();
+                            long startTime, elapsed;
+                            long count;
+                            double result1, result2, result3, result4;
+
+                            Console.WriteLine(Environment.NewLine + "Running the speed tests ... ");
+
+                            timer.Start();
+
+                            //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
+                            Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
+
+                            count = 200000000;
+
+                            Console.WriteLine("\r\nTesting global property write speed ... ");
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = 0;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result1 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result1.ToString("0.0#########") + " ms each pass.");
+
+                            Console.WriteLine("\r\nTesting global property read speed ... ");
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) n;");
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result2 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
+
+                            count = 200000;
+
+                            Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
+                            _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = 0;");
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result3 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result3.ToString("0.0#########") + " ms each pass.");
+
+                            Console.WriteLine("\r\nTesting property read speed on a managed object (with interceptors) ... ");
+                            startTime = timer.ElapsedMilliseconds;
+                            _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) mo.n;");
+                            elapsed = timer.ElapsedMilliseconds - startTime;
+                            result4 = (double)elapsed / count;
+                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result4.ToString("0.0#########") + " ms each pass.");
+
+                            Console.WriteLine("\r\nUpdating native properties is {0:N2}x faster than managed ones.", result3 / result1);
+                            Console.WriteLine("\r\nReading native properties is {0:N2}x faster than managed ones.", result4 / result2);
+
                             Console.WriteLine("\r\nDone.\r\n");
                         }
                         else if (lcInput == @"\1")

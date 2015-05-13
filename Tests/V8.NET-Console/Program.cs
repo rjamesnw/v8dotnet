@@ -157,6 +157,7 @@ namespace V8.Net
                             Console.WriteLine(@"\gc - Triggers garbage collection (for testing purposes).");
                             Console.WriteLine(@"\v8gc - Triggers garbage collection in V8 (for testing purposes).");
                             Console.WriteLine(@"\gctest - Runs a simple GC test against V8.NET and the native V8 engine.");
+                            Console.WriteLine(@"\handles - Dumps the current list of known handles.");
                             Console.WriteLine(@"\speedtest - Runs a simple test script to test V8.NET performance with the V8 engine.");
                             Console.WriteLine(@"\mtest - Runs a simple test script to test V8.NET integration/marshalling compatibility with the V8 engine on your system.");
                             Console.WriteLine(@"\newenginetest - Creates 3 new engines (each time) and runs simple expressions in each one (note: new engines are never removed once created).");
@@ -244,16 +245,51 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\gc")
                         {
-                            Console.Write("\r\nForcing garbage collection ... ");
-                            GC.Collect();
+                            Console.Write(Environment.NewLine + "Forcing garbage collection ... ");
+                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                            GC.WaitForPendingFinalizers();
+                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                             GC.WaitForPendingFinalizers();
                             Console.WriteLine("Done.\r\n");
+                            Console.WriteLine("Currently Used Memory: " + GC.GetTotalMemory(true));
                         }
                         else if (lcInput == @"\v8gc")
                         {
-                            Console.Write("\r\nForcing V8 garbage collection ... ");
+                            Console.Write(Environment.NewLine + "Forcing V8 garbage collection ... ");
                             _JSServer.ForceV8GarbageCollection();
                             Console.WriteLine("Done.\r\n");
+                        }
+                        else if (lcInput == @"\handles")
+                        {
+                            Console.Write(Environment.NewLine + "Active handles list ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_Active)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.Write(Environment.NewLine + "Managed side dispose-ready handles (usually due to a GC attempt) ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_ManagedSideDisposeReady)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.Write(Environment.NewLine + "Native side V8 handles now marked 'weak' (though may still be in use) ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_NativeSideWeak)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.Write(Environment.NewLine + "Native side V8 handles that are now cached for reuse ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_DisposedAndCached)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.WriteLine(Environment.NewLine + "Done." + Environment.NewLine);
                         }
                         else if (lcInput == @"\gctest")
                         {
@@ -616,7 +652,7 @@ public sealed class SealedObject : IV8NativeObject
 /// </summary>
 public class V8DotNetTesterFunction : V8Function
 {
-    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+    public override InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         Callback = ConstructV8DotNetTesterWrapper;
 
@@ -638,7 +674,7 @@ public class V8DotNetTesterWrapper : V8NativeObject // (I can also implement IV8
 {
     V8DotNetTester _Tester;
 
-    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+    public override InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         _Tester = Engine.CreateObjectTemplate().CreateObject<V8DotNetTester>();
         SetProperty("tester", _Tester); // (or _Tester.Handle works also)
@@ -650,7 +686,7 @@ public class V8DotNetTester : V8ManagedObject
 {
     IV8Function _MyFunc;
 
-    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+    public override InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         base.Initialize(isConstructCall, args);
 

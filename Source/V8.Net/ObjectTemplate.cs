@@ -30,13 +30,17 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe abstract class TemplateBase<ObjectType> : ITemplate, ITemplateInternal where ObjectType : class, IV8NativeObject
+    public unsafe abstract class TemplateBase<ObjectType> : ITemplate, ITemplateInternal, IV8Disposable where ObjectType : class, IV8NativeObject
     {
         // --------------------------------------------------------------------------------------------------------------------
 
         public V8Engine Engine { get { return _Engine; } }
         internal V8Engine _Engine;
 
+        /// <summary>
+        /// Returns true if this template object has been placed into the "abandoned" list due to a GC finalization attempt.
+        /// </summary>
+        internal bool _IsAbandoned { get { return _Engine != null && _Engine._AbandondObjects.Contains(this); } }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -84,6 +88,22 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         public TemplateBase()
+        {
+        }
+        ~TemplateBase()
+        {
+            this.Finalizing();
+        }
+
+        public virtual bool CanDispose
+        {
+            get
+            {
+                return (((ITemplateInternal)this)._ReferenceCount == 0
+                    && (Parent == null || ((ITemplateInternal)Parent)._ReferenceCount == 0));
+            }
+        }
+        public virtual void Dispose()
         {
         }
 
@@ -276,7 +296,7 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>, IV8Disposable
+    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -324,21 +344,7 @@ namespace V8.Net
         {
         }
 
-        ~ObjectTemplate()
-        {
-            this.Finalizing();
-        }
-
-        public bool CanDispose
-        {
-            get
-            {
-                return (((ITemplateInternal)this)._ReferenceCount == 0
-                    && _Engine.GetObjects(this).Length == 0
-                    && (Parent == null || _Engine.GetObjects(Parent).Length == 0));
-            }
-        }
-        public void Dispose() // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
+        public override void Dispose() // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
         {
             if (_NativeObjectTemplateProxy != null && CanDispose)
             {
