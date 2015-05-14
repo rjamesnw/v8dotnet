@@ -163,7 +163,7 @@ namespace V8.Net
                 if (_Prototype.IsEmpty && _Handle.IsObjectType)
                 {
                     // ... the prototype is not yet set, so get the prototype and wrap it ...
-                    _Prototype = _Handle.Prototype;
+                    _Prototype = _Handle.GetPrototype();
                 }
 
                 return _Prototype;

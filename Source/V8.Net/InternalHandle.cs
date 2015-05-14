@@ -1251,18 +1251,19 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+        [Obsolete("Using object inspector on this handle will cause handle leaks when this property is read from.  Please use 'GetPrototype()' instead.", true)]
+        public InternalHandle Prototype // (cannot be a property, else the object inspector will cause handle leaks)
+        { get { throw new NotSupportedException(); } }
+
         /// <summary>
         /// The prototype of the object (every JavaScript object implicitly has a prototype).
         /// <para>Note: As with any InternalHandle returned, you are responsible to dispose it.  It is recommended to type cast
         /// this to an ObjectHandle before use.</para>
         /// </summary>
-        public InternalHandle Prototype
+        public InternalHandle GetPrototype() // (cannot be a property, else )
         {
-            get
-            {
-                if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
-                return V8NetProxy.GetObjectPrototype(__HandleProxy);
-            }
+            if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
+            return V8NetProxy.GetObjectPrototype(__HandleProxy);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

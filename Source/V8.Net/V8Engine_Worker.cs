@@ -63,7 +63,8 @@ namespace V8.Net
                     }
                     else
                     {
-                        // ... queue 
+                        // ... queue the object ...
+                        
                         lock (engine._DisposalQueue)
                         {
                             engine._DisposalQueue.Enqueue(v8Object); // (queue first, so when 'weakRef.DoFinalize()' calls 'GC.ReRegisterForFinalize()', there's no chance of the finalizer kicking in, just in case)
@@ -73,6 +74,7 @@ namespace V8.Net
                             if (v8Object is V8NativeObject)
                             {
                                 var v8Obj = v8Object as V8NativeObject;
+
                                 v8Obj._Handle.IsBeingDisposed = true;
 
                                 if (v8Obj.ID >= 0)

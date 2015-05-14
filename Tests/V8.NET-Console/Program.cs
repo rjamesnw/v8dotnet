@@ -25,6 +25,8 @@ namespace V8.Net
 
             try
             {
+                Console.WriteLine("V8.Net Version: " + V8Engine.Version);
+
                 Console.Write(Environment.NewLine + "Creating a V8Engine instance ...");
                 _JSServer = new V8Engine();
                 Console.WriteLine(" Done!");

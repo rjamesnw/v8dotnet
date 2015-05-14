@@ -6,6 +6,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,6 +37,17 @@ namespace V8.Net
         /// </summary>
         public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
+        // --------------------------------------------------------------------------------------------------------------------
+
+        public static string Version
+        {
+            get
+            {
+                return _Version ?? (_Version = FileVersionInfo.GetVersionInfo(typeof(V8Engine).Assembly.Location).FileVersion);
+            }
+        }
+        static string _Version;
+        
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>

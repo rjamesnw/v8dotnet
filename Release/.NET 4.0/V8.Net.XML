@@ -1043,6 +1043,13 @@
             The 'this' property will not be specified, which will default to the global scope as expected.
             </summary>
         </member>
+        <member name="M:V8.Net.InternalHandle.GetPrototype">
+            <summary>
+            The prototype of the object (every JavaScript object implicitly has a prototype).
+            <para>Note: As with any InternalHandle returned, you are responsible to dispose it.  It is recommended to type cast
+            this to an ObjectHandle before use.</para>
+            </summary>
+        </member>
         <member name="P:V8.Net.InternalHandle.CanDispose">
             <summary>
             Any handle can be disposed, except the only handle left on a managed object. In this case, false is returned,
@@ -1233,13 +1240,6 @@
             <summary>
             Returns true if this handle contains an error message (the string value is the message).
             If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
-            </summary>
-        </member>
-        <member name="P:V8.Net.InternalHandle.Prototype">
-            <summary>
-            The prototype of the object (every JavaScript object implicitly has a prototype).
-            <para>Note: As with any InternalHandle returned, you are responsible to dispose it.  It is recommended to type cast
-            this to an ObjectHandle before use.</para>
             </summary>
         </member>
         <member name="T:V8.Net.V8NativeObjectPropertyGetter">

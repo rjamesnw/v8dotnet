@@ -1067,12 +1067,16 @@ namespace V8.Net
 #endif
         // --------------------------------------------------------------------------------------------------------------------
 
+        [Obsolete("Using object inspector on this handle will cause handle leaks when this property is read from.  Please use 'GetPrototype()' instead.", true)]
+        public ObjectHandle Prototype // (cannot be a property, else the object inspector will cause handle leaks)
+        { get { throw new NotSupportedException(); } }
+        
         /// <summary>
         /// The prototype of the object (every JavaScript object implicitly has a prototype).
         /// </summary>
-        public ObjectHandle Prototype
+        public ObjectHandle GetPrototype()
         {
-            get { return _Handle.Prototype; }
+            return _Handle.GetPrototype();
         }
 
         // --------------------------------------------------------------------------------------------------------------------
