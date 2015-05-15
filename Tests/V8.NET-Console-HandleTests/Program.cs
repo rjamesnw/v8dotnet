@@ -20,12 +20,11 @@ namespace V8.Net
         /// Returns a random number between the from and to values
         /// specified.
         /// </summary>
-        public int Random(int from, int to)
+        public InternalHandle Random(V8Engine engine, int from, int to)
         {
-            lock (rnd)
-            {
-                return rnd.Next(from, to);
-            }
+            var obj = engine.CreateObject<V8NativeObject>();
+            obj.SetProperty("result", rnd.Next(from, to));
+            return obj;
         }
     }
 
@@ -43,7 +42,7 @@ namespace V8.Net
             try
             {
                 Console.WriteLine("V8.Net Version: " + V8Engine.Version);
-                
+
                 Console.Write(Environment.NewLine + "Creating a V8Engine instance ...");
                 _JSServer = new V8Engine();
                 Console.WriteLine(" Done!");
@@ -116,9 +115,7 @@ namespace V8.Net
                         else if (lcInput == @"\gc")
                         {
                             Console.Write(Environment.NewLine + "Forcing garbage collection ... ");
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                            GC.WaitForPendingFinalizers();
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                            GC.Collect();
                             GC.WaitForPendingFinalizers();
                             Console.WriteLine("Done.\r\n");
                             Console.WriteLine("Currently Used Memory: " + GC.GetTotalMemory(true));
@@ -182,17 +179,22 @@ namespace V8.Net
                                 // collect it, which will mark the handle as ready for collection (but it will not be destroyed just yet until V8 is ready) ...
 
                                 Console.WriteLine("Clearing managed references and running the garbage collector ...");
+                                GC.Collect();
                                 testHandle = null;
                             }
 
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                            GC.Collect();
+                            GC.WaitForPendingFinalizers();
+                            GC.Collect();
                             GC.WaitForPendingFinalizers();
 
                             // (we wait for the 'testHandle' handle object to be collected, which will dispose the handle)
                             // (note: we do not call 'Set()' on 'internalHandle' because the "Handle" type takes care of the disposal)
 
                             for (i = 0; i < 3000 && internalHandle.ReferenceCount > 1; i++)
+                            {
                                 System.Threading.Thread.Sleep(1); // (just wait for the worker)
+                            }
 
                             if (internalHandle.ReferenceCount > 1)
                                 throw new Exception("Handle is still not ready for GC ... something is wrong.");
@@ -213,7 +215,7 @@ namespace V8.Net
 
                             GC.AddMemoryPressure(long.MaxValue);
 
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                            GC.Collect();
                             GC.WaitForPendingFinalizers();
 
                             GC.RemoveMemoryPressure(long.MaxValue);
@@ -298,7 +300,7 @@ namespace V8.Net
                         else if (lcInput == @"\1")
                         {
                             _JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
-                            _JSServer.ConsoleExecute("for (var i = 0; i < 10; ++i) jist.Random(1, 100);");
+                            _JSServer.ConsoleExecute("for (var i = 0; i < 10000; ++i) jist.Random(this, 1, 100);");
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {

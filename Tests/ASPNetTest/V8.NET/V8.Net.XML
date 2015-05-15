@@ -16,6 +16,12 @@
             If there's any marshalling incompatibility, this will throw an exception.
             </summary>
         </member>
+        <member name="F:V8.Net.V8Engine.AllInternalHandlesEverCreated">
+            <summary>
+            Holds all the InternalHandle values that were set with native proxy handles.
+            <para>Note: This list is only available when compiling in debug mode.</para>
+            </summary>
+        </member>
         <member name="M:V8.Net.V8Engine._StoreAccessor``1(System.Int32,System.String,``0)">
             <summary>
             This is required in order prevent accessor delegates from getting garbage collected when used with P/Invoke related callbacks (a process called "thunking").
@@ -461,6 +467,12 @@
             <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
             don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
             <returns>A native value that best represents the given managed value.</returns>
+        </member>
+        <member name="F:V8.Net.V8Engine.AllHandlesEverCreated">
+            <summary>
+            Holds all the Handle objects (via weak references) that were created since the application was launched.
+            <para>Note: This list is only available when compiling in debug mode.</para>
+            </summary>
         </member>
         <member name="P:V8.Net.V8Engine.Handles_All">
             <summary>
@@ -2791,7 +2803,7 @@
             The 'this' property will not be specified, which will default to the global scope as expected.
             </summary>
         </member>
-        <member name="P:V8.Net.ObjectHandle.Prototype">
+        <member name="M:V8.Net.ObjectHandle.GetPrototype">
             <summary>
             The prototype of the object (every JavaScript object implicitly has a prototype).
             </summary>

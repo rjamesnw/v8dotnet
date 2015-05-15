@@ -1089,7 +1089,7 @@ namespace V8.Net
     /// </summary>
     public sealed class DynamicHandle : DynamicMetaObject
     {
-        IV8Object _Handle;
+        IV8Object _V8Object;
         V8Engine _Engine;
 
 #if (V1_1 || V2 || V3 || V3_5)
@@ -1106,16 +1106,16 @@ namespace V8.Net
         internal DynamicHandle(object value, Expression parameter)
             : base(parameter, BindingRestrictions.GetTypeRestriction(parameter, value.GetType()), value)
         {
-            _Handle = value as IV8Object;
+            _V8Object = value as IV8Object;
             if (value is IHandleBased) _Engine = ((IHandleBased)value).Engine;
         }
 
         public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
         {
-            if (_Handle == null) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
+            if (_V8Object == null) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
 
             Expression[] args = new Expression[1];
-            MethodInfo methodInfo = ((Func<string, InternalHandle>)_Handle.GetProperty).Method;
+            MethodInfo methodInfo = ((Func<string, InternalHandle>)_V8Object.GetProperty).Method;
 
             args[0] = Expression.Constant(binder.Name);
 
@@ -1132,7 +1132,7 @@ namespace V8.Net
 
         public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
         {
-            if (_Handle == null) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
+            if (_V8Object == null) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
 
             var isHandle = (value.RuntimeType == typeof(InternalHandle) || typeof(Handle).IsAssignableFrom(value.RuntimeType));
             var isV8NativeObject = typeof(V8NativeObject).IsAssignableFrom(value.RuntimeType);
@@ -1151,7 +1151,7 @@ namespace V8.Net
                 var convertParameter = Expression.Call(Expression.Constant(handleParamConversion.Target), handleParamConversion.Method, Expression.Convert(value.Expression, typeof(object)));
                 args[1] = convertParameter;
                 args[2] = Expression.Constant(V8PropertyAttributes.None);
-                methodInfo = ((Func<string, InternalHandle, V8PropertyAttributes, bool>)_Handle.SetProperty).Method;
+                methodInfo = ((Func<string, InternalHandle, V8PropertyAttributes, bool>)_V8Object.SetProperty).Method;
             }
             else
             {
@@ -1159,7 +1159,7 @@ namespace V8.Net
                 args[2] = Expression.Constant(null, typeof(string));
                 args[3] = Expression.Constant(null, typeof(Nullable<bool>));
                 args[4] = Expression.Constant(null, typeof(Nullable<ScriptMemberSecurity>));
-                methodInfo = ((Func<string, object, string, bool?, ScriptMemberSecurity?, bool>)_Handle.SetProperty).Method;
+                methodInfo = ((Func<string, object, string, bool?, ScriptMemberSecurity?, bool>)_V8Object.SetProperty).Method;
             }
 
             Expression self = Expression.Convert(Expression, LimitType);
@@ -1203,8 +1203,8 @@ namespace V8.Net
 
         public override IEnumerable<string> GetDynamicMemberNames()
         {
-            if (_Handle == null) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
-            return _Handle.GetPropertyNames();
+            if (_V8Object == null) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
+            return _V8Object.GetPropertyNames();
         }
 
         public override DynamicMetaObject BindConvert(ConvertBinder binder)

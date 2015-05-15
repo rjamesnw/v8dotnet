@@ -1180,7 +1180,7 @@
             The 'this' property will not be specified, which will default to the global scope as expected.
             </summary>
         </member>
-        <member name="P:V8.Net.ObjectHandle.Prototype">
+        <member name="M:V8.Net.ObjectHandle.GetPrototype">
             <summary>
             The prototype of the object (every JavaScript object implicitly has a prototype).
             </summary>

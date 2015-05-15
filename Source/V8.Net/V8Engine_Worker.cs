@@ -120,6 +120,7 @@ namespace V8.Net
         /// Because there's no V8 GC for this, the worker will have to check these at a slower pace from time to time.
         /// </summary>
         internal readonly LinkedList<IV8Disposable> _AbandondObjects = new LinkedList<IV8Disposable>(); // TODO: Actually make the worker look into these on a slower frequency. ;)
+        internal readonly Dictionary<object, LinkedListNode<IV8Disposable>> _AbandondObjectsIndex = new Dictionary<object, LinkedListNode<IV8Disposable>>(); // (for faster removal)
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -203,7 +204,7 @@ namespace V8.Net
                 if (abandoned != null)
                     lock (_AbandondObjects)
                     {
-                        _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
+                        _AbandondObjectsIndex[abandoned] = _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
                     }
             }
 

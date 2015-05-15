@@ -324,7 +324,12 @@ namespace V8.Net
 
                 lock (engine._AbandondObjects)
                 {
-                    engine._AbandondObjects.Remove(this);
+                    LinkedListNode<IV8Disposable> node;
+                    if (engine._AbandondObjectsIndex.TryGetValue(this, out node))
+                    {
+                        engine._AbandondObjects.Remove(node);
+                        engine._AbandondObjectsIndex.Remove(this);
+                    }
                 }
             }
 
