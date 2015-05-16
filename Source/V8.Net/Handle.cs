@@ -1097,7 +1097,7 @@ namespace V8.Net
         internal DynamicHandle(object value, Expression parameter)
             : base(parameter, BindingRestrictions.Empty, value)
         {
-            _Handle = value as IV8Object;
+            _V8Object = value as IV8Object;
             if (value is IHandleBased) _Engine = ((IHandleBased)value).Engine;
         }
 

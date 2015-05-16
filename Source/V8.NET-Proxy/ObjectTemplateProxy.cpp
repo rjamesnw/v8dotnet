@@ -160,6 +160,7 @@ void ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, c
 				HandleProxy *val = proxy->_EngineProxy->GetHandleProxy(value);
 				auto result = proxy->NamedPropertySetter(str.String, val, maInfo); // (assumes the 'str' memory will be released by the managed side)
 				str.Dispose();
+				val->DisposeAsCallbackResult();
 				if (result != nullptr)
 				{
 					if (result->IsError())
@@ -321,6 +322,7 @@ void ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> value, const 
 				ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
 				HandleProxy *val = proxy->_EngineProxy->GetHandleProxy(value);
 				auto result = proxy->IndexedPropertySetter(index, val, maInfo); // (assumes the 'str' memory will be released by the managed side)
+				val->DisposeAsCallbackResult();
 				if (result != nullptr)
 				{
 					if (result->IsError())
@@ -475,6 +477,7 @@ void ObjectTemplateProxy::AccessorGetterCallbackProxy(Local<String> property, co
 				auto result = getter(_this, str.String); // (assumes the 'str' memory will be released by the managed side)
 
 				str.Dispose();
+				_this->DisposeAsCallbackResult();
 
 				Handle<Value> hResult;
 
@@ -531,6 +534,8 @@ void ObjectTemplateProxy::AccessorSetterCallbackProxy(Local<String> property, Lo
 				auto result = setter(_this, str.String, _value); // (assumes the 'str' memory will be released by the managed side)
 
 				str.Dispose();
+				_this->DisposeAsCallbackResult();
+				_value->DisposeAsCallbackResult();
 
 				Handle<Value> hResult;
 

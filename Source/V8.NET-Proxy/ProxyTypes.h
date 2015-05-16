@@ -276,9 +276,18 @@ public:
     // Disposes of the handle that is wrapped by this proxy instance.
     bool Dispose();
 
+	// The handle is currently in use.
+	bool IsInUse() { return _Disposed == 0; }
+	// The managed side has queued the handle (and any related managed object) for disposal.
+	bool IsDisposingManagedSide() { return _Disposed == 1; }
+	// The handle has been made weak.
+    bool IsWeak() { return _Disposed == 2; }
+	// The handle is disposed and cached.
+    bool IsDisposed() { return _Disposed == 3; }
+
     // Disposes handles returned from the managed side.
     // By default, handle proxies returned from callbacks to the managed side must be disposed, just like arguments.  The
-	// managed side is responsible for cloning them if needed later.
+    // managed side is responsible for cloning them if needed later.
     bool DisposeAsCallbackResult();
 
     // (expected to be called by a managed garbage collection thread [of some sort, but not the main thread])
@@ -629,6 +638,13 @@ protected:
     vector<int> _DisposedHandles; // An array of handles (by ID [index]) that have been disposed. The managed GC thread uses this, so beware!
     recursive_mutex _HandleSystemMutex; // A mutex is used to prevent access to the handle system as a "critical section".  NO ACCESS TO THE V8 ENGINE IS ALLOWED FOR MANAGED GARBAGE COLLECTION IN THIS CRITICAL SECTION.
 
+    vector<HandleProxy*> _HandlesToBeMadeWeak;
+    recursive_mutex _MakeWeakQueueMutex;
+    vector<HandleProxy*> _HandlesToBeMadeStrong;
+    recursive_mutex _MakeStrongQueueMutex;
+    
+    bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
+
 public:
 
     Isolate* Isolate();
@@ -654,6 +670,13 @@ public:
     // Registers the handle proxy as disposed for recycling.
     void DisposeHandleProxy(HandleProxy *handleProxy);
 
+    // Puts a handle proxy into a queue to be made weak via 'GetHandleProxy()' - which may be required during a long script execution.
+    void QueueMakeWeak(HandleProxy *handleProxy);
+    // Puts a handle proxy into a queue to be made strong via 'GetHandleProxy()' - which may be required during a long script execution.
+    void QueueMakeStrong(HandleProxy *handleProxy);
+
+    void ProcessWeakStrongHandleQueue(); // (must be called internally, NEVER externally [i.e. from managed side])
+
     // Registers a request to dispose a handle proxy for recycling.
     // WARNING: This is expected to be called by the GC to flag handles for disposal.
     //??void RequestDisposeHandleProxy(HandleProxy *handleProxy);
@@ -661,6 +684,9 @@ public:
     void  RegisterGCCallback(ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback);
 
     static bool IsDisposed(int32_t engineID);
+
+    // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
+    bool IsExecutingScript();
 
     void WithIsolateScope(CallbackAction action); //?
     void WithContextScope(CallbackAction action); //?

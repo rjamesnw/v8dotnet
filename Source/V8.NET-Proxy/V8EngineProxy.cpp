@@ -48,6 +48,11 @@ bool V8EngineProxy::IsDisposed(int32_t engineID)
 	return _DisposedEngines[engineID];
 }
 
+bool V8EngineProxy::IsExecutingScript()
+{
+	return _IsExecutingScript;
+}
+
 // ------------------------------------------------------------------------------------------------------------------------
 
 Isolate* V8EngineProxy::Isolate() { return _Isolate; }
@@ -57,8 +62,9 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 // ------------------------------------------------------------------------------------------------------------------------
 
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
-	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr),
-	_Strings(1000, _StringItem()), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _NextNonTemplateObjectID(-2)
+	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr), _NextNonTemplateObjectID(-2),
+	_Strings(1000, _StringItem()), _IsExecutingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1),
+	_HandlesToBeMadeWeak(1000, nullptr), _HandlesToBeMadeStrong(1000, nullptr)
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
@@ -74,6 +80,8 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 
 	_Handles.clear();
 	_DisposedHandles.clear();
+	_HandlesToBeMadeWeak.clear();
+	_HandlesToBeMadeStrong.clear();
 	_Strings.clear();
 
 	_ManagedV8GarbageCollectionRequestCallback = nullptr;
@@ -176,23 +184,35 @@ void V8EngineProxy::DisposeNativeString(_StringItem &item)
  */
 HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 {
-	std::lock_guard<std::recursive_mutex> handleSection(_HandleSystemMutex);
-
 	HandleProxy* handleProxy;
 
-	if (_DisposedHandles.size() > 0)
 	{
-		auto id = _DisposedHandles.back();
-		_DisposedHandles.pop_back();
-		handleProxy = _Handles.at(id);
-		handleProxy->Initialize(handle);
-	}
-	else
-	{
-		handleProxy = (new HandleProxy(this, (int32_t)_Handles.size()))->Initialize(handle);
-		_Handles.push_back(handleProxy); // (keep a record of all handles created)
+		std::lock_guard<std::recursive_mutex> handleSection(_HandleSystemMutex);
 
-		//_Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up)
+		ProcessWeakStrongHandleQueue();
+	
+		if (_DisposedHandles.size() == 0)
+		{
+			// (no handles are disposed/cached, which means a new one is required)
+			// ... try to trigger disposal of weak handles ...
+			//if (_HandlesToBeMadeWeak.size() > 1000)
+				_Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up if too many start adding up in weak state)
+		}
+
+		if (_DisposedHandles.size() > 0)
+		{
+			auto id = _DisposedHandles.back();
+			_DisposedHandles.pop_back();
+			handleProxy = _Handles.at(id);
+			handleProxy->Initialize(handle);
+		}
+		else
+		{
+			handleProxy = (new HandleProxy(this, (int32_t)_Handles.size()))->Initialize(handle);
+			_Handles.push_back(handleProxy); // (keep a record of all handles created)
+
+			ProcessWeakStrongHandleQueue(); // (process one more time to make this twice as fast as long as new handles are being created)
+		}
 	}
 
 	return handleProxy;
@@ -204,6 +224,49 @@ void V8EngineProxy::DisposeHandleProxy(HandleProxy *handleProxy)
 
 	if (handleProxy->_Dispose(false))
 		_DisposedHandles.push_back(handleProxy->_ID); // (this is a queue of disposed handles to use for recycling; Note: the persistent handles are NEVER disposed until they become reinitialized)
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+void V8EngineProxy::QueueMakeWeak(HandleProxy *handleProxy)
+{
+	if (handleProxy->IsDisposingManagedSide())
+	{
+		std::lock_guard<std::recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+		_HandlesToBeMadeWeak.push_back(handleProxy);
+	}
+}
+
+void V8EngineProxy::QueueMakeStrong(HandleProxy *handleProxy) // TODO: "MakeStrong" requests may no longer be needed.
+{
+	if (handleProxy->IsWeak())
+	{
+		std::lock_guard<std::recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+		_HandlesToBeMadeStrong.push_back(handleProxy);
+	}
+}
+
+void V8EngineProxy::ProcessWeakStrongHandleQueue()
+{
+	// ... process one of each per call ...
+
+	HandleProxy * h;
+
+	if (_HandlesToBeMadeWeak.size() > 0)
+	{
+		std::lock_guard<std::recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // PROTECTS AGAINST THE WORKER THREAD
+		h = _HandlesToBeMadeWeak.back();
+		_HandlesToBeMadeWeak.pop_back();
+		h->MakeWeak();
+	}
+
+	if (_HandlesToBeMadeStrong.size() > 0)
+	{
+		std::lock_guard<std::recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // PROTECTS AGAINST THE WORKER THREAD
+		h = _HandlesToBeMadeStrong.back();
+		_HandlesToBeMadeStrong.pop_back();
+		h->MakeStrong(); // TODO: "MakeStrong" requests may no longer be needed.
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -375,7 +438,9 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
 		TryCatch __tryCatch;
 		//__tryCatch.SetVerbose(true);
 
+		_IsExecutingScript = true;
 		auto result = script->Run();
+		_IsExecutingScript = false;
 
 		if (__tryCatch.HasCaught())
 		{

@@ -79,6 +79,9 @@ void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<V
 		if (_this != nullptr)
 			_this->DisposeAsCallbackResult();
 
+		for (auto i = 0; i < argLength; i++)
+			_args[i]->DisposeAsCallbackResult();
+		
 		if (result != nullptr) {
 			if (result->IsError())
 				args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));

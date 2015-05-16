@@ -300,7 +300,7 @@ namespace V8.Net
                         else if (lcInput == @"\1")
                         {
                             _JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
-                            _JSServer.ConsoleExecute("for (var i = 0; i < 10000; ++i) jist.Random(this, 1, 100);");
+                            _JSServer.ConsoleExecute("for (var i = 0; i < 10000000; ++i) jist.Random(this, 1, 100);");
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {

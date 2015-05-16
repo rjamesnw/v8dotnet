@@ -278,7 +278,7 @@ int32_t HandleProxy::GetManagedObjectID()
 // This is called when the managed side is ready to destroy the V8 handle.
 void HandleProxy::MakeWeak()
 {
-	if (GetManagedObjectID() >= 0)
+	if (GetManagedObjectID() >= 0 && _Disposed == 1)
 	{
 		_Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback);
 		_Disposed = 2;
@@ -288,8 +288,11 @@ void HandleProxy::MakeWeak()
 // This is called when the managed side is no longer ready to destroy this V8 handle.
 void HandleProxy::MakeStrong()
 {
-	_Handle.Value.ClearWeak();
-	if (_Disposed == 2) _Disposed = 1; // (roll back to managed-side "dispose ready" status; note: the managed side worker currently doesn't track this yet, so it's not supported)
+	if (_Disposed == 2)
+	{
+		_Handle.Value.ClearWeak();
+		_Disposed = 1; // (roll back to managed-side "dispose ready" status; note: the managed side worker currently doesn't track this yet, so it's not supported)
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

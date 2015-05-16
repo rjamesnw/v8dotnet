@@ -44,6 +44,7 @@ extern "C"
 
 	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1000)
 	{
+		if (engine->IsExecutingScript()) return false;
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		return engine->Isolate()->IdleNotification(hint);
@@ -526,11 +527,20 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
-			BEGIN_ISOLATE_SCOPE(engine);
-			BEGIN_CONTEXT_SCOPE(engine);
-			handleProxy->MakeWeak();
-			END_CONTEXT_SCOPE;
-			END_ISOLATE_SCOPE;
+
+			if (engine->IsExecutingScript())
+			{
+				// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
+				engine->QueueMakeWeak(handleProxy);
+			}
+			else
+			{
+				BEGIN_ISOLATE_SCOPE(engine);
+				BEGIN_CONTEXT_SCOPE(engine);
+				handleProxy->MakeWeak();
+				END_CONTEXT_SCOPE;
+				END_ISOLATE_SCOPE;
+			}
 		}
 	}
 	EXPORT void STDCALL MakeStrongHandle(HandleProxy *handleProxy)
@@ -538,11 +548,20 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
-			BEGIN_ISOLATE_SCOPE(engine);
-			BEGIN_CONTEXT_SCOPE(engine);
-			handleProxy->MakeStrong();
-			END_CONTEXT_SCOPE;
-			END_ISOLATE_SCOPE;
+
+			if (engine->IsExecutingScript())
+			{
+				// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
+				engine->QueueMakeStrong(handleProxy);
+			}
+			else
+			{
+				BEGIN_ISOLATE_SCOPE(engine);
+				BEGIN_CONTEXT_SCOPE(engine);
+				handleProxy->MakeStrong();
+				END_CONTEXT_SCOPE;
+				END_ISOLATE_SCOPE;
+			}
 		}
 	}
 

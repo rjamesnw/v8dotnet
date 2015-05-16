@@ -64,7 +64,7 @@ namespace V8.Net
                     else
                     {
                         // ... queue the object ...
-                        
+
                         lock (engine._DisposalQueue)
                         {
                             engine._DisposalQueue.Enqueue(v8Object); // (queue first, so when 'weakRef.DoFinalize()' calls 'GC.ReRegisterForFinalize()', there's no chance of the finalizer kicking in, just in case)
@@ -120,7 +120,7 @@ namespace V8.Net
         /// Because there's no V8 GC for this, the worker will have to check these at a slower pace from time to time.
         /// </summary>
         internal readonly LinkedList<IV8Disposable> _AbandondObjects = new LinkedList<IV8Disposable>(); // TODO: Actually make the worker look into these on a slower frequency. ;)
-        internal readonly Dictionary<object, LinkedListNode<IV8Disposable>> _AbandondObjectsIndex = new Dictionary<object, LinkedListNode<IV8Disposable>>(); // (for faster removal)
+        internal readonly Dictionary<IV8Disposable, LinkedListNode<IV8Disposable>> _AbandondObjectsIndex = new Dictionary<IV8Disposable, LinkedListNode<IV8Disposable>>(); // (for faster removal)
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -153,6 +153,7 @@ namespace V8.Net
                     {
                         workPending = _DoWorkStep();
                         // (note: the above does not consider '_AbandondObjects.Count' upon return so that the thread can sleep more for the abandoned ones)
+                        //DoIdleNotification(10);
                         Thread.Sleep(0); // (give time to other threads while looping)
                     }
                 }
@@ -173,39 +174,44 @@ namespace V8.Net
         {
             // ... check one abandoned object ...
 
-            IV8Disposable abandoned = null;
+            LinkedListNode<IV8Disposable> abandoned = null;
 
             lock (_AbandondObjects)
             {
                 if (_AbandondObjects.Count > 0)
                 {
-                    abandoned = _AbandondObjects.First.Value; // (take the first abandoned object and try to dispose of it)
+                    abandoned = _AbandondObjects.First; // (take the first abandoned object and try to dispose of it)
                     _AbandondObjects.RemoveFirst();
                 }
             }
 
             if (abandoned != null)
             {
-                if (abandoned is Handle || abandoned is InternalHandle)
+                var disposed = false;
+                if (abandoned.Value is Handle || abandoned.Value is InternalHandle)
                 {
-                    var h = ((IHandleBased)abandoned).AsInternalHandle;
+                    var h = ((IHandleBased)abandoned.Value).AsInternalHandle;
                     if (h.CanDispose)
                     {
-                        abandoned.Dispose();
-                        abandoned = null;
+                        abandoned.Value.Dispose();
+                        GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
+                        disposed = true;
                     }
                 }
-                else if (abandoned.CanDispose)
+                else if (abandoned.Value.CanDispose)
                 {
-                    abandoned.Dispose();
-                    abandoned = null;
+                    abandoned.Value.Dispose();
+                    GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
+                    disposed = true;
                 }
 
-                if (abandoned != null)
+                if (!disposed)
                     lock (_AbandondObjects)
                     {
-                        _AbandondObjectsIndex[abandoned] = _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
+                        _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
                     }
+                else
+                    _AbandondObjectsIndex.Remove(abandoned.Value);
             }
 
             // ... and do one handle ready to be disposed ...
@@ -227,7 +233,7 @@ namespace V8.Net
 
                     lock (_AbandondObjects)
                     {
-                        _AbandondObjects.AddLast(disposable);
+                        _AbandondObjectsIndex[disposable] = _AbandondObjects.AddLast(disposable);
                     }
 
                     // ... if this is a manage object, it is now abandoned, so make the native handle weak ...

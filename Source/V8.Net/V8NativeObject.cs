@@ -266,10 +266,7 @@ namespace V8.Net
 
         public void Dispose()
         {
-            if (CanDispose)
-            {
-                _OnNativeGCRequested();
-            }
+            _OnNativeGCRequested();
         }
 
         /// <summary>
@@ -295,31 +292,6 @@ namespace V8.Net
                 _Handle.IsBeingDisposed = true;
                 var engine = Engine;
 
-                OnDispose(); // (notify any custom dispose methods to clean up)
-
-                if (Template is FunctionTemplate)
-                    ((FunctionTemplate)Template)._RemoveFunctionType(ID);// (make sure to remove the function references from the template instance)
-
-                engine._ClearAccessors(_ID.Value); // (just to be sure - accessors are no longer needed once the native handle is GC'd)
-
-                if (!_Handle.IsEmpty)
-                {
-                    if (_Handle.ReferenceCount > 1)
-                        throw new InvalidOperationException("The handle '" + _Handle.ToString() + "' of this object being disposed has an invalid reference count of " + _Handle.ReferenceCount + ". There should be only one.  This may be the result of forcing this object to dispose while .");
-
-                    _Handle.ObjectID = -1; // (resets the object ID on the native side [though this happens anyhow once cached])
-                    // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.CanDispose' will return false])
-                    _Handle.Dispose();
-                }
-
-                if (_ID != null)
-                    engine._RemoveObjectWeakReference(_ID.Value);
-
-                Template = null; // (note: this decrements a template counter, allowing the template object to be finally allowed to dispose)
-                _ID = null; // (also allows the GC finalizer to collect the object)
-
-                GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
-
                 // ... remove this object from the abandoned queue ...
 
                 lock (engine._AbandondObjects)
@@ -331,6 +303,41 @@ namespace V8.Net
                         engine._AbandondObjectsIndex.Remove(this);
                     }
                 }
+
+                // ... notify any custom dispose methods to clean up ...
+
+                try
+                {
+                    OnDispose();
+                }
+                finally
+                {
+                }
+
+                // ... if this belongs to a function template, then this is a V8Function object, so remove it from the template's type list ...
+
+                if (Template is FunctionTemplate)
+                    ((FunctionTemplate)Template)._RemoveFunctionType(ID);// (make sure to remove the function references from the template instance)
+
+                // ... clear any registered accessors ...
+
+                engine._ClearAccessors(_ID.Value); // (just to be sure - accessors are no longer needed once the native handle is GC'd)
+
+                if (!_Handle.IsEmpty)
+                {
+                    //if (_Handle.ReferenceCount > 1)
+                    //    throw new InvalidOperationException("The handle '" + _Handle.ToString() + "' of this object being disposed has an invalid reference count of " + _Handle.ReferenceCount + ". There should be only one.  This may be the result of forcing this object to dispose while other handles still reference it.");
+
+                    _Handle.ObjectID = -1; // (resets the object ID on the native side [though this happens anyhow once cached])
+                    // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.CanDispose' will return false])
+                    _Handle.Dispose();
+                }
+
+                if (_ID != null)
+                    engine._RemoveObjectWeakReference(_ID.Value);
+
+                Template = null; // (note: this decrements a template counter, allowing the template object to be finally allowed to dispose)
+                _ID = null; // (also allows the GC finalizer to collect the object)
             }
 
             return true; // ("true" means to "continue disposal of native handle" [if not already empty])

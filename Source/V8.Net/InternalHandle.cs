@@ -195,7 +195,7 @@ namespace V8.Net
         {
             get
             {
-                return __HandleProxy == null || __HandleProxy->_ObjectID < 0 || __HandleProxy->ManagedReferenceCount > 1;
+                return __HandleProxy != null && (__HandleProxy->_ObjectID < 0 || __HandleProxy->ManagedReferenceCount > 1);
                 // (note: the manage object must set '__HandleProxy->_ObjectID' to -1 BEFORE disposing of its handle)
             }
         }
