@@ -216,9 +216,10 @@
             Set to the fixed date of Jan 1, 1970. This is used when converting DateTime values to JavaScript Date objects.
             </summary>
         </member>
-        <member name="F:V8.Net.V8Engine.ASPBINSubFolderName">
+        <member name="F:V8.Net.V8Engine.AlternateRootSubPath">
             <summary>
-            The sub-folder that is the root for the dependent libraries required by V8.NET.  This is set to "V8.NET" by default.
+            The sub-folder that is the root for the dependent libraries (x86 and x64).  This is set to "V8.NET" by default.
+            <para>This setting allows copying the V8.NET libraries to a project, and having the assemblies "Copy if never" automatically.</para>
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine.ForceV8GarbageCollection">
@@ -425,6 +426,7 @@
         <member name="M:V8.Net.V8Engine.CreateArray(V8.Net.InternalHandle[])">
             <summary>
             Calls the native V8 proxy library to create a JavaScript array for use within the V8 JavaScript environment.
+            <para>Note: The given handles are not disposed, and the caller is still responsible.</para>
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine.CreateValue(System.Collections.IEnumerable,System.Boolean)">

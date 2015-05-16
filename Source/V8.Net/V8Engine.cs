@@ -85,9 +85,10 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// The sub-folder that is the root for the dependent libraries required by V8.NET.  This is set to "V8.NET" by default.
+        /// The sub-folder that is the root for the dependent libraries (x86 and x64).  This is set to "V8.NET" by default.
+        /// <para>This setting allows copying the V8.NET libraries to a project, and having the assemblies "Copy if never" automatically.</para>
         /// </summary>
-        public static string ASPBINSubFolderName = "V8.NET";
+        public static string AlternateRootSubPath = "V8.NET";
 
         static Exception _TryLoadProxyInterface(string assemblyRoot, Exception lastError, out Assembly assembly)
         {
@@ -105,8 +106,8 @@ namespace V8.Net
             // ... check for a "V8.NET" sub-folder, which allows for copying the assemblies to a child folder of the project ...
             // (DLLs in the "x86" and "x64" folders of this child folder can be set to "Copy if newer" using this method)
 
-            if (Directory.Exists(Path.Combine(assemblyRoot, ASPBINSubFolderName)))
-                assemblyRoot = Path.Combine(assemblyRoot, ASPBINSubFolderName); // (exists, so move into it as the new root)
+            if (Directory.Exists(Path.Combine(assemblyRoot, AlternateRootSubPath)))
+                assemblyRoot = Path.Combine(assemblyRoot, AlternateRootSubPath); // (exists, so move into it as the new root)
 
             // ... get platform details ...
 
@@ -685,6 +686,7 @@ namespace V8.Net
 
         /// <summary>
         /// Calls the native V8 proxy library to create a JavaScript array for use within the V8 JavaScript environment.
+        /// <para>Note: The given handles are not disposed, and the caller is still responsible.</para>
         /// </summary>
         public InternalHandle CreateArray(params InternalHandle[] items)
         {
@@ -706,14 +708,32 @@ namespace V8.Net
         public InternalHandle CreateValue(IEnumerable enumerable, bool ignoreErrors = false)
         {
             var values = (enumerable).Cast<object>().ToArray();
+            var maxQuickInitLength = values.Length < 1000 ? values.Length : 1000;
 
-            InternalHandle[] handles = new InternalHandle[values.Length];
+            InternalHandle[] handles = new InternalHandle[maxQuickInitLength];
 
-            for (var i = 0; i < values.Length; i++)
+            for (var i = 0; i < maxQuickInitLength; i++)
                 try { handles[i] = CreateValue(values[i]); }
                 catch (Exception ex) { if (!ignoreErrors) throw ex; }
 
-            return CreateArray(handles);
+            InternalHandle array = CreateArray(handles); // (faster to initialize on the native side all at once, which is fine for a small number of handles)
+
+            // .. must dispose the internal handles now ...
+
+            for (var i = 0; i < maxQuickInitLength; i++)
+                handles[i].Dispose();
+
+            // ... if the shear number of items is large it will cause a spike in handle counts, so set the remaining items one by one instead on a native array ...
+
+            var remainingItemLength = values.Length - maxQuickInitLength;
+            if (remainingItemLength > 0)
+            {
+                for (var i = maxQuickInitLength; i < values.Length; i++)
+                    try { array.SetProperty(i, CreateValue(values[i])); }
+                    catch (Exception ex) { if (!ignoreErrors) throw ex; }
+            }
+
+            return array;
         }
 
         /// <summary>
