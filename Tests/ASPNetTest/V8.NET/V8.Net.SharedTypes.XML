@@ -11,7 +11,12 @@
         </member>
         <member name="F:V8.Net.ScriptMemberSecurity.NoAcccess">
             <summary>
-            Used internally to prevent access to a script member.
+            Used internally to prevent access to a script member on instance types.
+            <para>Warning: This has no affect on STATIC bound properties.  There is no such related security option in V8 
+            when setting properties. Bound instance objects use an ObjectBinder that wraps an object created from an ObjectTemplate.
+            This allows advanced access control.  Class/struct declarations use V8 FunctionTemplates instead, which do not
+            provide any callback interception for properties.  If set on the native side (not using ObjectTemplates), then this
+            will map to both 'Locked|Hidden' flags being set.</para>
             </summary>
         </member>
         <member name="F:V8.Net.ScriptMemberSecurity.ReadWrite">
@@ -87,7 +92,7 @@
             <summary>
             No valid attribute exists (unlike 'None', which *explicitly* defines that no attributes are set).
             The native PROXY (not V8) will interpret this to mean "let V8 continue on to the default behavior".
-            <para>Warning: This cannot be bitwise "OR"ed with the other enum values.</para>
+            <para>Warning: This cannot be bitwise "OR"ed with the other enum values. Also, this is not supported on the native V8 side.</para>
             </summary>
         </member>
         <member name="F:V8.Net.V8PropertyAttributes.None">

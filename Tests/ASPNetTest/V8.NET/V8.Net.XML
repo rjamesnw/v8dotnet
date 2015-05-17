@@ -16,12 +16,6 @@
             If there's any marshalling incompatibility, this will throw an exception.
             </summary>
         </member>
-        <member name="F:V8.Net.V8Engine.AllInternalHandlesEverCreated">
-            <summary>
-            Holds all the InternalHandle values that were set with native proxy handles.
-            <para>Note: This list is only available when compiling in debug mode.</para>
-            </summary>
-        </member>
         <member name="M:V8.Net.V8Engine._StoreAccessor``1(System.Int32,System.String,``0)">
             <summary>
             This is required in order prevent accessor delegates from getting garbage collected when used with P/Invoke related callbacks (a process called "thunking").
@@ -469,12 +463,6 @@
             <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
             don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
             <returns>A native value that best represents the given managed value.</returns>
-        </member>
-        <member name="F:V8.Net.V8Engine.AllHandlesEverCreated">
-            <summary>
-            Holds all the Handle objects (via weak references) that were created since the application was launched.
-            <para>Note: This list is only available when compiling in debug mode.</para>
-            </summary>
         </member>
         <member name="P:V8.Net.V8Engine.Handles_All">
             <summary>
@@ -2835,11 +2823,12 @@
             Unregisters handlers that intercept access to properties on ALL objects created by this template.  See <see cref="M:V8.Net.ObjectTemplate.RegisterNamedPropertyInterceptors"/> and <see cref="M:V8.Net.ObjectTemplate.RegisterIndexedPropertyInterceptors"/>.
             </summary>
         </member>
-        <member name="M:V8.Net.ObjectTemplate.RegisterInvokeHandler(V8.Net.JSFunction)">
+        <member name="M:V8.Net.ObjectTemplate.SetCallAsFunctionHandler(V8.Net.JSFunction)">
             <summary>
-            Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
+            Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called
+            like a function.
             </summary>
-            <param name="callback">A callback that gets invoked </param>
+            <param name="callback">A callback that gets invoked when the object is used like a function.</param>
         </member>
         <member name="M:V8.Net.ObjectTemplate.CreateObject``1(System.Boolean)">
             <summary>

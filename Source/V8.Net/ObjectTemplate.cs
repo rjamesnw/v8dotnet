@@ -40,7 +40,7 @@ namespace V8.Net
         /// <summary>
         /// Returns true if this template object has been placed into the "abandoned" list due to a GC finalization attempt.
         /// </summary>
-        internal bool _IsAbandoned { get { return _Engine != null && _Engine._AbandondObjects.Contains(this); } }
+        internal bool _IsAbandoned { get { lock (_Engine._AbandondObjects) { return _Engine != null && _Engine._AbandondObjects.Contains(this); } } }
 
         // --------------------------------------------------------------------------------------------------------------------
 

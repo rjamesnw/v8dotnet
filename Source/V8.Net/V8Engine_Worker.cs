@@ -182,36 +182,34 @@ namespace V8.Net
                 {
                     abandoned = _AbandondObjects.First; // (take the first abandoned object and try to dispose of it)
                     _AbandondObjects.RemoveFirst();
+                    // WARNING: Until '_AbandondObjectsIndex' is also updated, DO NOT release lock until the node is put back, or removed from the index!
                 }
-            }
 
-            if (abandoned != null)
-            {
-                var disposed = false;
-                if (abandoned.Value is Handle || abandoned.Value is InternalHandle)
+                if (abandoned != null)
                 {
-                    var h = ((IHandleBased)abandoned.Value).AsInternalHandle;
-                    if (h.CanDispose)
+                    var disposed = false;
+                    if (abandoned.Value is Handle || abandoned.Value is InternalHandle)
+                    {
+                        var h = ((IHandleBased)abandoned.Value).AsInternalHandle;
+                        if (h.CanDispose)
+                        {
+                            abandoned.Value.Dispose();
+                            GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
+                            disposed = true;
+                        }
+                    }
+                    else if (abandoned.Value.CanDispose)
                     {
                         abandoned.Value.Dispose();
                         GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
                         disposed = true;
                     }
-                }
-                else if (abandoned.Value.CanDispose)
-                {
-                    abandoned.Value.Dispose();
-                    GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
-                    disposed = true;
-                }
 
-                if (!disposed)
-                    lock (_AbandondObjects)
-                    {
+                    if (!disposed)
                         _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
-                    }
-                else
-                    _AbandondObjectsIndex.Remove(abandoned.Value);
+                    else
+                        _AbandondObjectsIndex.Remove(abandoned.Value);
+                }
             }
 
             // ... and do one handle ready to be disposed ...
