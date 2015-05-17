@@ -75,7 +75,7 @@ void ObjectTemplateProxy::RegisterIndexedPropertyHandlers(
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-void ObjectTemplateProxy::RegisterInvokeHandler(ManagedJSFunctionCallback callback)
+void ObjectTemplateProxy::SetCallAsFunctionHandler(ManagedJSFunctionCallback callback)
 {
 	_ManagedCallback = callback;
 	_ObjectTemplate->SetCallAsFunctionHandler(FunctionTemplateProxy::InvocationCallbackProxy, NewExternal(this));

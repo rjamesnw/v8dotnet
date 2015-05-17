@@ -198,7 +198,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-        public static extern void RegisterInvokeHandler(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+        public static extern void SetCallAsFunctionHandler(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86")]

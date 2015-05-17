@@ -299,8 +299,11 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\1")
                         {
-                            _JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
-                            _JSServer.ConsoleExecute("for (var i = 0; i < 10000000; ++i) jist.Random(this, 1, 100);");
+                            //_JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
+                            //_JSServer.ConsoleExecute("for (var i = 0; i < 10000000; ++i) jist.Random(this, 1, 100);");
+                            var ot = _JSServer.CreateObjectTemplate();
+                            ot.SetCallAsFunctionHandler((engine, isConstructCall, _this, _args) => { return _JSServer.CreateValue(1); });
+                            _JSServer.GlobalObject.SetProperty("test", ot.CreateObject());
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {

@@ -144,11 +144,11 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT void STDCALL RegisterInvokeHandler(ObjectTemplateProxy *proxy, ManagedJSFunctionCallback callback)
+	EXPORT void STDCALL SetCallAsFunctionHandler(ObjectTemplateProxy *proxy, ManagedJSFunctionCallback callback)
 	{
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
-		proxy->RegisterInvokeHandler(callback);
+		proxy->SetCallAsFunctionHandler(callback);
 		END_ISOLATE_SCOPE;
 	}
 
@@ -323,6 +323,9 @@ extern "C"
 		ManagedAccessorGetter getter, ManagedAccessorSetter setter,
 		v8::AccessControl access, v8::PropertyAttribute attributes)
 	{
+		if (attributes < 0) // (-1 is "No Access" on the managed side, but there is no native support in V8 for this)
+			attributes = (PropertyAttribute)(ReadOnly | DontEnum);
+
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -340,6 +343,7 @@ extern "C"
 		accessors->Set(1, NewExternal(getter));
 		accessors->Set(2, NewExternal(setter));
 
+		obj->ForceDelete(NewUString(name));
 		obj->SetAccessor(NewUString(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
 
 		END_CONTEXT_SCOPE;

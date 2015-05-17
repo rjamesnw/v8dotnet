@@ -1078,10 +1078,15 @@ namespace V8.Net
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
+            if (attributes == V8PropertyAttributes.Undefined)
+                attributes = V8PropertyAttributes.None;
+            if (attributes < 0) throw new InvalidOperationException("'attributes' has an invalid value.");
+            if (access < 0) throw new InvalidOperationException("'access' has an invalid value.");
 
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
             var engine = Engine;
+
             // TODO: Need a different native ID to track this.
             V8NetProxy.SetObjectAccessor(this, ObjectID, name,
                    Engine._StoreAccessor<ManagedAccessorGetter>(ObjectID, "get_" + name, (HandleProxy* _this, string propertyName) =>

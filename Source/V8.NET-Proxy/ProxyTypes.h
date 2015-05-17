@@ -508,7 +508,7 @@ public:
         ManagedIndexedPropertyDeleter deleter, 
         ManagedIndexedPropertyEnumerator enumerator);
 
-    void RegisterInvokeHandler(ManagedJSFunctionCallback callback);
+	void SetCallAsFunctionHandler(ManagedJSFunctionCallback callback);
 
     void UnregisterNamedPropertyHandlers();
     void UnregisterIndexedPropertyHandlers();

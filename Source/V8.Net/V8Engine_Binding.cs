@@ -1465,13 +1465,17 @@ namespace V8.Net
             foreach (var details in _FieldDetails(BindingMode.Static))
                 if (_GetBindingForDataMember(details, out getter, out setter) && details.MemberSecurity >= 0)
                 {
-                    TypeFunction.SetAccessor(details.MemberName, getter, setter, (V8PropertyAttributes)details.MemberSecurity); // TODO: Investigate need to add access control value.
+                    details.Getter = getter;
+                    details.Setter = setter;
+                    _RefreshMemberSecurity(details);
                 }
 
             foreach (var details in _PropertyDetails(BindingMode.Static))
                 if (_GetBindingForDataMember(details, out getter, out setter) && details.MemberSecurity >= 0)
                 {
-                    TypeFunction.SetAccessor(details.MemberName, getter, setter, (V8PropertyAttributes)details.MemberSecurity); // TODO: Investigate need to add access control value.
+                    details.Getter = getter;
+                    details.Setter = setter;
+                    _RefreshMemberSecurity(details);
                 }
 
             V8Function func;
@@ -1479,8 +1483,38 @@ namespace V8.Net
             foreach (var details in _MethodDetails(BindingMode.Static))
                 if (_GetBindingForMethod(details, out func) && details.MemberSecurity >= 0)
                 {
-                    TypeFunction.SetProperty(details.MemberName, func, (V8PropertyAttributes)details.MemberSecurity); // TODO: Investigate need to add access control value.
+                    details.Method = func;
+                    _RefreshMemberSecurity(details);
                 }
+        }
+
+        void _RefreshMemberSecurity(_MemberDetails member, ScriptMemberSecurity? security = null, bool forceChange = false)
+        {
+            if (forceChange || member.MemberSecurity >= 0) // (once NoAccess is set, this cannot be changed by default)
+            {
+                member.MemberSecurity = security ?? member.MemberSecurity;
+
+                // ... if this member is static, then make sure to update the related property on the static constructor function ...
+
+                if (member.BindingMode == BindingMode.Static)
+                {
+                    // ... need to translate this for the native side - for instance, -1 "No Access" has no native side support ...
+                    var propertyAttribs = (V8PropertyAttributes)(member.MemberSecurity == ScriptMemberSecurity.NoAcccess ? ScriptMemberSecurity.Hidden | ScriptMemberSecurity.Locked : member.MemberSecurity < 0 ? 0 : member.MemberSecurity);
+
+                    switch (member.MemberType)
+                    {
+                        case MemberTypes.Field:
+                            TypeFunction.SetAccessor(member.MemberName, member.Getter, member.Setter, propertyAttribs); // TODO: Investigate need to add access control value.
+                            break;
+                        case MemberTypes.Property:
+                            TypeFunction.SetAccessor(member.MemberName, member.Getter, member.Setter, propertyAttribs); // TODO: Investigate need to add access control value.
+                            break;
+                        case MemberTypes.Method:
+                            TypeFunction.SetProperty(member.MemberName, member.Method, propertyAttribs); // TODO: Investigate need to add access control value.
+                            break;
+                    }
+                }
+            }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1545,7 +1579,7 @@ namespace V8.Net
 
             if (memberDetails == null) throw new MissingMemberException("The member '" + member.Name + "' was not found.");
 
-            memberDetails.MemberSecurity = memberSecurity;
+            _RefreshMemberSecurity(memberDetails, memberSecurity);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1563,7 +1597,7 @@ namespace V8.Net
 
             if (memberDetails == null) throw new MissingMemberException("The member '" + memberName + "' was not found.");
 
-            memberDetails.MemberSecurity = memberSecurity;
+            _RefreshMemberSecurity(memberDetails, memberSecurity);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1817,7 +1851,7 @@ namespace V8.Net
 
         public override InternalHandle NamedPropertyEnumerator()
         {
-            return Engine.CreateValue(TypeBinder._Members.Keys);
+            return Engine.CreateValue(from m in TypeBinder._Members.Values where m.HasSecurityFlags(ScriptMemberSecurity.Hidden) select m.MemberName);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

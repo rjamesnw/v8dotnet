@@ -63,7 +63,7 @@ namespace V8.Net
                     _JSServer.RegisterType(typeof(char), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(int), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(Int16), null, true, ScriptMemberSecurity.Locked);
-                    _JSServer.RegisterType(typeof(Int32), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Int32), null, true, ScriptMemberSecurity.ReadWrite);
                     _JSServer.RegisterType(typeof(Int64), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(UInt16), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(UInt32), null, true, ScriptMemberSecurity.Locked);
@@ -83,6 +83,7 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(int));
                     _JSServer.GlobalObject.SetProperty(typeof(Int16));
                     _JSServer.GlobalObject.SetProperty(typeof(Int32));
+                    _JSServer.GetTypeBinder(typeof(Int32)).ChangeMemberSecurity("MaxValue", ScriptMemberSecurity.Hidden);
                     _JSServer.GlobalObject.SetProperty(typeof(Int64));
                     _JSServer.GlobalObject.SetProperty(typeof(UInt16));
                     _JSServer.GlobalObject.SetProperty(typeof(UInt32));

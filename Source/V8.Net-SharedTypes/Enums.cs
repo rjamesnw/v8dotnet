@@ -16,7 +16,7 @@ namespace V8.Net
         /// <summary>
         /// No valid attribute exists (unlike 'None', which *explicitly* defines that no attributes are set).
         /// The native PROXY (not V8) will interpret this to mean "let V8 continue on to the default behavior".
-        /// <para>Warning: This cannot be bitwise "OR"ed with the other enum values.</para>
+        /// <para>Warning: This cannot be bitwise "OR"ed with the other enum values. Also, this is not supported on the native V8 side.</para>
         /// </summary>
         Undefined = -1,
 
