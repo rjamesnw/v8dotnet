@@ -210,13 +210,27 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+#if DEBUG && TRACE
+        /// <summary>
+        /// Holds the call stack responsible for creating this object (available in debugging only with TRACE defined).
+        /// </summary>
+        string _CreationStack;
+#endif
+
+
         public V8NativeObject()
         {
+#if DEBUG && TRACE
+            _CreationStack = Environment.StackTrace;
+#endif
             _Proxy = this;
         }
 
         public V8NativeObject(IV8NativeObject proxy)
         {
+#if DEBUG && TRACE
+            _CreationStack = Environment.StackTrace;
+#endif
             _Proxy = proxy ?? this;
         }
 

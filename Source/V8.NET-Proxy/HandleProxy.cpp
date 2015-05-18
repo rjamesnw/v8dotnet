@@ -101,6 +101,8 @@ void HandleProxy::_ClearHandleValue()
 	}
 	_Value.Dispose();
 	_Type = JSV_Undefined;
+	if (_Handle.IsWeak())
+		throw exception("Still weak!");
 }
 
 HandleProxy* HandleProxy::SetHandle(v8::Handle<v8::Script> handle)
@@ -281,6 +283,7 @@ void HandleProxy::MakeWeak()
 	if (GetManagedObjectID() >= 0 && _Disposed == 1)
 	{
 		_Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback);
+		//?_Handle.Value.MarkIndependent();
 		_Disposed = 2;
 	}
 }

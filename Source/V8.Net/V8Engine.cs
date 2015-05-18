@@ -459,7 +459,7 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle.__HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._Handle._HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
             return result;
         }
@@ -486,7 +486,7 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle.__HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._Handle._HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
             return result;
         }

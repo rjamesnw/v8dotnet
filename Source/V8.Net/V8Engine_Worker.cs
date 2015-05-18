@@ -239,7 +239,7 @@ namespace V8.Net
                     if (disposable is V8NativeObject)
                     {
                         var v8Obj = (V8NativeObject)disposable;
-                        if (!v8Obj.Handle.IsEmpty && v8Obj.Handle.__HandleProxy->Disposed == 1)
+                        if (!v8Obj.Handle.IsEmpty && v8Obj.Handle._HandleProxy->Disposed == 1)
                         {
                             V8NetProxy.MakeWeakHandle(v8Obj.AsInternalHandle); // ('Disposed' will be 2 after this)
                             /* Once the native GC attempts to collect the underlying native object, then '_OnNativeGCRequested()' will get 

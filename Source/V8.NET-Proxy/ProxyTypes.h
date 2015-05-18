@@ -56,8 +56,13 @@ template <class T> struct CopyablePersistent {
     T* operator ->() const { return *Handle(); }
     /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
     Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
-    bool IsEmpty() const { return Value.IsEmpty(); }
-    void Reset() { return Value.Reset(); }
+	bool IsEmpty() const { return Value.IsEmpty(); }
+	bool IsWeak() const { return Value.IsWeak(); }
+	bool IsNearDeath() const { return Value.IsNearDeath(); }
+	bool IsIndependent() const { return Value.IsIndependent(); }
+	void Reset() { return Value.Reset(); }
+	void MarkIndependent() { return Value.MarkIndependent(); }
+	void MarkPartiallyDependent() { return Value.MarkPartiallyDependent(); }
     template <class S> Local<S> As() { return Handle().As<S>(); }
 };
 

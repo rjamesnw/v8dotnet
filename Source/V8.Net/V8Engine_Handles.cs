@@ -46,10 +46,10 @@ namespace V8.Net
             }
         }
 
-        public IEnumerable<InternalHandle> Handles_Active { get { return from h in Handles_All where h.__HandleProxy->Disposed == 0 select h; } }
-        public IEnumerable<InternalHandle> Handles_ManagedSideDisposeReady { get { return from h in Handles_All where h.__HandleProxy->Disposed == 1 select h; } }
-        public IEnumerable<InternalHandle> Handles_NativeSideWeak { get { return from h in Handles_All where h.__HandleProxy->Disposed == 2 select h; } }
-        public IEnumerable<InternalHandle> Handles_DisposedAndCached { get { return from h in Handles_All where h.__HandleProxy->Disposed == 3 select h; } }
+        public IEnumerable<InternalHandle> Handles_Active { get { return from h in Handles_All where h._HandleProxy->Disposed == 0 select h; } }
+        public IEnumerable<InternalHandle> Handles_ManagedSideDisposeReady { get { return from h in Handles_All where h._HandleProxy->Disposed == 1 select h; } }
+        public IEnumerable<InternalHandle> Handles_NativeSideWeak { get { return from h in Handles_All where h._HandleProxy->Disposed == 2 select h; } }
+        public IEnumerable<InternalHandle> Handles_DisposedAndCached { get { return from h in Handles_All where h._HandleProxy->Disposed == 3 select h; } }
 
         /// <summary>
         /// Total number of handle proxy references in the V8.NET system (for proxy use).

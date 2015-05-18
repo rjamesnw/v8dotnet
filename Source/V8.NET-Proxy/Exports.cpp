@@ -224,14 +224,20 @@ extern "C"
 	EXPORT bool STDCALL SetObjectPropertyByName(HandleProxy *proxy, const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attribs = v8::None)
 	{
 		auto engine = proxy->EngineProxy();
+
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
 		auto handle = proxy->Handle();
+
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
+
+		// ... managed objects must have a clone of their handle set because it may be made weak by the worker if abandoned, and the handle lost ...
+		Handle<Value> valueHandle = value == nullptr ? (Handle<Value>)V8Undefined : value->GetManagedObjectID() < 0 ? value->Handle() : value->Handle()->ToObject();
+		//?Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+
 		auto obj = handle.As<Object>();
-		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
 		return obj->ForceSet(NewUString(name), valueHandle, attribs);
 
 		END_CONTEXT_SCOPE;
@@ -245,10 +251,15 @@ extern "C"
 		BEGIN_CONTEXT_SCOPE(engine);
 
 		auto handle = proxy->Handle();
+
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
+
 		auto obj = handle.As<Object>();
+
+		//auto valueHandle = new CopyablePersistent<Value>(value != nullptr ? value->Handle() : V8Undefined);
 		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+
 		return obj->Set(index, valueHandle);
 
 		END_CONTEXT_SCOPE;

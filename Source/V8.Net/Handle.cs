@@ -355,13 +355,13 @@ namespace V8.Net
         {
             if (handle == null) return InternalHandle.Empty;
             var h = InternalHandle.Empty;
-            h._HandleProxy = handle._Handle.__HandleProxy; // (this is done to prevent incrementing the managed reference count on implicit conversions [to which a developer may not be aware])
+            h._HandleProxy = handle._Handle._HandleProxy; // (this is done to prevent incrementing the managed reference count on implicit conversions [to which a developer may not be aware])
             return h;
         }
 
         public static implicit operator HandleProxy*(Handle handle)
         {
-            return handle != null ? handle._Handle.__HandleProxy : null;
+            return handle != null ? handle._Handle._HandleProxy : null;
         }
 
         public static implicit operator Handle(HandleProxy* handleProxy)

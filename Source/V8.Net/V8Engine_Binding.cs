@@ -1974,8 +1974,11 @@ namespace V8.Net
 
         /// <summary>
         /// Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are not bound however).
-        /// The type returned is an object with property accessors for the object's public fields, properties, and methods.
-        /// <para>Note: Creating bindings is a much slower process than creating your own 'V8NativeObject' types.</para>
+        /// If the object given is actually a boxed primitive type, then a non-object handle can be returned.
+        /// If the given object is not a boxed value, then the handle returned is a handle to an object binder with internal property
+        /// accessors for the encapsulated object's public fields, properties, and methods.
+        /// <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however, 
+        /// bound types are cached and not created each time for the best efficiency.</para>
         /// </summary>
         /// <param name="obj">The object to create a binder for.</param>
         /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
