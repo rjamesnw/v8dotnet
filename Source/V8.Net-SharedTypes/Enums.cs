@@ -108,9 +108,14 @@ namespace V8.Net
         InternalError = -1,
 
         /// <summary>
+        /// The value has not been read yet from the native V8 handle, so a call to 'V8NetProxy.UpdateHandleValue(_HandleProxy)' is required.
+        /// </summary>
+        Uninitialized = 0,
+
+        /// <summary>
         /// The value is undefined (no value set).  This is NOT the same as 'null'.
         /// </summary>
-        Undefined = 0,
+        Undefined,
 
         /// <summary>
         /// The handle proxy represents pre-compiled JavaScript.

@@ -53,12 +53,12 @@ namespace V8.Net
                 if (engine != null)
                     if (v8Object is Handle || v8Object is InternalHandle)
                     {
-                        var h = ((IHandleBased)v8Object).AsInternalHandle;
+                        var h = ((IHandleBased)v8Object).InternalHandle;
                         if (!h.IsEmpty && !h.IsDisposed)
                             lock (engine._DisposalQueue)
                             {
                                 h.IsBeingDisposed = true;
-                                engine._DisposalQueue.Enqueue(h.AsInternalHandle);
+                                engine._DisposalQueue.Enqueue(h.InternalHandle);
                             }
                     }
                     else
@@ -190,7 +190,7 @@ namespace V8.Net
                     var disposed = false;
                     if (abandoned.Value is Handle || abandoned.Value is InternalHandle)
                     {
-                        var h = ((IHandleBased)abandoned.Value).AsInternalHandle;
+                        var h = ((IHandleBased)abandoned.Value).InternalHandle;
                         if (h.CanDispose)
                         {
                             abandoned.Value.Dispose();
@@ -241,7 +241,7 @@ namespace V8.Net
                         var v8Obj = (V8NativeObject)disposable;
                         if (!v8Obj.Handle.IsEmpty && v8Obj.Handle._HandleProxy->Disposed == 1)
                         {
-                            V8NetProxy.MakeWeakHandle(v8Obj.AsInternalHandle); // ('Disposed' will be 2 after this)
+                            V8NetProxy.MakeWeakHandle(v8Obj.InternalHandle); // ('Disposed' will be 2 after this)
                             /* Once the native GC attempts to collect the underlying native object, then '_OnNativeGCRequested()' will get 
                              * called to finalize the disposal of the managed object.
                              * Note 1: Once the native V8 engine agrees, this object will be removed due to a global V8 GC callback 

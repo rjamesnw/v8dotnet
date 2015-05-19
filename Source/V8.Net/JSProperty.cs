@@ -88,7 +88,7 @@ namespace V8.Net
 
         V8Engine IHandleBased.Engine { get { return _Value.Engine; } }
         Handle IHandleBased.AsHandle() { return (Handle)_Value; }
-        InternalHandle IHandleBased.AsInternalHandle { get { return _Value; } }
+        InternalHandle IHandleBased.InternalHandle { get { return _Value; } }
         V8NativeObject IHandleBased.Object { get { return _Value.Object; } }
     }
 

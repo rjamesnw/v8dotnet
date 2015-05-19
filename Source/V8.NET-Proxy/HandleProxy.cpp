@@ -8,7 +8,7 @@ v8::Handle<Script> HandleProxy::Script() { return _Script; }
 // ------------------------------------------------------------------------------------------------------------------------
 
 HandleProxy::HandleProxy(V8EngineProxy* engineProxy, int32_t id)
-	: ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReferenceCount(0), _ObjectID(-1), _CLRTypeID(-1), __EngineProxy(0)
+	: ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReference(0), _ObjectID(-1), _CLRTypeID(-1), __EngineProxy(0)
 {
 	_EngineProxy = engineProxy;
 	_EngineID = _EngineProxy->_EngineID;
@@ -48,7 +48,7 @@ bool HandleProxy::_Dispose(bool registerDisposal)
 			_ObjectID = -1;
 			_CLRTypeID = -1;
 			_Disposed = 3;
-			_Type = JSV_Undefined;
+			_Type = JSV_Uninitialized;
 
 			return true;
 		};;
@@ -100,7 +100,7 @@ void HandleProxy::_ClearHandleValue()
 		_Script.Reset();
 	}
 	_Value.Dispose();
-	_Type = JSV_Undefined;
+	_Type = JSV_Uninitialized;
 	if (_Handle.IsWeak())
 		throw exception("Still weak!");
 }
@@ -338,53 +338,54 @@ void HandleProxy::UpdateValue()
 			_Value.V8Number = 0;
 			break;
 		}
-		; case JSV_Bool:
+		case JSV_Bool:
 		{
 			_Value.V8Boolean = _Handle->BooleanValue();
 			break;
 		}
-		; case JSV_BoolObject:
+		case JSV_BoolObject:
 		{
 			_Value.V8Boolean = _Handle->BooleanValue();
 			break;
 		}
-		; case JSV_Int32:
+		case JSV_Int32:
 		{
 			_Value.V8Integer = _Handle->Int32Value();
 			break;
 		}
-		; case JSV_Number:
+		case JSV_Number:
 		{
 			_Value.V8Number = _Handle->NumberValue();
 			break;
 		}
-		; case JSV_NumberObject:
+		case JSV_NumberObject:
 		{
 			_Value.V8Number = _Handle->NumberValue();
 			break;
 		}
-		; case JSV_String:
+		case JSV_String:
 		{
 			_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; // (note: string is not disposed by struct object and becomes owned by this proxy!)
 			break;
 		}
-		; case JSV_StringObject:
+		case JSV_StringObject:
 		{
 			_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
 			break;
 		}
-		; case JSV_Date:
+		case JSV_Date:
 		{
 			_Value.V8Number = _Handle->NumberValue();
 			_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String;
 			break;
 		}
-		; case JSV_Undefined:
+		case JSV_Undefined:
+		case JSV_Uninitialized:
 		{
 			_Value.V8Number = 0; // (make sure this is cleared just in case...)
 			break;
 		}
-		; default: // (by default, an "object" type is assumed (warning: this includes functions); however, we can't translate it (obviously), so we just return a reference to this handle proxy instead)
+		default: // (by default, an "object" type is assumed (warning: this includes functions); however, we can't translate it (obviously), so we just return a reference to this handle proxy instead)
 		{
 			if (!_Handle.IsEmpty())
 				_Value.V8String = _StringItem(_EngineProxy, *_Handle->ToString()).String;

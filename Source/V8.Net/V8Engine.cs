@@ -459,7 +459,7 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle._HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._Handle._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
             return result;
         }
@@ -486,7 +486,7 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle._HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._Handle._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
             return result;
         }
@@ -807,7 +807,7 @@ namespace V8.Net
             if (value == null)
                 return CreateNullValue();
             else if (value is IHandleBased)
-                return ((IHandleBased)value).AsInternalHandle; // (already a V8.NET value!)
+                return ((IHandleBased)value).InternalHandle; // (already a V8.NET value!)
             else if (value is bool)
                 return CreateValue((bool)value);
             else if (value is byte)

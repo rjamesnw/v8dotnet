@@ -60,7 +60,7 @@ namespace V8.Net
     /// Represents a basic JavaScript object. This class wraps V8 functionality for operations required on any native V8 object (including managed ones).
     /// <para>This class implements 'DynamicObject' to make setting properties a bit easier.</para>
     /// </summary>
-    public unsafe class V8NativeObject : IV8NativeObject, IV8Object, IHandleBased, IDynamicMetaObjectProvider, IV8Disposable
+    public unsafe class V8NativeObject : Handle, IV8NativeObject, IV8Object, IDynamicMetaObjectProvider
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -72,7 +72,7 @@ namespace V8.Net
         internal V8Engine _Engine;
 
         public Handle AsHandle() { return _Handle.AsHandle(); }
-        public InternalHandle AsInternalHandle { get { return _Handle; } }
+        public InternalHandle InternalHandle { get { return _Handle; } }
         public V8NativeObject Object { get { return this; } }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace V8.Net
         /// Setting this property will call the inherited 'Set()' method to replace the handle associated with this object instance (this should never be done on
         /// objects created from templates ('V8ManagedObject' objects), otherwise callbacks from JavaScript to the managed side will not act as expected, if at all).
         /// </summary>
-        public InternalHandle Handle
+        public override InternalHandle InternalHandle
         {
             get { return _Handle; }
             set
@@ -144,7 +144,6 @@ namespace V8.Net
                 }
             }
         }
-        internal InternalHandle _Handle;
 
 #if !(V1_1 || V2 || V3 || V3_5)
         /// <summary>
@@ -261,16 +260,6 @@ namespace V8.Net
         {
             if (!IsInitilized)
                 Initialize(isConstructCall, args);
-        }
-
-        /// <summary>
-        /// This is called on the GC finalizer thread to flag that this managed object entry can be collected.
-        /// <para>Note: There are no longer any managed references to the object at this point; HOWEVER, there may still be NATIVE ones.
-        /// This means the object may survive this process, at which point it's up to the worker thread to clean it up when the native V8 GC is ready.</para>
-        /// </summary>
-        ~V8NativeObject()
-        {
-            this.Finalizing();
         }
 
         public bool CanDispose

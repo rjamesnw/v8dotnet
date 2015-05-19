@@ -176,17 +176,18 @@ enum JSValueType: int32_t
     JSV_ExecutionError = -3, // An error has occurred while attempting to execute the compiled script.
     JSV_CompilerError = -2, // An error has occurred compiling the script (usually a syntax error).
     JSV_InternalError = -1, // An internal error has occurred (before or after script execution).
-    JSV_Undefined = 0, // Value is unknown or not set.
+	JSV_Uninitialized = 0, // The value type has yet to be determined.
+	JSV_Undefined, // Value is the JavaScript 'undefined' value.
     JSV_Script, // The handle represents a compiled script.
-    JSV_Null,
-    JSV_Bool, // The value is a Boolean, as supported within JavaScript for true/false conditions.
-    JSV_BoolObject, // The value is a Boolean object (object reference), as supported within JavaScript when executing "new Boolean()".
-    JSV_Int32, // The value is a 32-bit integer, as supported within JavaScript for bit operations.
+    JSV_Null, // Value is the JavaScript 'null' value.
+    JSV_Bool, // The value is a JavaScript Boolean, as supported within JavaScript for true/false conditions.
+    JSV_BoolObject, // The value is a JavaScript Boolean object (object reference), as supported within JavaScript when executing "new Boolean()".
+    JSV_Int32, // The value is a 32-bit JavaScript integer, as supported within JavaScript for bit operations.
     JSV_Number, // The value is a JavaScript 64-bit number.
     JSV_NumberObject, // The value is a JavaScript 64-bit number object (object reference), as supported within JavaScript when executing "new Number()".
-    JSV_String, // The value is a UTF16 string.
+    JSV_String, // The value is a JavaScript UTF16 string.
     JSV_StringObject, // The value is a JavaScript string object (object reference), as supported within JavaScript when executing "new String()".
-    JSV_Object, // The value is a non-value (object reference).
+    JSV_Object, // The value is a JavaScript object reference (i.e. not a primitive value).
     JSV_Function, // The value is a reference to a JavaScript function (object reference).
     JSV_Date, // The date value is the number of milliseconds since epoch [1970-01-01 00:00:00 UTC+00] (a double value stored in 'Number').
     JSV_Array, // The value proxy represents a JavaScript array of various values.
@@ -239,7 +240,7 @@ private:
 
     HandleValue _Value; // The value is only valid when 'UpdateValue()' is called. Note: sizeof(double) + sizeof(uint16_t*)
 
-    int64_t _ManagedReferenceCount; // The number of references on the managed side.
+	int32_t _ManagedReference; // This is set to 1 if there is a managed side reference to this proxy object.
 
     int32_t _Disposed; // (0: handle is in use, 1: managed disposing in progress, 2: handle was made weak, 3: VIRTUALLY disposed [cached on native side for reuse])
 

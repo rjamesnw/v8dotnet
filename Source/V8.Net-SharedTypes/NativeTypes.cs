@@ -69,7 +69,7 @@ namespace V8.Net
         public Int32 _CLRTypeID; // If set (>=0), then this represents a registered type. The default is -1.
 
         [FieldOffset(16), MarshalAs(UnmanagedType.I4)]
-        public JSValueType _ValueType; // 32-bit value type, which is the type this handle represents.  This is not provided by default until 'GetType()' is called.
+        public JSValueType _Type; // 32-bit value type, which is the type this handle represents.  This is not provided by default until 'GetType()' is called.
 
         #region ### HANDLE VALUE ### - Note: This is only valid upon calling 'UpdateValue()'.
         [FieldOffset(20), MarshalAs(UnmanagedType.I1)]
@@ -83,18 +83,18 @@ namespace V8.Net
         #endregion
 
         [FieldOffset(36), MarshalAs(UnmanagedType.I8)]
-        public Int64 ManagedReferenceCount; // The number of references on the managed side.
+        public Int32 ManagedReference; // The number of references on the managed side.
 
-        [FieldOffset(44), MarshalAs(UnmanagedType.I4)]
+        [FieldOffset(40), MarshalAs(UnmanagedType.I4)]
         public Int32 Disposed; // (0 = in use, 1 = managed side ready to dispose, 2 = object is weak (if applicable), 3 = disposed/cached)
 
-        [FieldOffset(48), MarshalAs(UnmanagedType.I4)]
+        [FieldOffset(44), MarshalAs(UnmanagedType.I4)]
         public Int32 EngineID;
 
-        [FieldOffset(52)]
+        [FieldOffset(48)]
         public void* NativeEngineProxy; // Pointer to the native V8 engine proxy object associated with this proxy handle instance (used native side to free the handle upon destruction).
 
-        [FieldOffset(60)]
+        [FieldOffset(56)]
         public void* NativeV8Handle; // The native V8 persistent object handle (not used on the managed side).
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ namespace V8.Net
         {
             get
             {
-                if ((int)_ValueType == -1) throw new InvalidOperationException("Type is unknown - you must call 'V8NetProxy.UpdateHandleValue()' first.");
-                switch (_ValueType)
+                if ((int)_Type == -1) throw new InvalidOperationException("Type is unknown - you must call 'V8NetProxy.UpdateHandleValue()' first.");
+                switch (_Type)
                 {
                     case JSValueType.Undefined: return "undefined";
                     case JSValueType.Null: return null;

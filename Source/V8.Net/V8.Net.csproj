@@ -105,7 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="V8Engine_Tests.cs" />
-    <Compile Include="InternalHandle.cs" />
+    <Compile Include="Handle.cs" />
     <Compile Include="V8Engine_Binding.cs" />
     <Compile Include="V8Engine_Worker.cs" />
     <Compile Include="V8Engine_Handles.cs" />
@@ -121,7 +121,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="V8Engine.cs" />
     <Compile Include="FunctionTemplate.cs" />
-    <Compile Include="Handle.cs" />
+    <Compile Include="IHandle.cs" />
     <Compile Include="ObjectTemplate.cs" />
     <Compile Include="V8ManagedObject.cs" />
   </ItemGroup>

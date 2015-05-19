@@ -21,9 +21,22 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Holds an index of all handle proxies created for this engine instance.
+        /// Holds an index of all handles created for this engine instance.
+        /// This is a managed side reference to all the active and cached native side handle wrapper (proxy) objects.
         /// </summary>
         internal HandleProxy*[] _HandleProxies = new HandleProxy*[1000];
+
+        /// <summary>
+        /// When a new managed side handle wraps a native handle proxy the disposal process happens internally in a controlled 
+        /// manor.  There is no need to burden the end user with tracking handles for disposal, so when a handle enters public
+        /// space, it is assigned a 'HandleTracker' object reference from this list.  If not available, one is created.
+        /// For instance, during a callback, all native arguments (proxy references) are converted into handle values (which in
+        /// many cases means on the stack, or CPU registers, instead of the heap; though this is CLR implementation dependent).
+        /// These are then passed on to the user callback method WITHOUT a handle tracker, and disposed automatically on return.
+        /// This can save creating many unnecessary objects for the managed GC to deal with.
+        /// </summary>
+        internal WeakReference[] _HandleTrackers = new WeakReference[1000];
+
 
         /// <summary>
         /// Returns all the handles currently known on the managed side.
