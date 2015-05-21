@@ -51,42 +51,32 @@ namespace V8.Net
 
                 // ... get handle and object details ...
                 if (engine != null)
-                    if (v8Object is Handle || v8Object is InternalHandle)
+                    if (v8Object is V8NativeObject)
                     {
-                        var h = ((IHandleBased)v8Object).InternalHandle;
-                        if (!h.IsEmpty && !h.IsDisposed)
-                            lock (engine._DisposalQueue)
-                            {
-                                h.IsBeingDisposed = true;
-                                engine._DisposalQueue.Enqueue(h.InternalHandle);
-                            }
-                    }
-                    else
-                    {
-                        // ... queue the object ...
+                        // ... queue the object (not the handle, so the object itself can be dealt with) ...
 
                         lock (engine._DisposalQueue)
                         {
-                            engine._DisposalQueue.Enqueue(v8Object); // (queue first, so when 'weakRef.DoFinalize()' calls 'GC.ReRegisterForFinalize()', there's no chance of the finalizer kicking in, just in case)
+                            engine._DisposalQueue.Enqueue(v8Object); // (this will successfully resurrect the object; note: the finalize will NOT be called again! [nor does it need to be for dispose queued objects])
 
                             // (note: lock on '_DisposalQueue' is kept so worker doesn't pull something before being finished here)
 
                             if (v8Object is V8NativeObject)
                             {
                                 var v8Obj = v8Object as V8NativeObject;
-
-                                v8Obj._Handle.IsBeingDisposed = true;
-
-                                if (v8Obj.ID >= 0)
-                                {
-                                    var weakRef = engine._GetObjectWeakReference(v8Obj.ID);
-                                    if (weakRef != null)
-                                        weakRef.DoFinalize(v8Obj); // (the object will be prevented from finalizing; it will be resurrected by being adding it to a strong reference, and will remain abandoned)
-                                    // (WARNING: 'lock (Engine._Objects){}' can conflict with the main thread if care is not taken)
-                                    // (Past issue: When '{Engine}.GetObjects()' was called, and an '_Objects[?].Object' is accessed, a deadlock can occur since the finalizer has nulled all the weak references)
-                                }
+                                v8Obj._Handle.IsDisposing = true;
                             }
                         }
+                    }
+                    else if (v8Object is Handle || v8Object is InternalHandle)
+                    {
+                        var h = ((IHandleBased)v8Object).InternalHandle;
+                        if (!h.IsEmpty && !h.IsDisposed && !h.IsDisposing)
+                            lock (engine._DisposalQueue)
+                            {
+                                h.IsDisposing = true;
+                                engine._DisposalQueue.Enqueue(h);
+                            }
                     }
             }
         }
@@ -187,28 +177,14 @@ namespace V8.Net
 
                 if (abandoned != null)
                 {
-                    var disposed = false;
-                    if (abandoned.Value is Handle || abandoned.Value is InternalHandle)
-                    {
-                        var h = ((IHandleBased)abandoned.Value).InternalHandle;
-                        if (h.CanDispose)
-                        {
-                            abandoned.Value.Dispose();
-                            GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
-                            disposed = true;
-                        }
-                    }
-                    else if (abandoned.Value.CanDispose)
+                    if (abandoned.Value.CanDispose)
                     {
                         abandoned.Value.Dispose();
-                        GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
-                        disposed = true;
-                    }
-
-                    if (!disposed)
-                        _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
-                    else
+                        GC.SuppressFinalize(abandoned); // (required otherwise the object's finalizer will be triggered again)
                         _AbandondObjectsIndex.Remove(abandoned.Value);
+                    }
+                    else
+                        _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
                 }
             }
 
@@ -239,9 +215,9 @@ namespace V8.Net
                     if (disposable is V8NativeObject)
                     {
                         var v8Obj = (V8NativeObject)disposable;
-                        if (!v8Obj.Handle.IsEmpty && v8Obj.Handle._HandleProxy->Disposed == 1)
+                        if (!v8Obj.InternalHandle.IsEmpty && v8Obj.InternalHandle._HandleProxy->Disposed == 1)
                         {
-                            V8NetProxy.MakeWeakHandle(v8Obj.InternalHandle); // ('Disposed' will be 2 after this)
+                            V8NetProxy.MakeWeakHandle(v8Obj.InternalHandle); // ('Disposed' will be 2 after this, so no worries about doing this more than once)
                             /* Once the native GC attempts to collect the underlying native object, then '_OnNativeGCRequested()' will get 
                              * called to finalize the disposal of the managed object.
                              * Note 1: Once the native V8 engine agrees, this object will be removed due to a global V8 GC callback 
@@ -270,7 +246,7 @@ namespace V8.Net
 
         /// <summary>
         /// Terminates the worker thread, without a 3 second timeout to be sure.
-        /// This is called when the engine is shutting down. (Note: The worker thread manages object GC along with the native V8 GC.)
+        /// This is called when the engine is shutting down. (Note: The worker thread manages the disposal queues, in sync with the native V8 GC.)
         /// </summary>
         internal void _TerminateWorker()
         {

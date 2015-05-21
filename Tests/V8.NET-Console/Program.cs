@@ -71,7 +71,7 @@ namespace V8.Net
                     _JSServer.RegisterType(typeof(Enumerable), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(System.IO.File), null, true, ScriptMemberSecurity.Locked);
 
-                    ObjectHandle hSystem = _JSServer.CreateObject();
+                    InternalHandle hSystem = _JSServer.CreateObject().KeepAlive();
                     _JSServer.DynamicGlobalObject.System = hSystem;
                     hSystem.SetProperty(typeof(Object)); // (Note: No optional parameters used, so this will simply lookup and apply the existing registered type details above.)
                     hSystem.SetProperty(typeof(String));
@@ -230,7 +230,12 @@ namespace V8.Net
                                     tester.Execute();
 
                                     Console.WriteLine("\r\nReleasing managed tester object ...\r\n");
-                                    tester.Handle.ReleaseManagedObject();
+                                    (~tester).ReleaseManagedObject(); // (this is not the same as Dispose(), and just releases the underlying managed object from its handle, and thus, the underlying native handle as well)
+                                    if (tester.InternalHandle.IsEmpty)
+                                        Console.WriteLine(" Ok.");
+                                    else
+                                        throw new Exception("Failed to release the managed object from its handle.");
+
                                 }
 
                                 Console.WriteLine("\r\n===============================================================================\r\n");
@@ -302,48 +307,28 @@ namespace V8.Net
                             InternalHandle internalHandle = InternalHandle.Empty;
                             int i;
 
-                            {
-                                Console.WriteLine("Setting 'this.tempObj' to a new managed object ...");
+                            Console.WriteLine("Setting 'tempObj' to a new managed object ...");
 
-                                tempObj = _JSServer.CreateObject<V8NativeObject>();
-                                internalHandle = tempObj.Handle;
-                                Handle testHandle = internalHandle;
-                                _JSServer.DynamicGlobalObject.tempObj = tempObj;
+                            _JSServer.DynamicGlobalObject.tempObj = tempObj = _JSServer.CreateObject<V8NativeObject>();
+                            internalHandle = InternalHandle.GetUntrackedHandle(tempObj);
 
-                                // ... because we have a strong reference to the handle in 'testHandle', the managed and native objects are safe; however,
-                                // this block has the only strong reference, so once the reference goes out of scope, the managed GC should attempt to
-                                // collect it, which will mark the handle as ready for collection (but it will not be destroyed just yet until V8 is ready) ...
-
-                                Console.WriteLine("Clearing managed references and running the garbage collector ...");
-                                testHandle = null;
-                            }
-
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-                            // (we wait for the 'testHandle' handle object to be collected, which will dispose the handle)
-                            // (note: we do not call 'Set()' on 'internalHandle' because the "Handle" type takes care of the disposal)
-
-                            for (i = 0; i < 3000 && internalHandle.ReferenceCount > 1; i++)
-                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
-
-                            if (internalHandle.ReferenceCount > 1)
-                                throw new Exception("Handle is still not ready for GC ... something is wrong.");
-
-                            Console.WriteLine("Success! The managed handle instance is pending disposal.");
-                            Console.WriteLine("Clearing the handle object reference next ...");
-
-                            // ... because we still have a reference to 'tempObj' at this point, the managed and native objects are safe; however, this 
-                            // block scope has the only strong reference to the managed object keeping everything alive (including the underlying handle),
-                            // so once the reference goes out of scope, the managed GC will collect it, which will mark the managed object as ready for
-                            // collection. Once both the managed object and handle are marked, this in turn marks the native handle as weak. When the native
-                            // V8 engine's garbage collector is ready to dispose of the handle, as call back is triggered and the native object and
-                            // handles will finally be removed ...
-
+                            Console.WriteLine("Nullifying 'tempObj' to release the object ...");
                             tempObj = null;
 
-                            Console.WriteLine("Forcing CLR garbage collection ... ");
                             GC.Collect();
                             GC.WaitForPendingFinalizers();
+                            // (we wait for the object to be sent for disposal by the worker)
+
+                            for (i = 0; i < 3000 && !internalHandle.IsDisposing; i++)
+                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
+
+                            if (!internalHandle.IsDisposing)
+                                throw new Exception("The temp object's handle is still not pending disposal ... something is wrong.");
+
+                            Console.WriteLine("Success! The temp object's handle is going through the disposal process.");
+                            Console.WriteLine("Clearing the handle object reference next ...");
+
+                            // object handles will finally be disposed when the native V8 GC calls back regarding them ...
 
                             Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
 
@@ -365,9 +350,9 @@ namespace V8.Net
 
                             Console.WriteLine("Looking for object ...");
 
-                            if (!internalHandle.IsDisposed) throw new Exception("Managed object was not garbage collected.");
+                            if (!internalHandle.IsDisposed) throw new Exception("Managed object's handle did not dispose.");
                             // (note: this call is only valid as long as no more objects are created before this point)
-                            Console.WriteLine("Success! The managed V8NativeObject instance is disposed.");
+                            Console.WriteLine("Success! The managed V8NativeObject native handle is now disposed.");
                             Console.WriteLine("\r\nDone.\r\n");
                         }
                         else if (lcInput == @"\speedtest")
@@ -622,13 +607,13 @@ public sealed class SealedObject : IV8NativeObject
 
     public SealedObject(InternalHandle h1, InternalHandle h2)
     {
-        H1.Set(h1);
+        H1 = h1.KeepAlive();
         H2 = h2;
     }
 
     public string Test(int a, string b) { FieldA = a; FieldB = b; return a + "_" + b; }
     public InternalHandle SetHandle1(InternalHandle h) { return H1.Set(h); }
-    public Handle SetHandle2(Handle h) { return H2.Set(h); }
+    public Handle SetHandle2(Handle h) { return H2 = h; }
     public InternalHandle SetEngine(V8Engine engine) { Engine = engine; return Engine.GlobalObject; }
 
     public void Test<t2, t>(t2 a, string b) { }
@@ -664,7 +649,7 @@ public class V8DotNetTesterFunction : V8Function
 
     public InternalHandle ConstructV8DotNetTesterWrapper(V8Engine engine, bool isConstructCall, InternalHandle _this, params InternalHandle[] args)
     {
-        return isConstructCall ? engine.GetObject<V8DotNetTesterWrapper>(_this, true, false).Initialize(isConstructCall, args).AsInternalHandle : InternalHandle.Empty;
+        return isConstructCall ? engine.GetObject<V8DotNetTesterWrapper>(_this, true, false).Initialize(isConstructCall, args) : InternalHandle.Empty;
         // (note: V8DotNetTesterWrapper would cause an error here if derived from V8ManagedObject)
     }
 }
@@ -681,7 +666,7 @@ public class V8DotNetTesterWrapper : V8NativeObject // (I can also implement IV8
     {
         _Tester = Engine.CreateObjectTemplate().CreateObject<V8DotNetTester>();
         SetProperty("tester", _Tester); // (or _Tester.Handle works also)
-        return Handle;
+        return this;
     }
 }
 
@@ -731,7 +716,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\n... initialization complete.");
 
-        return Handle;
+        return this;
     }
 
     public void Execute()
@@ -747,7 +732,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\nTesting JS function call from native side ...\r\n");
 
-        ObjectHandle f = (ObjectHandle)Engine.ConsoleExecute("f = function(arg1) { return arg1; }");
+        InternalHandle f = Engine.ConsoleExecute("f = function(arg1) { return arg1; }");
         var fresult = f.StaticCall(Engine.CreateValue(10));
         Console.WriteLine("f(10) == " + fresult);
         if (fresult != 10)
@@ -755,7 +740,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\nTesting JS function call exception from native side ...\r\n");
 
-        f = (ObjectHandle)Engine.ConsoleExecute("f = function() { return thisdoesntexist; }");
+        f = Engine.ConsoleExecute("f = function() { return thisdoesntexist; }");
         fresult = f.StaticCall();
         Console.WriteLine("f() == " + fresult);
         if (!fresult.ToString().Contains("Error"))
@@ -825,7 +810,7 @@ public class V8DotNetTester : V8ManagedObject
         var obj = new V8NativeObject();
         for (var i = 0; i < 1000; i++)
         {
-            obj.Handle = Engine.GlobalObject.GetProperty("obj"); // (note here that 'obj.Handle' is a *property* and must be assigned, instead of calling 'Set()', in order to change the object's handle)
+            obj.InternalHandle = Engine.GlobalObject.GetProperty("obj"); // (note here that 'obj.InternalHandle' is a *property* and must be assigned, instead of calling 'Set()', in order to change the object's handle)
         }
         Console.WriteLine(" Done.");
     }

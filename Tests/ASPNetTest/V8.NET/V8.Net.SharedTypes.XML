@@ -175,6 +175,11 @@
             An internal error has occurred (before or after script execution).
             </summary>
         </member>
+        <member name="F:V8.Net.JSValueType.Uninitialized">
+            <summary>
+            The value has not been read yet from the native V8 handle, so a call to 'V8NetProxy.UpdateHandleValue(_HandleProxy)' is required.
+            </summary>
+        </member>
         <member name="F:V8.Net.JSValueType.Undefined">
             <summary>
             The value is undefined (no value set).  This is NOT the same as 'null'.

@@ -45,7 +45,7 @@ namespace V8.Net
         /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
         /// </summary>
         InternalHandle IJSProperty.Value { get { return _Value; } set { _Value.Set(value); } }
-        InternalHandle _Value;
+        internal InternalHandle _Value;
 
         /// <summary>
         /// 'V8PropertyAttributes' flags combined to describe the value, such as visibility, or what kind of access is allowed.
@@ -87,7 +87,6 @@ namespace V8.Net
         }
 
         V8Engine IHandleBased.Engine { get { return _Value.Engine; } }
-        Handle IHandleBased.AsHandle() { return (Handle)_Value; }
         InternalHandle IHandleBased.InternalHandle { get { return _Value; } }
         V8NativeObject IHandleBased.Object { get { return _Value.Object; } }
     }

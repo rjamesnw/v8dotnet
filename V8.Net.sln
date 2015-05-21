@@ -98,8 +98,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jist2Plugin", "..\..\..\..\Users\James\Downloads\Development\Temp\Jist2-src\Jist2\Jist2\Jist2Plugin\Jist2Plugin.csproj", "{21C82923-D4CB-40AE-AB4E-32526D33AF21}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrariaAPI-Server", "..\..\..\..\Users\James\Downloads\Development\Temp\Jist2-src\Jist2\Jist2\References\TShock\TerrariaServerAPI\TerrariaAPI-Server.csproj", "{549A7941-D9C9-4544-BAC8-D9EEEAB4D777}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8D612C41-7D95-499C-A82D-C5C3C82225B3} = {8D612C41-7D95-499C-A82D-C5C3C82225B3}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TShockAPI", "..\..\..\..\Users\James\Downloads\Development\Temp\Jist2-src\Jist2\Jist2\References\TShock\TShockAPI\TShockAPI.csproj", "{49606449-072B-4CF5-8088-AA49DA586694}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8D612C41-7D95-499C-A82D-C5C3C82225B3} = {8D612C41-7D95-499C-A82D-C5C3C82225B3}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

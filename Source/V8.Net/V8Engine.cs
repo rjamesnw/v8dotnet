@@ -76,7 +76,8 @@ namespace V8.Net
 
         ObjectTemplate _GlobalObjectTemplateProxy;
 
-        public ObjectHandle GlobalObject { get; private set; }
+        public InternalHandle GlobalObject { get { return _GlobalObject; } }
+        internal InternalHandle _GlobalObject; // TODO: Consider supporting a new global context.
 
 #if !(V1_1 || V2 || V3 || V3_5)
         public dynamic DynamicGlobalObject { get { return GlobalObject; } }
@@ -245,7 +246,7 @@ namespace V8.Net
 
                 _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>(false);
                 //?_GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
-                GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
+                _GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
             }
 
             ___V8GarbageCollectionRequestCallback = _V8GarbageCollectionRequestCallback;
@@ -275,22 +276,31 @@ namespace V8.Net
                 {
                     hProxy = _HandleProxies[i];
                     if (hProxy != null && !hProxy->IsDisposed)
+                    {
                         hProxy->_ObjectID = -2; // (note: this must be <= -2, otherwise the ID auto updates -1 to -2 to flag the ID as already processed)
+                        hProxy->ManagedReference = 0;
+                        V8NetProxy.DisposeHandleProxy(hProxy);
+                        _HandleProxies[i] = null;
+                    }
                 }
 
                 // ... allow all objects to be finalized by the GC ...
 
-                ObservableWeakReference<V8NativeObject> weakRef;
+                WeakReference weakRef;
+                V8NativeObject obj;
 
                 for (var i = 0; i < _Objects.Count; i++)
-                    if ((weakRef = _Objects[i]) != null && weakRef.Object != null)
+                    if ((weakRef = _Objects[i]) != null && (obj = (V8NativeObject)weakRef.Target) != null)
                     {
-                        weakRef.Object._ID = null;
-                        weakRef.Object.Template = null;
-                        weakRef.Object._Handle = ObjectHandle.Empty;
+                        obj.OnDispose();
+                        obj._ID = null;
+                        obj.Template = null;
+                        obj._Handle = InternalHandle.Empty;
+                        GC.SuppressFinalize(obj);
                     }
 
                 // ... destroy the native engine ...
+                // TODO: Consider caching the engine instead and reuse with a new context.
 
                 if (_NativeV8EngineProxy != null)
                 {
@@ -338,11 +348,11 @@ namespace V8.Net
         {
             if (persistedObjectHandle->_ObjectID >= 0)
             {
-                var weakRef = _GetObjectWeakReference(persistedObjectHandle->_ObjectID);
-                if (weakRef != null && weakRef.Object != null)
-                    lock (weakRef.Object)
+                var obj = _GetExistingObject(persistedObjectHandle->_ObjectID);
+                if (obj != null)
+                    lock (obj)
                     {
-                        return weakRef.Object._OnNativeGCRequested(); // (notify the object that a V8 GC is requested; the worker thread should pick it up later)
+                        return obj._OnNativeGCRequested(); // (notify the object that a V8 GC is requested; the worker thread should pick it up later)
                     }
             }
             return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])
@@ -356,15 +366,15 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public InternalHandle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
-            Handle result = V8NetProxy.V8Execute(_NativeV8EngineProxy, script, sourceName);
+            InternalHandle result = V8NetProxy.V8Execute(_NativeV8EngineProxy, script, sourceName);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
 
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -373,18 +383,18 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle Execute(Handle script, bool throwExceptionOnError = false)
+        public InternalHandle Execute(InternalHandle script, bool throwExceptionOnError = false)
         {
             if (script.ValueType != JSValueType.Script)
                 throw new InvalidOperationException("The handle must represent pre-compiled JavaScript.");
 
-            Handle result = V8NetProxy.V8ExecuteCompiledScript(_NativeV8EngineProxy, script);
+            InternalHandle result = V8NetProxy.V8ExecuteCompiledScript(_NativeV8EngineProxy, script);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
 
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -395,11 +405,11 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public InternalHandle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
-            Handle result = Execute(script, sourceName, throwExceptionOnError);
+            InternalHandle result = Execute(script, sourceName, throwExceptionOnError);
             Console.WriteLine(result.AsString);
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -411,12 +421,12 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public InternalHandle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
             Console.WriteLine(script);
-            Handle result = Execute(script, sourceName, throwExceptionOnError);
+            InternalHandle result = Execute(script, sourceName, throwExceptionOnError);
             Console.WriteLine(result.AsString);
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -427,15 +437,15 @@ namespace V8.Net
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
         /// <returns>A handle to the compiled script.</returns>
-        public Handle Compile(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public InternalHandle Compile(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
-            Handle result = V8NetProxy.V8Compile(_NativeV8EngineProxy, script, sourceName);
+            InternalHandle result = V8NetProxy.V8Compile(_NativeV8EngineProxy, script, sourceName);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
 
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -444,9 +454,9 @@ namespace V8.Net
         /// <param name="scriptFile">The script file to load.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
-        public Handle LoadScript(string scriptFile, string sourceName = null, bool throwExceptionOnError = false)
+        public InternalHandle LoadScript(string scriptFile, string sourceName = null, bool throwExceptionOnError = false)
         {
-            Handle result;
+            InternalHandle result;
             try
             {
                 var jsText = File.ReadAllText(scriptFile);
@@ -459,9 +469,9 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -471,9 +481,9 @@ namespace V8.Net
         /// <param name="scriptFile">The script file to load.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
-        public Handle LoadScriptCompiled(string scriptFile, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public InternalHandle LoadScriptCompiled(string scriptFile, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
-            Handle result;
+            InternalHandle result;
             try
             {
                 var jsText = File.ReadAllText(scriptFile);
@@ -486,9 +496,9 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
-            return result;
+            return result.KeepAlive();
         }
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -598,23 +608,16 @@ namespace V8.Net
         internal T _CreateObject<T>(ITemplate template, InternalHandle v8Object, bool initialize = true, bool connectNativeObject = true)
             where T : V8NativeObject, new()
         {
-            try
-            {
-                if (!v8Object.IsObjectType)
-                    throw new InvalidOperationException("An object handle type is required (such as a JavaScript object or function handle).");
+            if (!v8Object.IsObjectType)
+                throw new InvalidOperationException("An object handle type is required (such as a JavaScript object or function handle).");
 
-                // ... create the new managed JavaScript object, store it (to get the "ID"), and connect it to the native V8 object ...
-                var obj = _CreateManagedObject<T>(template, v8Object.PassOn(), connectNativeObject);
+            // ... create the new managed JavaScript object, store it (to get the "ID"), and connect it to the native V8 object ...
+            var obj = _CreateManagedObject<T>(template, v8Object, connectNativeObject);
 
-                if (initialize)
-                    obj.Initialize(false, null);
+            if (initialize)
+                obj.Initialize(false, null);
 
-                return obj;
-            }
-            finally
-            {
-                v8Object._DisposeIfFirst();
-            }
+            return obj;
         }
 
         /// <summary>
@@ -653,7 +656,7 @@ namespace V8.Net
             try
             {
                 // ... create a new native object and associated it with the new managed object ID ...
-                obj._Handle._Set(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID), false);
+                obj._Handle.Set(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID));
 
                 /* The V8 object will have an associated internal field set to the index of the created managed object above for quick lookup.  This index is used
                  * to locate the associated managed object when a call-back occurs. The lookup is a fast O(1) operation using the custom 'IndexedObjectList' manager.
@@ -681,7 +684,7 @@ namespace V8.Net
         public InternalHandle CreateObject(Int32 objectID = -2)
         {
             if (objectID > -2) throw new InvalidOperationException("Object IDs must be <= -2.");
-            return V8NetProxy.CreateObject(_NativeV8EngineProxy, objectID);
+            return (Handle)V8NetProxy.CreateObject(_NativeV8EngineProxy, objectID);
         }
 
         /// <summary>

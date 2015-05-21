@@ -103,21 +103,21 @@ namespace V8.NET.Console.ObjectExamples
 
             //examine result
             var test0 = resultHandle.GetProperty("isEnable");
-            ObjectHandle test1 = resultHandle.GetProperty("staff"); // NOTE: "ObjectHandle" is a special handle for objects (which also obviously includes arrays, etc.).
-            var arrayLength = test1.ArrayLength;
-            ObjectHandle arrayItem1 = test1.GetProperty(0);
-            var arrayItem1_name = arrayItem1.GetProperty("name");
-            var arrayItem1_address = arrayItem1.GetProperty("address");
-            var arrayItem1_dob = arrayItem1.GetProperty("dob");
-            ObjectHandle arrayItem2 = test1.GetProperty(1); // (arrays are treated same as objects here)
-            ObjectHandle arrayItem3 = test1.GetProperty(2); // (arrays are treated same as objects here)
+            Handle test1 = resultHandle.GetProperty("staff"); // NOTE: "ObjectHandle" is a special handle for objects (which also obviously includes arrays, etc.).
+            var arrayLength = test1._.ArrayLength;
+            Handle arrayItem1 = test1._.GetProperty(0);
+            var arrayItem1_name = arrayItem1._.GetProperty("name");
+            var arrayItem1_address = arrayItem1._.GetProperty("address");
+            var arrayItem1_dob = (~arrayItem1).GetProperty("dob");
+            Handle arrayItem2 = test1._.GetProperty(1); // (arrays are treated same as objects here)
+            Handle arrayItem3 = test1._.GetProperty(2); // (arrays are treated same as objects here)
 
             //  ==================================================================== OR  ====================================================================
 
             v8Engine.RegisterType<Company2>(null, true, ScriptMemberSecurity.Locked); // (this line is NOT required, but allows more control over the settings)
             v8Engine.GlobalObject.SetProperty(typeof(Company2)); // <= THIS IS IMPORTANT! It sets the type on the global object (though you can put this anywhere like any property)
 
-            var gs2 = (ObjectHandle)(InternalHandle)v8Engine.Execute(
+            var gs2 = v8Engine.Execute(
                 @"(function () {
                     var myClassObject = function() {};
                     myClassObject.prototype.getCompanyInfo = function (a, b, c) {

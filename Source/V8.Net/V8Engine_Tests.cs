@@ -129,7 +129,7 @@ namespace V8.Net
                 if ((Int64)hp->V8String != _GetMarshalTestPTRValue(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "V8String", ofs, data, (byte*)&hp->V8String);
                 // endregion
                 ofs = (byte)((int)&hp->ManagedReference - (int)hp);
-                if ((Int64)hp->ManagedReference != _GetMarshalTestInt64Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "ManagedReferenceCount", ofs, data, (byte*)&hp->ManagedReference); // The number of references on the managed side.
+                if ((Int64)hp->ManagedReference != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "ManagedReference", ofs, data, (byte*)&hp->ManagedReference); // The number of references on the managed side.
                 ofs = (byte)((int)&hp->Disposed - (int)hp);
                 if ((Int32)hp->Disposed != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "Disposed", ofs, data, (byte*)&hp->Disposed); // (0 = in use, 1 = managed side ready to dispose, 2 = object is weak (if applicable), 3 = disposed/cached)
                 ofs = (byte)((int)&hp->EngineID - (int)hp);

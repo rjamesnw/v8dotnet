@@ -76,20 +76,22 @@ void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<V
 
 		auto result = callback(0, args.IsConstructCall(), _this, _args, argLength);
 
-		if (_this != nullptr)
-			_this->DisposeAsCallbackResult();
-
-		for (auto i = 0; i < argLength; i++)
-			_args[i]->DisposeAsCallbackResult();
-		
 		if (result != nullptr) {
 			if (result->IsError())
 				args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
 			else
 				args.GetReturnValue().Set(result->Handle()); // (note: the returned value was created via p/invoke calls from the managed side, so the managed side is expected to tracked and free this handle when done)
 
-			result->DisposeAsCallbackResult();
+			result->TryDispose();
 		}
+
+		// ... do this LAST, as the result may be one of the arguments returned, or even '_this' itself ...
+
+		if (_this != nullptr)
+			_this->TryDispose();
+
+		for (auto i = 0; i < argLength; i++)
+			_args[i]->TryDispose();
 
 		// (result == null == undefined [which means the managed side didn't return anything])
 	}
@@ -144,7 +146,8 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
 
 void FunctionTemplateProxy::Set(const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes)
 {
-	_FunctionTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
+	if (value != nullptr)
+		_FunctionTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

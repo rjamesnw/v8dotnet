@@ -71,8 +71,6 @@ namespace V8.Net
         public V8Engine Engine { get { return _Engine ?? (_Engine = _Handle.Engine); } }
         internal V8Engine _Engine;
 
-        public Handle AsHandle() { return _Handle.AsHandle(); }
-        public InternalHandle InternalHandle { get { return _Handle; } }
         public V8NativeObject Object { get { return this; } }
 
         /// <summary>
@@ -95,16 +93,18 @@ namespace V8.Net
         /// </summary>
         public Int32 ID
         {
-            get { var id = _Handle.ObjectID; return id < 0 ? _ID ?? id : id; } // (this attempts to return the underlying managed object ID of the handle proxy, or the local ID if -1)
+            get { var id = _Handle.ObjectID; return id < 0 ? (_ID ?? id) : id; } // (this attempts to return the underlying managed object ID of the handle proxy, or the local ID if -1)
             set
             {
                 if ((_ID ?? -1) >= 0)
-                    throw new InvalidOperationException("Cannot set the object's ID once set.");
+                    throw new InvalidOperationException("Cannot set the ID of a V8NativeObject that is created from within V8Engine.");
+                if (value >= 0)
+                    throw new InvalidOperationException("Invalid object ID: Values >= 0 are reserved for V8NativeObject instances created from within V8Engine.");
                 _Handle.ObjectID = value; // (just to make sure, as it may be -1 [default value on native side])
                 _ID = value;
-            } // (once set, the managed object will be fixed to the ID as long as the underlying handle has a handle-based object ID less than 0)
+            }
         }
-        internal Int32? _ID; // ('_ID' is used within object collection to determine if the worker needs to get involved [{handle}.ObjectID cannot be used as it may call into the native side])
+        internal Int32? _ID;
 
         /// <summary>
         /// Another object of the same interface to direct actions to (such as 'Initialize()').
@@ -139,8 +139,16 @@ namespace V8.Net
                     if (!value.IsEmpty && !value.IsObjectType)
                         throw new InvalidCastException(string.Format(InternalHandle._VALUE_NOT_AN_OBJECT_ERRORMSG, value));
 
-                    _Handle.Set(value);
-                    ID = _Handle.ObjectID;
+                    _Handle._Object = null; // (REQUIRED to unlock the handle)
+                    _Handle.Dispose();
+                    _Handle = value;
+
+                    if (!_Handle.IsEmpty)
+                    {
+                        _Handle._Object = this;
+                        _ID = _Handle._HandleProxy->_ObjectID; // (MUST CHANGE THIS FIRST before setting '_Handle.ObjectID', else the '_Object' reference will be nullified)
+                        _Handle.ObjectID = _Handle._HandleProxy->_ObjectID; // (setting 'ObjectID' anyway, which may cause other updates)
+                    }
                 }
             }
         }
@@ -169,11 +177,6 @@ namespace V8.Net
             }
         }
         internal InternalHandle _Prototype;
-
-        /// <summary>
-        /// Returns true if this object is ready to be garbage collected by the native side.
-        /// </summary>
-        public bool IsManagedObjectWeak { get { using (Engine._ObjectsLocker.ReadLock()) { return _ID != null ? Engine._Objects[_ID.Value].IsGCReady : true; } } }
 
         /// <summary>
         /// Used internally to quickly determine when an instance represents a binder object type, or static type binder function (faster than reflection!).
@@ -250,7 +253,7 @@ namespace V8.Net
 
             IsInitilized = true;
 
-            return Handle;
+            return _Handle;
         }
 
         /// <summary>
@@ -262,12 +265,12 @@ namespace V8.Net
                 Initialize(isConstructCall, args);
         }
 
-        public bool CanDispose
+        public override bool CanDispose
         {
-            get { return _Handle.IsEmpty || !_Handle.IsObjectType || _Handle.ReferenceCount == 0 && !_Handle.IsBeingDisposed; }
+            get { return _Handle.IsEmpty || !_Handle.IsObjectType; }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _OnNativeGCRequested();
         }
@@ -292,7 +295,7 @@ namespace V8.Net
         {
             if (!_Handle.IsEmpty)
             {
-                _Handle.IsBeingDisposed = true;
+                _Handle.IsDisposing = true;
                 var engine = Engine;
 
                 // ... remove this object from the abandoned queue ...
@@ -328,10 +331,7 @@ namespace V8.Net
 
                 if (!_Handle.IsEmpty)
                 {
-                    //if (_Handle.ReferenceCount > 1)
-                    //    throw new InvalidOperationException("The handle '" + _Handle.ToString() + "' of this object being disposed has an invalid reference count of " + _Handle.ReferenceCount + ". There should be only one.  This may be the result of forcing this object to dispose while other handles still reference it.");
-
-                    _Handle.ObjectID = -1; // (resets the object ID on the native side [though this happens anyhow once cached])
+                    _Handle.ObjectID = -1; // (resets the object ID on the native side [though this happens anyhow once cached], which also causes the reference to clear)
                     // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.CanDispose' will return false])
                     _Handle.Dispose();
                 }
@@ -349,8 +349,6 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         public static implicit operator InternalHandle(V8NativeObject obj) { return obj != null ? obj._Handle : InternalHandle.Empty; }
-        public static implicit operator Handle(V8NativeObject obj) { return obj != null ? (Handle)obj._Handle : ObjectHandle.Empty; }
-        public static implicit operator ObjectHandle(V8NativeObject obj) { return obj != null ? (ObjectHandle)obj._Handle : ObjectHandle.Empty; }
 
         // --------------------------------------------------------------------------------------------------------------------
 

@@ -129,8 +129,8 @@ namespace V8.Net
             {
                 var functions = from f in
                                     (from t in _FunctionsByType.Keys.ToArray() // (need to convert this to an array in case the callbacks modify the dictionary!)
-                                     select _Engine._GetObjectWeakReference(_FunctionsByType[t]))
-                                where f != null && f.Object != null && ((V8Function)f.Object).Callback != null
+                                     select _Engine._GetExistingObject(_FunctionsByType[t]))
+                                where f != null && ((V8Function)f.Object).Callback != null
                                 select ((V8Function)f.Object).Callback;
 
                 return _CallBack(managedObjectID, isConstructCall, _this, args, argCount, functions.ToArray());
@@ -141,49 +141,38 @@ namespace V8.Net
         {
             // ... get a handle to the native "this" object ...
 
-            using (InternalHandle hThis = new InternalHandle(_this, false))
+            InternalHandle hThis = _this;
+
+            V8Engine engine = hThis.Engine;
+
+            // ... wrap the arguments ...
+
+            InternalHandle[] _args = new InternalHandle[argCount];
+            int i;
+
+            for (i = 0; i < argCount; i++)
+                _args[i] = args[i]; // (since these will be disposed immediately after, the "first" flag is not required [this also prevents it from getting passed on])
+
+            // (note: the underlying native handles for '_this' and any arguments will be disposed automatically upon return, unless the user calls 'KeepAlive()' on them)
+
+            InternalHandle result = null;
+
+            // ... call all function types (multiple custom derived function types are allowed, but only one of each type) ...
+            foreach (var callback in functions)
             {
-                V8Engine engine = hThis.Engine;
+                result = callback(engine, isConstructCall, hThis, _args);
 
-                // ... wrap the arguments ...
-
-                InternalHandle[] _args = new InternalHandle[argCount];
-                int i;
-
-                for (i = 0; i < argCount; i++)
-                    _args[i]._Set(args[i], false); // (since these will be disposed immediately after, the "first" flag is not required [this also prevents it from getting passed on])
-
-                InternalHandle result = null;
-
-                try
-                {
-                    // ... call all function types (multiple custom derived function types are allowed, but only one of each type) ...
-                    foreach (var callback in functions)
-                    {
-                        result = callback(engine, isConstructCall, hThis, _args);
-
-                        if (!result.IsEmpty) break;
-                    }
-
-                    // ... if the "hThis" reference is returned, make sure to clone it, otherwise it will be disposed at the end of the 'using' scope! ...
-
-                    result = result.Clone(); // (result will try to be disposed on the native side for returns)
-                }
-                finally
-                {
-                    for (i = 0; i < _args.Length; i++)
-                        //?if (_args[i] != result)
-                        _args[i].Dispose();
-                }
-
-                if (isConstructCall && result.HasObject && result.Object is V8ManagedObject && result.Object.Handle == hThis)
-                    throw new InvalidOperationException("You've attempted to return the type '" + result.Object.GetType().Name
-                        + "' which implements/extends IV8ManagedObject/V8ManagedObject in a construction call (using 'new' in JavaScript) to wrap the new native object."
-                        + " The native V8 engine only supports interceptor hooks for objects generated from ObjectTemplate instances.  You will need to first derive/implement from V8NativeObject/IV8NativeObject"
-                        + " for construction calls, then wrap it around your object (or rewrite your object to use V8NativeObject directly instead and use the 'SetAccessor()' handle method).");
-
-                return result;
+                if (!result.IsEmpty) break;
             }
+
+            var obj = result.Object as V8ManagedObject;
+            if (isConstructCall && obj != null && obj.InternalHandle == hThis)
+                throw new InvalidOperationException("You've attempted to return the type '" + obj.GetType().Name
+                    + "' which is of type V8ManagedObject in a construction call (using 'new' in JavaScript) to wrap the new native object given to the constructor.  The native V8 engine"
+                    + " only supports interceptor hooks for objects generated from ObjectTemplate instances.  You will need to first derive/implement from V8NativeObject/IV8NativeObject"
+                    + " for your custom object(s), or rewrite your object to use V8NativeObject directly instead and use the 'SetAccessor()' handle method.");
+
+            return result;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -214,8 +203,7 @@ namespace V8.Net
             {
                 if (_FunctionsByType.TryGetValue(typeof(T), out funcID))
                 {
-                    var weakRef = _Engine._GetObjectWeakReference(funcID);
-                    func = weakRef != null ? weakRef.Reset() as V8Function : null;
+                    func = _Engine._GetExistingObject(funcID) as V8Function;
                     if (func != null)
                         return (T)func;
                 }
@@ -227,7 +215,7 @@ namespace V8.Net
 
             // ... create a managed wrapper for the V8 "Function" object (note: functions inherit the native V8 "Object" type) ...
 
-            func = _Engine._GetObject<T>(this, hNativeFunc.PassOn(), true, false); // (note: this will "connect" the native object [hNativeFunc] to a new managed V8Function wrapper, and set the prototype!)
+            func = _Engine._GetObject<T>(this, hNativeFunc, true, false); // (note: this will "connect" the native object [hNativeFunc] to a new managed V8Function wrapper, and set the prototype!)
 
             if (callback != null)
                 func.Callback = callback;
@@ -235,7 +223,7 @@ namespace V8.Net
             // ... get the function's prototype object, wrap it, and give it to the new function object ...
             // (note: this is a special case, because the function object auto generates the prototype object natively using an existing object template)
 
-            func._Prototype._Set(V8NetProxy.GetObjectPrototype(func._Handle), false);
+            func._Prototype.Set(V8NetProxy.GetObjectPrototype(func._Handle));
 
             lock (_FunctionsByType)
             {
@@ -281,7 +269,7 @@ namespace V8.Net
 
             try
             {
-                return (InternalHandle)V8NetProxy.CreateFunctionInstance(_NativeFunctionTemplateProxy, -1, args.Length, _args);
+                return (InternalHandle)V8NetProxy.CreateInstanceFromFunctionTemplate(_NativeFunctionTemplateProxy, -1, args.Length, _args);
             }
             finally
             {
@@ -316,7 +304,7 @@ namespace V8.Net
 
             try
             {
-                obj._Handle._Set(V8NetProxy.CreateFunctionInstance(_NativeFunctionTemplateProxy, obj.ID, args.Length, _args), false);
+                obj._Handle.Set(V8NetProxy.CreateInstanceFromFunctionTemplate(_NativeFunctionTemplateProxy, obj.ID, args.Length, _args));
                 // (note: setting '_NativeObject' also updates it's '_ManagedObject' field if necessary.
 
                 obj.Initialize(true, args);
@@ -368,16 +356,9 @@ namespace V8.Net
         /// </summary>
         public void SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            try
-            {
-                if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
 
-                V8NetProxy.SetFunctionTemplateProperty(_NativeFunctionTemplateProxy, name, value, attributes);
-            }
-            finally
-            {
-                value._DisposeIfFirst();
-            }
+            V8NetProxy.SetFunctionTemplateProperty(_NativeFunctionTemplateProxy, name, value, attributes);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

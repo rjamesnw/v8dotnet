@@ -131,7 +131,7 @@ void ObjectTemplateProxy::GetProperty(Local<String> hName, const PropertyCallbac
 					else
 						info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 					
-					result->DisposeAsCallbackResult();
+					result->TryDispose();
 				}
 				// (result == null == undefined [which means the managed side didn't return anything])
 			}
@@ -160,7 +160,6 @@ void ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, c
 				HandleProxy *val = proxy->_EngineProxy->GetHandleProxy(value);
 				auto result = proxy->NamedPropertySetter(str.String, val, maInfo); // (assumes the 'str' memory will be released by the managed side)
 				str.Dispose();
-				val->DisposeAsCallbackResult();
 				if (result != nullptr)
 				{
 					if (result->IsError())
@@ -168,9 +167,12 @@ void ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, c
 					else
 						info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 					
-					result->DisposeAsCallbackResult();
+					result->TryDispose();
 				}
 				// (result == null == undefined [which means the managed side didn't return anything])
+
+				// ... do this LAST, as the result may be one of the arguments passed in ...
+				val->TryDispose();
 			}
 		}
 	}
@@ -262,7 +264,7 @@ void ObjectTemplateProxy::GetPropertyNames(const PropertyCallbackInfo<Array>& in
 					else
 						info.GetReturnValue().Set(result->Handle().As<Array>()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 					
-					result->DisposeAsCallbackResult();
+					result->TryDispose();
 				}
 				// (result == null == undefined [which means the managed side didn't return anything])
 			}
@@ -295,7 +297,7 @@ void ObjectTemplateProxy::GetProperty(uint32_t index, const PropertyCallbackInfo
 					else
 						info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 					
-					result->DisposeAsCallbackResult();
+					result->TryDispose();
 				}
 				// (result == null == undefined [which means the managed side didn't return anything])
 			}
@@ -322,7 +324,6 @@ void ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> value, const 
 				ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
 				HandleProxy *val = proxy->_EngineProxy->GetHandleProxy(value);
 				auto result = proxy->IndexedPropertySetter(index, val, maInfo); // (assumes the 'str' memory will be released by the managed side)
-				val->DisposeAsCallbackResult();
 				if (result != nullptr)
 				{
 					if (result->IsError())
@@ -330,9 +331,12 @@ void ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> value, const 
 					else
 						info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 					
-					result->DisposeAsCallbackResult();
+					result->TryDispose();
 				}
 				// (result == null == undefined [which means the managed side didn't return anything])
+				
+				// ... do this LAST, as the result may be one of the arguments passed in ...
+				val->TryDispose();
 			}
 		}
 	}
@@ -420,7 +424,7 @@ void ObjectTemplateProxy::GetPropertyIndices(const PropertyCallbackInfo<Array>& 
 					else
 						info.GetReturnValue().Set(result->Handle().As<Array>()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 					
-					result->DisposeAsCallbackResult();
+					result->TryDispose();
 				}
 				// (result == null == undefined [which means the managed side didn't return anything])
 			}
@@ -477,7 +481,6 @@ void ObjectTemplateProxy::AccessorGetterCallbackProxy(Local<String> property, co
 				auto result = getter(_this, str.String); // (assumes the 'str' memory will be released by the managed side)
 
 				str.Dispose();
-				_this->DisposeAsCallbackResult();
 
 				Handle<Value> hResult;
 
@@ -488,7 +491,9 @@ void ObjectTemplateProxy::AccessorGetterCallbackProxy(Local<String> property, co
 						hResult = result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 				// (result == null == undefined [which means the managed side didn't return anything])
 
-				result->DisposeAsCallbackResult();
+				result->TryDispose();
+				// ... do the following disposal LAST, as the result may be one of the arguments passed in ...
+				_this->TryDispose();
 
 				ret.Set(hResult);
 				return;
@@ -534,8 +539,6 @@ void ObjectTemplateProxy::AccessorSetterCallbackProxy(Local<String> property, Lo
 				auto result = setter(_this, str.String, _value); // (assumes the 'str' memory will be released by the managed side)
 
 				str.Dispose();
-				_this->DisposeAsCallbackResult();
-				_value->DisposeAsCallbackResult();
 
 				Handle<Value> hResult;
 
@@ -546,7 +549,10 @@ void ObjectTemplateProxy::AccessorSetterCallbackProxy(Local<String> property, Lo
 						hResult = result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
 				// (result == null == undefined [which means the managed side didn't return anything])
 				
-				result->DisposeAsCallbackResult();
+				result->TryDispose();
+				// ... do the following disposal LAST, as the result may be one of the arguments passed in ...
+				_this->TryDispose();
+				_value->TryDispose();
 
 				ret.Set(hResult);
 				return;
@@ -570,7 +576,8 @@ void ObjectTemplateProxy::SetAccessor(int32_t managedObjectID, const uint16_t *n
 
 void ObjectTemplateProxy::Set(const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes)
 {
-	_ObjectTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
+	if (value != nullptr)
+		_ObjectTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

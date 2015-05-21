@@ -72,9 +72,11 @@ extern "C"
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
-		if (!script->IsScript())
+		if (script == nullptr || !script->IsScript())
 			return engine->CreateError("Not a valid script handle.", JSV_ExecutionError);
-		return engine->Execute(script->Script());
+		auto h = engine->Execute(script->Script());
+		script->TryDispose();
+		return h;
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -213,7 +215,14 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
-		return engine->Call(subject, functionName, _this, argCount, args);
+		auto result = engine->Call(subject, functionName, _this, argCount, args);
+
+		if (args != nullptr)
+			for (int i = 0; i < argCount; ++i)
+				if (args[i] != nullptr)
+					args[i]->TryDispose();
+
+		return result;
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -233,9 +242,12 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 
-		// ... managed objects must have a clone of their handle set because it may be made weak by the worker if abandoned, and the handle lost ...
-		Handle<Value> valueHandle = value == nullptr ? (Handle<Value>)V8Undefined : value->GetManagedObjectID() < 0 ? value->Handle() : value->Handle()->ToObject();
-		//?Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+		//? ... managed objects must have a clone of their handle set because it may be made weak by the worker if abandoned, and the handle lost ...
+		//!Handle<Value> valueHandle = value == nullptr ? (Handle<Value>)V8Undefined : value->GetManagedObjectID() < 0 ? value->Handle() : value->Handle()->ToObject();
+		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+
+		if (value != nullptr)
+			value->TryDispose();
 
 		auto obj = handle.As<Object>();
 		return obj->ForceSet(NewUString(name), valueHandle, attribs);
@@ -257,8 +269,11 @@ extern "C"
 
 		auto obj = handle.As<Object>();
 
-		//auto valueHandle = new CopyablePersistent<Value>(value != nullptr ? value->Handle() : V8Undefined);
+		//!auto valueHandle = new CopyablePersistent<Value>(value != nullptr ? value->Handle() : V8Undefined);
 		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+
+		if (value != nullptr)
+			value->TryDispose();
 
 		return obj->Set(index, valueHandle);
 
@@ -383,6 +398,9 @@ extern "C"
 
 		proxy->Set(name, value, attributes);  // TODO: Check how this affects objects created from templates!
 
+		if (value != nullptr)
+			value->TryDispose();
+
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -498,12 +516,20 @@ extern "C"
 	}
 	//??EXPORT HandleProxy* STDCALL GetFunctionPrototype(FunctionTemplateProxy *proxy, int32_t managedObjectID, ObjectTemplateProxy *objTemplate)
 	//??{ return proxy->GetPrototype(managedObjectID, objTemplate); }
-	EXPORT HandleProxy* STDCALL CreateFunctionInstance(FunctionTemplateProxy *proxy, int32_t managedObjectID, int32_t argCount = 0, HandleProxy** args = nullptr)
+	EXPORT HandleProxy* STDCALL CreateInstanceFromFunctionTemplate(FunctionTemplateProxy *proxy, int32_t managedObjectID, int32_t argCount = 0, HandleProxy** args = nullptr)
 	{
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
-		return proxy->CreateInstance(managedObjectID, argCount, args);
+		auto result = proxy->CreateInstance(managedObjectID, argCount, args);
+
+		if (args != nullptr)
+			for (int i = 0; i < argCount; ++i)
+				if (args[i] != nullptr)
+					args[i]->TryDispose();
+
+		return result;
+
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -514,6 +540,8 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		proxy->Set(name, value, attributes);  // TODO: Check how this affects objects created from templates!
+		if (value != nullptr)
+			value->TryDispose();
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -527,7 +555,21 @@ extern "C"
 	EXPORT HandleProxy* STDCALL CreateString(V8EngineProxy *engine, uint16_t* str) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateString(str); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
 	EXPORT HandleProxy* STDCALL CreateDate(V8EngineProxy *engine, double ms) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateDate(ms); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
 	EXPORT HandleProxy* STDCALL CreateObject(V8EngineProxy *engine, int32_t managedObjectID) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateObject(managedObjectID); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
-	EXPORT HandleProxy* STDCALL CreateArray(V8EngineProxy *engine, HandleProxy** items, uint16_t length) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateArray(items, length); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
+	EXPORT HandleProxy* STDCALL CreateArray(V8EngineProxy *engine, HandleProxy** items, uint16_t length)
+	{
+		BEGIN_ISOLATE_SCOPE(engine);
+		BEGIN_CONTEXT_SCOPE(engine);
+		auto a = engine->CreateArray(items, length);
+
+		if (items != nullptr)
+			for (int i = 0; i < length; ++i)
+				if (items[i] != nullptr)
+					items[i]->TryDispose();
+
+		return a;
+		END_CONTEXT_SCOPE;
+		END_ISOLATE_SCOPE;
+	}
 	EXPORT HandleProxy* STDCALL CreateStringArray(V8EngineProxy *engine, uint16_t **items, uint16_t length) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateArray(items, length); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
 
 	EXPORT HandleProxy* STDCALL CreateNullValue(V8EngineProxy *engine) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateNullValue(); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }

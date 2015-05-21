@@ -39,7 +39,7 @@ namespace WCFServiceTest
         {
             // V8Engine.ASPBINSubFolderName = "V8.NET"; // It is already "V8.NET" by default, so just delete this line if not needed.  Please see integration steps at the top for more details.
             var engine = new V8Engine();
-            Handle result = engine.Execute("'You entered: '+" + value, "V8.NET Web Service Test");
+            var result = engine.Execute("'You entered: '+" + value, "V8.NET Web Service Test");
             return result.AsString;
         }
 

@@ -35,7 +35,7 @@ namespace V8.Net
         /// These are then passed on to the user callback method WITHOUT a handle tracker, and disposed automatically on return.
         /// This can save creating many unnecessary objects for the managed GC to deal with.
         /// </summary>
-        internal WeakReference[] _HandleTrackers = new WeakReference[1000];
+        internal WeakReference[] _TrackerHandles = new WeakReference[1000];
 
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace V8.Net
                     List<InternalHandle> handles = new List<InternalHandle>(_HandleProxies.Length);
                     for (var i = 0; i < _HandleProxies.Length; ++i)
                         if (_HandleProxies[i] != null)
-                            handles.Add(InternalHandle._WrapOnly(_HandleProxies[i]));
+                            handles.Add(_HandleProxies[i]);
                     return handles.ToArray();
                 }
             }
@@ -92,7 +92,7 @@ namespace V8.Net
                 {
                     var c = 0;
                     foreach (var item in _HandleProxies)
-                        if (item != null && item->IsBeingDisposed) c++;
+                        if (item != null && item->IsDisposing) c++;
                     return c;
                 }
             }

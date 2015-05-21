@@ -448,7 +448,7 @@ namespace V8.Net
             public V8NativeObjectPropertySetter Setter;
             public V8Function Method;
             //??public TypeLibrary<V8Function> Methods; // (overloads ['SingleMethod' should be null])
-            public Handle ValueOverride; // (the value override is a user value that, if exists, overrides the bindings)
+            public InternalHandle ValueOverride; // (the value override is a user value that, if exists, overrides the bindings)
 
             public bool Accessible // (returns true if this member is allowed to be accessed)
             {
@@ -841,9 +841,7 @@ namespace V8.Net
 
         V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
-            MethodInfo handleSetter = null;
-            if (typeof(IHandle).IsAssignableFrom(fieldInfo.FieldType))
-                handleSetter = typeof(IHandle).GetMethod("Set");
+            bool isInternalHandleTypeExpected = fieldInfo.FieldType == typeof(InternalHandle);
 
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
@@ -854,12 +852,10 @@ namespace V8.Net
                     {
                         object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
 
-                        if (handleSetter != null && _value is InternalHandle)
-                            _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // ('_value' is updated to the new handle value, because values are not objects and have to be written back to the field)
+                        if (isInternalHandleTypeExpected && _value is InternalHandle)
+                            _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
                         fieldInfo.SetValue(_this.BoundObject, _value);
-
-                        return value;
                     }
                     else
                         return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
@@ -1011,21 +1007,21 @@ namespace V8.Net
 
         V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
-            MethodInfo handleSetter = null;
-            if (typeof(IHandle).IsAssignableFrom(propertyInfo.PropertyType))
-                handleSetter = typeof(IHandle).GetMethod("Set");
+            bool isInternalHandleTypeExpected = propertyInfo.PropertyType == typeof(InternalHandle);
+            bool canRead = propertyInfo.CanRead;
+            bool canWrite = propertyInfo.CanWrite;
 
             return (InternalHandle _this, string propertyName, InternalHandle value) =>
             {
                 if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                if (propertyInfo.CanWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
+                if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
                     if (_this.IsBinder)
                     {
                         object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
 
-                        if (handleSetter != null && _value is InternalHandle)
-                            _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // ('_value' is updated to the new handle value, because values are not objects and have to be written back to the field)
+                        if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
+                            _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
                         propertyInfo.SetValue(_this.BoundObject, _value, null);
                     }
@@ -1706,7 +1702,7 @@ namespace V8.Net
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
             if (memberDetails != null && memberDetails.Accessible) // (no access == undefined) 
             {
-                if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
+                if (!memberDetails.ValueOverride.IsEmpty && !memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
 
                 switch (memberDetails.MemberType)
                 {
@@ -1757,12 +1753,15 @@ namespace V8.Net
         public override InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
-            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (no access == undefined)
+            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
             {
-                if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsUndefined)
+                // ... if the member details contains a valid override value, update and return it instead ...
+                // (override values exist because method properties cannot be overwritten; to restore, the property must be deleted)
+                if (!memberDetails.ValueOverride.IsEmpty)
                 {
-                    memberDetails.ValueOverride.Set(value);
-                    if (!memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
+                    memberDetails.ValueOverride = value.KeepAlive();
+                    if (!memberDetails.ValueOverride.IsUndefined)
+                        return memberDetails.ValueOverride;
                 }
 
                 switch (memberDetails.MemberType)
@@ -1802,7 +1801,7 @@ namespace V8.Net
                         }
                     case MemberTypes.Method:
                         {
-                            if (value.IsUndefined)
+                            if (memberDetails.ValueOverride.IsEmpty)
                             {
                                 var method = memberDetails.Method;
                                 if (method != null)
@@ -1814,10 +1813,7 @@ namespace V8.Net
                             }
                             else
                             {
-                                if (memberDetails.ValueOverride == null)
-                                    return memberDetails.ValueOverride = new Handle(value);
-                                else
-                                    return memberDetails.ValueOverride.Set(value);
+                                return memberDetails.ValueOverride = value.KeepAlive();
                             }
                         }
                 }
@@ -1828,9 +1824,9 @@ namespace V8.Net
         public override bool? NamedPropertyDeleter(ref string propertyName)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
-            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (undefined = no access)
+            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
             {
-                if (memberDetails.ValueOverride != null && !memberDetails.ValueOverride.IsEmpty)
+                if (!memberDetails.ValueOverride.IsEmpty)
                 {
                     memberDetails.ValueOverride.Dispose();
                     return true;
@@ -1842,7 +1838,7 @@ namespace V8.Net
         public override V8PropertyAttributes? NamedPropertyQuery(ref string propertyName)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
-            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (undefined = no access)
+            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
             {
                 return (V8PropertyAttributes)memberDetails.MemberSecurity;
             }

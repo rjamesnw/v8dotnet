@@ -56,13 +56,13 @@ template <class T> struct CopyablePersistent {
     T* operator ->() const { return *Handle(); }
     /* Returns the local handle for the persisted value.  Make sure to be in the handle scope before calling. */
     Local<T> Handle() const { return Local<T>::New(Isolate::GetCurrent(), Value); }
-	bool IsEmpty() const { return Value.IsEmpty(); }
-	bool IsWeak() const { return Value.IsWeak(); }
-	bool IsNearDeath() const { return Value.IsNearDeath(); }
-	bool IsIndependent() const { return Value.IsIndependent(); }
-	void Reset() { return Value.Reset(); }
-	void MarkIndependent() { return Value.MarkIndependent(); }
-	void MarkPartiallyDependent() { return Value.MarkPartiallyDependent(); }
+    bool IsEmpty() const { return Value.IsEmpty(); }
+    bool IsWeak() const { return Value.IsWeak(); }
+    bool IsNearDeath() const { return Value.IsNearDeath(); }
+    bool IsIndependent() const { return Value.IsIndependent(); }
+    void Reset() { return Value.Reset(); }
+    void MarkIndependent() { return Value.MarkIndependent(); }
+    void MarkPartiallyDependent() { return Value.MarkPartiallyDependent(); }
     template <class S> Local<S> As() { return Handle().As<S>(); }
 };
 
@@ -176,8 +176,8 @@ enum JSValueType: int32_t
     JSV_ExecutionError = -3, // An error has occurred while attempting to execute the compiled script.
     JSV_CompilerError = -2, // An error has occurred compiling the script (usually a syntax error).
     JSV_InternalError = -1, // An internal error has occurred (before or after script execution).
-	JSV_Uninitialized = 0, // The value type has yet to be determined.
-	JSV_Undefined, // Value is the JavaScript 'undefined' value.
+    JSV_Uninitialized = 0, // The value type has yet to be determined.
+    JSV_Undefined, // Value is the JavaScript 'undefined' value.
     JSV_Script, // The handle represents a compiled script.
     JSV_Null, // Value is the JavaScript 'null' value.
     JSV_Bool, // The value is a JavaScript Boolean, as supported within JavaScript for true/false conditions.
@@ -240,7 +240,7 @@ private:
 
     HandleValue _Value; // The value is only valid when 'UpdateValue()' is called. Note: sizeof(double) + sizeof(uint16_t*)
 
-	int32_t _ManagedReference; // This is set to 1 if there is a managed side reference to this proxy object.
+    int32_t _ManagedReference; // This is set to 1 if there is a managed side reference to this proxy object.
 
     int32_t _Disposed; // (0: handle is in use, 1: managed disposing in progress, 2: handle was made weak, 3: VIRTUALLY disposed [cached on native side for reuse])
 
@@ -280,21 +280,23 @@ public:
     bool IsScript() { return _Type == JSV_Script; }
 
     // Disposes of the handle that is wrapped by this proxy instance.
+    // This call always succeeds if disposal has been started by setting '_Disposed' to 1 or 2.
     bool Dispose();
 
-	// The handle is currently in use.
-	bool IsInUse() { return _Disposed == 0; }
-	// The managed side has queued the handle (and any related managed object) for disposal.
-	bool IsDisposingManagedSide() { return _Disposed == 1; }
-	// The handle has been made weak.
+    // The handle is currently in use.
+    bool IsInUse() { return _Disposed == 0; }
+    // The managed side has queued the handle (and any related managed object) for disposal.
+    bool IsDisposingManagedSide() { return _Disposed == 1; }
+    // The handle has been made weak.
     bool IsWeak() { return _Disposed == 2; }
-	// The handle is disposed and cached.
+    // The handle is disposed and cached.
     bool IsDisposed() { return _Disposed == 3; }
 
-    // Disposes handles returned from the managed side.
+    // Attempts to dispose a handle passed in from the managed side.
     // By default, handle proxies returned from callbacks to the managed side must be disposed, just like arguments.  The
-    // managed side is responsible for cloning them if needed later.
-    bool DisposeAsCallbackResult();
+    // managed side is responsible for keeping them alive if needed.
+	// Note: This also includes handles passed in as arguments, such as when setting properties on objects.
+    bool TryDispose();
 
     // (expected to be called by a managed garbage collection thread [of some sort, but not the main thread])
     void _ManagedGCCallback();
@@ -514,7 +516,7 @@ public:
         ManagedIndexedPropertyDeleter deleter, 
         ManagedIndexedPropertyEnumerator enumerator);
 
-	void SetCallAsFunctionHandler(ManagedJSFunctionCallback callback);
+    void SetCallAsFunctionHandler(ManagedJSFunctionCallback callback);
 
     void UnregisterNamedPropertyHandlers();
     void UnregisterIndexedPropertyHandlers();

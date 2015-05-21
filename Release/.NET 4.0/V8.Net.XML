@@ -100,8 +100,11 @@
         <member name="M:V8.Net.V8Engine.CreateBinding(System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity},System.Boolean)">
             <summary>
             Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are not bound however).
-            The type returned is an object with property accessors for the object's public fields, properties, and methods.
-            <para>Note: Creating bindings is a much slower process than creating your own 'V8NativeObject' types.</para>
+            If the object given is actually a boxed primitive type, then a non-object handle can be returned.
+            If the given object is not a boxed value, then the handle returned is a handle to an object binder with internal property
+            accessors for the encapsulated object's public fields, properties, and methods.
+            <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however, 
+            bound types are cached and not created each time for the best efficiency.</para>
             </summary>
             <param name="obj">The object to create a binder for.</param>
             <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
@@ -143,7 +146,7 @@
         <member name="M:V8.Net.V8Engine._TerminateWorker">
             <summary>
             Terminates the worker thread, without a 3 second timeout to be sure.
-            This is called when the engine is shutting down. (Note: The worker thread manages object GC along with the native V8 GC.)
+            This is called when the engine is shutting down. (Note: The worker thread manages the disposal queues, in sync with the native V8 GC.)
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine.ResumeWorker">
@@ -153,7 +156,19 @@
         </member>
         <member name="F:V8.Net.V8Engine._HandleProxies">
             <summary>
-            Holds an index of all handle proxies created for this engine instance.
+            Holds an index of all handles created for this engine instance.
+            This is a managed side reference to all the active and cached native side handle wrapper (proxy) objects.
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8Engine._TrackerHandles">
+            <summary>
+            When a new managed side handle wraps a native handle proxy the disposal process happens internally in a controlled 
+            manor.  There is no need to burden the end user with tracking handles for disposal, so when a handle enters public
+            space, it is assigned a 'HandleTracker' object reference from this list.  If not available, one is created.
+            For instance, during a callback, all native arguments (proxy references) are converted into handle values (which in
+            many cases means on the stack, or CPU registers, instead of the heap; though this is CLR implementation dependent).
+            These are then passed on to the user callback method WITHOUT a handle tracker, and disposed automatically on return.
+            This can save creating many unnecessary objects for the managed GC to deal with.
             </summary>
         </member>
         <member name="F:V8.Net.V8Engine._Objects">
@@ -206,9 +221,12 @@
             between the time you read an object's ID, and the time this method is called, then you can safely use this method.</para>
             </summary>
         </member>
-        <member name="M:V8.Net.V8Engine.GetObjects(V8.Net.ITemplate)">
+        <member name="M:V8.Net.V8Engine.GetObjects(System.Func{V8.Net.V8NativeObject,System.Boolean})">
             <summary>
-            Returns all the objects associated with a template reference.
+            Returns all the objects using a filter expression. If no expression is given, all objects will be included.
+            <para>Warning: This method enumerates using 'yield return' while keeping a read lock on the internal V8NativeObject 
+            WeakReference collection. It is recommended to dump the results to an array or list if enumeration will be deferred
+            at any point.</para>
             </summary>
         </member>
         <member name="F:V8.Net.V8Engine.Epoch">
@@ -250,7 +268,7 @@
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
         </member>
-        <member name="M:V8.Net.V8Engine.Execute(V8.Net.Handle,System.Boolean)">
+        <member name="M:V8.Net.V8Engine.Execute(V8.Net.InternalHandle,System.Boolean)">
             <summary>
             Executes JavaScript on the V8 engine and returns the result.
             </summary>
@@ -497,6 +515,95 @@
             Returns true once this engine has been disposed.
             </summary>
         </member>
+        <member name="T:V8.Net.Handle">
+            <summary>
+            Wrapper to an InternalHandle value for GC tracking purposes.  Calls work internally using 'InternalHandle' for
+            efficiency; however, an object handle is needed outside of V8.Net for end users. To prevent creating many objects
+            for the same native V8 handle, 'Handle' objects are stored in a fixed size array for quick lookup, and are shared
+            across many InternalHandle values. When all InternalHandle values are gone, this handle gets collected, unless
+            also referenced.
+            </summary>
+        </member>
+        <member name="T:V8.Net.IV8Disposable">
+            <summary>
+            Applied to V8 related objects to better coordinated disposing native resources on the native V8 engine side via the worker thread.
+            <para>'IV8Disposable' objects are added to an internal "disposal" queue when they are finalized.  This is done because
+            some tasks, such as disposing handles, cannot be performed in a finalizer method.  Because of this, the event is
+            deferred to a worker process queue to continue processing as soon as possible.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.IV8Disposable.Engine">
+            <summary>
+            The V8.Net engine that his disposable object belongs to.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IV8Disposable.CanDispose">
+            <summary>
+            If this is true, the object is ok to be disposed.
+            </summary>
+        </member>
+        <member name="T:V8.Net.IHandleBased">
+            <summary>
+            Represents a type that uses or supports a handle.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandleBased.Engine">
+            <summary>
+            Returns the engine associated with this instance.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandleBased.InternalHandle">
+            <summary>
+            Returns a handle value associated with this instance.
+            </summary>
+        </member>
+        <member name="P:V8.Net.IHandleBased.Object">
+            <summary>
+            Returns the object for this instance, or 'null' if not applicable/available.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.Finalize">
+            <summary>
+            This is called on the GC finalizer thread to flag that this managed object entry can be collected.
+            <para>Note: There are no longer any managed references to the object at this point; HOWEVER, there may still be NATIVE ones.
+            This means the object may survive this process, at which point it's up to the worker thread to clean it up when the native V8 GC is ready.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.ThrowOnError">
+            <summary>
+            Checks if the handle represents an error, and if so, throws one of the corresponding derived V8Exception exceptions.
+            See 'JSValueType' for possible exception states.  You can check the 'IsError' property to see if this handle represents an error.
+            <para>Exceptions thrown: V8InternalErrorException, V8CompilerErrorException, V8ExecutionErrorException, and V8Exception (for any general V8-related exceptions).</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.Handle.Dispose">
+            <summary>
+            Attempts to dispose the underlying internal handle.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle._">
+            <summary>
+            Just another shorter way to return the 'InternalHandle' value.
+            <para>Note: You can also prefix a tilde ('~') character to a 'Handle' reference to de-reference it to the underlying
+            InternHandle value as well (i.e. '(~handle).SetProperty(...)', or 'var h = ~handle; h.Call(...)').</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.IsError">
+            <summary>
+            Returns true if this handle contains an error message (the string value is the message).
+            If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.Engine">
+            <summary>
+            Returns a reference to the engine this tracker handle belongs to.
+            </summary>
+        </member>
+        <member name="P:V8.Net.Handle.InternalHandle">
+            <summary>
+            Returns a the underlying InternalHandle value.
+            </summary>
+        </member>
         <member name="T:V8.Net.InternalHandle">
             <summary>
             Keeps track of native V8 handles (C++ native side).
@@ -508,48 +615,16 @@
             Represents a handle type for tracking native objects.
             </summary>
         </member>
-        <member name="T:V8.Net.IHandleBased">
-            <summary>
-            Represents a type that uses or supports a handle.
-            </summary>
-        </member>
-        <member name="M:V8.Net.IHandleBased.AsHandle">
-            <summary>
-            Returns the underlying handle object associated with this instance.  If no 'Handle' object exists, one is created and returned.
-            <para>This is a method instead of a property because converting from 'InternalHandle' to 'Handle' can cause handle
-            reference counts to increase - which can easily happen in the inspector while debugging.</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.IHandleBased.Engine">
-            <summary>
-            Returns the engine associated with this instance.
-            </summary>
-        </member>
-        <member name="P:V8.Net.IHandleBased.AsInternalHandle">
-            <summary>
-            Returns a handle value associated with this instance (note: this is not a clone, but an exact copy).
-            End users should use "AsHandle", unless they are confident in making sure the InternalHandle they use is properly set and later disposed.
-            </summary>
-        </member>
-        <member name="P:V8.Net.IHandleBased.Object">
-            <summary>
-            Returns the object for this instance, or 'null' if not applicable/available.
-            </summary>
-        </member>
         <member name="M:V8.Net.IHandle.Set(V8.Net.InternalHandle)">
             <summary>
-            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
-            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
-            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
-            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
-            to convert it to a handle object that will dispose itself.</para>
-            </summary>
-        </member>
-        <member name="M:V8.Net.IHandle.Dispose">
-            <summary>
-            Attempts to dispose of the internally wrapped handle proxy and makes this handle empty.
-            If other handles exist, then they will still be valid, and this handle instance will become empty.
-            <para>This is useful to use with "using" statements to quickly release a handle into the cache for reuse.</para>
+            Disposes the current handle and sets it to another handle. Before setting, 'KeepAlive()' is called on the given
+            handle so both handles can be tracked. Once this handle is set you can treat it like any other object
+            reference and copy it around like a normal value (i.e. no need to keep calling this method). A rule of thumb is to 
+            either set 'keepAlive' to true when creating a new handle via 'new InternalHandle(...)', or use this method to set
+            the initial value.
+            <para>Note 1: Under the new handle system, when 'KeepAlive()' is called (default mode for V8NativeObject handles),
+            you do not need to call this method anymore. The GC will track it and dispose it when ready.</para>
+            <para>Note 2: If the current handle is locked (see IsLocked) then an exception error can occur.</para>
             </summary>
         </member>
         <member name="P:V8.Net.IHandle.ID">
@@ -673,24 +748,6 @@
             implementations.  It's primary purpose is to support the DreamSpace.Net development framework, which can support various scripting engines, and is
             designed to be non-V8.NET specific.  Third-party scripts should implement this interface for their handles, or create and return value wrappers that
             implement this interface.
-            </summary>
-        </member>
-        <member name="T:V8.Net.IV8Disposable">
-            <summary>
-            Applied to V8 related objects to better coordinated disposing native resources on the native V8 engine side via the worker thread.
-            <para>'IV8Disposable' objects are added to an internal "disposal" queue when they are finalized.  This is done because
-            some tasks, such as disposing handles, cannot be performed in a finalizer method.  Because of this, the event is
-            deferred to a worker process queue to continue processing as soon as possible.</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.IV8Disposable.Engine">
-            <summary>
-            The V8.Net engine that his disposable object belongs to.
-            </summary>
-        </member>
-        <member name="P:V8.Net.IV8Disposable.CanDispose">
-            <summary>
-            If this is true, the object is ok to be disposed.
             </summary>
         </member>
         <member name="M:V8.Net.IBasicHandle.As``1">
@@ -819,86 +876,110 @@
             Returns the underlying value converted if necessary to a DateTime type.
             </summary>
         </member>
-        <member name="F:V8.Net.InternalHandle._First">
+        <member name="M:V8.Net.InternalHandle.GetUntrackedHandle(V8.Net.InternalHandle)">
             <summary>
-            This is true if this is the FIRST handle to wrap the proxy (first handles may become automatically disposed internally if another handle is not created from it).
+            Returns a handle that initially does not have any trackers associated, and only references the underlying native
+            proxy handle object.  This can be useful for "watching" the proxy handle. For example, in testing garbage collection,
+            one can test IsDisposed, IsDisposing, or IsNativelyWeak without blocking the GC collection due to a reference of any
+            associated managed object in the handle.
+            <para>Warning: Tracker handles are shared via index IDs on a global array in the engine.  As such, accessing certain
+            properties and methods can trigger a pull to update the local reference with the tracker.  Normally this is not a
+            problem, unless one is testing the GC, as it may prevent the GC from collecting the object during the test.</para>
             </summary>
         </member>
-        <member name="F:V8.Net.InternalHandle._EngineID">
+        <member name="F:V8.Net.InternalHandle._Object">
             <summary>
-            The ID of the engine this handle belongs to.
+            The managed object represented by this handle, if any, or null otherwise.
+            If this handle does not represent a managed object, then this may be set to a 'Handle' instead to allow tracking 
+            and disposing the internal handle value within external user code.
             </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.KeepAlive">
+            <summary>
+            InternalHandle values are disposed within the engine automatically.  If a handle is to be used outside the engine,
+            this should be called to allow the handle to be tracked by the managed GC.  While it may seem one should always
+            call this, it is unnecessary (and costly) to call this on handles created from one of the '{V8Engine}.Create???()'
+            methods used as return values in callbacks, as disposal will be blocked on the native side pending the managed GC
+            instead, delaying the process.
+            <para>Note: This should usually only need to be called on handles returned from methods on the engine.  This is not 
+            called by default on handles passed into callbacks, as those handles are disposed automatically upon return from 
+            the callback.  This method must be called to prevent any internal handle from being dispose in such case.</para>
+            </summary>
+        </member>
+        <member name="M:V8.Net.InternalHandle.Clone">
+            <summary>
+            Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:V8.Net.InternalHandle.GetTrackerHandle(System.Boolean)">
+            <summary>
+            Returns a 'Handle' instance that can be used to track this value-based handle.  When no more value-based handles
+            exist, including any references to the tracker itself, the tracker will initiate disposal of the native proxy
+            handle. Calling 'KeepAlive()' implicitly calls this method as well.
+            </summary>
+            <param name="createIfMissing">If true (default), then a tracker handle based object is created if one doesn't exist
+            yet.  If false, then a tracker is only returned if one already exists, otherwise null is returned.
+            <para>Tracker handles are objects, instead of values, and are used to dispose of value base handles via the garbage
+            collector. This method is called implicitly when converting from an InternalHandle value to a Handle type.</para>
+            </param>
         </member>
         <member name="M:V8.Net.InternalHandle.#ctor(V8.Net.HandleProxy*,System.Boolean)">
             <summary>
             Wraps a given native handle proxy to provide methods to operate on it.
             </summary>
         </member>
-        <member name="M:V8.Net.InternalHandle.#ctor(V8.Net.InternalHandle)">
+        <member name="M:V8.Net.InternalHandle.#ctor(V8.Net.InternalHandle,System.Boolean)">
             <summary>
             Sets this instance to the same specified handle value.
             </summary>
         </member>
-        <member name="M:V8.Net.InternalHandle._WrapOnly(V8.Net.HandleProxy*)">
+        <member name="M:V8.Net.InternalHandle.UpdateObjectReference">
             <summary>
-            Creates an internal handle that only wraps the given handle proxy and does not increment the reference counter.
+            Updates the local object reference to point to the manage object that is represented by this handle, and returns
+            the object found, or null otherwise.
+            <para>The situations that may necessitate calling this method occur if the managed object ID in the underlying
+            native proxy object gets updated.  In such (rare and usually specialized) case, this handle will not contain a
+            reference to the managed object, and the GC might try to collect it. Internally, this method is always called
+            when wrapping a native ProxyHandle pointer with an InternalHandle, which makes sure any related managed object
+            also gets properly referenced. The method is also called if 'ObjectID' ever gets updated internally.</para>
             </summary>
         </member>
         <member name="M:V8.Net.InternalHandle.Set(V8.Net.InternalHandle)">
             <summary>
-            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
-            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
-            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
-            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
-            to convert it to a handle object that will dispose itself.</para>
-            </summary>
-        </member>
-        <member name="M:V8.Net.InternalHandle.Set(V8.Net.Handle)">
-            <summary>
-            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
-            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
-            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
-            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
-            to convert it to a handle object that will dispose itself.</para>
-            </summary>
-        </member>
-        <member name="M:V8.Net.InternalHandle._Set(V8.Net.HandleProxy*,System.Boolean)">
-            <summary>
-            Bypasses checking if 'handle._First' is set.
-            </summary>
-        </member>
-        <member name="M:V8.Net.InternalHandle.Clone">
-            <summary>
-            Handles should be set in either two ways: 1. by using the "Set()" method on the left side handle, or 2. using the "Clone()' method on the right side.
-            Using the "=" operator to set a handle may cause memory leaks if not used correctly.
-            See also: <seealso cref="M:V8.Net.InternalHandle.Set(V8.Net.InternalHandle)"/>
+            Disposes the current handle and sets it to another handle. Before setting, 'KeepAlive()' is called on the given
+            handle so both handles can be tracked. Once this handle is set you can treat it like any other object
+            reference and copy it around like a normal value (i.e. no need to keep calling this method). A rule of thumb is to 
+            either set 'keepAlive' to true when creating a new handle via 'new InternalHandle(...)', or use this method to set
+            the initial value.
+            <para>Note 1: Under the new handle system, when 'KeepAlive()' is called (default mode for V8NativeObject handles),
+            you do not need to call this method anymore. The GC will track it and dispose it when ready.</para>
+            <para>Note 2: If the current handle is locked (see IsLocked) then an exception error can occur.</para>
             </summary>
         </member>
         <member name="M:V8.Net.InternalHandle.Dispose">
             <summary>
-            Internal handle values are a bit faster than having to create handle objects, but they MUST be explicitly disposed
-            when no longer needed.  One rule of thumb is to always call "Set()" to set/update an internal value, and call
-            "Dispose()" either within a class's finalization (destructor), or use it in a "using(){}" statement. Both of these
-            will dispose of the handle in case exceptions occur. You may also use "try..finally", but that is not preferred
-            best practice for V8.NET handles.
+            Disposes of the underlying native handle and clears the current value. This is an unconditional request. As such,
+            if the handle cannot be disposed because it is locked, an 'InvalidOperationException' error will occur. Optionally
+            you may find 'TryDispose()' more convenient to ignore such situations.
+            <para>
+            If the handle represents a managed V8NativeObject instance, the handle cannot be disposed externally. Managed objects
+            will begin a disposal process when there are no more managed references. When this occurs, the native side V8 handle
+            is made "weak".  When there are no more references in V8, the V8's GC calls back into the managed side to notify
+            that disposal can complete. In all other cases, disposing a handle will succeed and simply clears it, making it empty.
+            </para>
             </summary>
         </member>
-        <member name="M:V8.Net.InternalHandle._DisposeIfFirst">
+        <member name="M:V8.Net.InternalHandle.TryDispose">
             <summary>
-            Disposes this handle if it is the first one (the first one is disposed automatically when passed back into the engine).
-            </summary>
-        </member>
-        <member name="M:V8.Net.InternalHandle.PassOn">
-            <summary>
-            This is used internally to pass on the internal handle values to internally called methods.
-            This is required because the last method in a call chain is responsible to dispose first-time handles.
-            (first-time handles are handles created internally immediately after native proxy calls)
+            Same as 'Dispose()', except that any errors are suppressed (i.e. if the handle is locked). 
+            If successful (which usually just means this handle was cleared), then 'true' is returned.
             </summary>
         </member>
         <member name="M:V8.Net.InternalHandle.ReleaseManagedObject">
             <summary>
-            Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
-            place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
+            Forces the underlying object, if any, to separate from the handle.  This is done by swapping the managed object with
+            a place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
             any associated handles later.  The released object is returned, or null if there is no object.
             </summary>
             <returns>The object released.</returns>
@@ -1052,15 +1133,34 @@
             this to an ObjectHandle before use.</para>
             </summary>
         </member>
+        <member name="P:V8.Net.InternalHandle.IsLocked">
+            <summary>
+            Returns true if this handle is directly accessed on a V8NativeObject object, or the global object.  Such handles are
+            disposed under a controlled process that must synchronize across both V8 and V8.Net environments (native and managed
+            sides).
+            </summary>
+        </member>
         <member name="P:V8.Net.InternalHandle.CanDispose">
             <summary>
-            Any handle can be disposed, except the only handle left on a managed object. In this case, false is returned,
-            since the managed object is responsible for it.
+            Returns true if calling 'Dispose()' will release the native side handle immediately on the native side.  Any handle
+            can usually be disposed, except the only handle left on a managed object. In this case, false is returned, since 
+            the managed object is responsible for disposing it in a controlled manner coordinated with V8.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsDisposed">
             <summary>
             Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsDisposing">
+            <summary>
+            True if this handle is going through a disposal process.
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.IsNativelyWeak">
+            <summary>
+            True if this handle was made weak on the native side (for object handles only).  Once a handle is weak, the V8 garbage collector can collect the
+            handle (and any associated managed object) at any time.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.ID">
@@ -1071,11 +1171,6 @@
         <member name="P:V8.Net.InternalHandle.ValueType">
             <summary>
             The JavaScript type this handle represents.
-            </summary>
-        </member>
-        <member name="P:V8.Net.InternalHandle.ReferenceCount">
-            <summary>
-            Used internally to determine the number of references to a handle.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.Engine">
@@ -1093,7 +1188,7 @@
         </member>
         <member name="P:V8.Net.InternalHandle._CurrentObjectID">
             <summary>
-            Returns the managed object ID "as is".
+            Returns the managed object ID "as is" from the native HandleProxy object.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.Object">
@@ -1129,15 +1224,19 @@
         </member>
         <member name="P:V8.Net.InternalHandle.Value">
             <summary>
-            Reading from this property causes a native call to fetch the current V8 value associated with this handle.
+            Reading from this property returns either the underlying managed object, or else causes a native call to fetch
+            the current V8 value associated with this handle.
             <param>For objects, this returns the in-script type text as a string - unless this handle represents an object binder, in which case this will return the bound object instead.</param>
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.LastValue">
             <summary>
-            Once "Value" is accessed to retrieve the JavaScript value in real time, there's no need to keep accessing it.  Just call this property
-            instead (a small bit faster). Note: If the value changes again within the engine (i.e. another scripts executes), you may need to call
-            'Value' again to make sure any changes are reflected.
+            Reading from this property returns either the underlying managed object, or else causes a ONE-TIME native call to 
+            fetch the current V8 value associated with this handle. This can be a bit faster, as subsequent calls return the
+            same value.
+            <para>Note: If the underlying V8 proxy handle value changes (i.e. properties), you should use the 'Value' property 
+            instead to make sure any changes are reflected each time.  Only use this property more than once if you're sure the 
+            target of the V8 handle will not change.</para>
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.ArrayLength">
@@ -1149,47 +1248,27 @@
         <member name="P:V8.Net.InternalHandle.IsWeakManagedObject">
             <summary>
             Returns 'true' if this handle is associated with a managed object that has no other CLR based references, and the
-            GC finalizer has attempted to claim it.
-            </summary>
-        </member>
-        <member name="P:V8.Net.InternalHandle.IsOnlyReference">
-            <summary>
-            Returns true if this is the only handle referencing the enclosed handle proxy, and has not yet been disposed.
-            </summary>
-        </member>
-        <member name="P:V8.Net.InternalHandle.IsBeingDisposed">
-            <summary>
-            True if this handle is place into a queue to be disposed.
-            </summary>
-        </member>
-        <member name="P:V8.Net.InternalHandle.IsNativelyWeak">
-            <summary>
-            True if this handle was made weak on the native side (for object handles only).  Once a handle is weak, the V8 garbage collector can collect the
-            handle (and any associated managed object) at any time.
-            </summary>
-        </member>
-        <member name="P:V8.Net.InternalHandle.IsDisposeReady">
-            <summary>
-            Returns true if this handle has no references (usually a primitive type), or is the only reference AND is associated with a weak managed object reference.
-            When a handle is ready to be disposed, then calling "Dispose()" will succeed and cause the handle to be placed back into the cache on the native side.
+            managed GC finalizer has attempted to claim it. The underlying native handle may also be in a weak state, in which 
+            case 'IsNativelyWeak' will also return true.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsEmpty">
             <summary>
-            Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists.
+            Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists. This 
+            will also return true if the underlying proxy object ends up in a disposed state.
             <para>An empty state is when a handle is set to 'InternalHandle.Empty' and has no valid native V8 handle assigned.
             This is similar to "undefined"; however, this property will be true if a valid native V8 handle exists that is set to "undefined".</para>
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsUndefined">
             <summary>
-            Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty').
+            Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty', or is disposed).
             <para>"Undefined" does not mean "null".  A variable (handle) can be defined and set to "null".</para>
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsNull">
             <summary>
-            Returns 'true' if this handle represents a ''ull' value (that is, an explicitly defined 'null' value).
+            Returns 'true' if this handle represents a 'null' value (that is, an explicit 'null' value).
             This will return 'false' if 'IsEmpty' or 'IsUndefined' is true.
             </summary>
         </member>
@@ -1330,13 +1409,6 @@
         <member name="M:V8.Net.V8NativeObject.Initialize(V8.Net.V8NativeObject,System.Boolean,V8.Net.InternalHandle[])">
             <summary>
             (Exists only to support the 'IV8NativeInterface' interface and should not be called directly - call 'Initialize(isConstructCall, args)' instead.)
-            </summary>
-        </member>
-        <member name="M:V8.Net.V8NativeObject.Finalize">
-            <summary>
-            This is called on the GC finalizer thread to flag that this managed object entry can be collected.
-            <para>Note: There are no longer any managed references to the object at this point; HOWEVER, there may still be NATIVE ones.
-            This means the object may survive this process, at which point it's up to the worker thread to clean it up when the native V8 GC is ready.</para>
             </summary>
         </member>
         <member name="M:V8.Net.V8NativeObject.OnDispose">
@@ -1483,7 +1555,7 @@
             True if this object was initialized and is ready for use.
             </summary>
         </member>
-        <member name="P:V8.Net.V8NativeObject.Handle">
+        <member name="P:V8.Net.V8NativeObject.InternalHandle">
             <summary>
             A reference to the managed object handle that wraps the native V8 handle for this managed object.
             The default implementation for 'V8NativeObject' is to return itself, since it inherits from 'Handle'.
@@ -1499,11 +1571,6 @@
         <member name="P:V8.Net.V8NativeObject.Prototype">
             <summary>
             The prototype of the object (every JavaScript object implicitly has a prototype).
-            </summary>
-        </member>
-        <member name="P:V8.Net.V8NativeObject.IsManagedObjectWeak">
-            <summary>
-            Returns true if this object is ready to be garbage collected by the native side.
             </summary>
         </member>
         <member name="P:V8.Net.V8NativeObject.BindingType">
@@ -1881,70 +1948,6 @@
         <member name="P:V8.Net.ObjectBinder.TypeBinder">
             <summary>
             The static TypeBinder reference that this ObjectBinder instance represents.
-            </summary>
-        </member>
-        <member name="T:V8.Net.ObservableWeakReference`1">
-            <summary>
-            Notifies handlers that an object is ready to be garbage collected.
-            To use this you must 1. wrap it in your class and pass it your class reference, 2. override the finalize method for your class and call "Finalize"
-            on this weak reference object, and 3. keep a strong reference to this weak reference object so you can check it later (if needed).
-            <para>Warning: This event is triggered in the GC thread!</para>
-            </summary>
-            <typeparam name="T">The object type to keep a reference for.</typeparam>
-        </member>
-        <member name="F:V8.Net.ObservableWeakReference`1.NullWaitEvent">
-            <summary>
-            When a finalizer runs on an object, the GC has already cleared all weak references. This means the main thread can read a null object reference
-            before the callback has a chance to reset the reference.  To protect against this, any call on a null reference will block until this event has
-            been signalled.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObservableWeakReference`1.SetTarget(`0)">
-            <summary>
-            Changes the underlying target object of the internal weak reference instance.
-            Warning: If the previous reference is "near death", it will be reset in order to set the new value.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObservableWeakReference`1.Reset">
-            <summary>
-            If 'IsGCReady' is true, then this moves the near death reference back into the weak reference. If not, this method does nothing.
-            <para>In either case, the underlying object is returned.</para>
-            </summary>
-        </member>
-        <member name="E:V8.Net.ObservableWeakReference`1.GCReady">
-            <summary>
-            Triggered when the GC wants to collect the object.
-            </summary>
-        </member>
-        <member name="P:V8.Net.ObservableWeakReference`1.IsGCReady">
-            <summary>
-            Is set to true when the GC wants to collect the object.
-            </summary>
-        </member>
-        <member name="P:V8.Net.ObservableWeakReference`1.CanCollect">
-            <summary>
-            This is false by default, which prevents the object from being finalized in the garbage collection process.
-            If you set this to true in an event handler, then upon return the object will continue being finalized.
-            </summary>
-        </member>
-        <member name="P:V8.Net.ObservableWeakReference`1.Object">
-            <summary>
-            Returns a reference to the object wrapped by this instance.
-            This is a weak reference at first, but will return the strong reference when the object is being finalized.
-            <para>Note: The GC finalizer clears all weak references before running finalizers on all the objects, which means it's possible that main thread
-            code may attempt to read this property, which would end up being 'null'.  However, this would be invalid, due to the fact 'DoFinalize()' hasn't been
-            called yet.  To prevent this, this property is blocking (with a 1.5 second timeout) if the target is set to null by the finalizer, until the finalizer 
-            triggers a call to 'DoFinalize()'.  As such, this property should never return 'null', unless a timeout occurs (may happen if viewed in a debugger).</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.ObservableWeakReference`1.NearDeathReference">
-            <summary>
-            If 'IsGCReady' returns true, then this is the only reference that is keeping the object alive.
-            </summary>
-        </member>
-        <member name="P:V8.Net.ObservableWeakReference`1.IsNearDeathReference">
-            <summary>
-            Returns true if an attempt was made to garbage collect the object (see <see cref="P:V8.Net.ObservableWeakReference`1.NearDeathReference"/>).
             </summary>
         </member>
         <member name="T:V8.Net.V8NativeObject`1">
@@ -2422,380 +2425,6 @@
             <summary>
             The V8 engine automatically creates two templates with every function template: one for object creation (instances) and one for object inheritance (prototypes).
             This property returns the ObjectTemplate wrapper associated with the prototype template for the function object in this template.
-            </summary>
-        </member>
-        <member name="T:V8.Net.Handle">
-            <summary>
-            Keeps track of native V8 handles (C++ native side).
-            When no more handles are in use, the native handle can be disposed when the V8.NET system is ready.
-            If the handle is a value, the native handle side is disposed immediately - but if the handle represents a managed object, it waits until the managed
-            object is also no longer in use.
-            <para>Handles are very small values that can be passed around quickly on the stack, and as a result, the garbage collector is not involved as much.
-            This helps prevent the GC from kicking in and slowing down applications when a lot of processing is in effect.
-            Another benefit is that thread locking is required for heap memory allocation (for obvious reasons), so stack allocation is faster within a
-            multi-threaded context.</para>
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.Set(V8.Net.Handle)">
-            <summary>
-            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
-            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
-            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
-            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
-            to convert it to a handle object that will dispose itself.</para>
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.Set(V8.Net.InternalHandle)">
-            <summary>
-            Disposes of the current handle proxy reference (if not empty, and different) and replaces it with the specified new reference.
-            <para>Note: This IS REQUIRED when setting handles, otherwise memory leaks may occur (the native V8 handles will never make it back into the cache).
-            NEVER use the "=" operator to set a handle.  If using 'InternalHandle' handles, ALWAYS call "Dispose()" when they are no longer needed.
-            To be safe, use the "using(SomeInternalHandle){}" statement (with 'InternalHandle' handles), or use "Handle refHandle = SomeInternalHandle;", to
-            to convert it to a handle object that will dispose itself.</para>
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.Clone">
-            <summary>
-            Creates another copy of this handle and increments the reference count to the native handle.
-            Handles should be set in either two ways: 1. by using the "Set()" method on the left side handle, or 2. using the "Clone()' method on the right side.
-            Using the "=" operator to set a handle may cause memory leaks if not used correctly.
-            See also: <seealso cref="M:V8.Net.Handle.Set(V8.Net.InternalHandle)"/>
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.Dispose">
-            <summary>
-            Attempts to dispose of the internally wrapped handle proxy and makes this handle empty.
-            If other handles exist, then they will still be valid, and this handle instance will become empty.
-            <para>This is useful to use with "using" statements to quickly release a handle into the cache for reuse.</para>
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.ReleaseManagedObject">
-            <summary>
-            Forces the underlying object, if any, to separate from the handle.  This is done by swapping the object with a
-            place holder object to keep the ID (index) for the current object alive until the native V8 engine's GC can remove
-            any associated handles later.  The released object is returned, or null if there is no object.
-            </summary>
-            <returns>The object released.</returns>
-        </member>
-        <member name="M:V8.Net.Handle.As``1">
-            <summary>
-            Returns the 'Value' property type cast to the expected type.
-            Warning: No conversion is made between different value types.
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.LastAs``1">
-            Returns the 'LastValue' property type cast to the expected type.
-            Warning: No conversion is made between different value types.
-        </member>
-        <member name="M:V8.Net.Handle.AsJSProperty">
-            <summary>
-            Returns this handle as a new JSProperty instance with default property attributes.
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.Equals(System.Object)">
-            <summary>
-            Checks if the wrapped handle reference is the same as the one compared with. This DOES NOT compare the underlying JavaScript values for equality.
-            To test for JavaScript value equality, convert to a desired value-type instead by first casting as needed (i.e. (int)jsv1 == (int)jsv2).
-            </summary>
-        </member>
-        <member name="M:V8.Net.Handle.ThrowOnError">
-            <summary>
-            Checks if the handle represents an error, and if so, throws one of the corresponding derived V8Exception exceptions.
-            See 'JSValueType' for possible exception states.  You can check the 'IsError' property to see if this handle represents an error.
-            <para>Exceptions thrown: V8InternalErrorException, V8CompilerErrorException, V8ExecutionErrorException, and V8Exception (for any general V8-related exceptions).</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.CanDispose">
-            <summary>
-            Any handle can be disposed, except the only handle left on a managed object. In this case, false is returned,
-            since the managed object is responsible for it.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsDisposed">
-            <summary>
-            Returns true if this handle is disposed (no longer in use).  Disposed native proxy handles are kept in a cache for performance reasons.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.Engine">
-            <summary>
-            A reference to the V8Engine instance that owns this handle.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.ID">
-            <summary>
-            The ID (index) of this handle on both the native and managed sides.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.ValueType">
-            <summary>
-            The JavaScript type this handle represents.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.ReferenceCount">
-            <summary>
-            Used internally to determine the number of references to a handle.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.ObjectID">
-            <summary>
-            The ID of the managed object represented by this handle.
-            This ID is expected when handles are passed to 'V8ManagedObject.GetObject()'.
-            If this value is less than 0 (usually -1), then there is no associated managed object.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle._CurrentObjectID">
-            <summary>
-            Returns the managed object ID "as is".
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.Object">
-            <summary>
-            A reference to the managed object associated with this handle. This property is only valid for object handles, and will return null otherwise.
-            Upon reading this property, if the managed object has been garbage collected (because no more handles or references exist), then a new basic 'V8NativeObject' instance will be created.
-            <para>Instead of checking for 'null' (which may not work as expected), query 'HasManagedObject' instead.</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.BoundObject">
-            <summary>
-            If this handle represents an object instance binder, then this returns the bound object.
-            Bound objects are usually custom user objects (non-V8.NET objects) wrapped in ObjectBinder instances.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.CLRTypeID">
-            <summary>
-            Returns the registered type ID for objects that represent registered CLR types.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.TypeBinder">
-            <summary>
-            If this handle represents a type binder, then this returns the associated 'TypeBinder' instance.
-            <para>Bound types are usually non-V8.NET types that are wrapped and exposed in the JavaScript environment for use with the 'new' operator.</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.HasObject">
-            <summary>
-            Returns true if this handle is associated with a managed object.
-            <para>Note: This can be false even though 'IsObjectType' may be true.
-            A handle can represent a native V8 object handle without requiring an associated managed object.</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.Value">
-            <summary>
-            Reading from this property causes a native call to fetch the current V8 value associated with this handle.
-            <param>For objects, this returns the in-script type text as a string - unless this handle represents an object binder, in which case this will return the bound object instead.</param>
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.LastValue">
-            <summary>
-            Once "Value" is accessed to retrieve the JavaScript value in real time, there's no need to keep accessing it.  Just call this property
-            instead (a small bit faster). Note: If the value changes again within the engine (i.e. another scripts executes), you may need to call
-            'Value' again to make sure any changes are reflected.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.ArrayLength">
-            <summary>
-            Returns the array length for handles that represent arrays. For all other types, this returns 0.
-            Note: To get the items of the array, use '{ObjectHandle|InternalHandle|V8NativeObject}.GetProperty(#)'.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsWeakManagedObject">
-            <summary>
-            Returns true if this handle is associated with a managed object that has no other references and is ready to be disposed.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsOnlyReference">
-            <summary>
-            Returns true if this is the only handle referencing the enclosed handle proxy, and has not yet been disposed.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsBeingDisposed">
-            <summary>
-            True if this handle is place into a queue to be disposed.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsNativelyWeak">
-            <summary>
-            True if this handle was made weak on the native side (for object handles only).  Once a handle is weak, the V8 garbage collector can collect the
-            handle (and any associated managed object) at any time.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsDisposeReady">
-            <summary>
-            Returns true if this handle is weak AND is associated with a weak managed object reference.
-            When a handle is ready to be disposed, then calling "Dispose()" will succeed and cause the handle to be placed back into the cache on the native side.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsEmpty">
-            <summary>
-            Returns true if this handle is empty (that is, equal to 'Handle.Empty'), and false if a valid handle exists.
-            <para>An empty state is when a handle is set to 'Handle.Empty' and has no valid native V8 handle assigned.
-            This is similar to "undefined"; however, this property will be true if a valid native V8 handle exists that is set to "undefined".</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsUndefined">
-            <summary>
-            Returns true if this handle is undefined or empty (empty is when this handle is an instance of 'Handle.Empty').
-            <para>"Undefined" does not mean "null".  A variable (handle) can be defined and set to "null".</para>
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsNull">
-            <summary>
-            Returns 'true' if this handle represents a 'null' value (that is, an explicitly defined 'null' value).
-            This will return 'false' if 'IsEmpty' or 'IsUndefined' is true.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsObjectType">
-            <summary>
-            Returns true of the handle represents ANY object type.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsBinder">
-            <summary>
-            Used internally to quickly determine when an instance represents a binder object type (faster than reflection!).
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.BindingMode">
-            <summary>
-            Returns the binding mode (Instance, Static, or None) represented by this handle.  The return is 'None' (0) if not applicable.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.AsBoolean">
-            <summary>
-            Returns the underlying value converted if necessary to a Boolean type.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.AsInt32">
-            <summary>
-            Returns the underlying value converted if necessary to an Int32 type.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.AsDouble">
-            <summary>
-            Returns the underlying value converted if necessary to a double type.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.AsString">
-            <summary>
-            Returns the underlying value converted if necessary to a string type.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.AsDate">
-            <summary>
-            Returns the underlying value converted if necessary to a DateTime type.
-            </summary>
-        </member>
-        <member name="P:V8.Net.Handle.IsError">
-            <summary>
-            Returns true if this handle contains an error message (the string value is the message).
-            If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.SetProperty(System.String,V8.Net.InternalHandle,V8.Net.V8PropertyAttributes)">
-            <summary>
-            Calls the V8 'Set()' function on the underlying native object.
-            Returns true if successful.
-            </summary>
-            <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.SetProperty(System.Int32,V8.Net.InternalHandle)">
-            <summary>
-            Calls the V8 'Set()' function on the underlying native object.
-            Returns true if successful.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.SetProperty(System.String,System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
-            <summary>
-            Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
-            the specified property name.
-            Returns true if successful.
-            </summary>
-            <param name="name">The property name.</param>
-            <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types.</param>
-            <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
-            <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
-            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
-            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-            <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.SetProperty(System.Type,V8.Net.V8PropertyAttributes,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})">
-            <summary>
-            Binds a 'V8Function' object to the specified type and associates the type name (or custom script name) with the underlying object.
-            Returns true if successful.
-            </summary>
-            <param name="type">The type to wrap.</param>
-            <param name="propertyAttributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
-            <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
-            <param name="recursive">For object types, if true, then object reference members are included, otherwise only the object itself is bound and returned.
-            For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
-            in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
-            <param name="memberSecurity">Flags that describe JavaScript properties.  They must be 'OR'd together as needed.</param>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.GetProperty(System.String)">
-            <summary>
-            Calls the V8 'Get()' function on the underlying native object.
-            If the property doesn't exist, the 'IsUndefined' property will be true.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.GetProperty(System.Int32)">
-            <summary>
-            Calls the V8 'Get()' function on the underlying native object.
-            If the property doesn't exist, the 'IsUndefined' property will be true.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.DeleteProperty(System.String)">
-            <summary>
-            Calls the V8 'Delete()' function on the underlying native object.
-            Returns true if the property was deleted.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.DeleteProperty(System.Int32)">
-            <summary>
-            Calls the V8 'Delete()' function on the underlying native object.
-            Returns true if the property was deleted.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.SetAccessor(System.String,V8.Net.V8NativeObjectPropertyGetter,V8.Net.V8NativeObjectPropertySetter,V8.Net.V8PropertyAttributes,V8.Net.V8AccessControl)">
-            <summary>
-            Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.GetPropertyNames">
-            <summary>
-            Returns a list of all property names for this object (including all objects in the prototype chain).
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.GetOwnPropertyNames">
-            <summary>
-            Returns a list of all property names for this object (excluding the prototype chain).
-            </summary>
-        </member>
-        <!-- Badly formed XML comment ignored for member "M:V8.Net.ObjectHandle.GetPropertyAttributes(System.String)" -->
-        <member name="M:V8.Net.ObjectHandle.Call(System.String,V8.Net.InternalHandle,V8.Net.InternalHandle[])">
-            <summary>
-            Calls an object property with a given name on a specified object as a function and returns the result.
-            The '_this' property is the "this" object within the function when called.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.StaticCall(System.String,V8.Net.InternalHandle[])">
-            <summary>
-            Calls an object property with a given name on a specified object as a function and returns the result.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.Call(V8.Net.InternalHandle,V8.Net.InternalHandle[])">
-            <summary>
-            Calls the underlying object as a function.
-            The '_this' parameter is the "this" reference within the function when called.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.StaticCall(V8.Net.InternalHandle[])">
-            <summary>
-            Calls the underlying object as a function.
-            The 'this' property will not be specified, which will default to the global scope as expected.
-            </summary>
-        </member>
-        <member name="M:V8.Net.ObjectHandle.GetPrototype">
-            <summary>
-            The prototype of the object (every JavaScript object implicitly has a prototype).
             </summary>
         </member>
         <member name="T:V8.Net.DynamicHandle">

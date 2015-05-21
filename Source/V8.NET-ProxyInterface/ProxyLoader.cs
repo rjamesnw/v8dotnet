@@ -9,7 +9,6 @@ using System.Text;
 namespace V8.Net
 {
     // ########################################################################################################################
-    // WARNING:
 
     public unsafe static class V8NetProxy
     {
@@ -437,9 +436,9 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy")]
 #endif
 #if V1_1 || V2 || V3 || V3_5
-        public static unsafe extern HandleProxy* CreateFunctionInstance(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount, HandleProxy** args);
+        public static unsafe extern HandleProxy* CreateInstanceFromFunctionTemplate(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount, HandleProxy** args);
 #else
-        public static unsafe extern HandleProxy* CreateFunctionInstance(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount = 0, HandleProxy** args = null);
+        public static unsafe extern HandleProxy* CreateInstanceFromFunctionTemplate(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount = 0, HandleProxy** args = null);
         // Return: HandleProxy*
 #endif
 

@@ -166,59 +166,32 @@ namespace V8.Net
                             InternalHandle internalHandle = InternalHandle.Empty;
                             int i;
 
-                            {
-                                Console.WriteLine("Setting 'this.tempObj' to a new managed object ...");
+                            Console.WriteLine("Setting 'tempObj' to a new managed object ...");
 
-                                tempObj = _JSServer.CreateObject<V8NativeObject>();
-                                internalHandle = tempObj.Handle;
-                                ObjectHandle testHandle = new ObjectHandle(internalHandle);
-                                _JSServer.DynamicGlobalObject.tempObj = tempObj;
+                            _JSServer.DynamicGlobalObject.tempObj = tempObj = _JSServer.CreateObject<V8NativeObject>();
+                            internalHandle = InternalHandle.GetUntrackedHandle(tempObj);
 
-                                // ... because we have a strong reference to the handle in 'testHandle', the managed and native objects are safe; however,
-                                // this block has the only strong reference, so once the reference goes out of scope, the managed GC should attempt to
-                                // collect it, which will mark the handle as ready for collection (but it will not be destroyed just yet until V8 is ready) ...
+                            Console.WriteLine("Current generation of 'tempObj' instance: " + GC.GetGeneration(tempObj));
 
-                                Console.WriteLine("Clearing managed references and running the garbage collector ...");
-                                GC.Collect();
-                                testHandle = null;
-                            }
-
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-
-                            // (we wait for the 'testHandle' handle object to be collected, which will dispose the handle)
-                            // (note: we do not call 'Set()' on 'internalHandle' because the "Handle" type takes care of the disposal)
-
-                            for (i = 0; i < 3000 && internalHandle.ReferenceCount > 1; i++)
-                            {
-                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
-                            }
-
-                            if (internalHandle.ReferenceCount > 1)
-                                throw new Exception("Handle is still not ready for GC ... something is wrong.");
-
-                            Console.WriteLine("Success! The managed handle instance is pending disposal.");
-                            Console.WriteLine("Clearing the handle object reference next ...");
-
-                            // ... because we still have a reference to 'tempObj' at this point, the managed and native objects are safe; however, this 
-                            // block scope has the only strong reference to the managed object keeping everything alive (including the underlying handle),
-                            // so once the reference goes out of scope, the managed GC will collect it, which will mark the managed object as ready for
-                            // collection. Once both the managed object and handle are marked, this in turn marks the native handle as weak. When the native
-                            // V8 engine's garbage collector is ready to dispose of the handle, as call back is triggered and the native object and
-                            // handles will finally be removed ...
-
+                            Console.WriteLine("Nullifying 'tempObj' to release the object ...");
                             tempObj = null;
 
-                            Console.WriteLine("Forcing CLR garbage collection ... ");
-
-                            GC.AddMemoryPressure(long.MaxValue);
-
                             GC.Collect();
                             GC.WaitForPendingFinalizers();
+                            // (we wait for the object to be sent for disposal by the worker)
 
-                            GC.RemoveMemoryPressure(long.MaxValue);
+                            Console.WriteLine("Generation of 'tempObj' instance after collect: " + GC.GetGeneration(_JSServer.GetObjectByID(internalHandle.ObjectID)));
+
+                            for (i = 0; i < 3000 && !internalHandle.IsDisposing; i++)
+                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
+
+                            if (!internalHandle.IsDisposing)
+                                throw new Exception("The temp object's handle is still not pending disposal ... something is wrong.");
+
+                            Console.WriteLine("Success! The temp object's handle is going through the disposal process.");
+                            Console.WriteLine("Clearing the handle object reference next ...");
+
+                            // object handles will finally be disposed when the native V8 GC calls back regarding them ...
 
                             Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
 
@@ -240,9 +213,9 @@ namespace V8.Net
 
                             Console.WriteLine("Looking for object ...");
 
-                            if (!internalHandle.IsDisposed) throw new Exception("Managed object was not garbage collected.");
+                            if (!internalHandle.IsDisposed) throw new Exception("Managed object's handle did not dispose.");
                             // (note: this call is only valid as long as no more objects are created before this point)
-                            Console.WriteLine("Success! The managed V8NativeObject instance is disposed.");
+                            Console.WriteLine("Success! The managed V8NativeObject native handle is now disposed.");
                             Console.WriteLine("\r\nDone.\r\n");
                         }
                         else if (lcInput == @"\speedtest")
@@ -299,11 +272,11 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\1")
                         {
-                            //_JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
-                            //_JSServer.ConsoleExecute("for (var i = 0; i < 10000000; ++i) jist.Random(this, 1, 100);");
-                            var ot = _JSServer.CreateObjectTemplate();
-                            ot.SetCallAsFunctionHandler((engine, isConstructCall, _this, _args) => { return _JSServer.CreateValue(1); });
-                            _JSServer.GlobalObject.SetProperty("test", ot.CreateObject());
+                            _JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
+                            _JSServer.ConsoleExecute("for (var i = 0; i < 10000000; ++i) jist.Random(this, 1, 100);");
+                            //var ot = _JSServer.CreateObjectTemplate();
+                            //ot.SetCallAsFunctionHandler((engine, isConstructCall, _this, _args) => { return _JSServer.CreateValue(1); });
+                            //_JSServer.GlobalObject.SetProperty("test", ot.CreateObject());
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {

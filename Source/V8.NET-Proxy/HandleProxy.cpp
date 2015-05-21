@@ -61,15 +61,12 @@ bool HandleProxy::Dispose()
 	return _Dispose(true);
 }
 
-bool HandleProxy::DisposeAsCallbackResult()
+bool HandleProxy::TryDispose()
 {
-	if (_Disposed == 0) {
-		if (_ManagedReferenceCount > 0)
-			_ManagedReferenceCount--;
-		if (_ManagedReferenceCount == 0) {
-			_Disposed = 1;
-			return Dispose();
-		}
+	if (_Disposed == 0 && _ManagedReference == 0)
+	{
+		_Disposed = 1;
+		return Dispose();
 	}
 	return false; // (already disposed, or the managed side has cloned it)
 }
