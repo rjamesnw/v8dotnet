@@ -26,6 +26,13 @@ namespace V8.Net
         /// </summary>
         internal HandleProxy*[] _HandleProxies = new HandleProxy*[1000];
 
+#if DEBUG && TRACE
+        /// <summary>
+        /// Holds a list of call stacks at the time each proxy was discovered.
+        /// </summary>
+        internal string[] _HandleProxyDiscoveryStacks = new string[1000];
+#endif
+
         /// <summary>
         /// When a new managed side handle wraps a native handle proxy the disposal process happens internally in a controlled 
         /// manor.  There is no need to burden the end user with tracking handles for disposal, so when a handle enters public
@@ -50,19 +57,19 @@ namespace V8.Net
             {
                 lock (_HandleProxies)
                 {
-                    List<InternalHandle> handles = new List<InternalHandle>(_HandleProxies.Length);
-                    for (var i = 0; i < _HandleProxies.Length; ++i)
-                        if (_HandleProxies[i] != null)
-                            handles.Add(_HandleProxies[i]);
-                    return handles.ToArray();
+                        List<InternalHandle> handles = new List<InternalHandle>(_HandleProxies.Length);
+                        for (var i = 0; i < _HandleProxies.Length; ++i)
+                            if (_HandleProxies[i] != null)
+                                handles.Add(InternalHandle.GetUntrackedHandleFromProxy(_HandleProxies[i]));
+                        return handles.ToArray();
                 }
             }
         }
 
-        public IEnumerable<InternalHandle> Handles_Active { get { return from h in Handles_All where h._HandleProxy->Disposed == 0 select h; } }
-        public IEnumerable<InternalHandle> Handles_ManagedSideDisposeReady { get { return from h in Handles_All where h._HandleProxy->Disposed == 1 select h; } }
-        public IEnumerable<InternalHandle> Handles_NativeSideWeak { get { return from h in Handles_All where h._HandleProxy->Disposed == 2 select h; } }
-        public IEnumerable<InternalHandle> Handles_DisposedAndCached { get { return from h in Handles_All where h._HandleProxy->Disposed == 3 select h; } }
+        public IEnumerable<InternalHandle> Handles_Active { get { return from h in Handles_All where h._HandleProxy->IsActive select h; } }
+        public IEnumerable<InternalHandle> Handles_ManagedSideDisposeReady { get { return from h in Handles_All where h._HandleProxy->IsPendingDisposal select h; } }
+        public IEnumerable<InternalHandle> Handles_NativeSideWeak { get { return from h in Handles_All where h._HandleProxy->IsWeak select h; } }
+        public IEnumerable<InternalHandle> Handles_DisposedAndCached { get { return from h in Handles_All where h._HandleProxy->IsDisposed select h; } }
 
         /// <summary>
         /// Total number of handle proxy references in the V8.NET system (for proxy use).
@@ -82,9 +89,9 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Total number of handle proxy references in the V8.NET system that are in the process of being disposed by the V8.NET garbage collector (the worker thread).
+        /// Total number of handle proxy references in the V8.NET system that are in the disposal queue (for the worker thread).
         /// </summary>
-        public int TotalHandlesBeingDisposed
+        public int TotalHandlesPendingDisposal
         {
             get
             {
@@ -92,12 +99,30 @@ namespace V8.Net
                 {
                     var c = 0;
                     foreach (var item in _HandleProxies)
-                        if (item != null && item->IsDisposing) c++;
+                        if (item != null && item->IsPendingDisposal) c++;
                     return c;
                 }
             }
         }
 
+        /// <summary>
+        /// Total number of handle proxy references in the V8.NET system that are in the process of being disposed by the native
+        /// V8 garbage collector (the worker thread).
+        /// This is also the number of "abandoned" objects, since only managed objects end up here.
+        /// </summary>
+        public int TotalHandlesPendingV8GC
+        {
+            get
+            {
+                lock (_HandleProxies)
+                {
+                    var c = 0;
+                    foreach (var item in _HandleProxies)
+                        if (item != null && item->IsWeak) c++;
+                    return c;
+                }
+            }
+        }
 
         /// <summary>
         /// Total number of handles in the V8.NET system that are cached and ready to be reused.
@@ -111,6 +136,23 @@ namespace V8.Net
                     var c = 0;
                     foreach (var item in _HandleProxies)
                         if (item != null && item->IsDisposed) c++;
+                    return c;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Total number of handles in the V8.NET system that are currently in use.
+        /// </summary>
+        public int TotalHandlesInUse
+        {
+            get
+            {
+                lock (_HandleProxies)
+                {
+                    var c = 0;
+                    foreach (var item in _HandleProxies)
+                        if (item != null && item->IsActive) c++;
                     return c;
                 }
             }

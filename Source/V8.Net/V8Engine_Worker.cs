@@ -42,6 +42,9 @@ namespace V8.Net
     {
         // --------------------------------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Called in an object's finalizer to handle disposal on the worker thread.  
+        /// </summary>
         public static void Finalizing<T>(this T v8Object)
             where T : IV8Disposable
         {
@@ -75,8 +78,16 @@ namespace V8.Net
                             lock (engine._DisposalQueue)
                             {
                                 h.IsDisposing = true;
+                                h._Object = null; // (release any tracker handle at this point, otherwise 'h.CanDispose' will keep returning false)
                                 engine._DisposalQueue.Enqueue(h);
                             }
+                    }
+                    else
+                    {
+                        lock (engine._DisposalQueue)
+                        {
+                            engine._DisposalQueue.Enqueue(v8Object);
+                        }
                     }
             }
         }
@@ -203,7 +214,7 @@ namespace V8.Net
                     disposable.Dispose();
                 else
                 {
-                    // ... cannot dispose this yet; place it in the "abandoned" queue for later ...
+                    // ... cannot dispose this yet; place it in the "abandoned" queue for later (next generation disposal) ...
 
                     lock (_AbandondObjects)
                     {
@@ -215,7 +226,7 @@ namespace V8.Net
                     if (disposable is V8NativeObject)
                     {
                         var v8Obj = (V8NativeObject)disposable;
-                        if (!v8Obj.InternalHandle.IsEmpty && v8Obj.InternalHandle._HandleProxy->Disposed == 1)
+                        if (!v8Obj.InternalHandle.IsEmpty && v8Obj.InternalHandle._HandleProxy->IsPendingDisposal)
                         {
                             V8NetProxy.MakeWeakHandle(v8Obj.InternalHandle); // ('Disposed' will be 2 after this, so no worries about doing this more than once)
                             /* Once the native GC attempts to collect the underlying native object, then '_OnNativeGCRequested()' will get 

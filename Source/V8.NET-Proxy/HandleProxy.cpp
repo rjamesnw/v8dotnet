@@ -23,6 +23,7 @@ HandleProxy::~HandleProxy()
 		_ClearHandleValue();
 		_ObjectID = -1;
 		_Disposed = 3;
+		_ManagedReference = 0;
 	}
 }
 
@@ -39,7 +40,7 @@ bool HandleProxy::_Dispose(bool registerDisposal)
 		{
 			if (registerDisposal)
 			{
-				_EngineProxy->DisposeHandleProxy(this);
+				_EngineProxy->DisposeHandleProxy(this); // (REQUIRES '_ID' and '_ObjectID', so don't clear before this)
 				return true;
 			}
 
@@ -48,6 +49,7 @@ bool HandleProxy::_Dispose(bool registerDisposal)
 			_ObjectID = -1;
 			_CLRTypeID = -1;
 			_Disposed = 3;
+			_ManagedReference = 0;
 			_Type = JSV_Uninitialized;
 
 			return true;
@@ -63,7 +65,7 @@ bool HandleProxy::Dispose()
 
 bool HandleProxy::TryDispose()
 {
-	if (_Disposed == 0 && _ManagedReference == 0)
+	if (_Disposed == 0 && _ManagedReference < 2)
 	{
 		_Disposed = 1;
 		return Dispose();
@@ -219,6 +221,44 @@ void HandleProxy::_DisposeCallback(const WeakCallbackData<Value, HandleProxy>& d
 
 // ------------------------------------------------------------------------------------------------------------------------
 
+int32_t HandleProxy::SetManagedObjectID(int32_t id)
+{
+	// ... first, nullify any exiting mappings for the managed object ID ...
+	if (_ObjectID >= 0 && _ObjectID < _EngineProxy->_Objects.size())
+		_EngineProxy->_Objects[_ObjectID] = nullptr;
+
+	_ObjectID = id;
+
+	if (_ObjectID >= 0)
+	{
+		// ... store a mapping from managed object ID to this handle proxy ...
+		if (_ObjectID >= _EngineProxy->_Objects.size())
+			_EngineProxy->_Objects.resize((_ObjectID + 100) * 2, nullptr);
+
+		_EngineProxy->_Objects[_ObjectID] = this;
+	}
+	else if (_ObjectID == -1)
+		_ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // (must return something to associate accessor delegates, etc.)
+
+	// ... detect if this is a special "type" object ...
+	if (_ObjectID < -2 && _Handle->IsObject())
+	{
+		// ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
+		auto obj = _Handle.As<Object>();
+		auto hTypeID = obj->Get(NewString("$__TypeID"));
+		if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
+		{
+			int32_t typeID = hTypeID->Int32Value();
+			if (obj->Has(NewString("$__Value")))
+			{
+				_CLRTypeID = typeID;
+			}
+		}
+	}
+
+	return _ObjectID;
+}
+
 // Should be called once to attempt to pull the ID.
 // If there's no ID, then the managed object ID will be set to -2 to prevent checking again.
 // To force a re-check, simply set the value back to -1.
@@ -228,48 +268,38 @@ int32_t HandleProxy::GetManagedObjectID()
 		return -1; // (no longer in use!)
 	else if (_ObjectID < -1 || _ObjectID >= 0)
 		return _ObjectID;
-	else {
-		if (_Handle->IsObject())
+	else
+		SetManagedObjectID(HandleProxy::GetManagedObjectID(_Handle));
+}
+
+
+// If the given handle is an object, this will attempt to pull the managed side object ID, or -1 otherwise.
+int32_t HandleProxy::GetManagedObjectID(v8::Handle<Value> h)
+{
+	auto id = -1;
+
+	if (!h.IsEmpty() && h->IsObject())
+	{
+		// ... if this was created by a template then there will be at least 2 fields set, so assume the second is a managed ID value, 
+		// but if not, then check for a hidden property for objects not created by templates ...
+
+		auto obj = h.As<Object>();
+
+		if (obj->InternalFieldCount() > 1)
 		{
-			// ... if this was created by a template then there will be at least 2 fields set, so assume the second is a managed ID value, 
-			// but if not, then check for a hidden property for objects not created by templates ...
-
-			auto obj = _Handle.As<Object>();
-
-			if (obj->InternalFieldCount() > 1)
-			{
-				auto field = obj->GetInternalField(1); // (may be faster than hidden values)
-				if (field->IsExternal())
-					_ObjectID = (int32_t)field.As<External>()->Value();
-			}
-			else
-			{
-				auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
-				if (!handle.IsEmpty() && handle->IsInt32())
-					_ObjectID = (int32_t)handle->Int32Value();
-			}
-
-			if (_ObjectID == -1)
-				_ObjectID = _EngineProxy->GetNextNonTemplateObjectID(); // (must return something to associate accessor delegates, etc.)
-
-			// ... detect if this is a special "type" object ...
-
-			if (_ObjectID < -2)
-			{
-				// ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
-				auto hTypeID = obj->Get(NewString("$__TypeID"));
-				if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
-				{
-					int32_t typeID = hTypeID->Int32Value();
-					if (obj->Has(NewString("$__Value")))
-					{
-						_CLRTypeID = typeID;
-					}
-				}
-			}
+			auto field = obj->GetInternalField(1); // (may be faster than hidden values)
+			if (field->IsExternal())
+				id = (int32_t)field.As<External>()->Value();
+		}
+		else
+		{
+			auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
+			if (!handle.IsEmpty() && handle->IsInt32())
+				id = (int32_t)handle->Int32Value();
 		}
 	}
-	return _ObjectID;
+
+	return id;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

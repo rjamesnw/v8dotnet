@@ -1608,6 +1608,9 @@ namespace V8.Net
     {
         // --------------------------------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Returns the bounder object instance.
+        /// </summary>
         new public object Object
         {
             get { return _Object; }

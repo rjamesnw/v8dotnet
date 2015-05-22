@@ -20,7 +20,11 @@ namespace V8.Net
         /// Returns a random number between the from and to values
         /// specified.
         /// </summary>
-        public InternalHandle Random(V8Engine engine, int from, int to)
+        public int Random(int from, int to)
+        {
+            return rnd.Next(from, to);
+        }
+        public InternalHandle Random2(V8Engine engine, int from, int to)
         {
             var obj = engine.CreateObject<V8NativeObject>();
             obj.SetProperty("result", rnd.Next(from, to));
@@ -57,9 +61,10 @@ namespace V8.Net
                 {
                     if (!_JSServer.IsDisposed)
                         Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
-                            + " / Pending Native GC: " + _JSServer.TotalHandlesBeingDisposed
+                            + " / Pending Disposal: " + _JSServer.TotalHandlesPendingDisposal
+                            + " / Pending Native GC: " + _JSServer.TotalHandlesPendingV8GC
                             + " / Cached: " + _JSServer.TotalHandlesCached
-                            + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
+                            + " / In Use: " + (_JSServer.TotalHandlesInUse) + ")";
                     else
                         Console.Title = "V8.Net Console - Shutting down...";
                 };
@@ -169,7 +174,7 @@ namespace V8.Net
                             Console.WriteLine("Setting 'tempObj' to a new managed object ...");
 
                             _JSServer.DynamicGlobalObject.tempObj = tempObj = _JSServer.CreateObject<V8NativeObject>();
-                            internalHandle = InternalHandle.GetUntrackedHandle(tempObj);
+                            internalHandle = InternalHandle.GetUntrackedHandleFromObject(tempObj);
 
                             Console.WriteLine("Current generation of 'tempObj' instance: " + GC.GetGeneration(tempObj));
 
@@ -273,10 +278,19 @@ namespace V8.Net
                         else if (lcInput == @"\1")
                         {
                             _JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
-                            _JSServer.ConsoleExecute("for (var i = 0; i < 10000000; ++i) jist.Random(this, 1, 100);");
                             //var ot = _JSServer.CreateObjectTemplate();
                             //ot.SetCallAsFunctionHandler((engine, isConstructCall, _this, _args) => { return _JSServer.CreateValue(1); });
                             //_JSServer.GlobalObject.SetProperty("test", ot.CreateObject());
+                        }
+                        else if (lcInput == @"\2")
+                        {
+                            _JSServer.ConsoleExecute("for (var i = 0; i < 1000000; ++i) jist.Random(1, 100);");
+                            //_JSServer.ConsoleExecute("for (var i = 0; i < 100; ++i) jist.Random2(this, 1, 100);");
+                        }
+                        else if (lcInput == @"\3")
+                        {
+                            _JSServer.ConsoleExecute("jist.Random(1, 100);");
+                            //_JSServer.ConsoleExecute("for (var i = 0; i < 100; ++i) jist.Random2(this, 1, 100);");
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {
@@ -290,6 +304,7 @@ namespace V8.Net
                             {
                                 var result = _JSServer.Execute(input, "V8.NET Console");
                                 Console.WriteLine(result.AsString);
+                                result.Dispose();
                             }
                             catch (Exception ex)
                             {

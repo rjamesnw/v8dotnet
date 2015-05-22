@@ -240,7 +240,7 @@ private:
 
     HandleValue _Value; // The value is only valid when 'UpdateValue()' is called. Note: sizeof(double) + sizeof(uint16_t*)
 
-    int32_t _ManagedReference; // This is set to 1 if there is a managed side reference to this proxy object.
+    int32_t _ManagedReference; // This is set to 1 for InternalHandle references, and 2 if there is a managed side reference to this proxy object that is responsible for it.
 
     int32_t _Disposed; // (0: handle is in use, 1: managed disposing in progress, 2: handle was made weak, 3: VIRTUALLY disposed [cached on native side for reuse])
 
@@ -273,7 +273,9 @@ protected:
 
 public:
 
-    int32_t SetManagedObjectID(int32_t id) { return (_ObjectID = id); }
+    int32_t SetManagedObjectID(int32_t id);
+    int GetManagedObjectID();
+    static int GetManagedObjectID(v8::Handle<Value> h);
 
     bool IsError() { return _Type < 0; }
 
@@ -295,7 +297,7 @@ public:
     // Attempts to dispose a handle passed in from the managed side.
     // By default, handle proxies returned from callbacks to the managed side must be disposed, just like arguments.  The
     // managed side is responsible for keeping them alive if needed.
-	// Note: This also includes handles passed in as arguments, such as when setting properties on objects.
+    // Note: This also includes handles passed in as arguments, such as when setting properties on objects.
     bool TryDispose();
 
     // (expected to be called by a managed garbage collection thread [of some sort, but not the main thread])
@@ -313,7 +315,6 @@ public:
     void MakeWeak();
     void MakeStrong();
 
-    int GetManagedObjectID();
     void UpdateValue();
 
     friend V8EngineProxy;
@@ -650,6 +651,8 @@ protected:
     recursive_mutex _MakeWeakQueueMutex;
     vector<HandleProxy*> _HandlesToBeMadeStrong;
     recursive_mutex _MakeStrongQueueMutex;
+    
+    vector<HandleProxy*> _Objects; // An array of handle references by object ID. This allows pulling an already existing proxy handle for an object without having to allocate a new one.
     
     bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
 

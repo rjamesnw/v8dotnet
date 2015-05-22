@@ -63,8 +63,8 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
 	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr), _NextNonTemplateObjectID(-2),
-	_Strings(1000, _StringItem()), _IsExecutingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1),
-	_HandlesToBeMadeWeak(1000, nullptr), _HandlesToBeMadeStrong(1000, nullptr)
+	_IsExecutingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _HandlesToBeMadeWeak(1000, nullptr),
+	_HandlesToBeMadeStrong(1000, nullptr), _Objects(1000, nullptr), _Strings(1000, _StringItem())
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
@@ -82,6 +82,7 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 	_DisposedHandles.clear();
 	_HandlesToBeMadeWeak.clear();
 	_HandlesToBeMadeStrong.clear();
+	_Objects.clear();
 	_Strings.clear();
 
 	_ManagedV8GarbageCollectionRequestCallback = nullptr;
@@ -184,19 +185,27 @@ void V8EngineProxy::DisposeNativeString(_StringItem &item)
  */
 HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 {
-	HandleProxy* handleProxy;
+	HandleProxy* handleProxy = nullptr;
 
+	// ... first check if this handle is an object with an ID, and if so, try to pull an existing handle ...
+
+	auto id = HandleProxy::GetManagedObjectID(handle);
+
+	if (id >= 0 && id < _Objects.size())
+		handleProxy = _Objects.at(id);
+
+	if (handleProxy == nullptr)
 	{
 		std::lock_guard<std::recursive_mutex> handleSection(_HandleSystemMutex);
 
 		ProcessWeakStrongHandleQueue();
-	
+
 		if (_DisposedHandles.size() == 0)
 		{
 			// (no handles are disposed/cached, which means a new one is required)
 			// ... try to trigger disposal of weak handles ...
 			//if (_HandlesToBeMadeWeak.size() > 1000)
-				_Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up if too many start adding up in weak state)
+			_Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up if too many start adding up in weak state)
 		}
 
 		if (_DisposedHandles.size() > 0)
@@ -221,6 +230,9 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 void V8EngineProxy::DisposeHandleProxy(HandleProxy *handleProxy)
 {
 	std::lock_guard<std::recursive_mutex> handleSection(_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+
+	if (handleProxy->_ObjectID >= 0 && handleProxy->_ObjectID < _Objects.size())
+		_Objects[handleProxy->_ObjectID] = nullptr;
 
 	if (handleProxy->_Dispose(false))
 		_DisposedHandles.push_back(handleProxy->_ID); // (this is a queue of disposed handles to use for recycling; Note: the persistent handles are NEVER disposed until they become reinitialized)

@@ -83,7 +83,7 @@ namespace V8.Net
         #endregion
 
         [FieldOffset(36), MarshalAs(UnmanagedType.I4)]
-        public Int32 ManagedReference; // Lets the native side know if there's a managed reference responsible for disposing the native handle proxy.
+        public Int32 ManagedReference; // 0=native side only, 1=InternalHandle, 2=Managed Object; Lets the native side know if there's a managed reference responsible for disposing the native handle proxy.
 
         [FieldOffset(40), MarshalAs(UnmanagedType.I4)]
         public Int32 Disposed; // (0 = in use, 1 = managed side ready to dispose, 2 = object is weak (if applicable), 3 = disposed/cached)
@@ -100,14 +100,34 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
         // Properties for interpretation of fields.
 
+        /// <summary>
+        /// The handle is still in use.
+        /// </summary>
+        public bool IsActive { get { return Disposed == 0; } }
+
+        /// <summary>
+        /// The handle has lost all managed side references, OR is being disposed on request for non-objects.
+        /// </summary>
+        public bool IsPendingDisposal { get { return Disposed == 1; } }
+
+        /// <summary>
+        /// The handle is going through the disposal process. 
+        /// This us true if either 'IsPendingDisposal' or 'IsWeak' is true. 
+        /// </summary>
         public bool IsDisposing
         {
             get { return Disposed == 1 || Disposed == 2; }
             set { if (Disposed <= 1) Disposed = value ? 1 : 0; } // (once disposed is > 1, the process cannot be stopped, and thus this must never change)
         }
 
+        /// <summary>
+        /// The native handle is weak.  The V8 GC will call back to reclaim the persistent handle when ready.
+        /// </summary>
         public bool IsWeak { get { return Disposed == 2; } }
 
+        /// <summary>
+        /// The native persistent handle is disposed and cached.
+        /// </summary>
         public bool IsDisposed { get { return Disposed == 3; } }
 
         // --------------------------------------------------------------------------------------------------------------------

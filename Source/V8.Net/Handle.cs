@@ -36,6 +36,7 @@ namespace V8.Net
         public static readonly Handle Empty = new Handle(null);
 
         internal InternalHandle _Handle;
+        internal bool _WasFinalized;
 
         /// <summary>
         /// Just another shorter way to return the 'InternalHandle' value.
@@ -61,6 +62,7 @@ namespace V8.Net
         ~Handle()
         {
             this.Finalizing();
+            _WasFinalized = true;
         }
 
         /// <summary>
@@ -172,7 +174,9 @@ namespace V8.Net
         /// properties and methods can trigger a pull to update the local reference with the tracker.  Normally this is not a
         /// problem, unless one is testing the GC, as it may prevent the GC from collecting the object during the test.</para>
         /// </summary>
-        public static InternalHandle GetUntrackedHandle(InternalHandle source) { var h = Empty; h._HandleProxy = source; return h; }
+        public static InternalHandle GetUntrackedHandleFromInternal(InternalHandle source) { var h = Empty; h._HandleProxy = source; return h; }
+        public static InternalHandle GetUntrackedHandleFromProxy(HandleProxy* source) { var h = Empty; h._HandleProxy = source; return h; }
+        public static InternalHandle GetUntrackedHandleFromObject(V8NativeObject source) { var h = Empty; h._HandleProxy = source._Handle; return h; }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -239,8 +243,8 @@ namespace V8.Net
                             if (createIfMissing)
                             {
                                 h = new Handle(this); // (need to create a new tracker handle)                   
-                                if (handleID > engine._TrackerHandles.Length)
-                                    Array.Resize(ref engine._TrackerHandles, handleID); // (make sure the tracker handle quick reference array can contain the handle ID)
+                                if (handleID >= engine._TrackerHandles.Length)
+                                    Array.Resize(ref engine._TrackerHandles, (100 + handleID) * 2); // (make sure the tracker handle quick reference array can contain the handle ID)
                                 if (wref != null)
                                     wref.Target = h;
                                 else
@@ -252,7 +256,7 @@ namespace V8.Net
                 else if (_Object is V8NativeObject && ((V8NativeObject)_Object)._Handle.IsEmpty)
                     ((V8NativeObject)_Object)._Handle.Set(this); // (if the object used to track this handle does not represent the current handle, then make sure it does)
 
-                _HandleProxy->ManagedReference = _Object != null ? 1 : 0; // (lets the native side know if there's a managed reference responsible for disposing the native handle proxy)
+                _HandleProxy->ManagedReference = _Object != null ? 2 : 1; // (lets the native side know if there's a managed reference responsible for disposing the native handle proxy)
             }
 
             return _Object;
@@ -300,12 +304,12 @@ namespace V8.Net
                 // ... check for a managed object and get the reference for this handle ...
                 if (_HandleProxy->_ObjectID >= 0 && _Object == null)
                 {
-                    _Object = Engine._GetExistingObject(_HandleProxy->_ObjectID);
+                    _Object = Object;
                 }
                 else if (_Object is V8NativeObject && ((V8NativeObject)_Object).ID != _HandleProxy->_ObjectID)
                     _Object = null; // (not a valid reference anymore)
 
-                _HandleProxy->ManagedReference = _Object != null ? 1 : 0; // (no longer has a managed object reference)
+                _HandleProxy->ManagedReference = _Object != null ? 2 : 1; // (no longer has a managed object reference)
             }
             return _Object as V8NativeObject;
         }
@@ -355,14 +359,21 @@ namespace V8.Net
 
                     currentHandleProxies[handleID] = _HandleProxy;
 
-                    _HandleProxy->ManagedReference = 0;
+#if DEBUG && TRACE
+                    if (engine._HandleProxyDiscoveryStacks.Length < currentHandleProxies.Length)
+                        Array.Resize(ref engine._HandleProxyDiscoveryStacks, currentHandleProxies.Length);
+                    engine._HandleProxyDiscoveryStacks[handleID] = Description + ": " + Environment.NewLine + Environment.StackTrace;
+#endif
 
-                    if (_HandleProxy->Disposed == 0)
+
+                    if (_HandleProxy->ManagedReference == 0)
                     {
+                        _HandleProxy->ManagedReference = 1;
+
                         GC.AddMemoryPressure((Marshal.SizeOf(typeof(HandleProxy)))); // (many handle instances can share one proxy)
 
 #if DEBUG && TRACKHANDLES
-                        V8Engine.AllInternalHandlesEverCreated.Add(GetUntrackedHandle(this));
+                        //V8Engine.AllInternalHandlesEverCreated.Add(GetUntrackedHandle(this));
 #endif
                     }
 
@@ -384,6 +395,11 @@ namespace V8.Net
         {
             get
             {
+                var engine = Engine;
+
+                if (_HandleProxy == null || engine == null)
+                    return false;
+
                 if (_Object == null)
                     GetTrackerHandle(false);
 
@@ -393,7 +409,7 @@ namespace V8.Net
                     // on the underlying object, which is the case if the pointer to the proxy pointer is that same 
                     // between this value, and the one on the target object ...
 
-                    fixed (void* ptr1 = &this._HandleProxy, ptr2 = &Engine._GlobalObject._HandleProxy)
+                    fixed (void* ptr1 = &this._HandleProxy, ptr2 = &engine._GlobalObject._HandleProxy)
                     {
                         if (ptr1 == ptr2) return true; // (if false, then handle proxy pointer is not on the same value as the global object handle)
                     }
@@ -410,15 +426,17 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Returns true if calling 'Dispose()' will release the native side handle immediately on the native side.  Any handle
-        /// can usually be disposed, except the only handle left on a managed object. In this case, false is returned, since 
-        /// the managed object is responsible for disposing it in a controlled manner coordinated with V8.
+        /// Returns true if calling 'Dispose()' will release the native side handle immediately on the native side.
+        /// All InternalHandle values not kept alive can be disposed quickly.  The only handle left on a managed object cannot
+        /// be disposed, nor the global object handle, as these will be locked. If false is returned, then there is a managed
+        /// object associated, and the worker thread is responsible for disposing the underlying proxy handle in a controlled
+        /// manner, coordinated with V8.
         /// </summary>
         public bool CanDispose
         {
             get
             {
-                return !IsLocked;
+                return !IsLocked && (_Object == null || !(_Object is V8NativeObject) || ((V8NativeObject)_Object)._Handle.ID != ID); // (only locked handles, or tracked handles with the SAME id, should not be disposed natively, but in a controlled manner)
             }
         }
 
@@ -429,7 +447,7 @@ namespace V8.Net
                 if (CanDispose)
                 {
                     _HandleProxy->IsDisposing = true; // (sets '__HandleProxy->Disposed' to 1)
-                    _HandleProxy->ManagedReference = 0;
+                    _HandleProxy->ManagedReference = 1; // (can now dispose, so downgrade this just in case)
 
                     V8NetProxy.DisposeHandleProxy(_HandleProxy); // (note: this will not work unless '__HandleProxy->Disposed' is 1, which starts the disposal process)
 
@@ -506,7 +524,7 @@ namespace V8.Net
 
         public static implicit operator V8NativeObject(InternalHandle handle)
         {
-            return handle.Object as V8NativeObject;
+            return handle.Object;
         }
 
         public static implicit operator HandleProxy*(InternalHandle handle)
@@ -617,20 +635,22 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// A reference to the managed object associated with this handle. This property is only valid for object handles, and will return null otherwise.
-        /// Upon reading this property, if the managed object has been garbage collected (because no more handles or references exist), then a new basic 'V8NativeObject' instance will be created.
-        /// <para>Instead of checking for 'null' (which may not work as expected), query 'HasManagedObject' instead.</para>
+        /// A reference to the managed object associated with this handle. This property is only valid for object handles, and
+        /// will return null otherwise.
+        /// Because this property reads from the internal engine objects list, which are store as weak references, this property
+        /// can potentially return 'null', even if 'HasObject' returns true.
+        /// <para>Note: Checking 'HasObject' can be initially faster, depending on situation.</para>
         /// </summary>
         public V8NativeObject Object
         {
             get
             {
-                if (_HandleProxy == null || _HandleProxy->_ObjectID == -1)
-                    _Object = null;
-                else if (_Object == null)
-                    UpdateObjectReference();
-
-                return _Object as V8NativeObject;
+                if (_Object != null)
+                    return _Object as V8NativeObject;
+                else if (_HandleProxy->_ObjectID >= 0)
+                    return Engine._GetExistingObject(_HandleProxy->_ObjectID);
+                else
+                    return null;
             }
         }
 
@@ -638,7 +658,7 @@ namespace V8.Net
         /// If this handle represents an object instance binder, then this returns the bound object.
         /// Bound objects are usually custom user objects (non-V8.NET objects) wrapped in ObjectBinder instances.
         /// </summary>
-        public object BoundObject { get { return BindingMode == BindingMode.Instance ? ((ObjectBinder)Object).Object : null; } }
+        public object BoundObject { get { return Object == null ? null : BindingMode == BindingMode.Instance ? ((ObjectBinder)Object).Object : null; } }
 
         object IBasicHandle.Object { get { return BoundObject ?? Object; } }
 
@@ -657,21 +677,26 @@ namespace V8.Net
         {
             get
             {
-                return BindingMode == BindingMode.Static ? ((TypeBinderFunction)Object).TypeBinder
+                return Object == null ? null : BindingMode == BindingMode.Static ? ((TypeBinderFunction)Object).TypeBinder
                     : BindingMode == BindingMode.Instance ? ((ObjectBinder)Object).TypeBinder : null;
             }
         }
 
         /// <summary>
-        /// Returns true if this handle is associated with a managed object.
+        /// Returns true if this handle is associated with a managed object (checks if ObjectID is valid).
         /// <para>Note: This can be false even though 'IsObjectType' may be true.
-        /// A handle can represent a native V8 object handle without requiring an associated managed object.</para>
+        /// A handle can represent a native V8 object handle without requiring an associated managed object. In such case,
+        /// 'HasObject' returns false.</para>
+        /// <para>Warning: True does not guarantee that 'Object' will not be null.  Objects are referenced by a numerical ID
+        /// and the 'WeakReference' entry may become null under specialized circumstances.  No object reference is actually
+        /// pulled until requested by calling 'GetTrackerHandle()',  'KeepAlive()', or 'UpdateObjectReference()'.
+        /// If any of the previously mentioned methods are called, then this property can be reliable. </para>
         /// </summary>
         public bool HasObject
         {
             get
             {
-                return _HandleProxy->_ObjectID >= 0 && Object != null;
+                return _HandleProxy->_ObjectID >= 0;
             }
         }
 
@@ -848,12 +873,12 @@ namespace V8.Net
         /// <summary>
         /// Used internally to quickly determine when an instance represents a binder object type (faster than reflection!).
         /// </summary>
-        public bool IsBinder { get { return IsObjectType && HasObject && Object._BindingMode != BindingMode.None; } }
+        public bool IsBinder { get { return BindingMode != BindingMode.None; } }
 
         /// <summary>
         /// Returns the binding mode (Instance, Static, or None) represented by this handle.  The return is 'None' (0) if not applicable.
         /// </summary>
-        public BindingMode BindingMode { get { return IsBinder ? Object._BindingMode : BindingMode.None; } }
+        public BindingMode BindingMode { get { V8NativeObject o = Object; return o != null ? o._BindingMode : BindingMode.None; } }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -920,7 +945,7 @@ namespace V8.Net
             }
         }
 
-        internal string _IDStatus { get { return "Engine ID: " + _HandleProxy->EngineID + ", Handle ID: " + _HandleProxy->ID + ", Locked: " + IsLocked; } }
+        internal string _IDStatus { get { return "Engine ID: " + _HandleProxy->EngineID + ", Handle ID: " + _HandleProxy->ID + ", Object ID: " + _HandleProxy->_ObjectID + ", Locked: " + IsLocked; } }
 
         /// <summary>
         /// Returns a string describing the handle (mainly for debugging purposes).
@@ -933,23 +958,37 @@ namespace V8.Net
                 {
                     if (IsEmpty) return "<empty>";
                     if (_HandleProxy->EngineID < 0 || Engine == null) return "<detached>"; // (doesn't belong anywhere - gone rogue! ;) )
-                    if (IsDisposed) return "<" + _IDStatus + ", Object ID: " + _HandleProxy->_ObjectID + ",  " + DisposalStatus + ">";
+                    if (IsDisposed) return "<" + _IDStatus + ",  " + DisposalStatus + ">";
                     if (IsUndefined) return "undefined";
 
                     if (IsBinder)
                     {
                         if (BindingMode == BindingMode.Static)
                         {
-                            var typeBinder = ((TypeBinderFunction)Object).TypeBinder;
-                            return "<CLR Type: " + typeBinder.BoundType.FullName + ", " + _IDStatus + ">";
+                            var obj = Object;
+                            if (obj != null)
+                            {
+                                var typeBinder = ((TypeBinderFunction)obj).TypeBinder;
+                                return "<Type Binder: " + typeBinder.BoundType.FullName + ", " + _IDStatus + ">";
+                            }
+                            else
+                            {
+                                if (System.Diagnostics.Debugger.IsAttached)
+                                    System.Diagnostics.Debugger.Break();
+                                return "<Type Binder: Error - no type binder instance exists.>";
+                            }
                         }
                         else
                         {
                             var obj = BoundObject;
                             if (obj != null)
-                                return "<" + obj.ToString() + ", " + _IDStatus + ">";
+                                return "<Object Binder: " + obj.ToString() + ", " + _IDStatus + ">";
                             else
-                                throw new InvalidOperationException("Object binder does not have an object instance.");
+                            {
+                                if (System.Diagnostics.Debugger.IsAttached)
+                                    System.Diagnostics.Debugger.Break();
+                                return "<Object Binder: Error - no object binder instance exists.>";
+                            }
                         }
                     }
                     else if (IsObjectType)
@@ -957,10 +996,11 @@ namespace V8.Net
                         string managedType = "";
                         string disposal = !string.IsNullOrEmpty(DisposalStatus) ? " - " + DisposalStatus : "";
 
-                        if (HasObject)
+                        var mo = Engine._GetExistingObject(ObjectID); // (don't access 'Object', which may cause an object to be pulled and set for tracking on this handle)
+                        if (mo != null)
                         {
-                            var mo = Engine._GetExistingObject(ObjectID);
-                            managedType = " (" + (mo != null ? mo.GetType().Name + " [" + mo.ID + "]" : "associated managed object is null") + ")";
+                            var type = mo.GetType();
+                            managedType = " (" + type.Name + (type != typeof(V8NativeObject) && typeof(V8NativeObject).IsAssignableFrom(type) ? " [V8NativeObject]" : "") + ")";
                         }
 
                         var typeName = Engine.GlobalObject != this ? Enum.GetName(typeof(JSValueType), ValueType) : "global";

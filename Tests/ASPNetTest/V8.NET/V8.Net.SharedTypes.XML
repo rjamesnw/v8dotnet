@@ -260,6 +260,32 @@
             Type of native proxy object (for native class instances only).
             </summary>
         </member>
+        <member name="P:V8.Net.HandleProxy.IsActive">
+            <summary>
+            The handle is still in use.
+            </summary>
+        </member>
+        <member name="P:V8.Net.HandleProxy.IsPendingDisposal">
+            <summary>
+            The handle has lost all managed side references, OR is being disposed on request for non-objects.
+            </summary>
+        </member>
+        <member name="P:V8.Net.HandleProxy.IsDisposing">
+            <summary>
+            The handle is going through the disposal process. 
+            This us true if either 'IsPendingDisposal' or 'IsWeak' is true. 
+            </summary>
+        </member>
+        <member name="P:V8.Net.HandleProxy.IsWeak">
+            <summary>
+            The native handle is weak.  The V8 GC will call back to reclaim the persistent handle when ready.
+            </summary>
+        </member>
+        <member name="P:V8.Net.HandleProxy.IsDisposed">
+            <summary>
+            The native persistent handle is disposed and cached.
+            </summary>
+        </member>
         <member name="T:V8.Net.ManagedNamedPropertyGetter">
             <summary>
             NamedProperty[Getter|Setter] are used as interceptors on object.

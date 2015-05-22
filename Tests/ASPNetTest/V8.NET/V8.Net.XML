@@ -16,12 +16,6 @@
             If there's any marshalling incompatibility, this will throw an exception.
             </summary>
         </member>
-        <member name="F:V8.Net.V8Engine.AllInternalHandlesEverCreated">
-            <summary>
-            Holds all the InternalHandle values that were set with native proxy handles.
-            <para>Note: This list is only available when compiling with the DEBUG and TRACKHANDLES compiler directives.</para>
-            </summary>
-        </member>
         <member name="M:V8.Net.V8Engine._StoreAccessor``1(System.Int32,System.String,``0)">
             <summary>
             This is required in order prevent accessor delegates from getting garbage collected when used with P/Invoke related callbacks (a process called "thunking").
@@ -488,12 +482,6 @@
             don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
             <returns>A native value that best represents the given managed value.</returns>
         </member>
-        <member name="F:V8.Net.V8Engine.AllHandlesEverCreated">
-            <summary>
-            Holds all the Handle objects (via weak references) that were created since the application was launched.
-            <para>Note: This list is only available when compiling in debug mode.</para>
-            </summary>
-        </member>
         <member name="P:V8.Net.V8Engine.Handles_All">
             <summary>
             Returns all the handles currently known on the managed side.
@@ -507,14 +495,26 @@
             Total number of handle proxy references in the V8.NET system (for proxy use).
             </summary>
         </member>
-        <member name="P:V8.Net.V8Engine.TotalHandlesBeingDisposed">
+        <member name="P:V8.Net.V8Engine.TotalHandlesPendingDisposal">
             <summary>
-            Total number of handle proxy references in the V8.NET system that are in the process of being disposed by the V8.NET garbage collector (the worker thread).
+            Total number of handle proxy references in the V8.NET system that are in the disposal queue (for the worker thread).
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8Engine.TotalHandlesPendingV8GC">
+            <summary>
+            Total number of handle proxy references in the V8.NET system that are in the process of being disposed by the native
+            V8 garbage collector (the worker thread).
+            This is also the number of "abandoned" objects, since only managed objects end up here.
             </summary>
         </member>
         <member name="P:V8.Net.V8Engine.TotalHandlesCached">
             <summary>
             Total number of handles in the V8.NET system that are cached and ready to be reused.
+            </summary>
+        </member>
+        <member name="P:V8.Net.V8Engine.TotalHandlesInUse">
+            <summary>
+            Total number of handles in the V8.NET system that are currently in use.
             </summary>
         </member>
         <member name="P:V8.Net.V8Engine.Engines">
@@ -888,7 +888,7 @@
             Returns the underlying value converted if necessary to a DateTime type.
             </summary>
         </member>
-        <member name="M:V8.Net.InternalHandle.GetUntrackedHandle(V8.Net.InternalHandle)">
+        <member name="M:V8.Net.InternalHandle.GetUntrackedHandleFromInternal(V8.Net.InternalHandle)">
             <summary>
             Returns a handle that initially does not have any trackers associated, and only references the underlying native
             proxy handle object.  This can be useful for "watching" the proxy handle. For example, in testing garbage collection,
@@ -1154,9 +1154,11 @@
         </member>
         <member name="P:V8.Net.InternalHandle.CanDispose">
             <summary>
-            Returns true if calling 'Dispose()' will release the native side handle immediately on the native side.  Any handle
-            can usually be disposed, except the only handle left on a managed object. In this case, false is returned, since 
-            the managed object is responsible for disposing it in a controlled manner coordinated with V8.
+            Returns true if calling 'Dispose()' will release the native side handle immediately on the native side.
+            All InternalHandle values not kept alive can be disposed quickly.  The only handle left on a managed object cannot
+            be disposed, nor the global object handle, as these will be locked. If false is returned, then there is a managed
+            object associated, and the worker thread is responsible for disposing the underlying proxy handle in a controlled
+            manner, coordinated with V8.
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.IsDisposed">
@@ -1205,9 +1207,11 @@
         </member>
         <member name="P:V8.Net.InternalHandle.Object">
             <summary>
-            A reference to the managed object associated with this handle. This property is only valid for object handles, and will return null otherwise.
-            Upon reading this property, if the managed object has been garbage collected (because no more handles or references exist), then a new basic 'V8NativeObject' instance will be created.
-            <para>Instead of checking for 'null' (which may not work as expected), query 'HasManagedObject' instead.</para>
+            A reference to the managed object associated with this handle. This property is only valid for object handles, and
+            will return null otherwise.
+            Because this property reads from the internal engine objects list, which are store as weak references, this property
+            can potentially return 'null', even if 'HasObject' returns true.
+            <para>Note: Checking 'HasObject' can be initially faster, depending on situation.</para>
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.BoundObject">
@@ -1229,9 +1233,14 @@
         </member>
         <member name="P:V8.Net.InternalHandle.HasObject">
             <summary>
-            Returns true if this handle is associated with a managed object.
+            Returns true if this handle is associated with a managed object (checks if ObjectID is valid).
             <para>Note: This can be false even though 'IsObjectType' may be true.
-            A handle can represent a native V8 object handle without requiring an associated managed object.</para>
+            A handle can represent a native V8 object handle without requiring an associated managed object. In such case,
+            'HasObject' returns false.</para>
+            <para>Warning: True does not guarantee that 'Object' will not be null.  Objects are referenced by a numerical ID
+            and the 'WeakReference' entry may become null under specialized circumstances.  No object reference is actually
+            pulled until requested by calling 'GetTrackerHandle()',  'KeepAlive()', or 'UpdateObjectReference()'.
+            If any of the previously mentioned methods are called, then this property can be reliable. </para>
             </summary>
         </member>
         <member name="P:V8.Net.InternalHandle.Value">
@@ -1406,11 +1415,6 @@
             <para>You should always override/implement this if you need to dispose of any native resources in custom implementations.</para>
             <para>DO NOT rely on the destructor (finalizer) - some objects may survive it (due to references on the native V8 side).</para>
             <para>Note: This can be triggered via the worker thread.</para>
-            </summary>
-        </member>
-        <member name="F:V8.Net.V8NativeObject._CreationStack">
-            <summary>
-            Holds the call stack responsible for creating this object (available in debugging only with TRACE defined).
             </summary>
         </member>
         <member name="M:V8.Net.V8NativeObject.Initialize(System.Boolean,V8.Net.InternalHandle[])">
@@ -1962,9 +1966,19 @@
             Accessing the 'Properties' property without setting it first creates a new dictionary object by default.
             </summary>
         </member>
+        <member name="P:V8.Net.ObjectBinder.Object">
+            <summary>
+            Returns the bounder object instance.
+            </summary>
+        </member>
         <member name="P:V8.Net.ObjectBinder.TypeBinder">
             <summary>
             The static TypeBinder reference that this ObjectBinder instance represents.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8EngineWorkerExtensions.Finalizing``1(``0)">
+            <summary>
+            Called in an object's finalizer to handle disposal on the worker thread.  
             </summary>
         </member>
         <member name="T:V8.Net.V8NativeObject`1">

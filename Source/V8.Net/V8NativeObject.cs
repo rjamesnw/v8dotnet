@@ -214,7 +214,7 @@ namespace V8.Net
 
 #if DEBUG && TRACE
         /// <summary>
-        /// Holds the call stack responsible for creating this object (available in debugging only with TRACE defined).
+        /// Holds the call stack responsible for creating this object (available in debugging only with DEBUG and TRACE defined).
         /// </summary>
         string _CreationStack;
 #endif
@@ -349,6 +349,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         public static implicit operator InternalHandle(V8NativeObject obj) { return obj != null ? obj._Handle : InternalHandle.Empty; }
+        public static implicit operator HandleProxy*(V8NativeObject obj) { return obj != null ? obj._Handle._HandleProxy : null; }
 
         // --------------------------------------------------------------------------------------------------------------------
 

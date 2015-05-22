@@ -41,9 +41,10 @@ namespace V8.Net
                 {
                     if (!_JSServer.IsDisposed)
                         Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
-                            + " / Pending Native GC: " + _JSServer.TotalHandlesBeingDisposed
+                            + " / Pending Disposal: " + _JSServer.TotalHandlesPendingDisposal
+                            + " / Pending Native GC: " + _JSServer.TotalHandlesPendingV8GC
                             + " / Cached: " + _JSServer.TotalHandlesCached
-                            + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
+                            + " / In Use: " + (_JSServer.TotalHandlesInUse) + ")";
                     else
                         Console.Title = "V8.Net Console - Shutting down...";
                 };
@@ -310,7 +311,7 @@ namespace V8.Net
                             Console.WriteLine("Setting 'tempObj' to a new managed object ...");
 
                             _JSServer.DynamicGlobalObject.tempObj = tempObj = _JSServer.CreateObject<V8NativeObject>();
-                            internalHandle = InternalHandle.GetUntrackedHandle(tempObj);
+                            internalHandle = InternalHandle.GetUntrackedHandleFromObject(tempObj);
 
                             Console.WriteLine("Nullifying 'tempObj' to release the object ...");
                             tempObj = null;

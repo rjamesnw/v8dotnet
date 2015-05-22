@@ -21,19 +21,6 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public partial class V8Engine
-    {
-#if DEBUG && TRACKHANDLES
-        /// <summary>
-        /// Holds all the Handle objects (via weak references) that were created since the application was launched.
-        /// <para>Note: This list is only available when compiling in debug mode.</para>
-        /// </summary>
-        public static readonly List<WeakReference> AllHandlesEverCreated = new List<WeakReference>();
-#endif
-    }
-
-    // ========================================================================================================================
-
     /// <summary>
     /// The basic handle interface is a higher level interface that implements members that can be common to many handle types for various 3rd-party script
     /// implementations.  It's primary purpose is to support the DreamSpace.Net development framework, which can support various scripting engines, and is

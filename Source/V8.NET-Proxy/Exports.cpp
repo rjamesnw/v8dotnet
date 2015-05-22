@@ -666,7 +666,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL CreateHandleProxyTest()
 	{
 		byte* data = new byte[sizeof(HandleProxy)];
-		for (byte i = 0; i < sizeof(HandleProxy); i++)
+		for (int i = 0; i < sizeof(HandleProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = HandleProxyClass;
@@ -676,7 +676,7 @@ extern "C"
 	EXPORT V8EngineProxy* STDCALL CreateV8EngineProxyTest()
 	{
 		byte* data = new byte[sizeof(V8EngineProxy)];
-		for (byte i = 0; i < sizeof(V8EngineProxy); i++)
+		for (int i = 0; i < sizeof(V8EngineProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = V8EngineProxyClass;
@@ -686,7 +686,7 @@ extern "C"
 	EXPORT ObjectTemplateProxy* STDCALL CreateObjectTemplateProxyTest()
 	{
 		byte* data = new byte[sizeof(ObjectTemplateProxy)];
-		for (byte i = 0; i < sizeof(ObjectTemplateProxy); i++)
+		for (int i = 0; i < sizeof(ObjectTemplateProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = ObjectTemplateProxyClass;
@@ -696,7 +696,7 @@ extern "C"
 	EXPORT FunctionTemplateProxy* STDCALL CreateFunctionTemplateProxyTest()
 	{
 		byte* data = new byte[sizeof(FunctionTemplateProxy)];
-		for (byte i = 0; i < sizeof(FunctionTemplateProxy); i++)
+		for (int i = 0; i < sizeof(FunctionTemplateProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = FunctionTemplateProxyClass;

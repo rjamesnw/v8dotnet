@@ -165,8 +165,11 @@ namespace V8.Net
                 if (!result.IsEmpty) break;
             }
 
-            var obj = result.Object as V8ManagedObject;
-            if (isConstructCall && obj != null && obj.InternalHandle == hThis)
+            var obj = result.Object;
+
+            // ... make sure the user is not returning a 'V8ManagedObject' instance associated with the new object (the property interceptors will never work) ...
+
+            if (isConstructCall && obj != null && obj is V8ManagedObject && obj.InternalHandle == hThis)
                 throw new InvalidOperationException("You've attempted to return the type '" + obj.GetType().Name
                     + "' which is of type V8ManagedObject in a construction call (using 'new' in JavaScript) to wrap the new native object given to the constructor.  The native V8 engine"
                     + " only supports interceptor hooks for objects generated from ObjectTemplate instances.  You will need to first derive/implement from V8NativeObject/IV8NativeObject"
