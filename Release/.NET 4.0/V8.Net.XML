@@ -234,12 +234,6 @@
             Set to the fixed date of Jan 1, 1970. This is used when converting DateTime values to JavaScript Date objects.
             </summary>
         </member>
-        <member name="F:V8.Net.V8Engine.AlternateRootSubPath">
-            <summary>
-            The sub-folder that is the root for the dependent libraries (x86 and x64).  This is set to "V8.NET" by default.
-            <para>This setting allows copying the V8.NET libraries to a project, and having the assemblies "Copy if never" automatically.</para>
-            </summary>
-        </member>
         <member name="M:V8.Net.V8Engine.ForceV8GarbageCollection">
             <summary>
             Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.

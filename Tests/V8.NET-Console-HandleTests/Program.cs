@@ -16,6 +16,11 @@ namespace V8.Net
     {
         protected Random rnd = new Random();
 
+        public int Random()
+        {
+            return rnd.Next(1, 100);
+        }
+
         /// <summary>
         /// Returns a random number between the from and to values
         /// specified.

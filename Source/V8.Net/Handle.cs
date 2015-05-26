@@ -647,10 +647,9 @@ namespace V8.Net
             {
                 if (_Object != null)
                     return _Object as V8NativeObject;
-                else if (_HandleProxy->_ObjectID >= 0)
+                else if (_HandleProxy != null && _HandleProxy->_ObjectID >= 0 && Engine != null)
                     return Engine._GetExistingObject(_HandleProxy->_ObjectID);
-                else
-                    return null;
+                return null;
             }
         }
 
