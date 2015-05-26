@@ -973,8 +973,8 @@ namespace V8.Net
                             }
                             else
                             {
-                                if (System.Diagnostics.Debugger.IsAttached)
-                                    System.Diagnostics.Debugger.Break();
+                                //?if (System.Diagnostics.Debugger.IsAttached)
+                                //    System.Diagnostics.Debugger.Break();
                                 return "<Type Binder: Error - no type binder instance exists.>";
                             }
                         }
@@ -985,8 +985,8 @@ namespace V8.Net
                                 return "<Object Binder: " + obj.ToString() + ", " + _IDStatus + ">";
                             else
                             {
-                                if (System.Diagnostics.Debugger.IsAttached)
-                                    System.Diagnostics.Debugger.Break();
+                                //?if (System.Diagnostics.Debugger.IsAttached)
+                                //    System.Diagnostics.Debugger.Break();
                                 return "<Object Binder: Error - no object binder instance exists.>";
                             }
                         }

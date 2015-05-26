@@ -134,6 +134,10 @@
       <Project>{eb32bbcc-6def-4f34-807b-e81273bf0275}</Project>
       <Name>V8.Net-SharedTypes-3.5</Name>
     </ProjectReference>
+    <ProjectReference Include="..\V8.Net.Loader\V8.Net.Loader - 3.5.csproj">
+      <Project>{bf8918d2-8b73-4487-a5b2-2ad366bc17ee}</Project>
+      <Name>V8.Net.Loader - 3.5</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

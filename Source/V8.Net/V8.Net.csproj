@@ -97,7 +97,6 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -132,6 +131,10 @@
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
       <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
       <Name>V8.Net-SharedTypes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\V8.Net.Loader\V8.Net.Loader.csproj">
+      <Project>{40277739-c6d1-4620-8b05-41b02c3a1efc}</Project>
+      <Name>V8.Net.Loader</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
