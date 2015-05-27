@@ -307,7 +307,7 @@ namespace V8.Net
 
                             try
                             {
-                                var result = _JSServer.Execute(input, "V8.NET Console");
+                                var result = _JSServer.Execute(input, "V8.NET Console", false, 5000);
                                 Console.WriteLine(result.AsString);
                                 result.Dispose();
                             }

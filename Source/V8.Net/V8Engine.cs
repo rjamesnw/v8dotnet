@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
 using System.Text;
+using System.Threading;
 using System.Web;
 
 namespace V8.Net
@@ -368,10 +369,19 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public InternalHandle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
+            Timer timer = null;
+
+            if (timeout > 0)
+                timer = new Timer((state) => { TerminateExecution(); }, this, timeout, Timeout.Infinite);
+
             InternalHandle result = V8NetProxy.V8Execute(_NativeV8EngineProxy, script, sourceName);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
+
+            if (timer != null)
+                timer.Dispose();
 
             if (throwExceptionOnError)
                 result.ThrowOnError();
@@ -385,14 +395,23 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public InternalHandle Execute(InternalHandle script, bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle Execute(InternalHandle script, bool throwExceptionOnError = false, int timeout = 0)
         {
             if (script.ValueType != JSValueType.Script)
                 throw new InvalidOperationException("The handle must represent pre-compiled JavaScript.");
 
+            Timer timer = null;
+
+            if (timeout > 0)
+                timer = new Timer((state) => { TerminateExecution(); }, this, timeout, Timeout.Infinite);
+            
             InternalHandle result = V8NetProxy.V8ExecuteCompiledScript(_NativeV8EngineProxy, script);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
 
+            if (timer != null)
+                timer.Dispose();
+            
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
@@ -407,9 +426,10 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public InternalHandle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
-            InternalHandle result = Execute(script, sourceName, throwExceptionOnError);
+            InternalHandle result = Execute(script, sourceName, throwExceptionOnError, timeout);
             Console.WriteLine(result.AsString);
             return result.KeepAlive();
         }
@@ -423,10 +443,11 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public InternalHandle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
             Console.WriteLine(script);
-            InternalHandle result = Execute(script, sourceName, throwExceptionOnError);
+            InternalHandle result = Execute(script, sourceName, throwExceptionOnError, timeout);
             Console.WriteLine(result.AsString);
             return result.KeepAlive();
         }
