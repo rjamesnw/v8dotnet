@@ -81,6 +81,11 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
+	EXPORT void STDCALL TerminateExecution(V8EngineProxy *engine)
+	{
+		engine->TerminateExecution();
+	}
+
 	// ------------------------------------------------------------------------------------------------------------------------
 	// Object Template Related
 

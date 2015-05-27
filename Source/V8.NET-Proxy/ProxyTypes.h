@@ -654,7 +654,8 @@ protected:
     
     vector<HandleProxy*> _Objects; // An array of handle references by object ID. This allows pulling an already existing proxy handle for an object without having to allocate a new one.
     
-    bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
+	bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
+	bool _IsTerminatingScript; // True if the engine was asked to terminate a script.  This is used to detect when a script is aborted.
 
 public:
 
@@ -664,7 +665,7 @@ public:
     V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort);
     ~V8EngineProxy();
 
-    static Local<String> GetErrorMessage(TryCatch &tryCatch);
+    Local<String> GetErrorMessage(TryCatch &tryCatch);
         
     // Returns the next object ID for objects that do NOT have a corresponding object.  These objects still need an ID, and are given values less than -1.
     int32_t GetNextNonTemplateObjectID() { return _NextNonTemplateObjectID--; }
@@ -711,6 +712,8 @@ public:
     HandleProxy* Execute(const uint16_t* script, uint16_t* sourceName);
     HandleProxy* Execute(Handle<Script> script);
     HandleProxy* Compile(const uint16_t* script, uint16_t* sourceName);
+
+	void TerminateExecution();
 
     HandleProxy* Call(HandleProxy *subject, const uint16_t *functionName, HandleProxy *_this, uint16_t argCount, HandleProxy** args);
 

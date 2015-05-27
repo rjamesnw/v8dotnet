@@ -63,7 +63,7 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
 	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr), _NextNonTemplateObjectID(-2),
-	_IsExecutingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _HandlesToBeMadeWeak(1000, nullptr),
+	_IsExecutingScript(false), _IsTerminatingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _HandlesToBeMadeWeak(1000, nullptr),
 	_HandlesToBeMadeStrong(1000, nullptr), _Objects(1000, nullptr), _Strings(1000, _StringItem())
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
@@ -364,50 +364,75 @@ HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
 
 Local<String> V8EngineProxy::GetErrorMessage(TryCatch &tryCatch)
 {
-	auto msg = tryCatch.Exception()->ToString();
-
+	auto msg = tryCatch.Message();
+	auto messageExists = !msg.IsEmpty();
+	auto exception = tryCatch.Exception();
+	auto exceptionExists = !exception.IsEmpty();
 	auto stack = tryCatch.StackTrace();
-	bool showStackMsg = !stack.IsEmpty() && !stack->IsUndefined();
+	bool stackExists = !stack.IsEmpty() && !stack->IsUndefined();
+
 	Local<String> stackStr;
 
-	if (showStackMsg)
+	if (stackExists && exceptionExists)
 	{
 		stackStr = stack->ToString();
+		
+		auto exceptionMsg = tryCatch.Exception()->ToString();
 
 		// ... detect if the start of the stack message is the same as the exception message, then remove it (seems to happen when managed side returns an error) ...
 
-		if (stackStr->Length() >= msg->Length())
+		if (stackStr->Length() >= exceptionMsg->Length())
 		{
 			uint16_t* ss = new uint16_t[stackStr->Length() + 1];
-			stack->ToString()->Write(ss);
-			auto subStackStr = NewSizedUString(ss, msg->Length());
-			auto stackPartStr = NewSizedUString(ss + msg->Length(), stackStr->Length() - msg->Length());
-			delete[] ss;
+			stack->ToString()->Write(ss); // (copied to a new array in order to offset the character pointer to extract a substring)
 
-			if (msg->Equals(subStackStr))
+			// ... get the same number of characters from the stack message as the exception message length ...
+			auto subStackStr = NewSizedUString(ss, exceptionMsg->Length());
+
+			if (exceptionMsg->Equals(subStackStr))
+			{
+				// ... using the known exception message length, ...
+				auto stackPartStr = NewSizedUString(ss + exceptionMsg->Length(), stackStr->Length() - exceptionMsg->Length());
 				stackStr = stackPartStr;
+			}
+
+			delete[] ss;
 		}
 	}
 
-	msg = msg->Concat(msg, NewString("\r\n"));
+	auto msgStr = messageExists ? msg->Get() : NewString("");
 
-	msg = msg->Concat(msg, NewString("  Line: "));
-	auto line = NewInteger(tryCatch.Message()->GetLineNumber())->ToString();
-	msg = msg->Concat(msg, line);
-
-	msg = msg->Concat(msg, NewString("  Column: "));
-	auto col = NewInteger(tryCatch.Message()->GetStartColumn())->ToString();
-	msg = msg->Concat(msg, col);
-	msg = msg->Concat(msg, NewString("\r\n"));
-
-	if (showStackMsg)
+	if (tryCatch.HasTerminated())
 	{
-		msg = msg->Concat(msg, NewString("  Stack: "));
-		msg = msg->Concat(msg, stackStr);
-		msg = msg->Concat(msg, NewString("\r\n"));
+		if (msgStr->Length() > 0)
+			msgStr = msgStr->Concat(msgStr, NewString("\r\n"));
+		msgStr = msgStr->Concat(msgStr, NewString("Script execution aborted by request."));
 	}
 
-	return msg;
+	if (messageExists)
+	{
+		msgStr = msgStr->Concat(msgStr, NewString("\r\n"));
+
+		msgStr = msgStr->Concat(msgStr, NewString("  Line: "));
+		auto line = NewInteger(msg->GetLineNumber())->ToString();
+		msgStr = msgStr->Concat(msgStr, line);
+
+		msgStr = msgStr->Concat(msgStr, NewString("  Column: "));
+		auto col = NewInteger(msg->GetStartColumn())->ToString();
+		msgStr = msgStr->Concat(msgStr, col);
+	}
+
+	if (stackExists)
+	{
+		msgStr = msgStr->Concat(msgStr, NewString("\r\n"));
+
+		msgStr = msgStr->Concat(msgStr, NewString("  Stack: "));
+		msgStr = msgStr->Concat(msgStr, stackStr);
+	}
+
+	msgStr = msgStr->Concat(msgStr, NewString("\r\n"));
+
+	return msgStr;
 }
 
 HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName)
@@ -460,6 +485,8 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
 			returnVal->_Type = JSV_ExecutionError;
 		}
 		else  returnVal = GetHandleProxy(result);
+
+		_IsTerminatingScript = false;
 	}
 	catch (exception ex)
 	{
@@ -504,6 +531,16 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
 	}
 
 	return returnVal;
+}
+
+void V8EngineProxy::TerminateExecution()
+{
+	if (_IsExecutingScript)
+	{
+		_IsExecutingScript = false;
+		_IsTerminatingScript = true;
+		_Isolate->TerminateExecution();
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

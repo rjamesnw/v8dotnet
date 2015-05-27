@@ -301,6 +301,12 @@
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
             <returns>A handle to the compiled script.</returns>
         </member>
+        <member name="M:V8.Net.V8Engine.TerminateExecution">
+            <summary>
+            Forcefully terminate the current thread of JavaScript execution.
+            This method can be used by any thread. 
+            </summary>
+        </member>
         <member name="M:V8.Net.V8Engine.LoadScript(System.String,System.String,System.Boolean)">
             <summary>
             Loads a JavaScript file from the current working directory (or specified absolute path) and executes it in the V8 engine, then returns the result.

@@ -451,6 +451,15 @@ namespace V8.Net
         }
 
         /// <summary>
+        /// Forcefully terminate the current thread of JavaScript execution.
+        /// This method can be used by any thread. 
+        /// </summary>
+        public void TerminateExecution()
+        {
+            V8NetProxy.TerminateExecution(_NativeV8EngineProxy);
+        }
+
+        /// <summary>
         /// Loads a JavaScript file from the current working directory (or specified absolute path) and executes it in the V8 engine, then returns the result.
         /// </summary>
         /// <param name="scriptFile">The script file to load.</param>
