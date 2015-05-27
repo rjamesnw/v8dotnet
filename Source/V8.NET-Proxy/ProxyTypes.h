@@ -173,7 +173,8 @@ protected:
 // Types supported by HandleProxy.
 enum JSValueType: int32_t
 {
-    JSV_ExecutionError = -3, // An error has occurred while attempting to execute the compiled script.
+	JSV_ExecutionTerminated = -4, // 'TerminateExecution()' was called.
+	JSV_ExecutionError = -3, // An error has occurred while attempting to execute the compiled script.
     JSV_CompilerError = -2, // An error has occurred compiling the script (usually a syntax error).
     JSV_InternalError = -1, // An internal error has occurred (before or after script execution).
     JSV_Uninitialized = 0, // The value type has yet to be determined.

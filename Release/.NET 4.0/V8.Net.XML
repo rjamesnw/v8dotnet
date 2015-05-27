@@ -1346,6 +1346,12 @@
             <summary>
             Returns true if this handle contains an error message (the string value is the message).
             If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
+            <para>Note: This returns false if a script was terminated forcibly. Instead, check the 'WasTerminated' property.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.WasTerminated">
+            <summary>
+            Returns true if execution was terminated, usually by calling '{V8Engine}.TerminateExecution()'.
             </summary>
         </member>
         <member name="T:V8.Net.V8NativeObjectPropertyGetter">

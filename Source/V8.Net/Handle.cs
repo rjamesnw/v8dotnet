@@ -1063,6 +1063,7 @@ namespace V8.Net
         /// <summary>
         /// Returns true if this handle contains an error message (the string value is the message).
         /// If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
+        /// <para>Note: This returns false if a script was terminated forcibly. Instead, check the 'WasTerminated' property.</para>
         /// </summary>
         public bool IsError
         {
@@ -1090,6 +1091,11 @@ namespace V8.Net
                     default: throw new V8Exception(this); // (this will only happen if 'IsError' contains a type check that doesn't have any corresponding exception object)
                 }
         }
+
+        /// <summary>
+        /// Returns true if execution was terminated, usually by calling '{V8Engine}.TerminateExecution()'.
+        /// </summary>
+        public bool WasTerminated { get { return ValueType == JSValueType.ExecutionTerminated; } }
 
         // --------------------------------------------------------------------------------------------------------------------
         // DynamicObject support is in .NET 4.0 and higher

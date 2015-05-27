@@ -376,7 +376,7 @@ Local<String> V8EngineProxy::GetErrorMessage(TryCatch &tryCatch)
 	if (stackExists && exceptionExists)
 	{
 		stackStr = stack->ToString();
-		
+
 		auto exceptionMsg = tryCatch.Exception()->ToString();
 
 		// ... detect if the start of the stack message is the same as the exception message, then remove it (seems to happen when managed side returns an error) ...
@@ -482,7 +482,7 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
 		if (__tryCatch.HasCaught())
 		{
 			returnVal = GetHandleProxy(GetErrorMessage(__tryCatch));
-			returnVal->_Type = JSV_ExecutionError;
+			returnVal->_Type = __tryCatch.HasTerminated() ? JSV_ExecutionTerminated : JSV_ExecutionError;
 		}
 		else  returnVal = GetHandleProxy(result);
 

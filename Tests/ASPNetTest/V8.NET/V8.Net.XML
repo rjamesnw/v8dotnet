@@ -16,6 +16,12 @@
             If there's any marshalling incompatibility, this will throw an exception.
             </summary>
         </member>
+        <member name="F:V8.Net.V8Engine.AllInternalHandlesEverCreated">
+            <summary>
+            Holds all the InternalHandle values that were set with native proxy handles.
+            <para>Note: This list is only available when compiling with the DEBUG and TRACKHANDLES compiler directives.</para>
+            </summary>
+        </member>
         <member name="M:V8.Net.V8Engine._StoreAccessor``1(System.Int32,System.String,``0)">
             <summary>
             This is required in order prevent accessor delegates from getting garbage collected when used with P/Invoke related callbacks (a process called "thunking").
@@ -160,6 +166,11 @@
             This is a managed side reference to all the active and cached native side handle wrapper (proxy) objects.
             </summary>
         </member>
+        <member name="F:V8.Net.V8Engine._HandleProxyDiscoveryStacks">
+            <summary>
+            Holds a list of call stacks at the time each proxy was discovered.
+            </summary>
+        </member>
         <member name="F:V8.Net.V8Engine._TrackerHandles">
             <summary>
             When a new managed side handle wraps a native handle proxy the disposal process happens internally in a controlled 
@@ -254,23 +265,25 @@
             <param name="hint">Gives the native V8 engine a hint on how much work can be performed before returning (V8's default is 1000 work tasks).</param>
             <returns>True if more work is pending.</returns>
         </member>
-        <member name="M:V8.Net.V8Engine.Execute(System.String,System.String,System.Boolean)">
+        <member name="M:V8.Net.V8Engine.Execute(System.String,System.String,System.Boolean,System.Int32)">
             <summary>
             Executes JavaScript on the V8 engine and returns the result.
             </summary>
             <param name="script">The script to run.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+            <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
         </member>
-        <member name="M:V8.Net.V8Engine.Execute(V8.Net.InternalHandle,System.Boolean)">
+        <member name="M:V8.Net.V8Engine.Execute(V8.Net.InternalHandle,System.Boolean,System.Int32)">
             <summary>
             Executes JavaScript on the V8 engine and returns the result.
             </summary>
             <param name="script">The script to run.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+            <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
         </member>
-        <member name="M:V8.Net.V8Engine.ConsoleExecute(System.String,System.String,System.Boolean)">
+        <member name="M:V8.Net.V8Engine.ConsoleExecute(System.String,System.String,System.Boolean,System.Int32)">
             <summary>
             Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
             <para>Note: This is just a shortcut to calling 'Execute()' followed by 'Console.WriteLine()'.</para>
@@ -279,8 +292,9 @@
             <param name="script">The script to run.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+            <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
         </member>
-        <member name="M:V8.Net.V8Engine.VerboseConsoleExecute(System.String,System.String,System.Boolean)">
+        <member name="M:V8.Net.V8Engine.VerboseConsoleExecute(System.String,System.String,System.Boolean,System.Int32)">
             <summary>
             Executes JavaScript on the V8 engine and automatically writes the script given AND the result to the console (only valid for applications that support 'Console' methods).
             The script is output to the console window before it gets executed.
@@ -290,6 +304,7 @@
             <param name="script">The script to run.</param>
             <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
             <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
+            <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
         </member>
         <member name="M:V8.Net.V8Engine.Compile(System.String,System.String,System.Boolean)">
             <summary>
@@ -1342,6 +1357,12 @@
             <summary>
             Returns true if this handle contains an error message (the string value is the message).
             If you have exception catching in place, you can simply call 'ThrowOnError()' instead.
+            <para>Note: This returns false if a script was terminated forcibly. Instead, check the 'WasTerminated' property.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.InternalHandle.WasTerminated">
+            <summary>
+            Returns true if execution was terminated, usually by calling '{V8Engine}.TerminateExecution()'.
             </summary>
         </member>
         <member name="T:V8.Net.V8NativeObjectPropertyGetter">
@@ -1415,6 +1436,11 @@
             <para>You should always override/implement this if you need to dispose of any native resources in custom implementations.</para>
             <para>DO NOT rely on the destructor (finalizer) - some objects may survive it (due to references on the native V8 side).</para>
             <para>Note: This can be triggered via the worker thread.</para>
+            </summary>
+        </member>
+        <member name="F:V8.Net.V8NativeObject._CreationStack">
+            <summary>
+            Holds the call stack responsible for creating this object (available in debugging only with DEBUG and TRACE defined).
             </summary>
         </member>
         <member name="M:V8.Net.V8NativeObject.Initialize(System.Boolean,V8.Net.InternalHandle[])">

@@ -93,14 +93,19 @@ namespace V8.Net
     public enum JSValueType : int
     {
         /// <summary>
+        /// Script execution was terminated upon request.
+        /// </summary>
+        ExecutionTerminated = -4,
+
+        /// <summary>
         /// An error has occurred while attempting to execute the compiled script.
         /// </summary>
-        ExecutionError = -2,
+        ExecutionError = -3,
 
         /// <summary>
         /// An error has occurred compiling the script (usually a syntax error).
         /// </summary>
-        CompilerError = -3,
+        CompilerError = -2,
 
         /// <summary>
         /// An internal error has occurred (before or after script execution).

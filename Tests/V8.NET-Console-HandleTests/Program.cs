@@ -308,7 +308,12 @@ namespace V8.Net
                             try
                             {
                                 var result = _JSServer.Execute(input, "V8.NET Console", false, 5000);
+
                                 Console.WriteLine(result.AsString);
+
+                                if (result.WasTerminated)
+                                    Console.WriteLine("The script took longer than 5 seconds to run and was aborted.");
+
                                 result.Dispose();
                             }
                             catch (Exception ex)

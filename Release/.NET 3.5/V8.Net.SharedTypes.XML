@@ -160,6 +160,11 @@
             The type of JavaScript values marshalled from the native side.
             </summary>
         </member>
+        <member name="F:V8.Net.JSValueType.ExecutionTerminated">
+            <summary>
+            Script execution was terminated upon request.
+            </summary>
+        </member>
         <member name="F:V8.Net.JSValueType.ExecutionError">
             <summary>
             An error has occurred while attempting to execute the compiled script.
