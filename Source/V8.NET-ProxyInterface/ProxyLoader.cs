@@ -31,14 +31,32 @@ namespace V8.Net
 #endif
         public static extern void DestroyV8EngineProxy(NativeV8EngineProxy* engine);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void WithV8IsolateScope(NativeV8EngineProxy* engine, Action action);
+        //#if x86
+        //        [DllImport("V8_Net_Proxy_x86")]
+        //#elif x64
+        //        [DllImport("V8_Net_Proxy_x64")]
+        //#else
+        //        [DllImport("V8_Net_Proxy")]
+        //#endif
+        //?        public static extern void WithV8IsolateScope(NativeV8EngineProxy* engine, Action action);
+
+        //#if x86
+        //        [DllImport("V8_Net_Proxy_x86")]
+        //#elif x64
+        //        [DllImport("V8_Net_Proxy_x64")]
+        //#else
+        //        [DllImport("V8_Net_Proxy")]
+        //#endif
+        //?        public static extern void WithV8ContextScope(NativeV8EngineProxy* engine, Action action);
+
+        //#if x86
+        //        [DllImport("V8_Net_Proxy_x86")]
+        //#elif x64
+        //        [DllImport("V8_Net_Proxy_x64")]
+        //#else
+        //        [DllImport("V8_Net_Proxy")]
+        //#endif
+        //?        public static extern void WithV8HandleScope(NativeV8EngineProxy* engine, Action action);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86")]
@@ -47,16 +65,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-        public static extern void WithV8ContextScope(NativeV8EngineProxy* engine, Action action);
-
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void WithV8HandleScope(NativeV8EngineProxy* engine, Action action);
+        public static unsafe extern void SetFlagsFromString(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86")]

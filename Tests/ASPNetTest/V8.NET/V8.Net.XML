@@ -16,12 +16,6 @@
             If there's any marshalling incompatibility, this will throw an exception.
             </summary>
         </member>
-        <member name="F:V8.Net.V8Engine.AllInternalHandlesEverCreated">
-            <summary>
-            Holds all the InternalHandle values that were set with native proxy handles.
-            <para>Note: This list is only available when compiling with the DEBUG and TRACKHANDLES compiler directives.</para>
-            </summary>
-        </member>
         <member name="M:V8.Net.V8Engine._StoreAccessor``1(System.Int32,System.String,``0)">
             <summary>
             This is required in order prevent accessor delegates from getting garbage collected when used with P/Invoke related callbacks (a process called "thunking").
@@ -166,11 +160,6 @@
             This is a managed side reference to all the active and cached native side handle wrapper (proxy) objects.
             </summary>
         </member>
-        <member name="F:V8.Net.V8Engine._HandleProxyDiscoveryStacks">
-            <summary>
-            Holds a list of call stacks at the time each proxy was discovered.
-            </summary>
-        </member>
         <member name="F:V8.Net.V8Engine._TrackerHandles">
             <summary>
             When a new managed side handle wraps a native handle proxy the disposal process happens internally in a controlled 
@@ -243,6 +232,18 @@
         <member name="F:V8.Net.V8Engine.Epoch">
             <summary>
             Set to the fixed date of Jan 1, 1970. This is used when converting DateTime values to JavaScript Date objects.
+            </summary>
+        </member>
+        <member name="M:V8.Net.V8Engine.SetFlagsFromString(System.String)">
+            <summary>
+            Sets V8 command line options.
+            </summary>
+            <param name="flags">Command line options/flags separated by a space.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.SetFlagsFromCommandLine(System.String[])">
+            <summary>
+            Sets V8 command line options.
+            <para>Just a convenient way to call 'SetFlagsFromString()' by joining all strings together, delimited by a space.</para>
             </summary>
         </member>
         <member name="M:V8.Net.V8Engine.ForceV8GarbageCollection">
@@ -1436,11 +1437,6 @@
             <para>You should always override/implement this if you need to dispose of any native resources in custom implementations.</para>
             <para>DO NOT rely on the destructor (finalizer) - some objects may survive it (due to references on the native V8 side).</para>
             <para>Note: This can be triggered via the worker thread.</para>
-            </summary>
-        </member>
-        <member name="F:V8.Net.V8NativeObject._CreationStack">
-            <summary>
-            Holds the call stack responsible for creating this object (available in debugging only with DEBUG and TRACE defined).
             </summary>
         </member>
         <member name="M:V8.Net.V8NativeObject.Initialize(System.Boolean,V8.Net.InternalHandle[])">

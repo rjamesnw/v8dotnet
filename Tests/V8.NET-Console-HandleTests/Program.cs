@@ -11,32 +11,6 @@ using System.Text;
 
 namespace V8.Net
 {
-    [ScriptObject("Sealed_Object", ScriptMemberSecurity.Permanent)]
-    public class JistJSLibrary
-    {
-        protected Random rnd = new Random();
-
-        public int Random()
-        {
-            return rnd.Next(1, 100);
-        }
-
-        /// <summary>
-        /// Returns a random number between the from and to values
-        /// specified.
-        /// </summary>
-        public int Random(int from, int to)
-        {
-            return rnd.Next(from, to);
-        }
-        public InternalHandle Random2(V8Engine engine, int from, int to)
-        {
-            var obj = engine.CreateObject<V8NativeObject>();
-            obj.SetProperty("result", rnd.Next(from, to));
-            return obj;
-        }
-    }
-
     class Program
     {
         static V8Engine _JSServer;
@@ -54,6 +28,7 @@ namespace V8.Net
 
                 Console.Write(Environment.NewLine + "Creating a V8Engine instance ...");
                 _JSServer = new V8Engine();
+                _JSServer.SetFlagsFromCommandLine(args);
                 Console.WriteLine(" Done!");
 
                 Console.Write("Testing marshalling compatibility...");
@@ -92,6 +67,7 @@ namespace V8.Net
                         {
                             Console.WriteLine(@"Special console commands (all commands are triggered via a preceding '\' character so as not to confuse it with script code):");
                             Console.WriteLine(@"\init - Setup environment for testing (adds 'dump()' and 'assert()'.");
+                            Console.WriteLine(@"\flags --flag1 --flag2 --etc... - Sets one or more flags (use '\flags --help' for more details).");
                             Console.WriteLine(@"\cls - Clears the screen.");
                             Console.WriteLine(@"\gc - Triggers garbage collection (for testing purposes).");
                             Console.WriteLine(@"\v8gc - Triggers garbage collection in V8 (for testing purposes).");
@@ -110,6 +86,14 @@ namespace V8.Net
 
                             Console.WriteLine(Environment.NewLine + "Creating a global 'assert(msg, a,b)' function for property value assertion ...");
                             _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
+                        }
+                        else if (lcInput == @"\flags" || lcInput.StartsWith(@"\flags "))
+                        {
+                            string flags = lcInput.Substring(6).Trim();
+                            if (flags.Length > 0)
+                                _JSServer.SetFlagsFromString(flags);
+                            else
+                                Console.WriteLine(@"You did not specify any options.");
                         }
                         else if (lcInput == @"\cls")
                             Console.Clear();
@@ -279,23 +263,6 @@ namespace V8.Net
                             Console.WriteLine("\r\nReading native properties is {0:N2}x faster than managed ones.", result4 / result2);
 
                             Console.WriteLine("\r\nDone.\r\n");
-                        }
-                        else if (lcInput == @"\1")
-                        {
-                            _JSServer.GlobalObject.SetProperty("jist", new JistJSLibrary(), null, true, ScriptMemberSecurity.Locked);
-                            //var ot = _JSServer.CreateObjectTemplate();
-                            //ot.SetCallAsFunctionHandler((engine, isConstructCall, _this, _args) => { return _JSServer.CreateValue(1); });
-                            //_JSServer.GlobalObject.SetProperty("test", ot.CreateObject());
-                        }
-                        else if (lcInput == @"\2")
-                        {
-                            _JSServer.ConsoleExecute("for (var i = 0; i < 1000000; ++i) jist.Random(1, 100);");
-                            //_JSServer.ConsoleExecute("for (var i = 0; i < 100; ++i) jist.Random2(this, 1, 100);");
-                        }
-                        else if (lcInput == @"\3")
-                        {
-                            _JSServer.ConsoleExecute("jist.Random(1, 100);");
-                            //_JSServer.ConsoleExecute("for (var i = 0; i < 100; ++i) jist.Random2(this, 1, 100);");
                         }
                         else if (lcInput.StartsWith(@"\"))
                         {

@@ -322,6 +322,26 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
+        /// Sets V8 command line options.
+        /// </summary>
+        /// <param name="flags">Command line options/flags separated by a space.</param>
+        public void SetFlagsFromString(string flags) // (http://bespin.cz/~ondras/html/classv8_1_1V8.html#ab263a85e6f97ea79d944bd20bb09a95f)
+        {
+            V8NetProxy.SetFlagsFromString(_NativeV8EngineProxy, flags);
+        }
+
+        /// <summary>
+        /// Sets V8 command line options.
+        /// <para>Just a convenient way to call 'SetFlagsFromString()' by joining all strings together, delimited by a space.</para>
+        /// </summary>
+        public void SetFlagsFromCommandLine(string[] args) // (http://bespin.cz/~ondras/html/classv8_1_1V8.html#a63157ad9284ffad1c0ab62b21aadd08c)
+        {
+            SetFlagsFromString(string.Join(" ", args));
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
         /// Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.
         /// The work performed helps to reduce the memory footprint within the native V8 engine.
         /// <para>(See also: <seealso cref="DoIdleNotification(int)"/>)</para>

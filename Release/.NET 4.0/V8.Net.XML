@@ -234,6 +234,18 @@
             Set to the fixed date of Jan 1, 1970. This is used when converting DateTime values to JavaScript Date objects.
             </summary>
         </member>
+        <member name="M:V8.Net.V8Engine.SetFlagsFromString(System.String)">
+            <summary>
+            Sets V8 command line options.
+            </summary>
+            <param name="flags">Command line options/flags separated by a space.</param>
+        </member>
+        <member name="M:V8.Net.V8Engine.SetFlagsFromCommandLine(System.String[])">
+            <summary>
+            Sets V8 command line options.
+            <para>Just a convenient way to call 'SetFlagsFromString()' by joining all strings together, delimited by a space.</para>
+            </summary>
+        </member>
         <member name="M:V8.Net.V8Engine.ForceV8GarbageCollection">
             <summary>
             Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.

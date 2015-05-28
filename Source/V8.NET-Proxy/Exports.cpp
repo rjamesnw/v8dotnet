@@ -23,6 +23,16 @@ extern "C"
 		delete engine;
 	}
 
+	EXPORT void STDCALL SetFlagsFromString(V8EngineProxy *engine, const char *flags)
+	{
+		BEGIN_ISOLATE_SCOPE(engine);
+		BEGIN_CONTEXT_SCOPE(engine);
+		if (flags != nullptr && strlen(flags) > 0)
+			v8:V8::SetFlagsFromString(flags, strlen(flags));
+		END_CONTEXT_SCOPE;
+		END_ISOLATE_SCOPE;
+	}
+
 	EXPORT void STDCALL RegisterGCCallback(V8EngineProxy* engine, ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback)
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
