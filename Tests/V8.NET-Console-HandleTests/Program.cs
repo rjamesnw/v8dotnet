@@ -87,6 +87,8 @@ namespace V8.Net
                             Console.WriteLine(Environment.NewLine + "Creating a global 'assert(msg, a,b)' function for property value assertion ...");
                             _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
                         }
+                        else if (lcInput == @"\cls")
+                            Console.Clear();
                         else if (lcInput == @"\flags" || lcInput.StartsWith(@"\flags "))
                         {
                             string flags = lcInput.Substring(6).Trim();
@@ -95,8 +97,6 @@ namespace V8.Net
                             else
                                 Console.WriteLine(@"You did not specify any options.");
                         }
-                        else if (lcInput == @"\cls")
-                            Console.Clear();
                         else if (lcInput == @"\exit")
                         {
                             Console.WriteLine("User requested exit, disposing the engine instance ...");

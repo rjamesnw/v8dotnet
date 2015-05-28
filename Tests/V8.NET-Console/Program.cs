@@ -157,6 +157,7 @@ namespace V8.Net
                         {
                             Console.WriteLine(@"Special console commands (all commands are triggered via a preceding '\' character so as not to confuse it with script code):");
                             Console.WriteLine(@"\cls - Clears the screen.");
+                            Console.WriteLine(@"\flags --flag1 --flag2 --etc... - Sets one or more flags (use '\flags --help' for more details).");
                             Console.WriteLine(@"\test - Starts the test process.");
                             Console.WriteLine(@"\gc - Triggers garbage collection (for testing purposes).");
                             Console.WriteLine(@"\v8gc - Triggers garbage collection in V8 (for testing purposes).");
@@ -169,6 +170,14 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\cls")
                             Console.Clear();
+                        else if (lcInput == @"\flags" || lcInput.StartsWith(@"\flags "))
+                        {
+                            string flags = lcInput.Substring(6).Trim();
+                            if (flags.Length > 0)
+                                _JSServer.SetFlagsFromString(flags);
+                            else
+                                Console.WriteLine(@"You did not specify any options.");
+                        }
                         else if (lcInput == @"\test")
                         {
                             try
