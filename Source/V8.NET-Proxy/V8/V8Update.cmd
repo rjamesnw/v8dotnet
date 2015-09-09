@@ -56,8 +56,7 @@ if exist "getGTest.log" del getGTest.log
 if exist "getGMock.log" del getGMock.log
 
 echo Downloading GYP ...
-git clone https://chromium.googlesource.com/external/gyp
-  build/gyp  >getGYP.log
+git clone https://chromium.googlesource.com/external/gyp build/gyp >getGYP.log
 REM Old Link: http://gyp.googlecode.com/svn/trunk
 if errorlevel 1 goto Error
 
