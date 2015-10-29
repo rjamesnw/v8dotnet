@@ -113,7 +113,7 @@ namespace V8.Net
         /// You should never change handles on managed objects because they are usually associated with object interceptors,
         /// and changing the handle will break the call-back system.
         /// </summary>
-        new Handle Handle { get { return _Handle; } }
+        Handle Handle { get { return _Handle; } }
 
         /// <summary>
         /// A reference to the ObjectTemplate instance that owns this object.

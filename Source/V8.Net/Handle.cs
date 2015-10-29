@@ -31,7 +31,7 @@ namespace V8.Net
     /// across many InternalHandle values. When all InternalHandle values are gone, this handle gets collected, unless
     /// also referenced.
     /// </summary>
-    public unsafe class Handle : IV8Disposable, IHandleBased, IDynamicMetaObjectProvider
+    public unsafe class Handle : IV8Disposable, IHandleBased, INativeHandleBased, IDynamicMetaObjectProvider
     {
         public static readonly Handle Empty = new Handle(null);
 
@@ -149,6 +149,13 @@ namespace V8.Net
         }
 
         // --------------------------------------------------------------------------------------------------------------------
+
+        HandleProxy* INativeHandleBased.GetNativeHandleProxy()
+        {
+            return (HandleProxy*)_Handle;
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
     }
 
     /// <summary>
@@ -156,7 +163,7 @@ namespace V8.Net
     /// <para>DO NOT STORE THIS HANDLE. Use "Handle" instead (i.e. "Handle h = someInternalHandle;"), or use the value with the "using(someInternalHandle){}" statement.</para>
     /// </summary>
     public unsafe struct InternalHandle :
-        IHandle, IHandleBased,
+        IHandle, IHandleBased, INativeHandleBased,
         IV8Object,
         IBasicHandle, // ('IDisposable' will not box in a "using" statement: http://stackoverflow.com/questions/2412981/if-my-struct-implements-idisposable-will-it-be-boxed-when-used-in-a-using-statem)
         IDynamicMetaObjectProvider
@@ -1515,6 +1522,13 @@ namespace V8.Net
         {
             if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
             return V8NetProxy.GetObjectPrototype(_HandleProxy);
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        HandleProxy* INativeHandleBased.GetNativeHandleProxy()
+        {
+            return (HandleProxy*)this;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

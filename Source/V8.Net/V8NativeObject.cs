@@ -68,10 +68,10 @@ namespace V8.Net
         /// A reference to the V8Engine instance that owns this object.
         /// The default implementation for 'V8NativeObject' is to cache and return 'base.Engine', since it inherits from 'Handle'.
         /// </summary>
-        public V8Engine Engine { get { return _Engine ?? (_Engine = _Handle.Engine); } }
+        new public V8Engine Engine { get { return _Engine ?? (_Engine = _Handle.Engine); } }
         internal V8Engine _Engine;
 
-        public V8NativeObject Object { get { return this; } }
+        new public V8NativeObject Object { get { return this; } }
 
         /// <summary>
         /// The V8.NET ObjectTemplate or FunctionTemplate instance associated with this object, if any, or null if this object was not created using a V8.NET template.
@@ -363,7 +363,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
 #if !(V1_1 || V2 || V3 || V3_5)
-        public DynamicMetaObject GetMetaObject(Expression parameter)
+        new public DynamicMetaObject GetMetaObject(Expression parameter)
         {
             return new DynamicHandle(this, parameter);
         }

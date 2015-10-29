@@ -372,5 +372,214 @@
             <para>Note: Internally, this is used to remove the strong reference to managed objects, leaving only a week one.</para>
             </summary>
         </member>
+        <member name="M:V8.Net.Exceptions.GetFullErrorMessage(System.Exception,System.Boolean)">
+            <summary>
+            A simple utility method which formats and returns an exception error object.
+            The stack trace is also included. The inner exceptions are also recursed and added.
+            </summary>
+            <param name="ex">The exception object with error message to format and return.</param>
+        </member>
+        <member name="M:V8.Net.ExtensionMethods.IsConstructedGenericType(System.Type)">
+            <summary>
+            '{Type}.IsConstructedGenericType' is only supported in .NET 4.5+, so this is a cross-version supported implementation.
+            </summary>
+        </member>
+        <member name="M:V8.Net.ExtensionMethods.Join(System.Collections.IEnumerable,System.String)">
+            <summary>
+            Convert a list of enumerable items into strings and return the concatenated result.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.AllocNativeMemory(System.Int32)">
+            <summary>
+            Allocates native memory.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.AllocPointerArray(System.Int32)">
+            <summary>
+            Allocates native memory for storing pointers.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.FreeNativeMemory(System.IntPtr)">
+            <summary>
+            Frees native memory allocated with any of the 'Utilities.Alloc???()' methods.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.MakeHandleProxyArray``1(``0[])">
+            <summary>
+            Allocates native memory to marshal an array of proxy handles.
+            Uses 'Utilities.AllocPointerArray()', so be sure to call 'Utilities.FreeNativeMemory()' when done.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Utilities.ND(System.Object,System.String)">
+            <summary>
+            Null Default (used mostly with database related data): Returns the value passed, or a default 
+            value if the value passed is null, or equal to DBNull.Value.
+            </summary>
+            <param name="val">Value to check.</param>
+            <param name="default_val">New value if "val" is null or DBNull.Value.</param>
+            <returns></returns>
+        </member>
+        <member name="M:V8.Net.Strings.IsNullOrEmpty(System.Object)">
+            <summary>
+            Returns true if the given object is null, or its string conversion results in an empty/null string.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.IsNullOrWhiteSpace(System.String)">
+            <summary>
+            Returns true if the string value is null or contains white space (contains all characters less than or equal Unicode value 32).
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.SelectNonEmptyString(System.String,System.String,System.String)">
+            <summary>
+            Selects the first non-null/empty string found in the parameter order given, and returns a default value if
+            both are null/empty.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.Join(System.String,System.Object[])">
+            <summary>
+            Convert a list of objects into strings and return the concatenated result.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.Join(System.String[],System.String[])">
+            <summary>
+            Join two strings arrays into one big array. The new array is returned.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.CopyTo(System.String[],System.String[],System.Int32)">
+            <summary>
+            Copies a given source string array into another (destination), returning the destination array.
+            </summary>
+            <param name="src">The array to copy.</param>
+            <param name="dest">The target of the copy.</param>
+            <param name="destIndex">The array index into the destination in which copy starts.</param>
+        </member>
+        <member name="M:V8.Net.Strings.Add(System.String,System.String[])">
+            <summary>
+            Copies the given string and string array to a new array. The new array is returned.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Strings.S(System.Int32,System.String,System.String,System.String)">
+            <summary>
+            Returns the singular or plural of a word based on a numerical value.
+            </summary>
+            <param name="value">Number value.</param>
+            <param name="word">Base word, singular.</param>
+            <param name="suffix_if_plural">Suffix to use if "value" is not 1.</param>
+            <param name="numberFormatting">The number format, if any (optional).</param>
+        </member>
+        <member name="M:V8.Net.Strings.S(System.Double,System.String,System.String,System.String)">
+            <summary>
+            Returns the singular or plural of a word based on a numerical value.
+            </summary>
+            <param name="value">Number value.</param>
+            <param name="word">Base word, singular.</param>
+            <param name="suffix_if_plural">Suffix to use if "value" is not 1.</param>
+            <param name="numberFormatting">The number format, if any (optional).</param>
+        </member>
+        <member name="M:V8.Net.Strings.Append(System.String,System.String,System.String,System.Boolean)">
+            <summary>
+            Appends the source string to the target string and returns the result.
+            If 'target' and 'source' are both not empty, then the delimiter is inserted between them, and the resulting string returned.
+            </summary>
+            <param name="target">The string to append to.</param>
+            <param name="source">The string to append.</param>
+            <param name="delimiter">If specified, the delimiter is placed between the target and source if the target is NOT empty.</param>
+            <param name="onlyAddDelimiterIfMissing">Only inserts the delimiter if it is missing from the end of the target and beginning of the source.</param>
+            <returns>The new string.</returns>
+        </member>
+        <member name="M:V8.Net.Strings.CharCount(System.String,System.Char)">
+            <summary>
+            Returns the number of occurrences of the given character in the given string.
+            </summary>
+            <param name="str">The string to look in.</param>
+            <param name="chr">The character to count.</param>
+        </member>
+        <member name="M:V8.Net.Strings.TextEqual(System.String,System.String)">
+            <summary>
+            Performs a textual comparison, where the letter casing is ignored, and returns 'true' if the specified strings are a match.
+            </summary>
+            <param name="strA">The first string to compare.</param>
+            <param name="strB">The second string to compare.</param>
+        </member>
+        <member name="M:V8.Net.Strings.Limit(System.String,System.UInt32,System.Boolean)">
+            <summary>
+            Returns the given string up to a maximum of 'maxlength' characters.
+            If more than 'maxlength' characters exist, an ellipse character is appended to the returned substring.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Arrays.Concat``1(``0[][])">
+            <summary>
+            Concatenate a list of arrays. Specify one array for each parameter.
+            To concatenate one list of arrays, use Join().
+            </summary>
+            <typeparam name="T">Array type for each argument.</typeparam>
+            <param name="args">A concatenated array made form the specified arrays.</param>
+            <returns></returns>
+        </member>
+        <member name="M:V8.Net.Arrays.Join``1(``0[][])">
+            <summary>
+            Concatenate a list of arrays.
+            </summary>
+            <typeparam name="T">Array type for each argument.</typeparam>
+            <param name="arrays">A concatenated array made form the specified arrays.</param>
+            <returns></returns>
+        </member>
+        <member name="M:V8.Net.Arrays.FromEnd``1(``0[],System.Int32)">
+            <summary>
+            Select an item from the end of the array.
+            </summary>
+            <typeparam name="T">Array type.</typeparam>
+            <param name="items">The array.</param>
+            <param name="index">0, or a negative value, that is the offset of the item to retrieve.</param>
+        </member>
+        <member name="M:V8.Net.Arrays.FromEnd``1(System.Collections.Generic.IList{``0},System.Int32)">
+            <summary>
+            Select an item from the end of the list.
+            </summary>
+            <typeparam name="T">List type.</typeparam>
+            <param name="items">The list.</param>
+            <param name="index">0, or a negative value, that is the offset of the item to retrieve.</param>
+        </member>
+        <member name="T:V8.Net.Types">
+            <summary>
+            Provides utility methods for types.
+            This class was originally created to support the 'ThreadController" class's "Dispatch()" methods.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Types.Arg(System.Type,System.Object)">
+            <summary>
+            If not null, returns either the argument, otherwise returns argument's 'null' type.
+            This is needed in cases where an argument is null, but the argument type is needed.
+            <para>
+            Example: MyMethod(typeof(DateTime).Arg(value)); - If 'value' is null, then the type is passed instead as 'Types.Null'
+            </para>
+            </summary>
+            <param name="type">Argument type.</param>
+            <param name="value">Argument value.</param>
+            <returns>Argument value, or the type if null.</returns>
+        </member>
+        <member name="M:V8.Net.Types.GetTypes(System.Object[])">
+            <summary>
+            Attempts to get the types of the values passed.
+            If a value is 'null', then the call will fail, and 'null' will be returned.
+            Note: This method recognizes Types.Null values.
+            </summary>
+            <param name="args">Argument values to get types for.</param>
+        </member>
+        <member name="M:V8.Net.Types.ConvertNullsToNullReferences(System.Object[])">
+            <summary>
+            Converts any Types.Null objects into simple 'null' references.
+            This is helpful after using Types.GetTypes() on the same items - once the types are
+            retrieved, this method helps to convert Types.Null items back to 'null'.
+            </summary>
+        </member>
+        <member name="T:V8.Net.Types.Null">
+            <summary>
+            A structure which represents a 'typed' null value.
+            This is required for cases where a type is just 'object', in which 'null' may be passed,
+            but the type still needs to be known. An example usage is with methods that accept variable
+            number of parameters, but need to know the argument type, even if null.
+            </summary>
+        </member>
     </members>
 </doc>

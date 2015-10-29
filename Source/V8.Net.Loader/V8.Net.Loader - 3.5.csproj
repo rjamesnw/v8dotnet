@@ -56,11 +56,14 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\V8.Net\Utilities\Exceptions.cs">
-      <Link>Exceptions.cs</Link>
-    </Compile>
     <Compile Include="Loader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes-3.5.csproj">
+      <Project>{eb32bbcc-6def-4f34-807b-e81273bf0275}</Project>
+      <Name>V8.Net-SharedTypes-3.5</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -114,8 +114,6 @@
     <Compile Include="Exceptions.cs" />
     <Compile Include="V8Engine_Objects.cs" />
     <Compile Include="V8NativeObject.cs" />
-    <Compile Include="Utilities\Exceptions.cs" />
-    <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="V8Function.cs" />
     <Compile Include="IndexedObjectList.cs" />
     <Compile Include="JSProperty.cs" />
