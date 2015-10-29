@@ -427,12 +427,12 @@ namespace V8.Net
         /// <param name="callback">A callback that gets invoked when the object is used like a function.</param>
         public void SetCallAsFunctionHandler(JSFunction callback)
         {
-            V8NetProxy.SetCallAsFunctionHandler(_NativeObjectTemplateProxy, (managedObjectID, isConstructCall, _this, args, argCount)
-                =>
+            ManagedJSFunctionCallback proxyCallback = (managedObjectID, isConstructCall, _this, args, argCount) =>
                 {
                     return FunctionTemplate._CallBack(managedObjectID, isConstructCall, _this, args, argCount, callback);
-                });
-            _Engine._StoreAccessor<JSFunction>(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", callback);
+                };
+            V8NetProxy.SetCallAsFunctionHandler(_NativeObjectTemplateProxy, proxyCallback);
+            _Engine._StoreAccessor(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", proxyCallback);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
