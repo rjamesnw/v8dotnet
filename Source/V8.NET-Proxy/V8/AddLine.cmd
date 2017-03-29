@@ -49,7 +49,7 @@ goto :EOF
   REM ECHO Errorlevel: %errorlevel%
 
   IF NOT "%lineSafe%"=="" ECHO !line!>>"%newFile%"
-  if "%errorlevel%" == "0" ECHO !newlineUnsafe!>>"%newFile%" && ECHO Found and added^^! ...
+  if "%errorlevel%" == "0" ECHO !newlineUnsafe!>>"%newFile%" && ECHO Found and added^^! Finishing up ...
   endlocal
   if "%errorlevel%" == "0" SET added=true
 goto :EOF

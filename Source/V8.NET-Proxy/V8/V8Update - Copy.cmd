@@ -62,28 +62,28 @@ if exist "getGTest.log" del getGTest.log
 if exist "getGMock.log" del getGMock.log
 
 echo Downloading GYP ...
-git clone https://chromium.googlesource.com/external/gyp  build/gyp  >getGYP.log
+git clone https://chromium.googlesource.com/external/gyp build/gyp >getGYP.log
 REM Old Link: http://gyp.googlecode.com/svn/trunk
 if errorlevel 1 goto Error
 
 echo Downloading Python ...
-git clone https://chromium.googlesource.com/chromium/deps/python_26  third_party/python_26  >getPython.log
+svn co http://src.chromium.org/svn/trunk/tools/third_party/python_26  third_party/python_26  >getPython.log
 if errorlevel 1 goto Error
 
 echo Downloading Cygwin...
-git clone https://chromium.googlesource.com/chromium/deps/cygwin  third_party/cygwin  >getCygwin.log
+svn co http://src.chromium.org/svn/trunk/deps/third_party/cygwin third_party/cygwin  >getCygwin.log
 if errorlevel 1 goto Error
 
 echo Downloading ICU ...
-git clone https://chromium.googlesource.com/chromium/deps/icu  third_party/icu  >getICU.log
+svn co https://src.chromium.org/chrome/trunk/deps/third_party/icu52  third_party/icu  >getICU.log
 if errorlevel 1 goto Error
 
 echo Downloading GTest ...
-git clone https://chromium.googlesource.com/external/gtest  testing/gtest  >getGTest.log
+svn co http://googletest.googlecode.com/svn/trunk  testing/gtest  >getGTest.log
 if errorlevel 1 goto Error
 
 echo Downloading GMock ...
-git clone https://chromium.googlesource.com/external/gmock  testing/gmock  >getGMock.log
+svn co http://googlemock.googlecode.com/svn/trunk  testing/gmock  >getGMock.log
 if errorlevel 1 goto Error
 
 echo.
@@ -131,15 +131,12 @@ echo Downloading V8 ...
 REM svn checkout -r %v8rev% http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log ; ISSUE 2882
 REM git clone https://chromium.googlesource.com/external/v8.git  build\v8
 git clone https://chromium.googlesource.com/v8/v8.git build\v8 >getv8.log
-if not "%v8rev%"=="" git checkout %v8rev%
 if errorlevel 1 goto Error
 
 :UpdateToRev
 cd build\v8
-git reset --hard
 git checkout %v8rev%
-REM git pull --rebase origin master
-pause
+git pull --rebase origin master
 cd ..\..
 
 :UpdateV8GYP
