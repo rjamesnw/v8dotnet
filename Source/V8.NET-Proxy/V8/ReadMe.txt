@@ -32,7 +32,7 @@ In order to build V8.NET support, you must first acquire, build, and import V8:
    to your executable path. This will allow the command file to automate the
    V8 source download and build it for you!
 
-3. Install Subversion (http://subversion.apache.org/packages.html) and add it
+3. (NO LONGER REQUIRED) Install Subversion (http://subversion.apache.org/packages.html) and add it
    to your executable path. This will allow the command file to automate the
    download of the tools that are required to setup the build environment
    for the V8 source.
@@ -40,6 +40,11 @@ In order to build V8.NET support, you must first acquire, build, and import V8:
 4. Navigate to "V8.NET\Source\V8.NET Proxy\V8" and double click "V8Update.cmd".
    Simply follow the easy to read prompts to download and build V8!!!
    We have made this extremely simple for you - and you're welcome. 8)
+
+   a) Download the V8 dsource.
+   b) Download the tools.
+   c) Press 2 again to go back to the source menu and apply the GYP updates.
+   d) Build V8 as needed (debug/release).
 
    This script downloads the latest versions of V8 and its prerequisites,
    builds 32-bit and 64-bit V8 shared libraries. It requires approximately 2+GB

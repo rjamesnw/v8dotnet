@@ -15,6 +15,7 @@ SET "newlineUnsafe=%newlineUnsafe:{'}=\"%
 SET ""="
 
 ECHO Current Directory: %CD%
+ECHO Search text: %search%
 ECHO Adding line "%newline%" after line "%search%" using file "%file%" and saving to "%newFile%" ...
 
 IF "%file%"=="%newFile%" echo Error: New file and source file are the same! && goto :EOF
