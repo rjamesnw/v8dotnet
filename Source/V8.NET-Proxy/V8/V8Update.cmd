@@ -3,6 +3,13 @@ setlocal
 set errorlevel=
 set v8rev=adbc2d4489b196140fb71f040953dafcf73462c5
 set GIT_CURL_VERBOSE=1
+set DEPOT_TOOLS_WIN_TOOLCHAIN=0
+set GYP_MSVS_VERSION=2015
+set GYP_GENERATORS=msvs
+REM set GYP_GENERATORS=ninja
+
+REM (This tells depot_tools to use the locally installed version of Visual Studio, otherwise by default, depot_tools will try to use a google-internal version)
+set DEPOT_TOOLS_WIN_TOOLCHAIN=0
 
 REM Note: Leave 'v8rev' empty for the HEAD V8 revision.
 
@@ -30,16 +37,18 @@ REM if errorlevel 1 echo Warning: SVN not detected in the environment path.
 echo.
 echo 1. Open ReadMe.txt
 echo 2. Download V8 source
-echo 3. Download required 3rd-party tools
+echo 3. Update build tools (gclient sync).
 echo 4. Build the V8 source
-echo 5. Exit
+echo 5. See list of V8 build configurations.
+echo 6. Exit
 
 choice /C 12345 /M "Please select one:"
 echo.
 
-if errorlevel 5 goto :EOF
+if errorlevel 6 goto :EOF
+if errorlevel 5 python tools/dev/v8gen.py list&pause&goto Restart
 if errorlevel 4 goto CheckEnv
-if errorlevel 3 goto GetTools
+if errorlevel 3 goto UpdateTools
 if errorlevel 2 goto GetSrc
 
 notepad "%cd%\ReadMe.txt"
@@ -48,77 +57,49 @@ goto restart
 
 REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
 
-:GetTools
-
-if not exist build\v8\ echo V8 Source not downloaded. & pause & goto restart
-
-cd build\v8
-
-if exist "getGYP.log" del getGYP.log
-if exist "getPython.log" del getPython.log
-if exist "getCygwin.log" del getCygwin.log
-if exist "getICU.log" del getICU.log
-if exist "getGTest.log" del getGTest.log
-if exist "getGMock.log" del getGMock.log
-
-:GetGyp
-echo Downloading GYP ...
-if exist "build/gyp/ok" echo Already downloaded.&goto GetPython
-if exist "build/gyp" rd /s /q build/gyp
-git clone https://chromium.googlesource.com/external/gyp  build/gyp  >getGYP.log
-REM Old Link: http://gyp.googlecode.com/svn/trunk
-if errorlevel 1 echo Error
-echo OK>build/gyp/ok
-
-:GetPython
-echo Downloading Python ...
-if exist "third_party/python_26/ok" echo Already downloaded.&goto GetCygwin
-if exist "third_party/python_26" rd /s /q "third_party/python_26"
-git clone https://chromium.googlesource.com/chromium/deps/python_26  third_party/python_26  >getPython.log
-if errorlevel 1 goto Error
-echo OK>third_party/python_26/ok
-
-:GetCygwin
-echo Downloading Cygwin...
-if exist "third_party/cygwin/ok" echo Already downloaded.&goto GetIUC
-if exist "third_party/cygwin" rd /s /q "third_party/cygwin"
-git clone https://chromium.googlesource.com/chromium/deps/cygwin  third_party/cygwin  >getCygwin.log
-if errorlevel 1 goto Error
-echo OK>third_party/cygwin/ok
-
-:GetIUC
-echo Downloading ICU ...
-if exist "third_party/icu/ok" echo Already downloaded.&goto GetGTest
-if exist "third_party/icu" rd /s /q "third_party/icu"
-git clone https://chromium.googlesource.com/chromium/deps/icu  third_party/icu  >getICU.log
-if errorlevel 1 goto Error
-echo OK>third_party/icu/ok
-
-:GetGTest
-echo Downloading GTest ...
-if exist "testing/gtest/ok" echo Already downloaded.&goto GetGMock
-if exist "testing/gtest" rd /s /q "testing/gtest"
-git clone https://chromium.googlesource.com/external/gtest  testing/gtest  >getGTest.log
-if errorlevel 1 goto Error
-echo OK>testing/gtest/ok
-
-:GetGMock
-echo Downloading GMock ...
-if exist "testing/gmock/ok" echo Already downloaded.&goto GetToolsCompleted
-if exist "testing/gmock" rd /s /q "testing/gmock"
-git clone https://chromium.googlesource.com/external/gmock  testing/gmock  >getGMock.log
-if errorlevel 1 goto Error
-echo OK>testing/gmock/ok
-
-:GetToolsCompleted
+:ToolsNotFound
+echo You need to install the depot tools correctly first.
 echo.
-echo Download completed.
-pause
+echo 1. Open the location now.
+echo    * Please follow the instructions on the page so the environment is configured
+echo      currently. Most importantly, python.bat must be found before python.exe in
+echo      the path environment variable.
+echo 2. Back to main menu.
+echo.
+choice /C 12 /M "Please select one:"
+if errorlevel 2 goto Restart
+echo Opening https://www.chromium.org/developers/how-tos/install-depot-tools ...
+start https://www.chromium.org/developers/how-tos/install-depot-tools
 goto restart
 
-REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
+:VerifyTools
+
+where gclient>nul
+if errorlevel 1 echo 'gclient' not found.&goto ToolsNotFound
+where python.bat>nul
+if errorlevel 1 echo 'python.bat' not found.&goto ToolsNotFound
+where python|find "python.bat">nul
+if errorlevel 1 echo 'python.bat' was not found first. Please check your &goto ToolsNotFound
+goto :EOF
+
+:UpdateTools
+
+call :VerifyTools
+if exist build cd build
+REM cmd /C gclient config https://chromium.googlesource.com/v8/v8.git
+Echo Updating ...
+REM (Attempt to change to the location of the client, which must be in a path without spaces [in case the current directory does have spaces])
+REM for /f %%i in ('where gclient.bat') do cd "%%i\.."
+echo Currently in %CD%.
+REM (note: gclient sync must be run in the folder where the '.gclient' config file is)
+cmd /C gclient sync
+pause
+
+goto restart
 
 :GetSrc
+
+call :VerifyTools
 
 if "%v8rev%"=="" set v8rev=HEAD
 echo V8 revision: %v8rev%
@@ -130,14 +111,12 @@ if not exist build\v8\ goto CreateBuildDir
 echo The V8 source files already exist. 
 echo 1. Delete and redownload
 echo 2. Update to the revision %v8rev%.
-echo 3. Appy/Reapply V8.GYP file updates
-echo 4. Main Menu
+echo 3. Main Menu
 
-choice /C 1234
+choice /C 123
 echo.
 
-if errorlevel 4 goto Restart
-if errorlevel 3 goto UpdateV8GYP
+if errorlevel 3 goto Restart
 if errorlevel 2 goto UpdateToRev
 
 :redownload
@@ -155,7 +134,11 @@ if errorlevel 1 goto Error
 echo Downloading V8 ...
 REM svn checkout -r %v8rev% http://v8.googlecode.com/svn/trunk/@%v8rev% build\v8 >getV8.log ; ISSUE 2882
 REM git clone https://chromium.googlesource.com/external/v8.git  build\v8
-git clone https://chromium.googlesource.com/v8/v8.git build\v8 >getv8.log
+REM git clone https://chromium.googlesource.com/v8/v8.git build\v8 >getv8.log
+cd build
+cmd /C fetch --no-history v8>getv8.log
+if errorlevel 1 goto Error
+cd v8
 if not "%v8rev%"=="" git checkout %v8rev%
 if errorlevel 1 goto Error
 
@@ -223,13 +206,13 @@ set mode=%1
 if "%mode%"=="" goto PromptReleaseMode
 if /i "%mode%"=="debug" goto DebugMode
 if /i "%mode%"=="release" goto ReleaseMode
-echo %mode%: Invalid build mode; please specify "Debug" or "Release"
+echo %mode%: Invalid build mode; please specify "debug" or "release"
 goto PromptReleaseMode
 :DebugMode
-set mode=Debug
+set mode=debug
 goto Start
 :ReleaseMode
-set mode=Release
+set mode=release
 goto Start
 :PromptReleaseMode
 choice /C DR /M "Please choose a build mode: [D]ebug, or [R]elease"
@@ -244,40 +227,17 @@ echo Build mode: %mode%
 
 :BuildV8
 
-cd build
+if exist build cd build
+if exist v8 cd v8
 
 echo Building 32-bit V8 ...
-if not exist "v8-ia32\ok-copied" goto CopyV832Bit
-if not exist "v8-ia32\build\all.sln" goto Gen32VSPRoj
-echo Do a clean build of the V8 source for the 32-bit libraries?
-choice /M "This will delete both existing debug and release directories as well."
-if errorlevel 2 cd v8-ia32 & goto BuildV832Bit
-echo Cleaning the V8 source for the 32-bit libraries...
-:CopyV832Bit
-set ERRORLEVEL=0
-if exist "v8-ia32" echo Removing old files ... & rd /s /q v8-ia32
-if not errorlevel 0 goto Error
-md v8-ia32
-if errorlevel 1 goto Error
-echo Copying needed files ...
-xcopy v8\*.* v8-ia32\ /e /y >nul
-if errorlevel 1 goto Error
-echo v8-ia32\OK>ok-copied
-:Gen32VSPRoj
-if exist "v8-ia32" cd v8-ia32
-echo Generating Visual Studio project files for the 32-bit libraries...
-REM (https://github.com/v8/v8/wiki/Building%20with%20Gyp)
-set DEPOT_TOOLS_WIN_TOOLCHAIN=0
-set GYP_GENERATORS=ninja
-third_party\python_26\python gypfiles\gyp_v8 -Dtarget_arch=ia32 -Dcomponent=static_library
-REM -Dcomponent=shared_library -Dv8_use_snapshot=false
-if errorlevel 1 goto Error
-if not exist "build\all.sln" echo "Error: build\all.sln was not created." & goto Error
-:BuildV832Bit
-if exist "v8-ia32" cd v8-ia32
-echo Building v8-ia32\build\all.sln ...
+
+python tools/dev/v8gen.py ia32.%mode%
+
+if errorlevel 1 echo Failed to create build configuration.&goto Error
+
 set LogFile=%CD%\build.log
-msbuild /p:Configuration=%mode% /p:Platform=Win32 build\all.sln >"%LogFile%"
+ninja -C out.gn/ia32.debug
 if errorlevel 1 goto Error
 set LogFile=
 cd ..
@@ -294,71 +254,36 @@ echo DLLs will be copied correctly.
 choice /M "Attempt to build 64-bit version?"
 echo.
 if errorlevel 2 goto ImportLibs
+
 :64BitSupported
+
 echo Building 64-bit V8 ...
-if not exist "v8-x64\ok-copied" goto CopyV864Bit
-if not exist "v8-x64\build\all.sln" goto Gen64VSPRoj
-echo Do a clean build of the V8 source for the 64-bit libraries?
-choice /M "This will delete both existing debug and release directories as well."
-if errorlevel 2 cd v8-x64 & goto BuildV864Bit
-echo Cleaning the V8 source for the 64-bit libraries...
-:CopyV864Bit
-set ERRORLEVEL=0
-if exist "v8-x64" echo Removing old files ... & rd /s /q v8-x64
-if not errorlevel 0 goto Error
-md v8-x64
-if errorlevel 1 goto Error
-echo Copying needed files ...
-xcopy v8\*.* v8-x64\ /e /y >nul
-if errorlevel 1 goto Error
-echo v8-x64\OK>ok-copied
-:Gen64VSPRoj
-if exist "v8-x64" cd v8-x64
-echo Generating Visual Studio project files for the 64-bit libraries...
-third_party\python_26\python gypfiles\gyp_v8 -Dtarget_arch=x64 -Dcomponent=static_library
-REM -Dcomponent=shared_library -Dv8_use_snapshot=false
-if not exist "build\all.sln" echo "Error: build\all.sln was not created." & goto Error
-if errorlevel 1 goto Error
-:BuildV864Bit
-if exist "v8-x64" cd v8-x64
-echo Building v8-x64\build\all.sln ...
+
+python tools/dev/v8gen.py x64.%mode%
+
+if errorlevel 1 echo Failed to create build configuration.&goto Error
+
 set LogFile=%CD%\build.log
-msbuild /p:Configuration=%mode% /p:Platform=x64 /p:TreatWarningsAsErrors=false build\all.sln >"%LogFile%"
-REM Note: 'TreatWarningsAsErrors' must be false, as size_t (int64 in x64) is downsized to int32 in some areas.
-REM (For more options see http://msdn.microsoft.com/en-us/library/bb629394.aspx)
+ninja -C out.gn/ia32.debug
 if errorlevel 1 goto Error
 set LogFile=
-cd ..
+
 
 :ImportLibs
 echo Importing V8 libraries ...
 
 REM *** .NET 4.0 ***
 
-xcopy v8-ia32\build\%mode%\*.dll ..\..\..\bin\%mode%\x86\ /Y >nul
+xcopy out.gn\ia32.%mode%\*.dll ..\..\..\bin\%mode%\x86\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-ia32\build\%mode%\*.pdb ..\..\..\bin\%mode%\x86\ /Y >nul
+xcopy out.gn\ia32.%mode%\*.pdb ..\..\..\bin\%mode%\x86\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-x64\build\%mode%\*.dll ..\..\..\bin\%mode%\x64\ /Y >nul
+xcopy out.gn\x64.%mode%\*.dll ..\..\..\bin\%mode%\x64\ /Y >nul
 if errorlevel 1 goto Error
 
-xcopy v8-x64\build\%mode%\*.pdb ..\..\..\bin\%mode%\x64\  /Y >nul
-if errorlevel 1 goto Error
-
-REM *** .NET 3.5 ***
-
-xcopy v8-ia32\build\%mode%\*.dll ..\..\..\bin\3.5\%mode%\x86\ /Y >nul
-if errorlevel 1 goto Error
-
-xcopy v8-ia32\build\%mode%\*.pdb ..\..\..\bin\3.5\%mode%\x86\ /Y >nul
-if errorlevel 1 goto Error
-
-xcopy v8-x64\build\%mode%\*.dll ..\..\..\bin\3.5\%mode%\x64\ /Y >nul
-if errorlevel 1 goto Error
-
-xcopy v8-x64\build\%mode%\*.pdb ..\..\..\bin\3.5\%mode%\x64\  /Y >nul
+xcopy out.gn\x64.%mode%\*.pdb ..\..\..\bin\%mode%\x64\  /Y >nul
 if errorlevel 1 goto Error
 
 

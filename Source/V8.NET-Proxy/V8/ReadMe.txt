@@ -29,31 +29,33 @@ In order to build V8.NET support, you must first acquire, build, and import V8:
    prerequisites are provided by their rights holders.
 
 2. Install Git (http://subversion.apache.org/packages.html) and add it
-   to your executable path. This will allow the command file to automate the
-   V8 source download and build it for you!
+   to your executable path. This will allow the automation of the V8 source
+   download and builds.
 
-3. (NO LONGER REQUIRED) Install Subversion (http://subversion.apache.org/packages.html) and add it
-   to your executable path. This will allow the command file to automate the
-   download of the tools that are required to setup the build environment
-   for the V8 source.
+3. Download and install the Windows SDK (as of Dec 8, 2016, this is required in
+   order to build the source).
 
-4. Navigate to "V8.NET\Source\V8.NET Proxy\V8" and double click "V8Update.cmd".
+4. Make sure the tools that are required to setup the build environment are
+   available (depot_tools specifically). See here: https://goo.gl/3jemcG
+   Also, make sure to run "gclient" from the command line (with no parameters)
+   at least once for it to initialize and download some other tools.
+
+5. Navigate to "V8.NET\Source\V8.NET Proxy\V8" and double click "V8Update.cmd".
    Simply follow the easy to read prompts to download and build V8!!!
    We have made this extremely simple for you - and you're welcome. 8)
 
    a) Download the V8 dsource.
-   b) Download the tools.
-   c) Press 2 again to go back to the source menu and apply the GYP updates.
-   d) Build V8 as needed (debug/release).
+   b) Update the build tools.
+   c) Build V8 as needed (debug/release).
 
-   This script downloads the latest versions of V8 and its prerequisites,
-   builds 32-bit and 64-bit V8 shared libraries. It requires approximately 2+GB
-   of additional disk space and does not perform any permanent software
-   installation on your machine.
+   This script calls other google python scripts to download the latest version
+   of V8 and related prerequisites, and build the 32-bit and 64-bit V8 shared
+   libraries. The source requires approximately 2+GB of additional disk space.
 
    If you'd like to use a specific version of V8 instead of the latest one, set
    an environment variable named V8REV to the desired V8 trunk revision number
    before running the script. See http://code.google.com/p/v8/source/list.
+   
 
 You are now ready to build the full V8.NET solution using Visual Studio!
 
