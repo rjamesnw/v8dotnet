@@ -8,7 +8,7 @@ What does that mean? Well, most other existing wrappers abstract most of the Goo
 
 I've carefully crafted a C++ proxy wrapper to help marshal fast data transfers between the V8 engine and the managed side.  One of the biggest challenges (which actually turned out to be simple in the end) was storing a field pointer in V8 objects to reference managed objects on call-backs (using reverse P/Invoke).  A special custom C# class was created to manage objects in an indexed array in an O(1) design that is extremely fast in locating managed objects representing V8 ones.
 
-Interesting note: I was carefully considering future portability to the Mono framework as well for this project, so great care was made to make the transition as seamless/painless as possible. ;)
+Interesting note: I was carefully considering future portability to the Mono framework as well for this project, so great care was made to make the transition as seamless/painless as possible. That said, given Microsoft's direction for .Net Core, which is also cross-platform, and 100% backed my the Microsoft team (as a true open source project), and my vision to have an ASP.Net Core style version of NodeJS, this seems the best direction.  I still plan to try to have a .Net Full and .Net Core versions on NuGet some day soon.
 
 *License Clarification*
 
