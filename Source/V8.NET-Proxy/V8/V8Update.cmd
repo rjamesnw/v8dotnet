@@ -42,11 +42,11 @@ echo 4. Build the V8 source
 echo 5. See list of V8 build configurations.
 echo 6. Exit
 
-choice /C 12345 /M "Please select one:"
+choice /C 123456 /M "Please select one:"
 echo.
 
 if errorlevel 6 goto :EOF
-if errorlevel 5 python tools/dev/v8gen.py list&pause&goto Restart
+if errorlevel 5 goto ListBuildConfigs
 if errorlevel 4 goto CheckEnv
 if errorlevel 3 goto UpdateTools
 if errorlevel 2 goto GetSrc
@@ -55,25 +55,42 @@ notepad "%cd%\ReadMe.txt"
 
 goto restart
 
+:ListBuildConfigs
+if exist build cd build
+if exist v8 cd v8
+if not exist tools/dev/v8gen.py echo You must download V8 and update the tools first.&pause&goto Restart
+python tools/dev/v8gen.py list
+pause
+goto Restart
+
 REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
 
 :ToolsNotFound
+set notools=true
 echo You need to install the depot tools correctly first.
 echo.
 echo 1. Open the location now.
 echo    * Please follow the instructions on the page so the environment is configured
 echo      currently. Most importantly, python.bat must be found before python.exe in
 echo      the path environment variable.
-echo 2. Back to main menu.
+echo 2. Run 'gclient' now (needs to be run at least once first, if not already).
+echo 3. Go back.
 echo.
-choice /C 12 /M "Please select one:"
-if errorlevel 2 goto Restart
+choice /C 123 /M "Please select one:"
+if errorlevel 3 goto :eof
+if errorlevel 2 goto trygclient
 echo Opening https://www.chromium.org/developers/how-tos/install-depot-tools ...
 start https://www.chromium.org/developers/how-tos/install-depot-tools
-goto restart
+goto :eof
+
+:trygclient
+cmd /C gclient
+pause
+goto :eof
 
 :VerifyTools
 
+set notools=false
 where gclient>nul
 if errorlevel 1 echo 'gclient' not found.&goto ToolsNotFound
 where python.bat>nul
@@ -85,6 +102,7 @@ goto :EOF
 :UpdateTools
 
 call :VerifyTools
+if "%notools%"=="true" goto restart
 if exist build cd build
 REM cmd /C gclient config https://chromium.googlesource.com/v8/v8.git
 Echo Updating ...
@@ -100,7 +118,7 @@ goto restart
 :GetSrc
 
 call :VerifyTools
-
+if "%notools%"=="true" goto restart
 if "%v8rev%"=="" set v8rev=HEAD
 echo V8 revision: %v8rev%
 choice /M "Is the revision ok? If not, you have to update the revision at the top of this command file."
@@ -237,7 +255,7 @@ python tools/dev/v8gen.py ia32.%mode%
 if errorlevel 1 echo Failed to create build configuration.&goto Error
 
 set LogFile=%CD%\build.log
-ninja -C out.gn/ia32.debug
+ninja -C out.gn/ia32.%mode%
 if errorlevel 1 goto Error
 set LogFile=
 cd ..
@@ -264,14 +282,14 @@ python tools/dev/v8gen.py x64.%mode%
 if errorlevel 1 echo Failed to create build configuration.&goto Error
 
 set LogFile=%CD%\build.log
-ninja -C out.gn/ia32.debug
+ninja -C out.gn/ia32.%mode%
 if errorlevel 1 goto Error
 set LogFile=
 
 
 :ImportLibs
 echo Importing V8 libraries ...
-
+goto success
 REM *** .NET 4.0 ***
 
 xcopy out.gn\ia32.%mode%\*.dll ..\..\..\bin\%mode%\x86\ /Y >nul

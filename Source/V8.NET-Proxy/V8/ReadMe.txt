@@ -57,8 +57,6 @@ In order to build V8.NET support, you must first acquire, build, and import V8:
    before running the script. See http://code.google.com/p/v8/source/list.
    
 
-You are now ready to build the full V8.NET solution using Visual Studio!
-
 --------------------------
 III. Debugging with V8.NET (NOTE: not yet completed - a work in progress)
 --------------------------
