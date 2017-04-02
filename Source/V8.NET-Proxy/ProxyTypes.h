@@ -35,9 +35,9 @@ using namespace std;
 //(make static instead) #define USING_V8_SHARED 1
 #define V8_USE_UNSAFE_HANDLES 1 // (see https://groups.google.com/forum/#!topic/v8-users/oBE_DTpRC08)
 
-#include <include\v8.h>
-#include <include\v8-debug.h>
-#include <include\libplatform\libplatform.h>
+#include <v8.h>
+#include <v8-debug.h>
+#include <libplatform\libplatform.h>
 
 using namespace v8;
 
@@ -173,8 +173,8 @@ protected:
 // Types supported by HandleProxy.
 enum JSValueType: int32_t
 {
-	JSV_ExecutionTerminated = -4, // 'TerminateExecution()' was called.
-	JSV_ExecutionError = -3, // An error has occurred while attempting to execute the compiled script.
+    JSV_ExecutionTerminated = -4, // 'TerminateExecution()' was called.
+    JSV_ExecutionError = -3, // An error has occurred while attempting to execute the compiled script.
     JSV_CompilerError = -2, // An error has occurred compiling the script (usually a syntax error).
     JSV_InternalError = -1, // An internal error has occurred (before or after script execution).
     JSV_Uninitialized = 0, // The value type has yet to be determined.
@@ -655,8 +655,8 @@ protected:
     
     vector<HandleProxy*> _Objects; // An array of handle references by object ID. This allows pulling an already existing proxy handle for an object without having to allocate a new one.
     
-	bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
-	bool _IsTerminatingScript; // True if the engine was asked to terminate a script.  This is used to detect when a script is aborted.
+    bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
+    bool _IsTerminatingScript; // True if the engine was asked to terminate a script.  This is used to detect when a script is aborted.
 
 public:
 
@@ -714,7 +714,7 @@ public:
     HandleProxy* Execute(Handle<Script> script);
     HandleProxy* Compile(const uint16_t* script, uint16_t* sourceName);
 
-	void TerminateExecution();
+    void TerminateExecution();
 
     HandleProxy* Call(HandleProxy *subject, const uint16_t *functionName, HandleProxy *_this, uint16_t argCount, HandleProxy** args);
 
