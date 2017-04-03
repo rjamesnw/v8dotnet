@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\3.5\Debug\</OutputPath>
+    <OutputPath>..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE;TRACKHANDLES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -31,13 +31,13 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">$(DefineConstants);V2</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v1.1' ">$(DefineConstants);V1_1</DefineConstants>
     <LangVersion>4</LangVersion>
-    <DocumentationFile>..\bin\3.5\Debug\V8.Net.XML</DocumentationFile>
+    <DocumentationFile>..\bin\Debug\V8.Net.Loader.XML</DocumentationFile>
     <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\bin\3.5\Release\</OutputPath>
+    <OutputPath>..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -49,7 +49,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3' ">$(DefineConstants);V3</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">$(DefineConstants);V2</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v1.1' ">$(DefineConstants);V1_1</DefineConstants>
-    <DocumentationFile>..\bin\3.5\Release\V8.Net.XML</DocumentationFile>
+    <DocumentationFile>..\bin\Release\V8.Net.Loader.XML</DocumentationFile>
     <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -61,9 +61,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes-3.5.csproj">
-      <Project>{eb32bbcc-6def-4f34-807b-e81273bf0275}</Project>
-      <Name>V8.Net-SharedTypes-3.5</Name>
+    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
+      <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
+      <Name>V8.Net-SharedTypes</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
