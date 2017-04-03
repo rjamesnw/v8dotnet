@@ -125,10 +125,12 @@ struct HandleValue;
 
 // Get rid of some linker warnings regarding certain V8 object references.
 // (see https://groups.google.com/forum/?fromgroups=#!topic/v8-users/OuZPd0n-oRg)
-namespace v8 { namespace internal {
-    class Object { };
-    class Isolate { };
-}}
+namespace v8 {
+    namespace internal {
+        class Object { };
+        class Isolate { };
+    }
+}
 
 // ========================================================================================================================
 // Utility functions.
@@ -163,7 +165,7 @@ public:
 protected:
     TProxyObjectType Type;
 
-    ProxyBase(TProxyObjectType type):Type(type) { }
+    ProxyBase(TProxyObjectType type) :Type(type) { }
 };
 #pragma pack(pop)
 
@@ -171,7 +173,7 @@ protected:
 
 //??#pragma enum(4)
 // Types supported by HandleProxy.
-enum JSValueType: int32_t
+enum JSValueType : int32_t
 {
     JSV_ExecutionTerminated = -4, // 'TerminateExecution()' was called.
     JSV_ExecutionError = -3, // An error has occurred while attempting to execute the compiled script.
@@ -229,7 +231,7 @@ struct HandleValue
 
 #pragma pack(push, 1)
 // Provides a mechanism by which to keep track of V8 objects associated with managed side objects.
-struct HandleProxy: ProxyBase
+struct HandleProxy : ProxyBase
 {
 private:
     int32_t _ID; // The ID of this handle (handles are cached/recycled and not destroyed). The ID is also used on the managed side.
@@ -256,8 +258,8 @@ private:
     CopyablePersistent<Value> _Handle; // Reference to a JavaScript object (persisted handle for future reference - WARNING: Must be explicitly released when no longer needed!).
     CopyablePersistent<v8::Script> _Script; // (references a script handle [instead of a value one])
 
-    static void _DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data);
-    static void _RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data);
+    static void _DisposeCallback(const WeakCallbackInfo<HandleProxy>& data);
+    static void _RevivableCallback(const WeakCallbackInfo<HandleProxy>& data);
 
 protected:
 
@@ -392,7 +394,7 @@ typedef HandleProxy* (STDCALL *ManagedNamedPropertySetter)(uint16_t* propertyNam
 * The result is an integer encoding property attributes (like v8::None,
 * v8::DontEnum, etc.)
 */
-typedef PropertyAttribute (STDCALL *ManagedNamedPropertyQuery)(uint16_t* propertyName, const ManagedAccessorInfo& info);
+typedef PropertyAttribute(STDCALL *ManagedNamedPropertyQuery)(uint16_t* propertyName, const ManagedAccessorInfo& info);
 
 /**
 * Returns a value indicating if the deleter intercepts the request.
@@ -423,7 +425,7 @@ typedef HandleProxy* (STDCALL *ManagedIndexedPropertySetter)(uint32_t index, Han
 * Returns a non-empty handle if the interceptor intercepts the request.
 * The result is an integer encoding property attributes.
 */
-typedef PropertyAttribute (STDCALL *ManagedIndexedPropertyQuery)(uint32_t index, const ManagedAccessorInfo& info);
+typedef PropertyAttribute(STDCALL *ManagedIndexedPropertyQuery)(uint32_t index, const ManagedAccessorInfo& info);
 
 /**
 * Returns a non-empty handle if the deleter intercepts the request.
@@ -468,7 +470,7 @@ typedef HandleProxy* (STDCALL *ManagedJSFunctionCallback)(int32_t managedObjectI
   * A proxy class to encapsulate the call-back methods needed to resolve properties for representing a managed object.
   */
 #pragma pack(push, 1)
-class ObjectTemplateProxy: ProxyBase
+class ObjectTemplateProxy : ProxyBase
 {
 protected:
 
@@ -505,17 +507,17 @@ public:
     int32_t EngineID() { return _EngineID; }
 
     void RegisterNamedPropertyHandlers(
-        ManagedNamedPropertyGetter getter, 
-        ManagedNamedPropertySetter setter, 
-        ManagedNamedPropertyQuery query, 
-        ManagedNamedPropertyDeleter deleter, 
+        ManagedNamedPropertyGetter getter,
+        ManagedNamedPropertySetter setter,
+        ManagedNamedPropertyQuery query,
+        ManagedNamedPropertyDeleter deleter,
         ManagedNamedPropertyEnumerator enumerator);
 
     void RegisterIndexedPropertyHandlers(
-        ManagedIndexedPropertyGetter getter, 
-        ManagedIndexedPropertySetter setter, 
-        ManagedIndexedPropertyQuery query, 
-        ManagedIndexedPropertyDeleter deleter, 
+        ManagedIndexedPropertyGetter getter,
+        ManagedIndexedPropertySetter setter,
+        ManagedIndexedPropertyQuery query,
+        ManagedIndexedPropertyDeleter deleter,
         ManagedIndexedPropertyEnumerator enumerator);
 
     void SetCallAsFunctionHandler(ManagedJSFunctionCallback callback);
@@ -557,7 +559,7 @@ public:
 * A proxy class to encapsulate the call-back methods needed to resolve properties for representing a managed object.
 */
 #pragma pack(push, 1)
-class FunctionTemplateProxy: ProxyBase
+class FunctionTemplateProxy : ProxyBase
 {
 protected:
 
@@ -621,7 +623,7 @@ struct _StringItem
 
 // ========================================================================================================================
 
-class V8EngineProxy: ProxyBase
+class V8EngineProxy : ProxyBase
 {
 protected:
 
@@ -652,9 +654,9 @@ protected:
     recursive_mutex _MakeWeakQueueMutex;
     vector<HandleProxy*> _HandlesToBeMadeStrong;
     recursive_mutex _MakeStrongQueueMutex;
-    
+
     vector<HandleProxy*> _Objects; // An array of handle references by object ID. This allows pulling an already existing proxy handle for an object without having to allocate a new one.
-    
+
     bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
     bool _IsTerminatingScript; // True if the engine was asked to terminate a script.  This is used to detect when a script is aborted.
 
@@ -667,7 +669,7 @@ public:
     ~V8EngineProxy();
 
     Local<String> GetErrorMessage(TryCatch &tryCatch);
-        
+
     // Returns the next object ID for objects that do NOT have a corresponding object.  These objects still need an ID, and are given values less than -1.
     int32_t GetNextNonTemplateObjectID() { return _NextNonTemplateObjectID--; }
 
@@ -729,6 +731,10 @@ public:
     HandleProxy* CreateArray(uint16_t** items, uint16_t length);
     HandleProxy* CreateObject(int32_t managedObjectID);
     HandleProxy* CreateNullValue();
+
+    Local<Private> CreatePrivateString(const char* data);
+    void SetObjectPrivateValue(Local<Object> obj, const char* name, Local<Value> value);
+    Local<Value> GetObjectPrivateValue(Local<Object> obj, const char* name);
 
     friend HandleProxy;
     friend ObjectTemplateProxy;

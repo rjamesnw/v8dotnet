@@ -212,7 +212,7 @@ HandleProxy* HandleProxy::SetHandle(v8::Handle<Value> handle)
 	return this;
 }
 
-void HandleProxy::_DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data)
+void HandleProxy::_DisposeCallback(const WeakCallbackInfo<HandleProxy>& data)
 {
 	//auto engineProxy = (V8EngineProxy*)isolate->GetData();
 	//auto handleProxy = parameter;
@@ -293,9 +293,14 @@ int32_t HandleProxy::GetManagedObjectID(v8::Handle<Value> h)
 		}
 		else
 		{
-			auto handle = obj->GetHiddenValue(NewString("ManagedObjectID"));
-			if (!handle.IsEmpty() && handle->IsInt32())
-				id = (int32_t)handle->Int32Value();
+			auto priv_sym = Private::New(Isolate::GetCurrent(), NewString("ManagedObjectID"));
+			auto handle = obj->GetPrivate(Isolate::GetCurrent()->GetEnteredContext(), priv_sym);
+			if (!handle.IsEmpty())
+			{
+				auto value = handle.ToLocalChecked();
+				if (!value.IsEmpty() && value->IsInt32())
+					id = (int32_t)value->Int32Value();
+			}
 		}
 	}
 
@@ -309,7 +314,7 @@ void HandleProxy::MakeWeak()
 {
 	if (GetManagedObjectID() >= 0 && _Disposed == 1)
 	{
-		_Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback);
+		_Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback, WeakCallbackType::kFinalizer);
 		//?_Handle.Value.MarkIndependent();
 		_Disposed = 2;
 	}
@@ -329,7 +334,7 @@ void HandleProxy::MakeStrong()
 // When the managed side is ready to destroy a handle, it first marks it as weak.  When the V8 engine's garbage collector finally calls back, the managed side
 // object information is finally destroyed.
 
-void HandleProxy::_RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data)
+void HandleProxy::_RevivableCallback(const WeakCallbackInfo<HandleProxy>& data)
 {
 	auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
 	auto handleProxy = data.GetParameter();

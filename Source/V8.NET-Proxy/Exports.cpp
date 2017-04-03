@@ -201,7 +201,7 @@ extern "C"
 					obj->SetAlignedPointerInInternalField(0, templateProxy); // (stored a reference to the proxy instance for the call-back function(s))
 				obj->SetInternalField(1, NewExternal((void*)managedObjectID));
 			}
-			obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+			engine->SetObjectPrivateValue(obj, "ManagedObjectID", NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
 		}
 		handleProxy->SetManagedObjectID(managedObjectID);
 
@@ -377,14 +377,14 @@ extern "C"
 
 		auto obj = handle.As<Object>();
 
-		obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID));
+		engine->SetObjectPrivateValue(obj, "ManagedObjectID", NewInteger(managedObjectID));
 
 		auto accessors = NewArray(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
 		accessors->Set(0, NewInteger(managedObjectID));
 		accessors->Set(1, NewExternal(getter));
 		accessors->Set(2, NewExternal(setter));
 
-		obj->ForceDelete(NewUString(name));
+		obj->Delete(NewUString(name)); // ForceDelete()?
 		obj->SetAccessor(NewUString(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
 
 		END_CONTEXT_SCOPE;

@@ -74,7 +74,8 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 		_V8Initialized = true;
 	}
 
-	_Isolate = Isolate::New();
+	auto params = Isolate::CreateParams();
+	_Isolate = Isolate::New(params);
 
 	BEGIN_ISOLATE_SCOPE(this);
 
@@ -619,6 +620,23 @@ HandleProxy* V8EngineProxy::CreateBoolean(bool b)
 HandleProxy* V8EngineProxy::CreateString(const uint16_t* str)
 {
 	return GetHandleProxy(NewUString(str));
+}
+
+Local<Private> V8EngineProxy::CreatePrivateString(const char* value)
+{
+	return Private::New(_Isolate, NewString(value));
+}
+
+void V8EngineProxy::SetObjectPrivateValue(Local<Object> obj, const char* name, Local<Value> value)
+{
+	obj->SetPrivate(_Context, CreatePrivateString("ManagedObjectID"), value);
+}
+
+Local<Value> V8EngineProxy::GetObjectPrivateValue(Local<Object> obj, const char* name)
+{
+	auto phandle = obj->GetPrivate(_Context, CreatePrivateString("ManagedObjectID"));
+	if (phandle.IsEmpty()) return V8Undefined;
+	return phandle.ToLocalChecked();
 }
 
 HandleProxy* V8EngineProxy::CreateError(const uint16_t* message, JSValueType errorType)

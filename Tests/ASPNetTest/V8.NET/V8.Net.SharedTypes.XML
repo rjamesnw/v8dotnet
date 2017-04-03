@@ -546,6 +546,14 @@
             This class was originally created to support the 'ThreadController" class's "Dispatch()" methods.
             </summary>
         </member>
+        <member name="T:V8.Net.Types.Null">
+            <summary>
+            A structure which represents a 'typed' null value.
+            This is required for cases where a type is just 'object', in which 'null' may be passed,
+            but the type still needs to be known. An example usage is with methods that accept variable
+            number of parameters, but need to know the argument type, even if null.
+            </summary>
+        </member>
         <member name="M:V8.Net.Types.Arg(System.Type,System.Object)">
             <summary>
             If not null, returns either the argument, otherwise returns argument's 'null' type.
@@ -571,14 +579,6 @@
             Converts any Types.Null objects into simple 'null' references.
             This is helpful after using Types.GetTypes() on the same items - once the types are
             retrieved, this method helps to convert Types.Null items back to 'null'.
-            </summary>
-        </member>
-        <member name="T:V8.Net.Types.Null">
-            <summary>
-            A structure which represents a 'typed' null value.
-            This is required for cases where a type is just 'object', in which 'null' may be passed,
-            but the type still needs to be known. An example usage is with methods that accept variable
-            number of parameters, but need to know the argument type, even if null.
             </summary>
         </member>
     </members>

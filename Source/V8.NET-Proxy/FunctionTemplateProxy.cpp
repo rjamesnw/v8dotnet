@@ -138,7 +138,7 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
 	//??auto count = obj->InternalFieldCount();
 	obj->SetAlignedPointerInInternalField(0, this); // (stored a reference to the proxy instance for the call-back functions)
 	obj->SetInternalField(1, NewExternal((void*)managedObjectID)); // (stored a reference to the managed object for the call-back functions)
-	obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+	_EngineProxy->SetObjectPrivateValue(obj, "ManagedObjectID", NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
 	return proxyVal;
 }
 
