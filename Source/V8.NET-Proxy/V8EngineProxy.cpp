@@ -68,13 +68,15 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
-		v8::V8::InitializePlatform(v8::platform::CreateDefaultPlatform());
 		v8::V8::InitializeICU();
+		//v8::V8::InitializeExternalStartupData()
+		v8::V8::InitializePlatform(v8::platform::CreateDefaultPlatform());
 		v8::V8::Initialize();
 		_V8Initialized = true;
 	}
 
 	auto params = Isolate::CreateParams();
+	params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
 	_Isolate = Isolate::New(params);
 
 	BEGIN_ISOLATE_SCOPE(this);
