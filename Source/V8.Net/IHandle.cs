@@ -338,7 +338,7 @@ namespace V8.Net
     // ========================================================================================================================
 
     /// <summary>
-    /// This is a class used internally to create a meta object for dynamic access to 
+    /// This is a class used internally to create a meta object for dynamic access to object properties for object based handles.
     /// </summary>
     public sealed class DynamicHandle : DynamicMetaObject
     {
@@ -398,20 +398,28 @@ namespace V8.Net
             Expression[] args = new Expression[isHandleBase ? 3 : 5];
             MethodInfo methodInfo;
 
+            // ... create parameters for the call expression to set a value given a property name ...
+
             args[0] = Expression.Constant(binder.Name);
 
-            if (isHandleBase)
+            if (isHandleBase) // (if the interface is implemented, then we need a converter to detect and pull out the handle value)
             {
                 Func<object, InternalHandle> handleParamConversion
                     = obj => (obj is IHandleBased) ? ((IHandleBased)obj).InternalHandle
                         : _Engine != null ? _Engine.CreateValue(obj)
                         : InternalHandle.Empty;
-                var convertParameter = Expression.Call(Expression.Constant(handleParamConversion.Target), handleParamConversion.Method, Expression.Convert(value.Expression, typeof(object)));
+
+                var convertParameter = Expression.Call(
+                    Expression.Constant(handleParamConversion.Target),
+                    handleParamConversion.Method,
+                    Expression.Convert(value.Expression, typeof(object)));
+
                 args[1] = convertParameter;
                 args[2] = Expression.Constant(V8PropertyAttributes.None);
+
                 methodInfo = ((Func<string, InternalHandle, V8PropertyAttributes, bool>)_Handle.SetProperty).Method;
             }
-            else
+            else // (no interface is implemented, so default to just 'object')
             {
                 args[1] = Expression.Convert(value.Expression, typeof(object));
                 args[2] = Expression.Constant(null, typeof(string));
@@ -420,7 +428,8 @@ namespace V8.Net
                 methodInfo = ((Func<string, object, string, bool?, ScriptMemberSecurity?, bool>)_Handle.SetProperty).Method;
             }
 
-            Expression self = Expression.Convert(Expression, typeof(InternalHandle), ((Func<object,InternalHandle>)(obj=>(obj is IHandleBased) ? ((IHandleBased)obj).InternalHandle : InternalHandle.Empty)).Method);
+            var conversionMethod = ((Func<object, InternalHandle>)_conversionMethod).Method;
+            Expression self = Expression.Convert(Expression, typeof(InternalHandle), conversionMethod);
 
             Expression methodCall = Expression.Call(self, methodInfo, args);
 
@@ -428,6 +437,8 @@ namespace V8.Net
 
             return new DynamicMetaObject(Expression.Convert(methodCall, binder.ReturnType), restrictions);
         }
+
+        static InternalHandle _conversionMethod(object obj) => (obj is IHandleBased) ? ((IHandleBased)obj).InternalHandle : InternalHandle.Empty;
 
         public override DynamicMetaObject BindInvoke(InvokeBinder binder, DynamicMetaObject[] args)
         {

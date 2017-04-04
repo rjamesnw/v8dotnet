@@ -294,10 +294,16 @@ if errorlevel 1 goto Error
 xcopy out.gn\ia32.%mode%\*.pdb "%V8NETPROXYPATH%\..\bin\%mode%\x86\" /Y >nul
 if errorlevel 1 goto Error
 
+xcopy out.gn\ia32.%mode%\*.bin "%V8NETPROXYPATH%\..\bin\%mode%\x86\" /Y >nul
+if errorlevel 1 goto Error
+
 xcopy out.gn\x64.%mode%\*.dll "%V8NETPROXYPATH%\..\bin\%mode%\x64\" /Y >nul
 if errorlevel 1 goto Error
 
 xcopy out.gn\x64.%mode%\*.pdb "%V8NETPROXYPATH%\..\bin\%mode%\x64\"  /Y >nul
+if errorlevel 1 goto Error
+
+xcopy out.gn\x64.%mode%\*.bin "%V8NETPROXYPATH%\..\bin\%mode%\x64\"  /Y >nul
 if errorlevel 1 goto Error
 
 

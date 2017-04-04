@@ -1,6 +1,7 @@
 // https://thlorenz.github.io/v8-dox/build/v8-3.25.30/html/index.html (more up to date)
 
 #include "ProxyTypes.h"
+#include <experimental/filesystem>
 
 // ------------------------------------------------------------------------------------------------------------------------
 
@@ -69,9 +70,17 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
 		v8::V8::InitializeICU();
-		//v8::V8::InitializeExternalStartupData()
-		v8::V8::InitializePlatform(v8::platform::CreateDefaultPlatform());
+	
+		auto path = std::experimental::filesystem::current_path().string().append("\\x64");
+		const char* currentPath = path.c_str();
+		v8::V8::InitializeExternalStartupData("x64\\");
+		//v8::V8::SetNativesDataBlob
+
+		auto platform = v8::platform::CreateDefaultPlatform();
+		v8::V8::InitializePlatform(platform);
+
 		v8::V8::Initialize();
+
 		_V8Initialized = true;
 	}
 
