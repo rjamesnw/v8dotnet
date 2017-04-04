@@ -428,17 +428,17 @@ namespace V8.Net
                 methodInfo = ((Func<string, object, string, bool?, ScriptMemberSecurity?, bool>)_Handle.SetProperty).Method;
             }
 
-            var conversionMethod = ((Func<object, InternalHandle>)_conversionMethod).Method;
-            Expression self = Expression.Convert(Expression, typeof(InternalHandle), conversionMethod);
+            Func<object, InternalHandle> conversionDelegate = _ConvertObjectToHandle;
+            var self = Expression.Convert(Expression, typeof(InternalHandle), conversionDelegate.Method);
 
-            Expression methodCall = Expression.Call(self, methodInfo, args);
+            var methodCall = Expression.Call(self, methodInfo, args);
 
             BindingRestrictions restrictions = Restrictions.Merge(value.Restrictions);
 
             return new DynamicMetaObject(Expression.Convert(methodCall, binder.ReturnType), restrictions);
         }
 
-        static InternalHandle _conversionMethod(object obj) => (obj is IHandleBased) ? ((IHandleBased)obj).InternalHandle : InternalHandle.Empty;
+        static InternalHandle _ConvertObjectToHandle(object obj) => (obj as IHandleBased)?.InternalHandle ?? InternalHandle.Empty;
 
         public override DynamicMetaObject BindInvoke(InvokeBinder binder, DynamicMetaObject[] args)
         {
