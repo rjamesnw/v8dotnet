@@ -293,7 +293,7 @@ int32_t HandleProxy::GetManagedObjectID(v8::Handle<Value> h)
 		}
 		else
 		{
-			auto priv_sym = Private::New(Isolate::GetCurrent(), NewString("ManagedObjectID"));
+			auto priv_sym = Private::ForApi(Isolate::GetCurrent(), NewString("ManagedObjectID")); // TODO: Better way to do this?
 			auto handle = obj->GetPrivate(Isolate::GetCurrent()->GetEnteredContext(), priv_sym);
 			if (!handle.IsEmpty())
 			{

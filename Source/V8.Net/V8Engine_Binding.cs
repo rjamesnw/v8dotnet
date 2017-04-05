@@ -48,9 +48,9 @@ namespace V8.Net
     // ========================================================================================================================
 
     /// <summary>
-    /// Keeps track of object references based on an array of one or more related types.
+    /// Keeps track of object references based on an array of one or more related types. The reference is stored with the last type entry.
     /// The object references are stored based on a tree of nested types for fast dictionary-tree-style lookup.
-    /// Currently, this class is used to cache new generic types in the type binder.
+    /// Currently, this class is used in the type binder to cache references to MemberInfo objects based on generic type parameters.
     /// </summary>
 #if !(V1_1 || V2 || V3 || V3_5)
     [DebuggerDisplay("(Object: {Object}, SubTypes: {SubTypes.Count})")]
@@ -389,6 +389,9 @@ namespace V8.Net
         public ScriptObject ScriptObjectAttribute { get { return _ScriptObjectAttribute; } }
         ScriptObject _ScriptObjectAttribute;
 
+        /// <summary>
+        /// Holds details for each member on a type when binding objects.
+        /// </summary>
 #if !(V1_1 || V2 || V3 || V3_5)
         [DebuggerDisplay("{MemberName}x{TotalImmediateMembers}")]
 #endif
@@ -400,9 +403,12 @@ namespace V8.Net
             public _MemberDetails BaseDetails; // (if set, this is these are the inherited members of the same name represented by this member).
 
             public MemberInfo FirstMember; // (this is a quick cached reference to the first member in 'Members', which is faster for fields and properties)
-            public readonly TypeLibrary<MemberInfo> ImmediateMembers = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this represents a method or property (indexer) overload)
+            public readonly TypeLibrary<MemberInfo> ImmediateMembers = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this member detail instance represents a method or property (indexer) overload)
             public uint TotalImmediateMembers = 1; // (if > 1 then this member is overloaded)
 
+            /// <summary>
+            /// Enumerates all the type libraries for this member detail and any base member details.
+            /// </summary>
             public IEnumerable<TypeLibrary<MemberInfo>> MemberTypeLibraries
             {
                 get
@@ -414,6 +420,10 @@ namespace V8.Net
                 }
             }
 
+            /// <summary>
+            /// Enumerates all the type libraries for this member detail and any base member details,
+            /// and returns each underlying MemberInfo reference.
+            /// </summary>
             public IEnumerable<MemberInfo> Members
             {
                 get
@@ -422,8 +432,18 @@ namespace V8.Net
                         yield return mi;
                 }
             }
+            /// <summary>
+            /// Enumerates all the type libraries for this member detail and any base member details,
+            /// and returns each underlying MethodInfo reference.
+            /// </summary>
             public IEnumerable<MethodInfo> MethodMembers { get { return from m in Members where m.MemberType == MemberTypes.Method select (MethodInfo)m; } }
 
+            /// <summary>
+            /// Given a list of types, returns the matching MemberInfo reference, or 'null' if not found.
+            /// This is used mainly with member details instances representing overloaded method members.
+            /// </summary>
+            /// <param name="types"></param>
+            /// <returns></returns>
             public MemberInfo FindMemberByTypes(params Type[] types)
             {
                 MemberInfo mi;
@@ -514,7 +534,7 @@ namespace V8.Net
                     }
                     else
                         if (ClassName == "Object" || ClassName == "Function" || ClassName == "Boolean" || ClassName == "String" || ClassName == "RegExp" || ClassName == "Number" || ClassName == "Math" || ClassName == "Array" || ClassName == "Date")
-                            ClassName = "CLR" + ClassName;
+                        ClassName = "CLR" + ClassName;
                 }
             }
             else ClassName = className;
@@ -591,15 +611,17 @@ namespace V8.Net
             foreach (var tb in BaseBinders) // (this will return the inherited base types in order from the immediate base upwards, which is really important when linking '_MemberDetails' instances)
             {
                 // ... go through all the INSTANCE types in the declaring type binder and add them ...
+
                 var baseInstanceMembers = from md in tb._Members.Values where md.BindingMode == BindingMode.Instance select md;
-                foreach (var baseInstanceMemberDetails in baseInstanceMembers)
+
+                foreach (var baseInstanceMemberDetails in baseInstanceMembers.Where(md => md.BindingMode == BindingMode.Instance))
                 {
                     var md = _Members.GetValueOrDefault(baseInstanceMemberDetails.MemberName); // (find a local member by the same name as this base member name, if any)
                     if (md == null)
                         _Members[baseInstanceMemberDetails.MemberName] = baseInstanceMemberDetails; // (adopt the base member into this local member list for quick reference [i.e. all base names will exist in this subtype])
                     else
                         if (md.BaseDetails == null && md.TypeBinder == this)
-                            md.BaseDetails = baseInstanceMemberDetails; // (the iteration goes up the inheritance chain, so once 'BaseDetails' is set, it is ignored [because the base type binders would have already linked the details])
+                        md.BaseDetails = baseInstanceMemberDetails; // (the iteration goes up the inheritance chain, so once 'BaseDetails' is set, it is ignored [because the base type binders would have already linked the details])
                 }
             }
         }
@@ -685,12 +707,12 @@ namespace V8.Net
                     var existingMemberDetails = getExisting != null ? getExisting(memberName) : null;
 
                     memberDetails = existingMemberDetails ?? new _MemberDetails(this)
-                   {
-                       FirstMember = methodInfo,
-                       MemberName = memberName,
-                       MemberType = MemberTypes.Method,
-                       BindingMode = methodInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
-                   };
+                    {
+                        FirstMember = methodInfo,
+                        MemberName = memberName,
+                        MemberType = MemberTypes.Method,
+                        BindingMode = methodInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
+                    };
 
                     if (memberSecurity >= 0 && memberDetails.MemberSecurity >= 0)
                         memberDetails.MemberSecurity |= memberSecurity; // (combine all security attributes for all overloaded members, if any)
@@ -1262,14 +1284,10 @@ namespace V8.Net
         /// Binds a specific or named method of the specified object to a 'V8Function' callback wrapper.
         /// The returned function can be used in setting native V8 object properties to function values.
         /// </summary>
-        /// <param name="obj">The object that contains the method to bind to, or null if 'methodInfo' is supplied and specifies a static method.</param>
-        /// <param name="memberName">Required only if 'methodInfo' is null.</param>
-        /// <param name="func">The 'V8Function' wrapper for specified method.</param>
-        /// <param name="methods">An array of one MethodInfo, for strong binding, or more than one for dynamic invocation.</param>
-        /// <param name="className">An optional name to return when 'valueOf()' is called on a JS object (this defaults to the method's name).</param>
-        /// <param name="genericTarget">Allows binding a specific handle to the 'this' of a callback (for static bindings).</param>
-        /// <param name="genericInstanceTargetUpdater">Allows binding a specific instance to the 'this' of a callback (for static bindings).</param>
-        internal bool _GetBindingForMethod(_MemberDetails memberDetails, out V8Function func, string className = null)
+        /// <param name="memberDetails">A reference to the member details for the given function representing the underlying type.</param>
+        /// <param name="func">The 'V8Function' wrapper for specified method. This function can be used with 'new' in JS to create a new instance of the CLR type.</param>
+        /// <param name="methodName">An optional name to return when 'valueOf()' is called on a JS object (this defaults to the method's name [i.e. 'memberDetails.MemberName']).</param>
+        internal bool _GetBindingForMethod(_MemberDetails memberDetails, out V8Function func, string methodName = null)
         {
             func = null;
 
@@ -1278,8 +1296,8 @@ namespace V8.Net
             if (TypeTemplate == null) throw new InvalidOperationException("'TypeTemplate' is null.");
             if (BoundType == null) throw new InvalidOperationException("'BoundType' is null.");
 
-            if (string.IsNullOrEmpty(className))
-                className = memberDetails.MemberName;
+            if (string.IsNullOrEmpty(methodName))
+                methodName = memberDetails.MemberName;
 
             bool isGenericMember = ((MethodInfo)memberDetails.FirstMember).IsGenericMethodDefinition;
             MethodInfo soloMethod = memberDetails.TotalImmediateMembers == 1 && !isGenericMember ? (MethodInfo)memberDetails.FirstMember : null;
@@ -1294,7 +1312,7 @@ namespace V8.Net
             if (expectedParameters != null)
                 convertedArgumentArrayCache[expectedParameters.Length] = new object[expectedParameters.Length];
 
-            var funcTemplate = Engine.CreateFunctionTemplate(className);
+            var funcTemplate = Engine.CreateFunctionTemplate(methodName);
 
             func = funcTemplate.GetFunctionObject<V8Function>((V8Engine engine, bool isConstructCall, InternalHandle _this, InternalHandle[] args) =>
             {
@@ -1310,7 +1328,7 @@ namespace V8.Net
                 try
                 {
                     if (!_this.IsBinder)
-                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "function", className, memberDetails.MemberName), JSValueType.ExecutionError);
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "function", methodName, memberDetails.MemberName), JSValueType.ExecutionError);
 
                     // ... translate the generic arguments, if applicable ...
 
@@ -1547,7 +1565,7 @@ namespace V8.Net
         /// Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
         /// It's an error to pass an object instance that is not of the same underlying type as this type binder.
         /// </summary>
-        /// <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        /// <param name="initializeBinder">If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
         /// <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
         public ObjectBinder CreateObject(object obj, bool initializeBinder = true)
         {
@@ -1609,7 +1627,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Returns the bounder object instance.
+        /// Returns the bound object instance that is the context for this binder.
         /// </summary>
         new public object Object
         {
@@ -1703,7 +1721,7 @@ namespace V8.Net
         public override InternalHandle NamedPropertyGetter(ref string propertyName)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
-            if (memberDetails != null && memberDetails.Accessible) // (no access == undefined) 
+            if (memberDetails != null && memberDetails.BindingMode == BindingMode.Instance && memberDetails.Accessible) // (no access == undefined) 
             {
                 if (!memberDetails.ValueOverride.IsEmpty && !memberDetails.ValueOverride.IsUndefined) return memberDetails.ValueOverride;
 
@@ -1756,7 +1774,7 @@ namespace V8.Net
         public override InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
-            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
+            if (memberDetails != null && memberDetails.BindingMode == BindingMode.Instance && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
             {
                 // ... if the member details contains a valid override value, update and return it instead ...
                 // (override values exist because method properties cannot be overwritten; to restore, the property must be deleted)
@@ -1827,7 +1845,8 @@ namespace V8.Net
         public override bool? NamedPropertyDeleter(ref string propertyName)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
-            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
+            // (make sure to only consider instance members)
+            if (memberDetails != null && memberDetails.BindingMode == BindingMode.Instance && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
             {
                 if (!memberDetails.ValueOverride.IsEmpty)
                 {
@@ -1841,7 +1860,8 @@ namespace V8.Net
         public override V8PropertyAttributes? NamedPropertyQuery(ref string propertyName)
         {
             var memberDetails = TypeBinder._Members.GetValueOrDefault(propertyName);
-            if (memberDetails != null && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
+            // (make sure to only consider instance members)
+            if (memberDetails != null && memberDetails.BindingMode == BindingMode.Instance && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.NoAcccess)) // (if undefined = no access)
             {
                 return (V8PropertyAttributes)memberDetails.MemberSecurity;
             }
@@ -1850,7 +1870,9 @@ namespace V8.Net
 
         public override InternalHandle NamedPropertyEnumerator()
         {
-            return Engine.CreateValue(from m in TypeBinder._Members.Values where m.HasSecurityFlags(ScriptMemberSecurity.Hidden) select m.MemberName);
+            return Engine.CreateValue(from m in TypeBinder._Members.Values
+                                      where m.BindingMode == BindingMode.Instance && !m.HasSecurityFlags(ScriptMemberSecurity.Hidden) // (make sure to only enumerate instance members)
+                                      select m.MemberName);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

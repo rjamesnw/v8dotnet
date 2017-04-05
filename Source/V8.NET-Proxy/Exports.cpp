@@ -195,7 +195,7 @@ extern "C"
 		if (!handle.IsEmpty() && handle->IsObject())
 		{
 			auto obj = handleProxy->Handle().As<Object>();
-			if (obj->InternalFieldCount() > 1)
+			if (obj->InternalFieldCount() > 1) // (this is used on templates only, where a number of fields can bet set before objects are created [not possible otherwise]) 
 			{
 				if (templateProxy != nullptr)
 					obj->SetAlignedPointerInInternalField(0, templateProxy); // (stored a reference to the proxy instance for the call-back function(s))

@@ -341,38 +341,6 @@ HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-// ??
-//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-//void V8EngineProxy::WithIsolateScope(CallbackAction action)
-//{
-//    BEGIN_ISOLATE_SCOPE(this);
-//    if (action != nullptr) action();
-//    END_ISOLATE_SCOPE;
-//}
-//
-//// ------------------------------------------------------------------------------------------------------------------------
-// ??
-//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-//void V8EngineProxy::WithContextScope(CallbackAction action)
-//{
-//    BEGIN_ISOLATE_SCOPE(this);
-//    BEGIN_CONTEXT_SCOPE(this);
-//    if (action != nullptr) action();
-//    END_CONTEXT_SCOPE;
-//    END_ISOLATE_SCOPE;
-//}
-//
-//// ------------------------------------------------------------------------------------------------------------------------
-// ??
-//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-//void V8EngineProxy::WithHandleScope(CallbackAction action)
-//{
-//    BEGIN_HANDLE_SCOPE(this);
-//    if (action != nullptr) action();
-//    END_HANDLE_SCOPE;
-//}
-
-// ------------------------------------------------------------------------------------------------------------------------
 
 Local<String> V8EngineProxy::GetErrorMessage(TryCatch &tryCatch)
 {
@@ -635,7 +603,7 @@ HandleProxy* V8EngineProxy::CreateString(const uint16_t* str)
 
 Local<Private> V8EngineProxy::CreatePrivateString(const char* value)
 {
-	return Private::New(_Isolate, NewString(value));
+	return Private::ForApi(_Isolate, NewString(value)); // ('ForApi' is required, otherwise a new "virtual" symbol reference of some sort will be created with the same name on each request [duplicate names, but different symbols virtually])
 }
 
 void V8EngineProxy::SetObjectPrivateValue(Local<Object> obj, const char* name, Local<Value> value)

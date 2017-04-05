@@ -12,6 +12,12 @@ using V8.Net;
 
 namespace V8.Net
 {
+    //public class Test
+    //{
+    //    public string GetName() => "Test";
+    //    public static string SGetName() => "STest";
+    //}
+
     public class Program
     {
         static V8Engine _JSServer;
@@ -50,6 +56,18 @@ namespace V8.Net
                 };
                 _TitleUpdateTimer.Start();
 
+                Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
+                _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
+                    + @" if (typeof o.valueOf=='undefined') return ""'valueOf()' is missing on '""+(typeof o)+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
+                    + @" if (typeof o.toString=='undefined') return ""'toString()' is missing on '""+o.valueOf()+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
+                    + @" for (var p in o) {var ov='', pv=''; try{ov=o.valueOf();}catch(e){ov='{error: '+e.message+': '+dump(o)+'}';} try{pv=o[p];}catch(e){pv=e.message;} s+='* '+ov+'.'+p+' = ('+pv+')\r\n'; } return s; }");
+
+                Console.WriteLine("Setting up test...");
+
+                //_JSServer.RegisterType<Test>(null, null, ScriptMemberSecurity.ReadOnly);
+                //_JSServer.GlobalObject.SetProperty(typeof(Test));
+
+                //if (false) // (comment this out to run the initial tests and examples)
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
 
@@ -98,12 +116,6 @@ namespace V8.Net
 
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
-
-                    Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
-                    _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
-                        + @" if (typeof o.valueOf=='undefined') return ""'valueOf()' is missing on '""+(typeof o)+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
-                        + @" if (typeof o.toString=='undefined') return ""'toString()' is missing on '""+o.valueOf()+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
-                        + @" for (var p in o) {var ov='', pv=''; try{ov=o.valueOf();}catch(e){ov='{error: '+e.message+': '+dump(o)+'}';} try{pv=o[p];}catch(e){pv=e.message;} s+='* '+ov+'.'+p+' = ('+pv+')\r\n'; } return s; }");
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'assert(msg, a,b)' function for property value assertion ...");
                     _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
@@ -174,7 +186,18 @@ namespace V8.Net
                         {
                             string flags = lcInput.Substring(6).Trim();
                             if (flags.Length > 0)
-                                _JSServer.SetFlagsFromString(flags);
+                            {
+                                try
+                                {
+                                    _JSServer.SetFlagsFromString(flags); // TODO: This seems to crash after listing for some reason ...?
+                                }
+                                catch { }                                    
+                                if (lcInput.Contains("--help"))
+                                {
+                                    Console.WriteLine("Press any key to continue ..." + Environment.NewLine);
+                                    Console.ReadKey();
+                                }
+                            }
                             else
                                 Console.WriteLine(@"You did not specify any options.");
                         }

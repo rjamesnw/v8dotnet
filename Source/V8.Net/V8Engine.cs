@@ -425,13 +425,13 @@ namespace V8.Net
 
             if (timeout > 0)
                 timer = new Timer((state) => { TerminateExecution(); }, this, timeout, Timeout.Infinite);
-            
+
             InternalHandle result = V8NetProxy.V8ExecuteCompiledScript(_NativeV8EngineProxy, script);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
 
             if (timer != null)
                 timer.Dispose();
-            
+
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
@@ -798,20 +798,18 @@ namespace V8.Net
         /// </summary>
         public InternalHandle CreateValue(IEnumerable<string> items)
         {
-            if (items == null) return V8NetProxy.CreateArray(_NativeV8EngineProxy, null, 0);
+            var _items = items?.ToArray(); // (the enumeration could be lengthy depending on the implementation, so iterate it only once and dump it to an array)
+            if (_items == null || _items.Length == 0) return V8NetProxy.CreateArray(_NativeV8EngineProxy, null, 0);
 
-            var itemsEnum = items.GetEnumerator();
             int strBufSize = 0; // (size needed for the string chars portion of the memory block)
             int itemsCount = 0;
 
-            while (itemsEnum.MoveNext())
+            for (int i = 0, n = _items.Length; i < n; ++i)
             {
                 // get length of all strings together
-                strBufSize += itemsEnum.Current.Length + 1; // (+1 for null char)
+                strBufSize += _items[i].Length + 1; // (+1 for null char)
                 itemsCount++;
             }
-
-            itemsEnum.Reset();
 
             int strPtrBufSize = Marshal.SizeOf(typeof(IntPtr)) * itemsCount; // start buffer size with size needed for all string pointers.
             char** oneBigStringBlock = (char**)Utilities.AllocNativeMemory(strPtrBufSize + Marshal.SystemDefaultCharSize * strBufSize);
@@ -819,10 +817,10 @@ namespace V8.Net
             char* strWritePtr = (char*)(((byte*)oneBigStringBlock) + strPtrBufSize);
             int itemLength;
 
-            while (itemsEnum.MoveNext())
+            for (int i = 0, n = _items.Length; i < n; ++i)
             {
-                itemLength = itemsEnum.Current.Length;
-                Marshal.Copy(itemsEnum.Current.ToCharArray(), 0, (IntPtr)strWritePtr, itemLength);
+                itemLength = _items[i].Length;
+                Marshal.Copy(_items[i].ToCharArray(), 0, (IntPtr)strWritePtr, itemLength);
                 Marshal.WriteInt16((IntPtr)(strWritePtr + itemLength), 0);
                 Marshal.WriteIntPtr((IntPtr)ptrWritePtr++, (IntPtr)strWritePtr);
                 strWritePtr += itemLength + 1;

@@ -342,6 +342,8 @@ namespace V8.Net
     /// </summary>
     public sealed class DynamicHandle : DynamicMetaObject
     {
+        // --------------------------------------------------------------------------------------------------------------------
+
         InternalHandle _Handle;
         V8Engine _Engine;
 
@@ -359,6 +361,8 @@ namespace V8.Net
 
 #else
 
+        // --------------------------------------------------------------------------------------------------------------------
+
         internal DynamicHandle(object value, Expression parameter)
             : base(parameter, BindingRestrictions.GetTypeRestriction(parameter, value.GetType()), value)
         {
@@ -369,6 +373,20 @@ namespace V8.Net
             }
         }
 
+        // --------------------------------------------------------------------------------------------------------------------
+
+        // (Gets the internal handle from an object reference if IHandleBased is implemented)
+        static InternalHandle _GetInternalHandleFromObject(object obj) => (obj as IHandleBased)?.InternalHandle ?? InternalHandle.Empty;
+
+        static Handle _GetHandleFromObject(object obj) => (obj as IHandleBased)?.InternalHandle.GetTrackerHandle() ?? Handle.Empty;
+
+        // (Get an object from an internal handle [value type] if the handle represents a managed V8 object, otherwise just return the internal handle as an object)
+        static object _GetObjectOrHandle(InternalHandle h) => h.HasObject ? h.Object : (Handle)h;
+
+        static V8NativeObject _GetUnderlyingObject(object obj) => (obj as IHandleBased)?.Object;
+
+        // --------------------------------------------------------------------------------------------------------------------
+
         public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
         {
             if (!_Handle.IsObjectType) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
@@ -378,16 +396,20 @@ namespace V8.Net
 
             args[0] = Expression.Constant(binder.Name);
 
-            Expression self = Expression.Convert(Expression, typeof(InternalHandle), ((Func<object, InternalHandle>)(obj => (obj is IHandleBased) ? ((IHandleBased)obj).InternalHandle : InternalHandle.Empty)).Method);
+            Func<object, InternalHandle> conversionDelegate = _GetInternalHandleFromObject;
+
+            Expression self = Expression.Convert(Expression, typeof(InternalHandle), conversionDelegate.Method);
 
             Expression methodCall = Expression.Call(self, methodInfo, args);
 
             BindingRestrictions restrictions = Restrictions;
 
-            Func<InternalHandle, object> handleWrapper = h => h.HasObject ? h.Object : (Handle)h; // (need to wrap the internal handle value with an object based handle in order to dispose of the value!)
+            Func<InternalHandle, object> handleWrapper = _GetObjectOrHandle; // (need to wrap the internal handle value with an object based handle in order to dispose of the value!)
 
             return new DynamicMetaObject(Expression.Convert(methodCall, typeof(object), handleWrapper.Method), restrictions);
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
 
         public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
         {
@@ -428,7 +450,7 @@ namespace V8.Net
                 methodInfo = ((Func<string, object, string, bool?, ScriptMemberSecurity?, bool>)_Handle.SetProperty).Method;
             }
 
-            Func<object, InternalHandle> conversionDelegate = _ConvertObjectToHandle;
+            Func<object, InternalHandle> conversionDelegate = _GetInternalHandleFromObject;
             var self = Expression.Convert(Expression, typeof(InternalHandle), conversionDelegate.Method);
 
             var methodCall = Expression.Call(self, methodInfo, args);
@@ -438,43 +460,58 @@ namespace V8.Net
             return new DynamicMetaObject(Expression.Convert(methodCall, binder.ReturnType), restrictions);
         }
 
-        static InternalHandle _ConvertObjectToHandle(object obj) => (obj as IHandleBased)?.InternalHandle ?? InternalHandle.Empty;
+        // --------------------------------------------------------------------------------------------------------------------
 
         public override DynamicMetaObject BindInvoke(InvokeBinder binder, DynamicMetaObject[] args)
         {
             return base.BindInvoke(binder, args);
         }
 
+        // --------------------------------------------------------------------------------------------------------------------
+
         public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
         {
             return base.BindInvokeMember(binder, args);
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
 
         public override DynamicMetaObject BindGetIndex(GetIndexBinder binder, DynamicMetaObject[] indexes)
         {
             return base.BindGetIndex(binder, indexes);
         }
 
+        // --------------------------------------------------------------------------------------------------------------------
+
         public override DynamicMetaObject BindSetIndex(SetIndexBinder binder, DynamicMetaObject[] indexes, DynamicMetaObject value)
         {
             return base.BindSetIndex(binder, indexes, value);
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
 
         public override DynamicMetaObject BindDeleteMember(DeleteMemberBinder binder)
         {
             return base.BindDeleteMember(binder);
         }
 
+        // --------------------------------------------------------------------------------------------------------------------
+
         public override DynamicMetaObject BindDeleteIndex(DeleteIndexBinder binder, DynamicMetaObject[] indexes)
         {
             return base.BindDeleteIndex(binder, indexes);
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
 
         public override IEnumerable<string> GetDynamicMemberNames()
         {
             if (!_Handle.IsObjectType) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
             return _Handle.GetPropertyNames();
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
 
         public override DynamicMetaObject BindConvert(ConvertBinder binder)
         {
@@ -486,19 +523,18 @@ namespace V8.Net
             }
             else if (typeof(V8NativeObject).IsAssignableFrom(binder.Type))
             {
-                Func<object, V8NativeObject> getUnderlyingObjectMethod = obj => obj is IHandleBased ? ((IHandleBased)obj).Object : null;
-                convertExpression = Expression.Convert(Expression.Convert(Expression, typeof(V8NativeObject), getUnderlyingObjectMethod.Method), binder.Type);
+                Func<object, V8NativeObject> getUnderlyingObject = _GetUnderlyingObject;
+
+                convertExpression = Expression.Convert(Expression.Convert(Expression, typeof(V8NativeObject), getUnderlyingObject.Method), binder.Type);
             }
             else
             {
                 MethodInfo conversionMethodInfo;
 
                 if (binder.Type == typeof(InternalHandle))
-                    conversionMethodInfo =
-                        ((Func<object, InternalHandle>)(obj => obj is IHandleBased ? ((IHandleBased)obj).InternalHandle : InternalHandle.Empty)).Method;
+                    conversionMethodInfo = ((Func<object, InternalHandle>)_GetInternalHandleFromObject).Method;
                 else if (binder.Type == typeof(Handle))
-                    conversionMethodInfo =
-                        ((Func<object, Handle>)(obj => obj is IHandleBased ? ((IHandleBased)obj).InternalHandle.GetTrackerHandle() : Handle.Empty)).Method;
+                    conversionMethodInfo = ((Func<object, Handle>)_GetHandleFromObject).Method;
                 else
                     conversionMethodInfo = ((Func<object, object>)(obj => Types.ChangeType(Value, binder.Type))).Method;
 
@@ -509,6 +545,8 @@ namespace V8.Net
 
             return new DynamicMetaObject(convertExpression, Restrictions);
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
 
 #endif
     }
