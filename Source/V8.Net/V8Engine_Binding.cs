@@ -499,6 +499,9 @@ namespace V8.Net
         IEnumerable<_MemberDetails> _MethodDetails(BindingMode bindingMode)
         { return from kv in _Members where (bindingMode == BindingMode.None || kv.Value.BindingMode == bindingMode) && kv.Value.MemberType == MemberTypes.Method select kv.Value; }
 
+        /// <summary>
+        /// Enumerates all type binders in the inheritance hierarchy.
+        /// </summary>
         public IEnumerable<TypeBinder> BaseBinders { get { var b = BaseTypeBinder; while (b != null) { yield return b; b = b.BaseTypeBinder; } } }
 
         // --------------------------------------------------------------------------------------------------------------------

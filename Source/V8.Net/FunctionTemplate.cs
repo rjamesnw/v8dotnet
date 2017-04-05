@@ -123,10 +123,22 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// This is the main entry point from the native side for all calls to functions created from function templates.
+        /// This method exists to give an instance based delegate reference for each function template instance.
+        /// </summary>
+        /// <param name="managedObjectID">The object ID of a managed object for this call.</param>
+        /// <param name="isConstructCall">'true' if this is called because of the 'new' operator in JS.</param>
+        /// <param name="_this">The instance context, if any.</param>
+        /// <param name="args">Any arguments from the JS call.</param>
+        /// <param name="argCount">Number of arguments given in the JS call.</param>
+        /// <returns></returns>
         HandleProxy* _CallBack(Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount)
         {
             lock (_FunctionsByType)
             {
+                // ... get a list of callback functions to execute for this callback ...
+
                 var functions = from f in
                                     (from t in _FunctionsByType.Keys.ToArray() // (need to convert this to an array in case the callbacks modify the dictionary!)
                                      select _Engine._GetExistingObject(_FunctionsByType[t]))
@@ -137,6 +149,7 @@ namespace V8.Net
             }
         }
 
+        // TODO: This is shared in both templates - consider putting elsewhere.
         internal static HandleProxy* _CallBack(Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount, params JSFunction[] functions)
         {
             // ... get a handle to the native "this" object ...

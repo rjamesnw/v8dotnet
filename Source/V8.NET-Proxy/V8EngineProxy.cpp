@@ -71,10 +71,7 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 	{
 		v8::V8::InitializeICU();
 	
-		auto path = std::experimental::filesystem::current_path().string().append("\\x64");
-		const char* currentPath = path.c_str();
-		v8::V8::InitializeExternalStartupData("x64\\");
-		//v8::V8::SetNativesDataBlob
+		v8::V8::InitializeExternalStartupData(PLATFORM_TARGET "\\");
 
 		auto platform = v8::platform::CreateDefaultPlatform();
 		v8::V8::InitializePlatform(platform);
