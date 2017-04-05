@@ -36,6 +36,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-ProxyInterface-x86",
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET 4.0", ".NET 4.0", "{4CC56C49-DA3A-444E-B051-D1ECC8B51D7D}"
+	ProjectSection(SolutionItems) = preProject
+		Source\V8.NET-Proxy\V8\V8Update.cmd = Source\V8.NET-Proxy\V8\V8Update.cmd
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test Projects", "Test Projects", "{677064CB-0ED0-4758-AEEF-73CEEFD3030B}"
 EndProject

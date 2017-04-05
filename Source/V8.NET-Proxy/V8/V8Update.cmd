@@ -1,3 +1,7 @@
+REM License: https://creativecommons.org/licenses/by-sa/4.0/
+REM Developer: James Wilkins (JamesWilkins.net)
+REM Description: Save time downloading and building V8 - you're welcome. ;)
+
 @echo off
 setlocal
 
