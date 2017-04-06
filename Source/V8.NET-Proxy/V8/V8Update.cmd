@@ -192,6 +192,14 @@ if "%notools%"=="true" goto restart
 
 if exist v8 cd v8
 
+FOR /F "usebackq tokens=3" %%s IN (`DIR /-C /-O /W`) DO ( SET FREE_SPACE=%%s )
+echo Drive Space in %CD% is %FREE_SPACE%bytes.
+echo The build will create about ~4-5GB for the 32-bit output, and ~6-7GB for the
+echo 64-bit output. Make sure you have enough space available.
+choice /M "Continue?"
+echo.
+if errorlevel 2 goto Restart
+
 REM Check if we are running in the correct environment (supports VS2010-VS2015) ...
 REM (note: more than one version of Visual Studio may be installed, so start from highest version, to least)
 
@@ -243,6 +251,7 @@ if errorlevel 1 goto DebugMode
 REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
 
 :Start
+
 echo Build mode: %mode%
 
 :BuildV8
@@ -262,18 +271,16 @@ set LogFile=
 
 REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
 
-if not "%PROCESSOR_ARCHITECTURE%"=="x86" goto 64BitSupported
-echo.
-echo While compiling the 64-bit version of V8 on a 32-bit system will work, the last
-echo build step will fail for some reason (even though the compile will succeed).
-echo If you continue, an error may occur, but the 64-bit DLLs will be present.
-echo Just restart this script a second time and skip this compile and the 64-bit
-echo DLLs will be copied correctly.
-choice /M "Attempt to build 64-bit version?"
-echo.
-if errorlevel 2 goto ImportLibs
+REM if not "%PROCESSOR_ARCHITECTURE%"=="x86" goto 64BitSupported
+REM echo.
+REM echo While compiling the 64-bit version of V8 on a 32-bit system will work, it will
+REM echo output files over 1.7GB more than the ia32 build (an additional 6+GB in total).
+REM echo 
+REM choice /M "Build 64-bit version anyhow? (could be an additional 6+GB)"
+REM echo.
+REM if errorlevel 2 goto ImportLibs
 
-:64BitSupported
+REM :64BitSupported
 
 echo Building 64-bit V8 ...
 
@@ -292,22 +299,22 @@ echo Importing V8 libraries ...
 
 REM *** .NET 4.0 ***
 
-xcopy out.gn\ia32.%mode%\*.dll "%V8NETPROXYPATH%\..\bin\%mode%\x86\" /Y >nul
+xcopy /Y /D out.gn\ia32.%mode%\*.dll "%V8NETPROXYPATH%\..\bin\%mode%\x86\" >nul
 if errorlevel 1 goto Error
 
-xcopy out.gn\ia32.%mode%\*.pdb "%V8NETPROXYPATH%\..\bin\%mode%\x86\" /Y >nul
+xcopy /Y /D out.gn\ia32.%mode%\*.pdb "%V8NETPROXYPATH%\..\bin\%mode%\x86\" >nul
 if errorlevel 1 goto Error
 
-xcopy out.gn\ia32.%mode%\*.bin "%V8NETPROXYPATH%\..\bin\%mode%\x86\" /Y >nul
+xcopy /Y /D out.gn\ia32.%mode%\*.bin "%V8NETPROXYPATH%\..\bin\%mode%\x86\" >nul
 if errorlevel 1 goto Error
 
-xcopy out.gn\x64.%mode%\*.dll "%V8NETPROXYPATH%\..\bin\%mode%\x64\" /Y >nul
+xcopy /Y /D out.gn\x64.%mode%\*.dll "%V8NETPROXYPATH%\..\bin\%mode%\x64\" >nul
 if errorlevel 1 goto Error
 
-xcopy out.gn\x64.%mode%\*.pdb "%V8NETPROXYPATH%\..\bin\%mode%\x64\"  /Y >nul
+xcopy /Y /D out.gn\x64.%mode%\*.pdb "%V8NETPROXYPATH%\..\bin\%mode%\x64\" >nul
 if errorlevel 1 goto Error
 
-xcopy out.gn\x64.%mode%\*.bin "%V8NETPROXYPATH%\..\bin\%mode%\x64\"  /Y >nul
+xcopy /Y /D out.gn\x64.%mode%\*.bin "%V8NETPROXYPATH%\..\bin\%mode%\x64\" >nul
 if errorlevel 1 goto Error
 
 
