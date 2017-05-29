@@ -710,7 +710,7 @@ namespace V8.Net
 
         /// <summary>
         /// Reading from this property returns either the underlying managed object, or else causes a native call to fetch
-        /// the current V8 value associated with this handle.
+        /// the current V8 value associated with this handle (for primitive types only - for Arrays, see ArrayLength and GetProperty(Int32)).
         /// <param>For objects, this returns the in-script type text as a string - unless this handle represents an object binder, in which case this will return the bound object instead.</param>
         /// </summary>
         public object Value
@@ -889,8 +889,8 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Returns the 'Value' property type cast to the expected type.
-        /// Warning: No conversion is made between different value types.
+        /// Returns the 'Value' property type cast to the expected type (this will not cast from native arrays or objects to a CLR type).
+        /// <para>Warning: No conversion is made between different value types.</para>
         /// </summary>
         public DerivedType As<DerivedType>()
         {
