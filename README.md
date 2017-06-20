@@ -1,7 +1,7 @@
 V8.NET
 ======
 
-News (March 31, 2017): CodePlex is shutting down this year, so this page is now the main repo.
+News (March 31, 2017): CodePlex is shutting down this year, so this page is now the main repo (but the documentation is still there at the moment).
 
 
 What does that mean? Well, most other existing wrappers abstract most of the Google V8 engine's abilities away from you.  That's fine for simple tasks, but wouldn't you rather have full control over the power of the V8 engine from managed code?
