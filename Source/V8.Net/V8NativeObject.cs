@@ -35,7 +35,7 @@ namespace V8.Net
         /// In the constructor, the object only exists as an empty shell.
         /// It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
-        /// the 'IsInitilized' property.</para>
+        /// the 'IsInitialized' property.</para>
         /// </summary>
         void Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args);
 
@@ -116,7 +116,7 @@ namespace V8.Net
         /// <summary>
         /// True if this object was initialized and is ready for use.
         /// </summary>
-        public bool IsInitilized { get; internal set; }
+        public bool IsInitialized { get; internal set; }
 
         /// <summary>
         /// A reference to the managed object handle that wraps the native V8 handle for this managed object.
@@ -244,14 +244,14 @@ namespace V8.Net
         /// In the constructor, the object only exists as an empty shell.
         /// It's ok to setup non-v8 values in constructors, but be careful not to trigger any calls into the V8Engine itself.
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
-        /// the 'IsInitilized' property.</para>
+        /// the 'IsInitialized' property.</para>
         /// </summary>
         public virtual InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
         {
-            if (_Proxy != this && !IsInitilized)
+            if (_Proxy != this && !IsInitialized)
                 _Proxy.Initialize(this, isConstructCall, args);
 
-            IsInitilized = true;
+            IsInitialized = true;
 
             return _Handle;
         }
@@ -261,7 +261,7 @@ namespace V8.Net
         /// </summary>
         public void Initialize(V8NativeObject owner, bool isConstructCall, params InternalHandle[] args)
         {
-            if (!IsInitilized)
+            if (!IsInitialized)
                 Initialize(isConstructCall, args);
         }
 

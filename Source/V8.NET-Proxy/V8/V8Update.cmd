@@ -10,13 +10,20 @@ REM !!!WARNING!!! The path should NOT have spaces in it.
 set TARGET_V8_FOLDER=%ProgramData%\Google\V8Engine
 
 set errorlevel=
-set v8rev=889d205b523c19e34c75770ff045a4c65d530635
+
+REM Note: Last working repo: 889d205b523c19e34c75770ff045a4c65d530635
+set v8rev=HEAD
+
 set GIT_CURL_VERBOSE=1
 set DEPOT_TOOLS_WIN_TOOLCHAIN=0
+
+REM NOTE: At the writing of this note, 2017+ is NOT supported yet by Google.
 set GYP_MSVS_VERSION=2015
+
 set GYP_GENERATORS=msvs
 REM set GYP_GENERATORS=ninja
-set V8NETPROXYPATH=%~dp0..
+set BATCHPATH=%~dp0
+set V8NETPROXYPATH=%BATCHPATH%..
 
 REM (This tells depot_tools to use the locally installed version of Visual Studio, otherwise by default, depot_tools will try to use a google-internal version)
 set DEPOT_TOOLS_WIN_TOOLCHAIN=0
@@ -48,7 +55,7 @@ cd "%WorkingDir%"
 cls
 
 echo This command file is used to download the V8 source and build it.
-echo The Goole Depot Tools are required (see ReadMe.txt).
+echo The Google Depot Tools are required (see ReadMe.txt).
 where /q gclient.bat
 if errorlevel 1 echo Warning: Depot Tools not detected in the environment path.
 echo V8.NET-Proxy location: %V8NETPROXYPATH%
@@ -72,7 +79,7 @@ if errorlevel 4 goto CheckEnv
 if errorlevel 3 goto UpdateTools
 if errorlevel 2 goto GetSrc
 
-notepad "%cd%\ReadMe.txt"
+notepad "%BATCHPATH%\ReadMe.txt"
 
 goto restart
 
@@ -88,11 +95,14 @@ REM _012345678901234567890123456789012345678901234567890123456789012345678901234
 :ToolsNotFound
 set notools=true
 echo You need to install the depot tools correctly first.
+echo Note: If you had to update your path environment variable for the tools,
+echo       you will need to re-run this command script in a new command window.
+echo       (if that doesn't work, a system restart may be required)
 echo.
 echo 1. Open the location now.
-echo    * Please follow the instructions on the page so the environment is configured
-echo      currently. Most importantly, python.bat must be found before python.exe in
-echo      the path environment variable.
+echo    * Please follow the instructions on the page so the environment is
+echo      configured correctly. Most importantly, python.bat must be found before
+echo      python.exe in the path environment variable.
 echo 2. Run 'gclient' now (needs to be run at least once first, if not already).
 echo 3. Go back.
 echo.
@@ -121,6 +131,8 @@ goto :EOF
 
 :UpdateTools
 
+REM _01234567890123456789012345678901234567890123456789012345678901234567890123456789___________________________________________________________________________________
+
 call :VerifyTools
 if "%notools%"=="true" goto restart
 REM cmd /C gclient config https://chromium.googlesource.com/v8/v8.git
@@ -128,8 +140,11 @@ Echo Updating ...
 REM (Attempt to change to the location of the client, which must be in a path without spaces [in case the current directory does have spaces])
 REM for /f %%i in ('where gclient.bat') do cd "%%i\.."
 echo Currently in %CD%.
+echo GYP_MSVS_VERSION=%GYP_MSVS_VERSION% (Target Visual Studio Version)
 REM (note: gclient sync must be run in the folder where the '.gclient' config file is)
 cmd /C gclient sync
+echo (Note: If you see a 'GYP_MSVS_VERSION' error above, make sure the setting at
+echo the top of this the V8Update.cmd file is correct)
 pause
 
 goto restart
@@ -208,6 +223,9 @@ if not "%DevEnvDir%"=="" set VSTools=%DevEnvDir%..\Tools\ & goto BeginV8Compile
 echo This command file should be run via the Visual Studio developer prompt.
 echo Attempting to do so now ...
 
+REM 2017+ NOT YET SUPPORTED BY GOOGLE!
+if not "%VS150ENTCOMNTOOLS%"=="" set VSTools=%VS150ENTCOMNTOOLS%& set VSVer=2017& goto SetVSEnv
+if not "%VS150COMNTOOLS%"=="" set VSTools=%VS150COMNTOOLS%& set VSVer=2017& goto SetVSEnv
 if not "%VS140COMNTOOLS%"=="" set VSTools=%VS140COMNTOOLS%& set VSVer=2015& goto SetVSEnv
 if not "%VS120COMNTOOLS%"=="" set VSTools=%VS120COMNTOOLS%& set VSVer=2013& goto SetVSEnv
 if not "%VS110COMNTOOLS%"=="" set VSTools=%VS110COMNTOOLS%& set VSVer=2012& goto SetVSEnv
@@ -221,6 +239,7 @@ goto Exit
 Echo Visual Studio %VSVer% detected ...
 set GYP_MSVS_VERSION=%VSVer%
 call "%VSTools%VsDevCmd.bat"
+if ERRORLEVEL 1 goto Error
 echo Visual Studio developer prompt environment was setup successfully!
 echo.
 
@@ -258,6 +277,7 @@ echo Build mode: %mode%
 
 if exist v8 cd v8
 
+echo Currently in folder %cd%.
 echo Building 32-bit V8 ...
 
 cmd /C python tools/dev/v8gen.py ia32.%mode%
