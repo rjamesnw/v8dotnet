@@ -37,7 +37,7 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		engine->Isolate()->LowMemoryNotification();
-		while (!engine->Isolate()->IdleNotification(1000)) {}
+		while (!engine->Isolate()->IdleNotificationDeadline(1000)) {}
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -46,7 +46,7 @@ extern "C"
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
-		return engine->Isolate()->IdleNotification(hint);
+		return engine->Isolate()->IdleNotificationDeadline(hint);
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -183,7 +183,7 @@ extern "C"
 					obj->SetAlignedPointerInInternalField(0, templateProxy); // (stored a reference to the proxy instance for the call-back function(s))
 				obj->SetInternalField(1, NewExternal((void*)managedObjectID));
 			}
-			obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+			obj->SetPrivate(NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
 		}
 		handleProxy->SetManagedObjectID(managedObjectID);
 

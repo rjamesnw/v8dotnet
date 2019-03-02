@@ -21,7 +21,7 @@ ObjectTemplateProxy::ObjectTemplateProxy(V8EngineProxy* engineProxy, Local<Objec
 
 ObjectTemplateProxy::~ObjectTemplateProxy()
 {
-    if (Type != 0) // (type is 0 if this class was wiped with 0's {if used in a marshalling test})
+    if (Type != 0) // (type is 0 if this class was wiped with 0's {if used in a marshaling test})
     {
         if (!V8EngineProxy::IsDisposed(_EngineID))
         {
@@ -54,7 +54,9 @@ void ObjectTemplateProxy::RegisterNamedPropertyHandlers(
     NamedPropertyDeleter = deleter; 
     NamedPropertyEnumerator = enumerator;
 
-    _ObjectTemplate->SetNamedPropertyHandler(GetProperty, SetProperty, GetPropertyAttributes, DeleteProperty, GetPropertyNames);
+	NamedPropertyHandlerConfiguration config(GetProperty, SetProperty, GetPropertyAttributes, DeleteProperty, GetPropertyNames);
+
+    _ObjectTemplate->SetHandler(config);
 }
 
 void ObjectTemplateProxy::RegisterIndexedPropertyHandlers(
@@ -106,7 +108,7 @@ void ObjectTemplateProxy::UnregisterIndexedPropertyHandlers()
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-void ObjectTemplateProxy::GetProperty(Local<String> hName, const PropertyCallbackInfo<Value>& info)
+void ObjectTemplateProxy::GetProperty(Local<Name> hName, const PropertyCallbackInfo<Value>& info)
 {
     auto obj = info.Holder();
 
@@ -137,7 +139,7 @@ void ObjectTemplateProxy::GetProperty(Local<String> hName, const PropertyCallbac
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-void ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, const PropertyCallbackInfo<Value>& info)
+void ObjectTemplateProxy::SetProperty(Local<Name> hName, Local<Value> value, const PropertyCallbackInfo<Value>& info)
 {
     auto obj = info.Holder();
 
@@ -169,7 +171,7 @@ void ObjectTemplateProxy::SetProperty(Local<String> hName, Local<Value> value, c
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-void ObjectTemplateProxy::GetPropertyAttributes(Local<String> hName, const PropertyCallbackInfo<Integer>& info)
+void ObjectTemplateProxy::GetPropertyAttributes(Local<Name> hName, const PropertyCallbackInfo<Integer>& info)
 {
     auto obj = info.Holder();
 
@@ -196,7 +198,7 @@ void ObjectTemplateProxy::GetPropertyAttributes(Local<String> hName, const Prope
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-void ObjectTemplateProxy::DeleteProperty(Local<String> hName, const PropertyCallbackInfo<Boolean>& info)
+void ObjectTemplateProxy::DeleteProperty(Local<Name> hName, const PropertyCallbackInfo<Boolean>& info)
 {
     auto obj = info.Holder();
 

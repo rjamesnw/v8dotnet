@@ -6,19 +6,25 @@
 #if (_MSC_PLATFORM_TOOLSET >= 110)
 #include <mutex>
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+//#include <cstddef>
+
 //#include <include\v8stdint.h>
 #include "Platform.h"
 
-using namespace std;
+//using namespace std;
 
 #if (_MSC_PLATFORM_TOOLSET < 110)
 #define nullptr NULL
 #endif
 
 #if _WIN32 || _WIN64
-#include <windows.h>
-#pragma comment(lib, "winmm.lib") // (required by V8 now)
-#include <oleauto.h>
+//#include <windows.h>
+//#pragma comment(lib, "winmm.lib") // (required by V8 now)
+//#include <oleauto.h>
 #define ALLOC_MANAGED_MEM(size) GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, size)
 #define REALLOC_MANAGED_MEM(ptr, size) GlobalReAlloc(ptr, size, GMEM_MOVEABLE)
 #define FREE_MANAGED_MEM(ptr) { GlobalFree(ptr); ptr = nullptr; }
@@ -35,9 +41,8 @@ using namespace std;
 //(make static instead) #define USING_V8_SHARED 1
 #define V8_USE_UNSAFE_HANDLES 1 // (see https://groups.google.com/forum/#!topic/v8-users/oBE_DTpRC08)
 
-#include <include\v8.h>
-#include <include\v8-debug.h>
-#include <include\libplatform\libplatform.h>
+#include "libplatform/libplatform.h"
+#include "v8.h"
 
 using namespace v8;
 
@@ -60,6 +65,13 @@ template <class T> struct CopyablePersistent {
     void Reset() { return Value.Reset(); }
     template <class S> Local<S> As() { return Handle().As<S>(); }
 };
+
+#define byte unsigned char
+#define int32_t std::int32_t
+#define int64_t std::int64_t
+#define vector std::vector
+#define exception std::exception
+#define recursive_mutex std::recursive_mutex
 
 #define V8Undefined v8::Undefined(Isolate::GetCurrent())
 #define V8Null v8::Null(Isolate::GetCurrent())
@@ -249,8 +261,8 @@ private:
     CopyablePersistent<Value> _Handle; // Reference to a JavaScript object (persisted handle for future reference - WARNING: Must be explicitly released when no longer needed!).
     CopyablePersistent<v8::Script> _Script; // (references a script handle [instead of a value one])
 
-    static void _DisposeCallback(const WeakCallbackData<Value, HandleProxy>& data);
-    static void _RevivableCallback(const WeakCallbackData<Value, HandleProxy>& data);
+    //static void _DisposeCallback(const WeakCallbackInfo<HandleProxy>& data);
+    static void _RevivableCallback(const WeakCallbackInfo<HandleProxy>& data);
 
 protected:
 
@@ -499,10 +511,10 @@ public:
     void UnregisterNamedPropertyHandlers();
     void UnregisterIndexedPropertyHandlers();
 
-    static void GetProperty(Local<String> hName, const PropertyCallbackInfo<Value>& info);
-    static void SetProperty(Local<String> hName, Local<Value> value, const PropertyCallbackInfo<Value>& info);
-    static void GetPropertyAttributes(Local<String> hName, const PropertyCallbackInfo<Integer>& info);
-    static void DeleteProperty(Local<String> hName, const PropertyCallbackInfo<Boolean>& info);
+    static void GetProperty(Local<Name> hName, const PropertyCallbackInfo<Value>& info);
+    static void SetProperty(Local<Name> hName, Local<Value> value, const PropertyCallbackInfo<Value>& info);
+    static void GetPropertyAttributes(Local<Name> hName, const PropertyCallbackInfo<Integer>& info);
+    static void DeleteProperty(Local<Name> hName, const PropertyCallbackInfo<Boolean>& info);
     static void GetPropertyNames(const PropertyCallbackInfo<Array>& info);
 
     static void GetProperty(uint32_t index, const PropertyCallbackInfo<Value>& info);
@@ -618,11 +630,11 @@ protected:
     CopyablePersistent<v8::Object> _GlobalObject; // (taken from the context)
     ManagedV8GarbageCollectionRequestCallback _ManagedV8GarbageCollectionRequestCallback;
 
-    vector<_StringItem> _Strings; // An array (cache) of string buffers to reuse when marshalling strings.
+	vector<_StringItem> _Strings; // An array (cache) of string buffers to reuse when marshalling strings.
 
-    vector<HandleProxy*> _Handles; // An array of all allocated handles for this engine proxy.
-    vector<int> _DisposedHandles; // An array of handles (by ID [index]) that have been disposed. The managed GC thread uses this, so beware!
-    recursive_mutex _HandleSystemMutex; // A mutex is used to prevent access to the handle system as a "critical section".  NO ACCESS TO THE V8 ENGINE IS ALLOWED FOR MANAGED GARBAGE COLLECTION IN THIS CRITICAL SECTION.
+	vector<HandleProxy*> _Handles; // An array of all allocated handles for this engine proxy.
+	vector<int> _DisposedHandles; // An array of handles (by ID [index]) that have been disposed. The managed GC thread uses this, so beware!
+	recursive_mutex _HandleSystemMutex; // A mutex is used to prevent access to the handle system as a "critical section".  NO ACCESS TO THE V8 ENGINE IS ALLOWED FOR MANAGED GARBAGE COLLECTION IN THIS CRITICAL SECTION.
 
 public:
 

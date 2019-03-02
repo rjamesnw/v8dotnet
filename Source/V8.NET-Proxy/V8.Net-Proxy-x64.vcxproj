@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -26,31 +26,32 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccProvider>SAK</SccProvider>
     <ProjectName>V8.Net-Proxy-x64</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -80,7 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>V8_Net_Proxy_x64</TargetName>
-    <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)V8\src\v8\include;$(IncludePath)</IncludePath>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
     <OutDir>..\bin\$(Configuration)\x64\</OutDir>
@@ -97,7 +98,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)V8\src\v8\include;$(IncludePath)</IncludePath>
     <OutDir>..\bin\$(Configuration)\x64\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
@@ -137,19 +138,19 @@
       <Optimization>Disabled</Optimization>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(ProjectDir)V8\build\v8-x64;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)V8\src\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>V8\build\v8-x64\build\$(Configuration)\lib\v8_base.lib;V8\build\v8-x64\build\$(Configuration)\lib\v8_libbase.lib;V8\build\v8-x64\build\$(Configuration)\lib\v8_libplatform.lib;V8\build\v8-x64\build\$(Configuration)\lib\v8_snapshot.lib;V8\build\v8-x64\build\$(Configuration)\lib\icuuc.lib;V8\build\v8-x64\build\$(Configuration)\lib\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libbase.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libplatform.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icuuc.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>C:\Data\Visual Studio\Projects\V8.NET\Source\V8.NET-Proxy\V8\build\v8-x64\build\Debug\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -204,7 +205,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>V8\build\v8-x64\build\$(Configuration)\lib\v8_base.lib;V8\build\v8-x64\build\$(Configuration)\lib\v8_libbase.lib;V8\build\v8-x64\build\$(Configuration)\lib\v8_libplatform.lib;V8\build\v8-x64\build\$(Configuration)\lib\v8_snapshot.lib;V8\build\v8-x64\build\$(Configuration)\lib\icuuc.lib;V8\build\v8-x64\build\$(Configuration)\lib\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libbase.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libplatform.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icuuc.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
