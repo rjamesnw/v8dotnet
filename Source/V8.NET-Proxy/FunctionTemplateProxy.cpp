@@ -105,7 +105,7 @@ ObjectTemplateProxy* FunctionTemplateProxy::GetPrototypeTemplateProxy()
 HandleProxy* FunctionTemplateProxy::GetFunction()
 {
 	auto obj = _FunctionTemplate->GetFunction(_EngineProxy->Context());
-	auto proxyVal = _EngineProxy->GetHandleProxy(obj.FromMaybe(V8Null));
+	auto proxyVal = _EngineProxy->GetHandleProxy(obj.ToLocalChecked());
 	return proxyVal;
 }
 
@@ -126,8 +126,8 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
 	proxyVal->_ObjectID = managedObjectID;
 	//??auto count = obj->InternalFieldCount();
 	obj->SetAlignedPointerInInternalField(0, this); // (stored a reference to the proxy instance for the call-back functions)
-	obj->SetInternalField(1, NewExternal((void*)managedObjectID)); // (stored a reference to the managed object for the call-back functions)
-	obj->SetPrivate(_EngineProxy->Context(), NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+	obj->SetInternalField(1, NewExternal((void*)(int64_t)managedObjectID)); // (stored a reference to the managed object for the call-back functions)
+	obj->SetPrivate(_EngineProxy->Context(), NewPrivateString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
 	return proxyVal;
 }
 

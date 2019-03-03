@@ -22,7 +22,7 @@
 #endif
 
 #if _WIN32 || _WIN64
-//#include <windows.h>
+#include <windows.h>
 //#pragma comment(lib, "winmm.lib") // (required by V8 now)
 //#include <oleauto.h>
 #define ALLOC_MANAGED_MEM(size) GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, size)
@@ -72,6 +72,7 @@ template <class T> struct CopyablePersistent {
 #define vector std::vector
 #define exception std::exception
 #define recursive_mutex std::recursive_mutex
+#define lock_guard std::lock_guard
 
 #define V8Undefined v8::Undefined(Isolate::GetCurrent())
 #define V8Null v8::Null(Isolate::GetCurrent())
@@ -80,10 +81,12 @@ template <class T> struct CopyablePersistent {
 #define NewBool(value) Boolean::New(Isolate::GetCurrent(), value)
 #define NewSizedUString(str, len) String::NewFromTwoByte(Isolate::GetCurrent(), str, String::kNormalString, len)
 #define NewUString(str) String::NewFromTwoByte(Isolate::GetCurrent(), str, String::kNormalString)
+#define NewName(str) NewUString(str)
 #define NewSizedString(str, len) String::NewFromUtf8(Isolate::GetCurrent(), str, String::kNormalString, len)
 #define NewString(str) String::NewFromUtf8(Isolate::GetCurrent(), str, String::kNormalString)
+#define NewPrivateString(str) Private::New(Isolate::GetCurrent(), NewString(str))
 #define NewObject() Object::New(Isolate::GetCurrent())
-#define NewDate(ms) Date::New(Isolate::GetCurrent(), ms)
+#define NewDate(ctx, ms) Date::New(ctx, ms).ToLocalChecked()
 #define NewArray(len) Array::New(Isolate::GetCurrent(), len)
 #define NewObjectTemplate() ObjectTemplate::New(Isolate::GetCurrent())
 #define NewFunctionTemplate(callback, data) FunctionTemplate::New(Isolate::GetCurrent(), callback, data)
@@ -523,8 +526,8 @@ public:
     static void DeleteProperty(uint32_t index, const PropertyCallbackInfo<Boolean>& info);
     static void GetPropertyIndices(const PropertyCallbackInfo<Array>& info);
 
-    static void AccessorGetterCallbackProxy(Local<String> property, const PropertyCallbackInfo<Value>& info);
-    static void AccessorSetterCallbackProxy(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void>& info);
+    static void AccessorGetterCallbackProxy(Local<Name> property, const PropertyCallbackInfo<Value>& info);
+    static void AccessorSetterCallbackProxy(Local<Name> property, Local<Value> value, const PropertyCallbackInfo<void>& info);
 
     HandleProxy* CreateObject(int32_t managedObjectID);
 
@@ -644,7 +647,7 @@ public:
     V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort);
     ~V8EngineProxy();
 
-    static Local<String> GetErrorMessage(TryCatch &tryCatch);
+    static Local<String> GetErrorMessage(Local<v8::Context> ctx, TryCatch &tryCatch);
         
     // Returns the next object ID for objects that do NOT have a corresponding object.  These objects still need an ID, and are given values less than -1.
     int32_t GetNextNonTemplateObjectID() { return _NextNonTemplateObjectID--; }

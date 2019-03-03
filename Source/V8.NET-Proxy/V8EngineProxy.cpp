@@ -16,7 +16,7 @@ _StringItem::_StringItem(V8EngineProxy *engine, v8::String* str)
 	Engine = engine;
 	Length = str->Length();
 	String = (uint16_t*)ALLOC_MANAGED_MEM(sizeof(uint16_t) * (Length + 1));
-	str->Write(String);
+	str->Write(Engine->Isolate(), String);
 }
 
 void _StringItem::Free() { if (String != nullptr) { FREE_MANAGED_MEM(String); String = nullptr; } }
@@ -56,19 +56,29 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
+//class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
+//public:
+//	virtual void* Allocate(size_t length) { return malloc(length); }
+//	virtual void* AllocateUninitialized(size_t length) { return malloc(length); }
+//	virtual void Free(void* data, size_t length) { free(data); }
+//};
+
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
 	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr),
 	_Strings(1000, _StringItem()), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _NextNonTemplateObjectID(-2)
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
-		v8::V8::InitializePlatform(v8::platform::CreateDefaultPlatform());
+		std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform();
+		v8::V8::InitializePlatform(platform.get());
 		v8::V8::InitializeICU();
 		v8::V8::Initialize();
 		_V8Initialized = true;
 	}
 
-	_Isolate = Isolate::New();
+	Isolate::CreateParams params;
+	//params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+	_Isolate = Isolate::New(params);
 
 	BEGIN_ISOLATE_SCOPE(this);
 
@@ -158,7 +168,7 @@ _StringItem V8EngineProxy::GetNativeString(v8::String* str)
 		_str = _StringItem(this, str->Length());
 	}
 
-	str->Write(_str.String);
+	str->Write(_Isolate, _str.String);
 	return _str;
 }
 
@@ -176,7 +186,7 @@ void V8EngineProxy::DisposeNativeString(_StringItem &item)
  */
 HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 {
-	std::lock_guard<std::recursive_mutex> handleSection(_HandleSystemMutex);
+	lock_guard<recursive_mutex> handleSection(_HandleSystemMutex);
 
 	HandleProxy* handleProxy;
 
@@ -200,7 +210,7 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 
 void V8EngineProxy::DisposeHandleProxy(HandleProxy *handleProxy)
 {
-	std::lock_guard<std::recursive_mutex> handleSection(_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+	lock_guard<recursive_mutex> handleSection(_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
 
 	if (handleProxy->_Dispose(false))
 		_DisposedHandles.push_back(handleProxy->_ID); // (this is a queue of disposed handles to use for recycling; Note: the persistent handles are NEVER disposed until they become reinitialized)
@@ -244,7 +254,7 @@ HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
 	// ... the context auto creates the global object from the given template, BUT, we still need to update the internal fields with proper values expected
 	// for callback into managed code ...
 
-	auto globalObject = context->Global()->GetPrototype()->ToObject();
+	auto globalObject = context->Global()->GetPrototype()->ToObject(_Isolate);
 	globalObject->SetAlignedPointerInInternalField(0, _GlobalObjectTemplateProxy); // (proxy object reference)
 	globalObject->SetInternalField(1, External::New(_Isolate, (void*)-1)); // (manage object ID, which is only applicable when tracking many created objects [and not a single engine or global scope])
 
@@ -287,49 +297,49 @@ HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-Local<String> V8EngineProxy::GetErrorMessage(TryCatch &tryCatch)
+Local<String> V8EngineProxy::GetErrorMessage(Local<v8::Context> ctx, TryCatch &tryCatch)
 {
-	auto msg = tryCatch.Exception()->ToString();
+	auto msg = tryCatch.Exception()->ToString(ctx->GetIsolate());
 
-	auto stack = tryCatch.StackTrace();
+	auto stack = tryCatch.StackTrace(ctx).ToLocalChecked();
 	bool showStackMsg = !stack.IsEmpty() && !stack->IsUndefined();
 	Local<String> stackStr;
 
 	if (showStackMsg)
 	{
-		stackStr = stack->ToString();
+		stackStr = stack->ToString(ctx->GetIsolate());
 
 		// ... detect if the start of the stack message is the same as the exception message, then remove it (seems to happen when managed side returns an error) ...
 
 		if (stackStr->Length() >= msg->Length())
 		{
 			uint16_t* ss = new uint16_t[stackStr->Length() + 1];
-			stack->ToString()->Write(ss);
+			stack->ToString(ctx->GetIsolate())->Write(ctx->GetIsolate(), ss);
 			auto subStackStr = NewSizedUString(ss, msg->Length());
 			auto stackPartStr = NewSizedUString(ss + msg->Length(), stackStr->Length() - msg->Length());
 			delete[] ss;
 
-			if (msg->Equals(subStackStr))
+			if (msg->Equals(ctx, subStackStr).ToChecked())
 				stackStr = stackPartStr;
 		}
 	}
 
-	msg = msg->Concat(msg, NewString("\r\n"));
+	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("\r\n"));
 
-	msg = msg->Concat(msg, NewString("  Line: "));
-	auto line = NewInteger(tryCatch.Message()->GetLineNumber())->ToString();
-	msg = msg->Concat(msg, line);
+	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("  Line: "));
+	auto line = NewInteger(tryCatch.Message()->GetLineNumber(ctx).ToChecked())->ToString(ctx).ToLocalChecked();
+	msg = msg->Concat(ctx->GetIsolate(), msg, line);
 
-	msg = msg->Concat(msg, NewString("  Column: "));
-	auto col = NewInteger(tryCatch.Message()->GetStartColumn())->ToString();
-	msg = msg->Concat(msg, col);
-	msg = msg->Concat(msg, NewString("\r\n"));
+	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("  Column: "));
+	auto col = NewInteger(tryCatch.Message()->GetStartColumn(ctx).ToChecked())->ToString(ctx).ToLocalChecked();
+	msg = msg->Concat(ctx->GetIsolate(), msg, col);
+	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("\r\n"));
 
 	if (showStackMsg)
 	{
-		msg = msg->Concat(msg, NewString("  Stack: "));
-		msg = msg->Concat(msg, stackStr);
-		msg = msg->Concat(msg, NewString("\r\n"));
+		msg = msg->Concat(ctx->GetIsolate(), msg, NewString("  Stack: "));
+		msg = msg->Concat(ctx->GetIsolate(), msg, stackStr);
+		msg = msg->Concat(ctx->GetIsolate(), msg, NewString("\r\n"));
 	}
 
 	return msg;
@@ -342,16 +352,17 @@ HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName
 	try
 	{
 
-		TryCatch __tryCatch;
+		TryCatch __tryCatch(_Isolate);
 		//__tryCatch.SetVerbose(true);
 
 		if (sourceName == nullptr) sourceName = (uint16_t*)L"";
 
-		auto compiledScript = Script::Compile(NewUString(script), NewUString(sourceName));
+		ScriptOrigin origin(NewUString(sourceName));
+		auto compiledScript = Script::Compile(_Context, NewUString(script), &origin).ToLocalChecked();
 
 		if (__tryCatch.HasCaught())
 		{
-			returnVal = GetHandleProxy(GetErrorMessage(__tryCatch));
+			returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 			returnVal->_Type = JSV_CompilerError;
 		}
 		else
@@ -372,14 +383,14 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
 
 	try
 	{
-		TryCatch __tryCatch;
+		TryCatch __tryCatch(_Isolate);
 		//__tryCatch.SetVerbose(true);
 
-		auto result = script->Run();
+		auto result = script->Run(_Context).ToLocalChecked();
 
 		if (__tryCatch.HasCaught())
 		{
-			returnVal = GetHandleProxy(GetErrorMessage(__tryCatch));
+			returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 			returnVal->_Type = JSV_ExecutionError;
 		}
 		else  returnVal = GetHandleProxy(result);
@@ -399,18 +410,20 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
 
 	try
 	{
-		TryCatch __tryCatch;
+		TryCatch __tryCatch(_Isolate);
 		//__tryCatch.SetVerbose(true);
 
 		if (sourceName == nullptr) sourceName = (uint16_t*)L"";
 
 		auto hScript = NewUString(script);
 
-		auto compiledScript = Script::Compile(hScript, NewUString(sourceName));
+		ScriptOrigin origin(NewUString(sourceName));
+
+		auto compiledScript = Script::Compile(_Context, hScript, &origin).ToLocalChecked();
 
 		if (__tryCatch.HasCaught())
 		{
-			returnVal = GetHandleProxy(GetErrorMessage(__tryCatch));
+			returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 			returnVal->_Type = JSV_CompilerError;
 		}
 		else
@@ -459,7 +472,7 @@ HandleProxy* V8EngineProxy::Call(HandleProxy *subject, const uint16_t *functionN
 	else
 		hFunc = hSubject.As<Function>();
 
-	TryCatch __tryCatch;
+	TryCatch __tryCatch(_Isolate);
 
 	Handle<Value> result;
 
@@ -468,16 +481,16 @@ HandleProxy* V8EngineProxy::Call(HandleProxy *subject, const uint16_t *functionN
 		Handle<Value>* _args = new Handle<Value>[argCount];
 		for (auto i = 0; i < argCount; i++)
 			_args[i] = args[i]->Handle();
-		result = hFunc->Call(hThis.As<Object>(), argCount, _args);
+		result = hFunc->Call(_Context, hThis.As<Object>(), argCount, _args).ToLocalChecked();
 		delete[] _args;
 	}
-	else result = hFunc->Call(hThis.As<Object>(), 0, nullptr);
+	else result = hFunc->Call(_Context, hThis.As<Object>(), 0, nullptr).ToLocalChecked();
 
 	HandleProxy *returnVal;
 
 	if (__tryCatch.HasCaught())
 	{
-		returnVal = GetHandleProxy(GetErrorMessage(__tryCatch));
+		returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 		returnVal->_Type = JSV_ExecutionError;
 	}
 	else returnVal = result.IsEmpty() ? nullptr : GetHandleProxy(result);
@@ -525,7 +538,7 @@ HandleProxy* V8EngineProxy::CreateError(const char* message, JSValueType errorTy
 
 HandleProxy* V8EngineProxy::CreateDate(double ms)
 {
-	return GetHandleProxy(NewDate(ms));
+	return GetHandleProxy(NewDate(_Context, ms));
 }
 
 HandleProxy* V8EngineProxy::CreateObject(int32_t managedObjectID)

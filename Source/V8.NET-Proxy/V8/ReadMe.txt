@@ -6,15 +6,23 @@ Steps to download and build V8:
 2. Download the source into THIS folder (where this readme.txt file exists, so 'V8.NET-Proxy\V8\src\...').
    Follow instructions here: https://v8.dev/docs/source-code
 
-3. Go here for steps on building the V8 source: https://v8.dev/docs/build
+3. Make sure to set these environment variables:
+   * DEPOT_TOOLS_WIN_TOOLCHAIN=0
+   * GYP_MSVS_VERSION=2017
+
+4. Go here for steps on building the V8 source: https://v8.dev/docs/build
    Tip: In the 'tools' folder run 'gm.py' without parameters to see all architectures.
-
-4. Compiled files will be in 'tools\dev\out' in a sub-folder for each architecture.
-
-5. To get the static lib files for building V8.NET open the command prompt here: src\v8\tools\dev
+   Note: If you run "python gm.py ????.release" it will say "Done.", then start auto-building.
+         Press CTRL-C to abort the build.
+		 
+5. Compiled files will be in 'tools\dev\out' in a sub-folder for each architecture.
+   For each out folder (out/*) update 'args.gn' within them and add this: v8_static_library = true
+6. To get the static lib files for building V8.NET open the command prompt here: src\v8\tools\dev
    And execute this:
    * ninja -C out/x64.release
    * ninja -C out/ia32.release
+
+7. Copy *.bin from both folders in src\v8\tools\dev\out\ (x64.release and ia32.release) to the output folder for V8.Net.
 
 You should now be ready to build V8.NET! :)
    

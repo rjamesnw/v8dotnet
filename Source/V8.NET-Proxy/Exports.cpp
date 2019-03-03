@@ -181,9 +181,9 @@ extern "C"
 			{
 				if (templateProxy != nullptr)
 					obj->SetAlignedPointerInInternalField(0, templateProxy); // (stored a reference to the proxy instance for the call-back function(s))
-				obj->SetInternalField(1, NewExternal((void*)managedObjectID));
+				obj->SetInternalField(1, NewExternal((void*)(int64_t)managedObjectID));
 			}
-			obj->SetPrivate(NewString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+			obj->SetPrivate(engine->Context(), NewPrivateString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
 		}
 		handleProxy->SetManagedObjectID(managedObjectID);
 
@@ -231,7 +231,7 @@ extern "C"
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
-		return obj->ForceSet(NewUString(name), valueHandle, attribs);
+		return obj->DefineOwnProperty(engine->Context(), NewUString(name), valueHandle, attribs).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -296,7 +296,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		return obj->Delete(NewUString(name));
+		return obj->Delete(engine->Context(), NewUString(name)).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -312,7 +312,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		return obj->Delete(index);
+		return obj->Delete(engine->Context(), index).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -332,14 +332,14 @@ extern "C"
 
 		auto obj = handle.As<Object>();
 
-		obj->SetHiddenValue(NewString("ManagedObjectID"), NewInteger(managedObjectID));
+		obj->SetPrivate(engine->Context(), NewPrivateString("ManagedObjectID"), NewInteger(managedObjectID));
 
 		auto accessors = NewArray(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
 		accessors->Set(0, NewInteger(managedObjectID));
 		accessors->Set(1, NewExternal(getter));
 		accessors->Set(2, NewExternal(setter));
 
-		obj->SetAccessor(NewUString(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
+		obj->SetAccessor(engine->Context(), NewName(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -381,7 +381,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		auto names = obj->GetPropertyNames();
+		auto names = obj->GetPropertyNames(engine->Context()).ToLocalChecked();
 		return proxy->EngineProxy()->GetHandleProxy(names);
 
 		END_CONTEXT_SCOPE;
@@ -398,7 +398,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		auto names = obj->GetOwnPropertyNames();
+		auto names = obj->GetOwnPropertyNames(engine->Context()).ToLocalChecked();
 		return proxy->EngineProxy()->GetHandleProxy(names);
 
 		END_CONTEXT_SCOPE;
@@ -415,7 +415,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		return obj->GetPropertyAttributes(NewUString(name));
+		return obj->GetPropertyAttributes(engine->Context(), NewUString(name)).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;

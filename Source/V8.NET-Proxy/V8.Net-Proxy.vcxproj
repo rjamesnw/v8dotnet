@@ -111,19 +111,19 @@
       <Optimization>Disabled</Optimization>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(ProjectDir)V8\build\v8-ia32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>V8\build\v8-ia32\build\$(Configuration)\lib\v8_base.lib;V8\build\v8-ia32\build\$(Configuration)\lib\v8_libbase.lib;V8\build\v8-ia32\build\$(Configuration)\lib\v8_libplatform.lib;V8\build\v8-ia32\build\$(Configuration)\lib\v8_snapshot.lib;V8\build\v8-ia32\build\$(Configuration)\lib\icuuc.lib;V8\build\v8-ia32\build\$(Configuration)\lib\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)V8\src\v8\tools\dev\out\ia32.release\obj\v8_libbase.lib;$(ProjectDir)V8\src\v8\tools\dev\out\ia32.release\obj\v8_libplatform.lib;$(ProjectDir)V8\src\v8\tools\dev\out\ia32.release\obj\third_party\icu\icuuc.lib;$(ProjectDir)V8\src\v8\tools\dev\out\ia32.release\obj\third_party\icu\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>C:\Data\Visual Studio\Projects\V8.NET\Source\V8.NET-Proxy\V8\build\v8-ia32\build\Debug\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)V8\src\v8\tools\dev\out\ia32.release\obj</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>

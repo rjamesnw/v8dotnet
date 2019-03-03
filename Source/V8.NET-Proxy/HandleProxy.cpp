@@ -30,7 +30,7 @@ HandleProxy::~HandleProxy()
 // (registerDisposal is false when called within 'V8EngineProxy.DisposeHandleProxy()' (to prevent a cyclical loop), or by the engine's destructor)
 bool HandleProxy::_Dispose(bool registerDisposal)
 {
-	std::lock_guard<recursive_mutex>(_EngineProxy->_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+	lock_guard<recursive_mutex>(_EngineProxy->_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
 
 	if (V8EngineProxy::IsDisposed(_EngineID))
 		delete this; // (the engine is gone, so just destroy the memory [the managed side owns UNDISPOSED proxy handles - they are not deleted with the engine)
@@ -225,13 +225,13 @@ int32_t HandleProxy::GetManagedObjectID()
 			{
 				auto field = obj->GetInternalField(1); // (may be faster than hidden values)
 				if (field->IsExternal())
-					_ObjectID = (int32_t)field.As<External>()->Value();
+					_ObjectID = (int32_t)(int64_t)field.As<External>()->Value();
 			}
 			else
 			{
-				auto handle = obj->GetPrivate(_EngineProxy->Context(), NewString("ManagedObjectID"));
-				if (!handle.IsEmpty() && handle.FromMaybe(V8Null)->IsInt32())
-					_ObjectID = (int32_t)handle.FromMaybe(V8Null)->Int32Value(_EngineProxy->Context()).FromJust();
+				auto handle = obj->GetPrivate(_EngineProxy->Context(), NewPrivateString("ManagedObjectID"));
+				if (!handle.IsEmpty() && handle.ToLocalChecked()->IsInt32())
+					_ObjectID = (int32_t)handle.ToLocalChecked()->Int32Value(_EngineProxy->Context()).FromJust();
 			}
 
 			if (_ObjectID == -1)
