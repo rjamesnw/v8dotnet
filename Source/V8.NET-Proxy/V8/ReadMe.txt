@@ -51,7 +51,11 @@ Steps to download and build V8:
    If "v8_use_external_startup_data" is true, then V8 will start more quickly, but two .bin files in the
    out.gn\*.release folders will need to be included with the V8.Net output files.
    
+   Follow these same steps for 'x64.debug' and 'ia32.debug' as well; however, make sure to set 'is_debug = true' instead.
+   
 6. To build, run these:
+   * ninja -C out.gn/x64.debug v8
+   * ninja -C out.gn/ia32.debug v8
    * ninja -C out.gn/x64.release v8
    * ninja -C out.gn/ia32.release v8
 

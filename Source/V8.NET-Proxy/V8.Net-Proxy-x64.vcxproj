@@ -88,7 +88,7 @@
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
@@ -103,7 +103,7 @@
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -140,7 +140,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
-      <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>

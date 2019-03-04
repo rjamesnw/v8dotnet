@@ -640,6 +640,7 @@ protected:
 
     int32_t _NextNonTemplateObjectID;
 
+	std::unique_ptr<v8::Platform> _Platform;
     Isolate* _Isolate;
     ObjectTemplateProxy* _GlobalObjectTemplateProxy; // (for working with the managed side regarding the global scope)
     CopyablePersistent<v8::Context> _Context;

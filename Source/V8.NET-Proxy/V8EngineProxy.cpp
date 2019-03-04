@@ -26,7 +26,10 @@ _StringItem _StringItem::ResizeIfNeeded(size_t newLength)
 	if (newLength > Length)
 	{
 		Length = newLength;
-		String = (uint16_t*)REALLOC_MANAGED_MEM(String, sizeof(uint16_t) * (Length + 1));
+		if (String == nullptr)
+			String = (uint16_t*)ALLOC_MANAGED_MEM(sizeof(uint16_t) * (Length + 1));
+		else
+			String = (uint16_t*)REALLOC_MANAGED_MEM(String, sizeof(uint16_t) * (Length + 1));
 	}
 	return *this;
 }
@@ -69,15 +72,15 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
-		std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform();
-		v8::V8::InitializePlatform(platform.get());
+		_Platform = v8::platform::NewDefaultPlatform();
+		v8::V8::InitializePlatform(_Platform.get());
 		v8::V8::InitializeICU();
 		v8::V8::Initialize();
 		_V8Initialized = true;
 	}
 
 	Isolate::CreateParams params;
-	//params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+	params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 	_Isolate = Isolate::New(params);
 
 	BEGIN_ISOLATE_SCOPE(this);
@@ -138,6 +141,8 @@ V8EngineProxy::~V8EngineProxy()
 		_Isolate->Dispose();
 		_Isolate = nullptr;
 
+		_Platform.release();
+
 		// ... free the string cache ...
 
 		for (size_t i = 0; i < _Strings.size(); i++)
@@ -165,10 +170,14 @@ _StringItem V8EngineProxy::GetNativeString(v8::String* str)
 	}
 	else
 	{
-		_str = _StringItem(this, str->Length());
+		_str = _StringItem(this, str == nullptr ? 0 : str->Length());
 	}
 
-	str->Write(_Isolate, _str.String);
+	if (str != nullptr)
+		str->Write(_Isolate, _str.String);
+	else
+		_str.String = nullptr;
+
 	return _str;
 }
 
@@ -358,15 +367,15 @@ HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName
 		if (sourceName == nullptr) sourceName = (uint16_t*)L"";
 
 		ScriptOrigin origin(NewUString(sourceName));
-		auto compiledScript = Script::Compile(_Context, NewUString(script), &origin).ToLocalChecked();
+		auto compiledScript = Script::Compile(_Context, NewUString(script), &origin);
 
 		if (__tryCatch.HasCaught())
 		{
 			returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 			returnVal->_Type = JSV_CompilerError;
 		}
-		else
-			returnVal = Execute(compiledScript);
+		else if (!compiledScript.IsEmpty())
+			returnVal = Execute(compiledScript.ToLocalChecked());
 	}
 	catch (exception ex)
 	{
@@ -386,14 +395,15 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
 		TryCatch __tryCatch(_Isolate);
 		//__tryCatch.SetVerbose(true);
 
-		auto result = script->Run(_Context).ToLocalChecked();
+		auto result = script->Run(_Context);
 
 		if (__tryCatch.HasCaught())
 		{
 			returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 			returnVal->_Type = JSV_ExecutionError;
 		}
-		else  returnVal = GetHandleProxy(result);
+		else  if (!result.IsEmpty())
+			returnVal = GetHandleProxy(result.ToLocalChecked());
 	}
 	catch (exception ex)
 	{
@@ -419,17 +429,17 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
 
 		ScriptOrigin origin(NewUString(sourceName));
 
-		auto compiledScript = Script::Compile(_Context, hScript, &origin).ToLocalChecked();
+		auto compiledScript = Script::Compile(_Context, hScript, &origin);
 
 		if (__tryCatch.HasCaught())
 		{
 			returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 			returnVal->_Type = JSV_CompilerError;
 		}
-		else
+		else if (!compiledScript.IsEmpty())
 		{
 			returnVal = GetHandleProxy(Handle<Value>());
-			returnVal->SetHandle(compiledScript);
+			returnVal->SetHandle(compiledScript.ToLocalChecked());
 			returnVal->_Value.V8String = _StringItem(this, *hScript).String;
 		}
 	}
@@ -474,17 +484,17 @@ HandleProxy* V8EngineProxy::Call(HandleProxy *subject, const uint16_t *functionN
 
 	TryCatch __tryCatch(_Isolate);
 
-	Handle<Value> result;
+	MaybeLocal<Value> result;
 
 	if (argCount > 0)
 	{
 		Handle<Value>* _args = new Handle<Value>[argCount];
 		for (auto i = 0; i < argCount; i++)
 			_args[i] = args[i]->Handle();
-		result = hFunc->Call(_Context, hThis.As<Object>(), argCount, _args).ToLocalChecked();
+		result = hFunc->Call(_Context, hThis.As<Object>(), argCount, _args);
 		delete[] _args;
 	}
-	else result = hFunc->Call(_Context, hThis.As<Object>(), 0, nullptr).ToLocalChecked();
+	else result = hFunc->Call(_Context, hThis.As<Object>(), 0, nullptr);
 
 	HandleProxy *returnVal;
 
@@ -493,7 +503,7 @@ HandleProxy* V8EngineProxy::Call(HandleProxy *subject, const uint16_t *functionN
 		returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
 		returnVal->_Type = JSV_ExecutionError;
 	}
-	else returnVal = result.IsEmpty() ? nullptr : GetHandleProxy(result);
+	else returnVal = result.IsEmpty() ? nullptr : GetHandleProxy(result.ToLocalChecked());
 
 	return returnVal;
 }

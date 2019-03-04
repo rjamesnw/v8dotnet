@@ -121,19 +121,19 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Dumping global properties ...");
                     _JSServer.VerboseConsoleExecute(@"dump(this)");
 
-                    Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
-                    _JSServer.VerboseConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
-                    _JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
+                    //Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
+                    //_JSServer.VerboseConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
+                    //_JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
 
-                    Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
-                    _JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
-                    _JSServer.VerboseConsoleExecute(@"System.String.Empty;");
-                    Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
+                    //Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
+                    //_JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
+                    //_JSServer.VerboseConsoleExecute(@"System.String.Empty;");
+                    //Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
 
-                    Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
-                    _JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
+                    //Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
+                    //_JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
 
-                    var funcTemp = _JSServer.CreateFunctionTemplate<SamplePointFunctionTemplate>("SamplePointFunctionTemplate");
+                    //var funcTemp = _JSServer.CreateFunctionTemplate<SamplePointFunctionTemplate>("SamplePointFunctionTemplate");
                 }
 
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
