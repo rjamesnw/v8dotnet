@@ -15,8 +15,6 @@
 //#include <include\v8stdint.h>
 #include "Platform.h"
 
-//using namespace std;
-
 #if (_MSC_PLATFORM_TOOLSET < 110)
 #define nullptr NULL
 #endif
@@ -43,6 +41,21 @@
 
 #include "libplatform/libplatform.h"
 #include "v8.h"
+
+#pragma comment(lib, "v8_base_0.lib")
+#pragma comment(lib, "v8_base_1.lib")
+#pragma comment(lib, "v8_snapshot.lib")
+#pragma comment(lib, "v8_nosnapshot.lib")
+#pragma comment(lib, "v8_libbase.lib")
+#pragma comment(lib, "v8_libplatform.lib")
+#pragma comment(lib, "v8_libsampler.lib")
+#pragma comment(lib, "third_party/icu/icuuc.lib")
+#pragma comment(lib, "third_party/icu/icui18n.lib")
+#pragma comment(lib, "src/inspector/inspector.lib")
+
+#pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "dbghelp.lib")
+#pragma comment(lib, "shlwapi.lib")
 
 using namespace v8;
 

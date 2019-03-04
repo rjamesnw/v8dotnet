@@ -81,14 +81,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>V8_Net_Proxy_x64</TargetName>
-    <IncludePath>$(ProjectDir)V8\src\v8\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)V8\src\v8\include;$(ProjectDir)V8\src\v8;$(IncludePath)</IncludePath>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
     <OutDir>..\bin\$(Configuration)\x64\</OutDir>
-    <IntDir>bin\$(Configuration)\</IntDir>
+    <IntDir>bin\$(Configuration)\x64\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <LibraryPath>C:/windows/system32;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
@@ -98,12 +98,12 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)V8\src\v8\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)V8\src\v8\include;$(ProjectDir)V8\src\v8;$(IncludePath)</IncludePath>
     <OutDir>..\bin\$(Configuration)\x64\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <LibraryPath>C:/windows/system32;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.release\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -145,12 +145,13 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libbase.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libplatform.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icuuc.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -205,11 +206,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libbase.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\v8_libplatform.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icuuc.lib;$(ProjectDir)V8\src\v8\tools\dev\out\x64.release\obj\third_party\icu\icui18n.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>C:\Data\Visual Studio\Projects\V8.NET\Source\V8.NET-Proxy\V8\build\v8-x64\build\Release\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>
