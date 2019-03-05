@@ -95,6 +95,7 @@ namespace V8.Net
         {
             try
             {
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertyGetter(): '{nameof(propertyName)}' is null.");
                 var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return null;
@@ -111,6 +112,7 @@ namespace V8.Net
         {
             try
             {
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertySetter(): '{nameof(propertyName)}' is null.");
                 using (InternalHandle hValue = new InternalHandle(value, false))
                 {
                     var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
@@ -130,6 +132,7 @@ namespace V8.Net
         {
             try
             {
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertyQuery(): '{nameof(propertyName)}' is null.");
                 var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return V8PropertyAttributes.Undefined;
@@ -148,6 +151,7 @@ namespace V8.Net
         {
             try
             {
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertyDeleter(): '{nameof(propertyName)}' is null.");
                 var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return -1;

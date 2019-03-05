@@ -121,19 +121,19 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Dumping global properties ...");
                     _JSServer.VerboseConsoleExecute(@"dump(this)");
 
-                    //Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
-                    //_JSServer.VerboseConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
-                    //_JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
+                    Console.WriteLine(Environment.NewLine + "Here is a contrived example of calling and passing CLR methods/types ...");
+                    _JSServer.VerboseConsoleExecute(@"r = Enumerable.Range(1,Int32('10'));");
+                    _JSServer.VerboseConsoleExecute(@"a = System.String.Join$1([Int32], ', ', r);");
 
-                    //Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
-                    //_JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
-                    //_JSServer.VerboseConsoleExecute(@"System.String.Empty;");
-                    //Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
+                    Console.WriteLine(Environment.NewLine + "Example of changing 'System.String.Empty' member security attributes to 'NoAccess'...");
+                    _JSServer.GetTypeBinder(typeof(String)).ChangeMemberSecurity("Empty", ScriptMemberSecurity.NoAcccess);
+                    _JSServer.VerboseConsoleExecute(@"System.String.Empty;");
+                    Console.WriteLine("(Note: Access denied is only for static types - bound instances are more dynamic, and will hide properties instead [name/index interceptors are not available on V8 Function objects])");
 
-                    //Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
-                    //_JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
+                    Console.WriteLine(Environment.NewLine + "Finally, how to view method signatures...");
+                    _JSServer.VerboseConsoleExecute(@"dump(System.String.Join);");
 
-                    //var funcTemp = _JSServer.CreateFunctionTemplate<SamplePointFunctionTemplate>("SamplePointFunctionTemplate");
+                    var funcTemp = _JSServer.CreateFunctionTemplate<SamplePointFunctionTemplate>("SamplePointFunctionTemplate");
                 }
 
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
@@ -345,7 +345,7 @@ namespace V8.Net
                             //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
                             Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
 
-                            count = 200000000;
+                            count = 2000000;
 
                             Console.WriteLine("\r\nTesting global property write speed ... ");
                             startTime = timer.ElapsedMilliseconds;
@@ -361,7 +361,7 @@ namespace V8.Net
                             result2 = (double)elapsed / count;
                             Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
-                            count = 200000;
+                            count = 2000000;
 
                             Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
                             _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();
@@ -659,7 +659,7 @@ public class V8DotNetTester : V8ManagedObject
         Console.WriteLine("Creating test property 1 (adding new JSProperty directly) ...");
 
         var myProperty1 = new JSProperty(Engine.CreateValue("Test property 1"));
-        this.Properties.Add("testProperty1", myProperty1);
+        this.NamedProperties.Add("testProperty1", myProperty1);
 
         Console.WriteLine("Creating test property 2 (adding new JSProperty using the IV8ManagedObject interface) ...");
 
@@ -669,11 +669,11 @@ public class V8DotNetTester : V8ManagedObject
         Console.WriteLine("Creating test property 3 (reusing JSProperty instance for property 1) ...");
 
         // Note: This effectively links property 3 to property 1, so they will both always have the same value, even if the value changes.
-        this.Properties.Add("testProperty3", myProperty1); // (reuse a value)
+        this.NamedProperties.Add("testProperty3", myProperty1); // (reuse a value)
 
         Console.WriteLine("Creating test property 4 (just creating a 'null' property which will be intercepted later) ...");
 
-        this.Properties.Add("testProperty4", JSProperty.Empty);
+        this.NamedProperties.Add("testProperty4", JSProperty.Empty);
 
         Console.WriteLine("Creating test property 5 (test the 'this' overload in V8ManagedObject, which will set/update property 5 without calling into V8) ...");
 

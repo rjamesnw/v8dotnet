@@ -25,7 +25,7 @@ namespace V8.Net
         /// Holds a Key->Value reference to all property names and values for the JavaScript object that this managed object represents.
         /// Accessing the 'Properties' property without setting it first creates a new dictionary object by default.
         /// </summary>
-        IDictionary<string, IJSProperty> Properties { get; }
+        IDictionary<string, IJSProperty> NamedProperties { get; }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ namespace V8.Net
         /// Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
         /// <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
         /// </summary>
-        InternalHandle IndexedPropertySetter(int index, InternalHandle value);
+        InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
         /// Let's the V8 engine know the attributes for the specified property.
@@ -124,27 +124,55 @@ namespace V8.Net
         /// Holds a Key->Value reference to all property names and values for the JavaScript object that this managed object represents.
         /// Accessing the 'Properties' property without setting it first creates a new dictionary object by default.
         /// </summary>
-        public virtual IDictionary<string, IJSProperty> Properties
+        public virtual IDictionary<string, IJSProperty> NamedProperties
         {
-            get { return _Properties ?? (_Properties = new Dictionary<string, IJSProperty>()); }
-            protected set { _Properties = value; }
+            get { return _NamedProperties ?? (_NamedProperties = new Dictionary<string, IJSProperty>()); }
+            protected set { _NamedProperties = value; }
         }
-        protected IDictionary<string, IJSProperty> _Properties;
+        protected IDictionary<string, IJSProperty> _NamedProperties;
+
+        /// <summary>
+        /// Holds a Key->Value reference to all numerical indexed values for the JavaScript object that this managed object represents.
+        /// Accessing the 'Properties' property without setting it first creates a new dictionary object by default.
+        /// </summary>
+        public virtual IDictionary<int, IJSProperty> IndexedProperties
+        {
+            get { return _IndexedProperties ?? (_IndexedProperties = new Dictionary<int, IJSProperty>()); }
+            protected set { _IndexedProperties = value; }
+        }
+        protected IDictionary<int, IJSProperty> _IndexedProperties;
 
         // --------------------------------------------------------------------------------------------------------------------
+
+        bool _TryConvertToIndex(string propertyName, out int index)
+        {
+            index = -1;
+            if (propertyName != null && propertyName[0] >= '0' && propertyName[0] <= '0')
+            {
+                var _index = Utilities.ToInt32(propertyName, null);
+                if (_index != null)
+                    index = _index.Value;
+            }
+            return index >= 0;
+        }
 
         new public IJSProperty this[string propertyName]
         {
             get
             {
+                if (_TryConvertToIndex(propertyName, out var index))
+                    return this[index];
                 IJSProperty value;
-                if (Properties.TryGetValue(propertyName, out value))
+                if (NamedProperties.TryGetValue(propertyName, out value))
                     return value;
                 return JSProperty.Empty;
             }
             set
             {
-                Properties[propertyName] = value;
+                if (_TryConvertToIndex(propertyName, out var index))
+                    this[index] = value;
+                else
+                    NamedProperties[propertyName] = value;
             }
         }
 
@@ -153,13 +181,13 @@ namespace V8.Net
             get
             {
                 IJSProperty value;
-                if (Properties.TryGetValue(index.ToString(), out value))
+                if (IndexedProperties.TryGetValue(index, out value))
                     return value;
                 return JSProperty.Empty;
             }
             set
             {
-                Properties[index.ToString()] = value;
+                IndexedProperties[index] = value;
             }
         }
 
@@ -262,7 +290,7 @@ namespace V8.Net
             if ((jsVal.Attributes & V8PropertyAttributes.DontDelete) != 0)
                 return false;
 
-            return Properties.Remove(propertyName);
+            return NamedProperties.Remove(propertyName);
         }
 
         public virtual InternalHandle NamedPropertyEnumerator()
@@ -273,9 +301,9 @@ namespace V8.Net
                 if (!result.IsUndefined) return result;
             }
 
-            List<string> names = new List<string>(Properties.Count);
+            List<string> names = new List<string>(NamedProperties.Count);
 
-            foreach (var prop in Properties)
+            foreach (var prop in NamedProperties)
                 if (prop.Value != null && (prop.Value.Attributes & V8PropertyAttributes.DontEnum) == 0)
                     names.Add(prop.Key);
 
@@ -286,31 +314,83 @@ namespace V8.Net
 
         public virtual InternalHandle IndexedPropertyGetter(int index)
         {
-            var propertyName = index.ToString();
-            return NamedPropertyGetter(ref propertyName);
+            if (_Proxy != this)
+            {
+                var result = ((IV8ManagedObject)_Proxy).IndexedPropertyGetter(index);
+                if (!result.IsUndefined) return result;
+            }
+
+            return this[index].Value;
         }
 
-        public virtual InternalHandle IndexedPropertySetter(int index, InternalHandle value)
+        public virtual InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            var propertyName = index.ToString();
-            return NamedPropertySetter(ref propertyName, value);
+            if (_Proxy != this)
+            {
+                var result = ((IV8ManagedObject)_Proxy).IndexedPropertySetter(index, value, attributes);
+                if (!result.IsUndefined) return result;
+            }
+
+            var jsVal = this[index];
+
+            if (jsVal.Value.IsEmpty)
+                this[index] = jsVal = new JSProperty(value, attributes != V8PropertyAttributes.Undefined ? attributes : V8PropertyAttributes.None);
+            else
+            {
+                if (attributes != V8PropertyAttributes.Undefined)
+                {
+                    jsVal.Attributes = attributes;
+                    jsVal.Value = value; // (note: updating attributes automatically assumes writable access)
+                }
+                else if ((jsVal.Attributes & V8PropertyAttributes.ReadOnly) == 0)
+                    jsVal.Value = value;
+            }
+
+            return jsVal.Value;
         }
 
         public virtual V8PropertyAttributes? IndexedPropertyQuery(int index)
         {
-            var propertyName = index.ToString();
-            return NamedPropertyQuery(ref propertyName);
+            if (_Proxy != this)
+            {
+                var result = ((IV8ManagedObject)_Proxy).IndexedPropertyQuery(index);
+                if (result != null) return result;
+            }
+
+            return this[index].Attributes;
         }
 
         public virtual bool? IndexedPropertyDeleter(int index)
         {
-            var propertyName = index.ToString();
-            return NamedPropertyDeleter(ref propertyName);
+            if (_Proxy != this)
+            {
+                var result = ((IV8ManagedObject)_Proxy).IndexedPropertyDeleter(index);
+                if (result != null) return result;
+            }
+
+            var jsVal = this[index];
+
+            if ((jsVal.Attributes & V8PropertyAttributes.DontDelete) != 0)
+                return false;
+
+            return IndexedProperties.Remove(index);
         }
 
         public virtual InternalHandle IndexedPropertyEnumerator()
         {
-            return NamedPropertyEnumerator();
+            if (_Proxy != this)
+            {
+                var result = ((IV8ManagedObject)_Proxy).IndexedPropertyEnumerator();
+                if (!result.IsUndefined) return result;
+            }
+
+            List<int> indexes = new List<int>(IndexedProperties.Count);
+
+            foreach (var prop in IndexedProperties)
+                if (prop.Value != null && (prop.Value.Attributes & V8PropertyAttributes.DontEnum) == 0)
+                    indexes.Add(prop.Key);
+
+            return Engine.CreateValue(indexes);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -324,10 +404,10 @@ namespace V8.Net
             return true;
         }
 
-        public override bool SetProperty(int index, InternalHandle value)
+        public override bool SetProperty(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             var result = IndexedPropertySetter(index, value);
-            if (result.IsUndefined) return base.SetProperty(index, value);
+            if (result.IsUndefined) return base.SetProperty(index, value, attributes);
             return true;
         }
 

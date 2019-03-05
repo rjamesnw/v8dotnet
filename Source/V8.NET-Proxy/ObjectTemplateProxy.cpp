@@ -71,7 +71,7 @@ void ObjectTemplateProxy::RegisterIndexedPropertyHandlers(
     IndexedPropertyDeleter = deleter; 
     IndexedPropertyEnumerator = enumerator;
 
-	IndexedPropertyHandlerConfiguration config(GetProperty, SetProperty, GetPropertyAttributes, DeleteProperty, GetPropertyNames);
+	IndexedPropertyHandlerConfiguration config(GetProperty, SetProperty, GetPropertyAttributes, DeleteProperty, GetPropertyIndices);
 	_ObjectTemplate->SetHandler(config);
 }
 
@@ -123,12 +123,13 @@ void ObjectTemplateProxy::GetProperty(Local<Name> hName, const PropertyCallbackI
             {
                 auto managedObjectID = (int32_t)(int64_t)obj->GetInternalField(1).As<External>()->Value();
                 ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
-                auto str = proxy->_EngineProxy->GetNativeString(*hName->ToString(Isolate::GetCurrent())); // TODO: This can be faster - no need to allocate every time!
+				auto hNameStr = hName->IsSymbol() ? hName.As<Symbol>()->Name().As<String>() : hName.As<String>();
+				auto str = proxy->_EngineProxy->GetNativeString(*hNameStr); // TODO: This can be faster - no need to allocate every time!
                 auto result = proxy->NamedPropertyGetter(str.String, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 str.Dispose();
                 if (result != nullptr) 
                     if (result->IsError())
-                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))));
+                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))));
                     else
                         info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
                 // (result == null == undefined [which means the managed side didn't return anything])
@@ -154,13 +155,14 @@ void ObjectTemplateProxy::SetProperty(Local<Name> hName, Local<Value> value, con
             {
                 auto managedObjectID = (int32_t)(int64_t)obj->GetInternalField(1).As<External>()->Value();
                 ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
-                auto str = proxy->_EngineProxy->GetNativeString(*hName->ToString(Isolate::GetCurrent()));
+				auto hNameStr = hName->IsSymbol() ? hName.As<Symbol>()->Name().As<String>() : hName.As<String>();
+				auto str = proxy->_EngineProxy->GetNativeString(*hNameStr);
                 HandleProxy *val = proxy->_EngineProxy->GetHandleProxy(value);
                 auto result = proxy->NamedPropertySetter(str.String, val, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 str.Dispose();
                 if (result != nullptr)
                     if (result->IsError())
-                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))));
+                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))));
                     else
                         info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
                 // (result == null == undefined [which means the managed side didn't return anything])
@@ -186,11 +188,14 @@ void ObjectTemplateProxy::GetPropertyAttributes(Local<Name> hName, const Propert
             {
                 auto managedObjectID = (int32_t)(int64_t)obj->GetInternalField(1).As<External>()->Value();
                 ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
-                auto str = proxy->_EngineProxy->GetNativeString(*hName->ToString(Isolate::GetCurrent()));
+				auto hNameStr = hName->IsSymbol() ? hName.As<Symbol>()->Name().As<String>() : hName.As<String>();
+				auto str = proxy->_EngineProxy->GetNativeString(*hNameStr);
                 int result = proxy->NamedPropertyQuery(str.String, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 str.Dispose();
                 if (result >= 0)
-                    info.GetReturnValue().Set(Handle<v8::Integer>(NewInteger(result)));
+					info.GetReturnValue().Set(NewInteger(result));
+				else
+					info.GetReturnValue().Set(NewInteger(0));
             }
         }
     }
@@ -213,7 +218,8 @@ void ObjectTemplateProxy::DeleteProperty(Local<Name> hName, const PropertyCallba
             {
                 auto managedObjectID = (int32_t)(int64_t)obj->GetInternalField(1).As<External>()->Value();
                 ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
-                auto str = proxy->_EngineProxy->GetNativeString(*hName->ToString(Isolate::GetCurrent()));
+				auto hNameStr = hName->IsSymbol() ? hName.As<Symbol>()->Name().As<String>() : hName.As<String>();
+				auto str = proxy->_EngineProxy->GetNativeString(*hNameStr);
                 int result = proxy->NamedPropertyDeleter(str.String, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 str.Dispose();
 
@@ -248,7 +254,7 @@ void ObjectTemplateProxy::GetPropertyNames(const PropertyCallbackInfo<Array>& in
                     if (result->IsError())
                     {
                         auto array = NewArray(1);
-                        array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))));
+                        array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))));
                         info.GetReturnValue().Set(array);
                     }
                     else
@@ -279,7 +285,7 @@ void ObjectTemplateProxy::GetProperty(uint32_t index, const PropertyCallbackInfo
                 auto result = proxy->IndexedPropertyGetter(index, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 if (result != nullptr) 
                     if (result->IsError())
-                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))));
+                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))));
                     else
                         info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
                 // (result == null == undefined [which means the managed side didn't return anything])
@@ -309,7 +315,7 @@ void ObjectTemplateProxy::SetProperty(uint32_t index, Local<Value> value, const 
                 auto result = proxy->IndexedPropertySetter(index, val, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 if (result != nullptr) 
                     if (result->IsError())
-                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))));
+                        info.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))));
                     else
                         info.GetReturnValue().Set(result->Handle()); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
                 // (result == null == undefined [which means the managed side didn't return anything])
@@ -337,7 +343,9 @@ void ObjectTemplateProxy::GetPropertyAttributes(uint32_t index, const PropertyCa
                 ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
                 int result = proxy->IndexedPropertyQuery(index, maInfo); // (assumes the 'str' memory will be released by the managed side)
                 if (result >= 0)
-                    info.GetReturnValue().Set(Handle<v8::Integer>(NewInteger(result)));
+					info.GetReturnValue().Set(NewInteger(result));
+				else
+					info.GetReturnValue().Set(NewInteger(0));
             }
         }
     }
@@ -393,7 +401,7 @@ void ObjectTemplateProxy::GetPropertyIndices(const PropertyCallbackInfo<Array>& 
                     if (result->IsError())
                     {
                         auto array = NewArray(1);
-                        array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))));
+                        array->Set(0, ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))));
                         info.GetReturnValue().Set(array);
                     }
                     else
@@ -408,9 +416,6 @@ void ObjectTemplateProxy::GetPropertyIndices(const PropertyCallbackInfo<Array>& 
 
 HandleProxy* ObjectTemplateProxy::CreateObject(int32_t managedObjectID)
 {
-    if (managedObjectID == -1)
-        managedObjectID = _EngineProxy->GetNextNonTemplateObjectID();
-
     auto obj = _ObjectTemplate->NewInstance(_EngineProxy->Context()).ToLocalChecked();
     auto proxyVal = _EngineProxy->GetHandleProxy(obj);
     ConnectObject(proxyVal, managedObjectID, this);
@@ -449,7 +454,7 @@ void ObjectTemplateProxy::AccessorGetterCallbackProxy(Local<Name> property, cons
                 auto _this = engine->GetHandleProxy(info.This());
                 if (managedObjectID >= 0) _this->_ObjectID = managedObjectID; // (use any explicitly specified object ID)
 
-                auto str = engine->GetNativeString(*property->ToString(Isolate::GetCurrent()));
+                auto str = engine->GetNativeString(*property->ToString(info.GetIsolate()));
 
                 auto result = getter(_this, str.String); // (assumes the 'str' memory will be released by the managed side)
 
@@ -459,7 +464,7 @@ void ObjectTemplateProxy::AccessorGetterCallbackProxy(Local<Name> property, cons
 
                 if (result != nullptr)  
                     if (result->IsError())
-                        hResult = ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))); // TODO: Look into associating the returned error type as well (very low priority)
+                        hResult = ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))); // TODO: Look into associating the returned error type as well (very low priority)
                     else
                         hResult = result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
                 // (result == null == undefined [which means the managed side didn't return anything])
@@ -503,7 +508,7 @@ void ObjectTemplateProxy::AccessorSetterCallbackProxy(Local<Name> property, Loca
                 auto _this = engine->GetHandleProxy(info.This());
                 if (managedObjectID >= 0) _this->_ObjectID = managedObjectID; // (use any explicitly specified object ID)
 
-                auto str = engine->GetNativeString(*property->ToString(Isolate::GetCurrent()));
+                auto str = engine->GetNativeString(*property->ToString(info.GetIsolate()));
                 auto _value = engine->GetHandleProxy(value);
 
                 auto result = setter(_this, str.String, _value); // (assumes the 'str' memory will be released by the managed side)
@@ -514,7 +519,7 @@ void ObjectTemplateProxy::AccessorSetterCallbackProxy(Local<Name> property, Loca
 
                 if (result != nullptr)  
                     if (result->IsError())
-                        hResult = ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))); // TODO: Look into associating the returned error type as well (very low priority)
+                        hResult = ThrowException(Exception::Error(result->Handle()->ToString(info.GetIsolate()))); // TODO: Look into associating the returned error type as well (very low priority)
                     else
                         hResult = result->Handle(); // (the result was create via p/invoke calls, but is expected to be tracked and freed on the managed side)
                 // (result == null == undefined [which means the managed side didn't return anything])

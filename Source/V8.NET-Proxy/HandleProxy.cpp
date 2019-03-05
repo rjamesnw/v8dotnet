@@ -8,7 +8,7 @@ v8::Handle<Script> HandleProxy::Script() { return _Script; }
 // ------------------------------------------------------------------------------------------------------------------------
 
 HandleProxy::HandleProxy(V8EngineProxy* engineProxy, int32_t id)
-	: ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReferenceCount(0), _ObjectID(-1), _CLRTypeID(-1), __EngineProxy(0)
+	: ProxyBase(HandleProxyClass), _Type((JSValueType)-1), _ID(id), _ManagedReferenceCount(0), _ObjectID(-1), _CLRTypeID(-1), __EngineProxy(0), _Disposed(0)
 {
 	_EngineProxy = engineProxy;
 	_EngineID = _EngineProxy->_EngineID;
@@ -64,9 +64,9 @@ HandleProxy* HandleProxy::Initialize(v8::Handle<Value> handle)
 {
 	if (_Disposed > 0) _Dispose(false); // (just resets whatever is needed)
 
-	SetHandle(handle);
-
 	_Disposed = 0;
+	
+	SetHandle(handle);
 
 	return this;
 }
@@ -242,13 +242,17 @@ int32_t HandleProxy::GetManagedObjectID()
 			if (_ObjectID < -2)
 			{
 				// ... use "duck typing" to determine if the handle is a valid TypeInfo object ...
-				auto hTypeID = obj->Get(NewString("$__TypeID"));
-				if (!hTypeID.IsEmpty() && hTypeID->IsInt32())
+				auto hTypeID = obj->Get(_EngineProxy->Context(), NewString("$__TypeID"));
+				if (!hTypeID.IsEmpty())
 				{
-					int32_t typeID = hTypeID->Int32Value(_EngineProxy->Context()).FromJust();
-					if (obj->Has(_EngineProxy->Context(), NewString("$__Value")).FromMaybe(false))
+					auto lhTypeID = hTypeID.ToLocalChecked();
+					if (lhTypeID->IsNumber() || lhTypeID->IsInt32())
 					{
-						_CLRTypeID = typeID;
+						int32_t typeID = lhTypeID->IsNumber() ? lhTypeID->Int32Value(_EngineProxy->Context()).FromJust() : (int32_t)lhTypeID->NumberValue(_EngineProxy->Context()).FromJust();
+						if (obj->Has(_EngineProxy->Context(), NewString("$__Value")).FromMaybe(false))
+						{
+							_CLRTypeID = typeID;
+						}
 					}
 				}
 			}
@@ -365,7 +369,7 @@ void HandleProxy::UpdateValue()
 		default: // (by default, an "object" type is assumed (warning: this includes functions); however, we can't translate it (obviously), so we just return a reference to this handle proxy instead)
 		{
 			if (!_Handle.IsEmpty())
-				_Value.V8String = _StringItem(_EngineProxy, *_Handle->ToString(Isolate::GetCurrent())).String;
+				_Value.V8String = _StringItem(_EngineProxy, *_Handle->ToString(_EngineProxy->Isolate())).String;
 			break;
 		}
 	}

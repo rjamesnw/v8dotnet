@@ -72,7 +72,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\bin\$(Configuration)\x64\</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
@@ -84,7 +84,7 @@
     <IncludePath>$(ProjectDir)V8\src\v8\include;$(ProjectDir)V8\src\v8;$(IncludePath)</IncludePath>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
-    <OutDir>..\bin\$(Configuration)\x64\</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
@@ -92,14 +92,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
-    <OutDir>..\bin\$(Configuration)\x64\</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)V8\src\v8\include;$(ProjectDir)V8\src\v8;$(IncludePath)</IncludePath>
-    <OutDir>..\bin\$(Configuration)\x64\</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -129,7 +129,8 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x86\" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -158,7 +159,8 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -187,7 +189,8 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x86\" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -218,7 +221,8 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

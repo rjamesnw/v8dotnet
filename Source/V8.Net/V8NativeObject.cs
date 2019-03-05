@@ -386,9 +386,10 @@ namespace V8.Net
         /// Calls the V8 'Set()' function on the underlying native object.
         /// Returns true if successful.
         /// </summary>
-        public virtual bool SetProperty(Int32 index, InternalHandle value)
+        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        public virtual bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            return _Handle._Handle.SetProperty(index, value);
+            return _Handle._Handle.SetProperty(index, value, attributes);
         }
 
         /// <summary>

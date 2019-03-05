@@ -72,13 +72,13 @@ void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<V
 		for (auto i = 0; i < argLength; i++)
 			_args[i] = engine->GetHandleProxy(args[i]);
 
-		auto _this = engine->GetHandleProxy(args.Holder());
+		auto _this = engine->GetHandleProxy(args.This()); // (was args.Holder())
 
 		auto result = callback(0, args.IsConstructCall(), _this, _args, argLength);
 
 		if (result != nullptr)
 			if (result->IsError())
-				args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(Isolate::GetCurrent()))));
+				args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(args.GetIsolate()))));
 			else
 				args.GetReturnValue().Set(result->Handle()); // (note: the returned value was created via p/invoke calls from the managed side, so the managed side is expected to tracked and free this handle when done)
 

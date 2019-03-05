@@ -405,7 +405,7 @@ namespace V8.Net
             return h;
         }
 
-        public static implicit operator HandleProxy*(Handle handle)
+        public static implicit operator HandleProxy* (Handle handle)
         {
             return handle != null ? handle._Handle.__HandleProxy : null;
         }
@@ -796,18 +796,24 @@ namespace V8.Net
     /// </summary>
     public interface IV8Object
     {
-        /// <summary>
-        /// Calls the V8 'Set()' function on the underlying native object.
-        /// Returns true if successful.
-        /// </summary>
-        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
+        /// <param name="name"> The property name. </param>
+        /// <param name="value"> The value. </param>
+        /// <param name="attributes">
+        ///     (Optional) Flags that describe the property behavior.  They must be 'OR'd together as needed.
+        /// </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
         bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
-        /// <summary>
-        /// Calls the V8 'Set()' function on the underlying native object.
-        /// Returns true if successful.
-        /// </summary>
-        bool SetProperty(Int32 index, InternalHandle value);
+        /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
+        /// <param name="index"> Zero-based index of the. </param>
+        /// <param name="value"> The value. </param>
+        /// <param name="attributes">
+        ///     (Optional) Flags that describe the property behavior.  They must be 'OR'd together as needed. Note that attributes
+        ///     on indexes are not supported by V8 without converting the index to a name first.
+        /// </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
         /// Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
@@ -945,21 +951,29 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Calls the V8 'Set()' function on the underlying native object.
-        /// Returns true if successful.
-        /// </summary>
-        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
+        /// <param name="name"> The property name. </param>
+        /// <param name="value"> The value. </param>
+        /// <param name="attributes">
+        ///     (Optional) Flags that describe the property behavior.  They must be 'OR'd together as needed.
+        /// </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        /// <seealso cref="M:V8.Net.IV8Object.SetProperty(string,InternalHandle,V8PropertyAttributes)"/>
         public virtual bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             return _Handle.SetProperty(name, value, attributes);
         }
 
-        /// <summary>
-        /// Calls the V8 'Set()' function on the underlying native object.
-        /// Returns true if successful.
-        /// </summary>
-        public virtual bool SetProperty(Int32 index, InternalHandle value)
+        /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
+        /// <param name="index"> Zero-based index of the. </param>
+        /// <param name="value"> The value. </param>
+        /// <param name="attributes">
+        ///     (Optional) Flags that describe the property behavior.  They must be 'OR'd together as needed. Note that attributes
+        ///     on indexes are not supported by V8 without converting the index to a name first.
+        /// </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        /// <seealso cref="M:V8.Net.IV8Object.SetProperty(Int32,InternalHandle,V8PropertyAttributes)"/>
+        public virtual bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             return _Handle.SetProperty(index, value);
         }
@@ -1166,6 +1180,8 @@ namespace V8.Net
             if (value is IHandleBased) _Engine = ((IHandleBased)value).Engine;
         }
 
+        static object _HandleWrapper(InternalHandle h) => h.HasObject ? h.Object : (Handle)h; // (need to wrap the internal handle value with an object based handle in order to dispose of the value!)
+
         public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
         {
             if (_Handle == null) throw new InvalidOperationException(InternalHandle._NOT_AN_OBJECT_ERRORMSG);
@@ -1181,9 +1197,7 @@ namespace V8.Net
 
             BindingRestrictions restrictions = Restrictions;
 
-            Func<InternalHandle, object> handleWrapper = h => h.HasObject ? h.Object : (Handle)h; // (need to wrap the internal handle value with an object based handle in order to dispose of the value!)
-
-            return new DynamicMetaObject(Expression.Convert(methodCall, typeof(object), handleWrapper.Method), restrictions);
+            return new DynamicMetaObject(Expression.Convert(methodCall, typeof(object), ((Func<InternalHandle, object>)_HandleWrapper).Method), restrictions);
         }
 
         public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
@@ -1263,6 +1277,8 @@ namespace V8.Net
             return _Handle.GetPropertyNames();
         }
 
+        static V8NativeObject _GetUnderlyingObjectMethod(object obj) => obj is IHandleBased ? ((IHandleBased)obj).Object : null;
+
         public override DynamicMetaObject BindConvert(ConvertBinder binder)
         {
             Expression convertExpression;
@@ -1273,8 +1289,7 @@ namespace V8.Net
             }
             else if (typeof(V8NativeObject).IsAssignableFrom(binder.Type))
             {
-                Func<object, V8NativeObject> getUnderlyingObjectMethod = obj => obj is IHandleBased ? ((IHandleBased)obj).Object : null;
-                convertExpression = Expression.Convert(Expression.Convert(Expression, typeof(V8NativeObject), getUnderlyingObjectMethod.Method), binder.Type);
+                convertExpression = Expression.Convert(Expression.Convert(Expression, typeof(V8NativeObject), ((Func<object, V8NativeObject>)_GetUnderlyingObjectMethod).Method), binder.Type);
             }
             else
             {

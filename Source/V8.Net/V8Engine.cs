@@ -106,14 +106,14 @@ namespace V8.Net
 
                 // ... get platform details ...
 
-                var bitStr = IntPtr.Size == 8 ? "x64" : "x86";
+                var bitStr = Environment.Is64BitProcess ? "x64" : "x86"; //IntPtr.Size == 8 ? "x64" : "x86";
                 var platformLibraryPath = Path.Combine(assemblyRoot, bitStr);
-                string fileName;
-                // ... if the platform folder doesn't exist, try loading assemblies from the current folder ...
-                if (Directory.Exists(platformLibraryPath))
-                    fileName = Path.Combine(platformLibraryPath, "V8.Net.Proxy.Interface." + bitStr + ".dll");
-                else
-                    fileName = Path.Combine(assemblyRoot, "V8.Net.Proxy.Interface." + bitStr + ".dll");
+                string fileName = Path.Combine(assemblyRoot, "V8.Net.Proxy.Interface." + bitStr + ".dll"); // (try the current assembly location first)
+
+                // ... if the file doesn't exist locally, try loading assemblies from the platform folder, if present ...
+
+                if (!File.Exists(fileName) && Directory.Exists(platformLibraryPath))
+                    fileName = Path.Combine(platformLibraryPath, "V8.Net.Proxy.Interface." + bitStr + ".dll"); // (try the platform specific sub-folder next)
 
                 // ... attempt to update environment variable automatically for the native DLLs ...
                 // (see: http://stackoverflow.com/questions/7996263/how-do-i-get-iis-to-load-a-native-dll-referenced-by-my-wcf-service
@@ -149,6 +149,7 @@ namespace V8.Net
                         msg += "3. Make sure the path '" + assemblyRoot + "' is accessible to the application pool identity (usually Read & Execute for 'IIS_IUSRS', or a similar user/group)";
                     else
                         msg += "3. Make sure the path '" + assemblyRoot + "' is accessible to the application for loading the required libraries.";
+                    msg += "Locations searched: " + Environment.NewLine + " * " + assemblyRoot + Environment.NewLine + " * " + platformLibraryPath;
                     throw new InvalidOperationException(msg + "\r\n", ex);
                 }
             }
@@ -665,9 +666,9 @@ namespace V8.Net
             itemsEnum.Reset();
 
             int strPtrBufSize = Marshal.SizeOf(typeof(IntPtr)) * itemsCount; // start buffer size with size needed for all string pointers.
-            char** oneBigStringBlock = (char**)Utilities.AllocNativeMemory(strPtrBufSize + Marshal.SystemDefaultCharSize * strBufSize);
+            char** oneBigStringBlock = (char**)Utilities.AllocNativeMemory(strPtrBufSize + Marshal.SystemDefaultCharSize * strBufSize); // (we will mash the pointer table AND strings together and send ONE block)
             char** ptrWritePtr = oneBigStringBlock;
-            char* strWritePtr = (char*)(((byte*)oneBigStringBlock) + strPtrBufSize);
+            char* strWritePtr = (char*)(((byte*)oneBigStringBlock) + strPtrBufSize); // (start writing at the END of the pointer table)
             int itemLength;
 
             while (itemsEnum.MoveNext())

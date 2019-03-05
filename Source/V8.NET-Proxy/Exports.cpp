@@ -237,7 +237,7 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT bool STDCALL SetObjectPropertyByIndex(HandleProxy *proxy, const uint16_t index, HandleProxy *value)
+	EXPORT bool STDCALL SetObjectPropertyByIndex(HandleProxy *proxy, const uint16_t index, HandleProxy *value, v8::PropertyAttribute attribs = v8::None)
 	{
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
@@ -248,7 +248,11 @@ extern "C"
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
 		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
-		return obj->Set(index, valueHandle);
+
+		if (attribs == 0)
+			return obj->Set(index, valueHandle);
+		else
+			return obj->DefineOwnProperty(engine->Context(), Int32::New(engine->Isolate(), index)->ToString(engine->Isolate()), valueHandle, attribs).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;

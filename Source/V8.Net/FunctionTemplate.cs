@@ -136,6 +136,7 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+        /// <summary> Called by the native side when a JS-side function call is made that maps back to a CLR function.  </summary>
         HandleProxy* _CallBack(Int32 managedObjectID, bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount)
         {
             var functions = from f in

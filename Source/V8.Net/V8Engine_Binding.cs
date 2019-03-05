@@ -30,7 +30,7 @@ namespace V8.Net
         Instance,
 
         /// <summary>
-        /// The V8NativeObject is not a binding object for types  (i.e. V8Function).
+        /// The V8NativeObject is a binding object for static types  (i.e. via V8Function).
         /// </summary>
         Static
     }
@@ -510,7 +510,7 @@ namespace V8.Net
                     }
                     else
                         if (ClassName == "Object" || ClassName == "Function" || ClassName == "Boolean" || ClassName == "String" || ClassName == "RegExp" || ClassName == "Number" || ClassName == "Math" || ClassName == "Array" || ClassName == "Date")
-                            ClassName = "CLR" + ClassName;
+                        ClassName = "CLR" + ClassName;
                 }
             }
             else ClassName = className;
@@ -594,7 +594,7 @@ namespace V8.Net
                         _Members[baseInstanceMemberDetails.MemberName] = baseInstanceMemberDetails; // (adopt the member into this instance as well for fast lookup)
                     else
                         if (md.BaseDetails == null && md.TypeBinder == this)
-                            md.BaseDetails = baseInstanceMemberDetails; // (the iteration goes up the inheritance chain, so once 'BaseDetails' is set, it is ignored [because the base type binders would have already linked the details])
+                        md.BaseDetails = baseInstanceMemberDetails; // (the iteration goes up the inheritance chain, so once 'BaseDetails' is set, it is ignored [because the base type binders would have already linked the details])
                 }
             }
         }
@@ -668,12 +668,12 @@ namespace V8.Net
                     var existingMemberDetails = getExisting != null ? getExisting(memberName) : null;
 
                     memberDetails = existingMemberDetails ?? new _MemberDetails(this)
-                   {
-                       FirstMember = methodInfo,
-                       MemberName = memberName,
-                       MemberType = MemberTypes.Method,
-                       BindingMode = methodInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
-                   };
+                    {
+                        FirstMember = methodInfo,
+                        MemberName = memberName,
+                        MemberType = MemberTypes.Method,
+                        BindingMode = methodInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
+                    };
 
                     if (memberSecurity >= 0 && memberDetails.MemberSecurity >= 0)
                         memberDetails.MemberSecurity |= memberSecurity; // (combine all security attributes for all overloaded members, if any)
@@ -1296,7 +1296,8 @@ namespace V8.Net
 
                 try
                 {
-                    if (!_this.IsBinder)
+                    if (memberDetails.BindingMode == BindingMode.Instance && !_this.IsBinder)
+                        //if (!_this.IsBinder)
                         return Engine.CreateError("The ObjectBinder is missing for function '" + className + "' (" + memberDetails.MemberName + ").", JSValueType.ExecutionError);
 
                     // ... translate the generic arguments, if applicable ...
@@ -1558,6 +1559,14 @@ namespace V8.Net
     {
         // --------------------------------------------------------------------------------------------------------------------
 
+        /// <summary>
+        ///     Gets or sets the CLR object that is associated with this binding. You can dynamically replace objects, but only of
+        ///     the same type once set the first time.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the object is set again with an instance of a different type.
+        /// </exception>
+        /// <value> The object associated with this binding. </value>
         new public object Object
         {
             get { return _Object; }
@@ -1580,10 +1589,17 @@ namespace V8.Net
         }
         internal object _Object;
 
+        /// <summary>
+        ///     Gets or sets the type of the object that this binder will work with. Once this is set it cannot be changed.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if the object type is set again with a different type.
+        /// </exception>
+        /// <value> The type of the object expected for this binder. </value>
         public Type ObjectType
         {
             get { return _ObjectType; }
-            private set
+            set
             {
                 if (value == null) throw new InvalidOperationException("'value' cannot be null.");
                 if (_ObjectType == null)
@@ -1591,10 +1607,19 @@ namespace V8.Net
                     _ObjectType = value;
                     TypeBinder = Engine.RegisterType(_ObjectType);
                 }
+                else if (value != _ObjectType)
+                    throw new InvalidOperationException("Once an object type is set you cannot change it.");
             }
         }
         Type _ObjectType;
 
+        /// <summary>
+        ///     Gets or sets the type binder that is automatically set when <see cref="Object"/> or <see cref="ObjectType"/> is set.
+        ///     The TypeBinder reference holds all the cached reflection details needed to read the associated CLR object instance.
+        ///     As the JavaScript code accesses new properties and types not yet bound, they get bound automatically when accessed.
+        ///     This prevents the need to bind everything at once!
+        /// </summary>
+        /// <value> The type binder associated with this binder instance. </value>
         public TypeBinder TypeBinder { get; private set; }
 
         public ObjectBinder() { _BindingMode = BindingMode.Instance; }
@@ -1623,7 +1648,7 @@ namespace V8.Net
                 return Engine.CreateValue(TypeBinder.Indexer.GetValue(Object, new object[] { index }), TypeBinder._Recursive);
             return InternalHandle.Empty;
         }
-        public override InternalHandle IndexedPropertySetter(int index, InternalHandle value)
+        public override InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
             if (TypeBinder.Indexer != null && TypeBinder.Indexer.CanWrite)
                 TypeBinder.Indexer.SetValue(_Object, new ArgInfo(value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });

@@ -129,6 +129,7 @@
     <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface.csproj">
       <Project>{81752b54-1391-44cb-a1f5-eccf7279db71}</Project>
       <Name>V8.Net-ProxyInterface</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
       <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
@@ -149,9 +150,9 @@ REM msbuild "$(SolutionDir)V8.NET-ProxyInterface\V8.NET-ProxyInterface.csproj" /
 
 REM if "%25ERRORLEVEL%25"=="0" msbuild "$(SolutionDir)V8.NET-ProxyInterface\V8.NET-ProxyInterface.csproj" /nologo /p:Configuration=$(Configuration) /p:Platform=x64
 
-del "$(TargetDir)V8.NET.Proxy.Interface.*"
-del "$(TargetDir)\x64\V8.Net.SharedTypes.*"
-del "$(TargetDir)\x86\V8.Net.SharedTypes.*"
+REM del "$(TargetDir)V8.NET.Proxy.Interface.*"
+REM if exist "$(TargetDir)\x64\" rd "$(TargetDir)\x64" /d /q
+REM if exist "$(TargetDir)\x86\"rd "$(TargetDir)\x86" /d /q
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

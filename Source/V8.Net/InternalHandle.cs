@@ -355,6 +355,7 @@ namespace V8.Net
         /// The ID of the managed object represented by this handle.
         /// This ID is expected when handles are passed to 'V8ManagedObject.GetObject()'.
         /// If this value is less than 0, then there is no associated 'V8NativeObject' object (and the 'Object' property will be null).
+        /// If this is -1 then the handle does not represent a valid object.
         /// </summary>
         public Int32 ObjectID
         {
@@ -362,7 +363,8 @@ namespace V8.Net
             {
                 return __HandleProxy == null ? -1
                     : __HandleProxy->_ObjectID < -1 || __HandleProxy->_ObjectID >= 0 ? __HandleProxy->_ObjectID
-                    : IsObjectType ? V8NetProxy.GetHandleManagedObjectID(__HandleProxy) : -1; // TODO: V8NetProxy.GetHandleManagedObjectID() is not really relevant anymore...but verify first.
+                    : -1; // (does not represent an object)
+                    //: IsObjectType ? V8NetProxy.GetHandleManagedObjectID(__HandleProxy) : -1; // TODO: V8NetProxy.GetHandleManagedObjectID() is not really relevant anymore...but verify first.
             }
             internal set { if (__HandleProxy != null) __HandleProxy->_ObjectID = value; }
         }
@@ -913,13 +915,13 @@ namespace V8.Net
         /// Calls the V8 'Set()' function on the underlying native object.
         /// Returns true if successful.
         /// </summary>
-        public bool SetProperty(Int32 index, InternalHandle value)
+        public bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             try
             {
                 if (!IsObjectType) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 
-                return V8NetProxy.SetObjectPropertyByIndex(this, index, value);
+                return V8NetProxy.SetObjectPropertyByIndex(this, index, value, attributes);
             }
             finally
             {
