@@ -103,6 +103,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="InternalHandle.cs" />
+    <Compile Include="Utilities\Exceptions.cs" />
+    <Compile Include="Utilities\ObservableWeakReference.cs" />
+    <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="V8Engine_Tests.cs" />
     <Compile Include="Handle.cs" />
     <Compile Include="V8Engine_Binding.cs" />
