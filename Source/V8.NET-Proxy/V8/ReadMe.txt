@@ -7,7 +7,7 @@ Steps to download and build V8:
    * DEPOT_TOOLS_WIN_TOOLCHAIN=0
    * GYP_MSVS_VERSION=2017
 
-2. Download the source into THIS folder (where this readme.txt file exists, so 'V8.NET-Proxy\V8\src\...').
+2. Download the source into 'C:\ProgramData\Google\V8\src\'.
    Follow instructions here: https://v8.dev/docs/source-code
 
    If you want to compile a specified version, execute:
@@ -65,6 +65,10 @@ Steps to download and build V8:
 7. If you set "v8_use_external_startup_data=true", don't forget to copy '*.bin' from both folders in "v8\out.gn\*.release" to the output folder for V8.Net for x64 and x86.
 
 You should now be ready to build V8.NET! :)
+
+Note: The proxy C++ projects expect the V8 source to be in "C:\ProgramData\Google\V8\src\" by default.  The "Common Properties" property page contains a "$(V8_SRC)" macro that must be updated to match where the source exists. The property pages are in "View->Other Windows->Property Manager" (expand the tree nodes). Open "Common Properties" and select "User Macros".
+
+Optionally you can try the automated process by running V8Update.cmd - but Google likes to break things often so it may not always work.
    
 Staying up to date: https://v8.dev/docs/source-code#staying-up-to-date
 

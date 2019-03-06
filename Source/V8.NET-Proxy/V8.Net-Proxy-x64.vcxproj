@@ -60,50 +60,56 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Common Properties.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Common Properties.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Common Properties.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Common Properties.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>..\bin\$(Configuration)\</OutDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
-    <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>V8_Net_Proxy_x64</TargetName>
-    <IncludePath>$(ProjectDir)V8\src\v8\include;$(ProjectDir)V8\src\v8;$(IncludePath)</IncludePath>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
     <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir)V8\build\v8\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
     <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)V8\src\v8\include;$(ProjectDir)V8\src\v8;$(IncludePath)</IncludePath>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
     <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>bin\$(Configuration)\x64\</IntDir>
     <TargetName>V8_Net_Proxy_x64</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <LibraryPath>C:/windows/system32;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(ProjectDir)V8\src\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\x64.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
