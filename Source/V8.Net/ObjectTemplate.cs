@@ -30,17 +30,13 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe abstract class TemplateBase<ObjectType> : ITemplate, ITemplateInternal, IV8Disposable where ObjectType : class, IV8NativeObject
+    public unsafe abstract class TemplateBase<ObjectType> : ITemplate, ITemplateInternal where ObjectType : class, IV8NativeObject
     {
         // --------------------------------------------------------------------------------------------------------------------
 
         public V8Engine Engine { get { return _Engine; } }
         internal V8Engine _Engine;
 
-        /// <summary>
-        /// Returns true if this template object has been placed into the "abandoned" list due to a GC finalization attempt.
-        /// </summary>
-        internal bool _IsAbandoned { get { lock (_Engine._AbandondObjects) { return _Engine != null && _Engine._AbandondObjects.Contains(this); } } }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -90,22 +86,6 @@ namespace V8.Net
         public TemplateBase()
         {
         }
-        ~TemplateBase()
-        {
-            this.Finalizing();
-        }
-
-        public virtual bool CanDispose
-        {
-            get
-            {
-                return (((ITemplateInternal)this)._ReferenceCount == 0
-                    && (Parent == null || ((ITemplateInternal)Parent)._ReferenceCount == 0));
-            }
-        }
-        public virtual void Dispose()
-        {
-        }
 
         protected abstract void OnInitialized();
 
@@ -115,12 +95,12 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertyGetter(): '{nameof(propertyName)}' is null.");
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return null;
-                var mo = obj as IV8ManagedObject;
-                var result = mo != null ? mo.NamedPropertyGetter(ref propertyName) : null;
-                return result;
+                var mo = obj.Reset() as IV8ManagedObject; // (this acts also as a test because native object wrappers are also supported)
+                return mo != null ? mo.NamedPropertyGetter(ref propertyName) : null;
             }
             catch (Exception ex)
             {
@@ -132,13 +112,15 @@ namespace V8.Net
         {
             try
             {
-                InternalHandle hValue = value;
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
-                if (obj == null)
-                    return null;
-                var mo = obj as IV8ManagedObject;
-                var result = mo != null ? mo.NamedPropertySetter(ref propertyName, hValue, V8PropertyAttributes.Undefined) : null;
-                return result;
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertySetter(): '{nameof(propertyName)}' is null.");
+                using (InternalHandle hValue = new InternalHandle(value, false))
+                {
+                    var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                    if (obj == null)
+                        return null;
+                    var mo = obj.Reset() as IV8ManagedObject;
+                    return mo != null ? mo.NamedPropertySetter(ref propertyName, hValue, V8PropertyAttributes.Undefined) : null;
+                }
             }
             catch (Exception ex)
             {
@@ -150,10 +132,11 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertyQuery(): '{nameof(propertyName)}' is null.");
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return V8PropertyAttributes.Undefined;
-                var mo = obj as IV8ManagedObject;
+                var mo = obj.Reset() as IV8ManagedObject;
                 var result = mo != null ? mo.NamedPropertyQuery(ref propertyName) : null;
                 if (result != null) return result.Value;
                 else return V8PropertyAttributes.Undefined; // (not intercepted, so perform default action)
@@ -168,10 +151,11 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                System.Diagnostics.Debug.Assert(propertyName != null, $"ObjectTemplate::_NamedPropertyDeleter(): '{nameof(propertyName)}' is null.");
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return -1;
-                var mo = obj as IV8ManagedObject;
+                var mo = obj.Reset() as IV8ManagedObject;
                 var result = mo != null ? mo.NamedPropertyDeleter(ref propertyName) : null;
                 if (result != null) return result.Value ? 1 : 0;
                 else return -1; // (not intercepted, so perform default action)
@@ -186,10 +170,10 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return null;
-                var mo = obj as IV8ManagedObject;
+                var mo = obj.Reset() as IV8ManagedObject;
                 return mo != null ? mo.NamedPropertyEnumerator() : null;
             }
             catch (Exception ex)
@@ -204,12 +188,11 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return null;
-                var mo = obj as IV8ManagedObject;
-                var result = mo != null ? mo.IndexedPropertyGetter(index) : null;
-                return result;
+                var mo = obj.Reset() as IV8ManagedObject;
+                return mo != null ? mo.IndexedPropertyGetter(index) : null;
             }
             catch (Exception ex)
             {
@@ -221,13 +204,14 @@ namespace V8.Net
         {
             try
             {
-                InternalHandle hValue = value;
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
-                if (obj == null)
-                    return null;
-                var mo = obj as IV8ManagedObject;
-                var result = mo != null ? mo.IndexedPropertySetter(index, hValue) : null;
-                return result;
+                using (InternalHandle hValue = new InternalHandle(value, false))
+                {
+                    var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
+                    if (obj == null)
+                        return null;
+                    var mo = obj.Reset() as IV8ManagedObject;
+                    return mo != null ? mo.IndexedPropertySetter(index, hValue) : null;
+                }
             }
             catch (Exception ex)
             {
@@ -239,10 +223,10 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return V8PropertyAttributes.Undefined;
-                var mo = obj as IV8ManagedObject;
+                var mo = obj.Reset() as IV8ManagedObject;
                 var result = mo != null ? mo.IndexedPropertyQuery(index) : null;
                 if (result != null) return result.Value;
                 else return V8PropertyAttributes.Undefined; // (not intercepted, so perform default action)
@@ -257,10 +241,10 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return -1;
-                var mo = obj as IV8ManagedObject;
+                var mo = obj.Reset() as IV8ManagedObject;
                 var result = mo != null ? mo.IndexedPropertyDeleter(index) : null;
                 if (result != null) return result.Value ? 1 : 0;
                 else return -1; // (not intercepted, so perform default action)
@@ -275,10 +259,10 @@ namespace V8.Net
         {
             try
             {
-                var obj = _Engine._GetExistingObject(info.ManagedObjectID);
+                var obj = _Engine._GetObjectWeakReference(info.ManagedObjectID);
                 if (obj == null)
                     return null;
-                var mo = obj as IV8ManagedObject;
+                var mo = obj.Reset() as IV8ManagedObject;
                 return mo != null ? mo.IndexedPropertyEnumerator() : null;
             }
             catch (Exception ex)
@@ -292,7 +276,7 @@ namespace V8.Net
 
     // ========================================================================================================================
 
-    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>
+    public unsafe class ObjectTemplate : TemplateBase<IV8ManagedObject>, IFinalizable
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -340,16 +324,37 @@ namespace V8.Net
         {
         }
 
-        public override void Dispose() // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
+        ~ObjectTemplate()
         {
-            if (_NativeObjectTemplateProxy != null && CanDispose)
+            if (!((IFinalizable)this).CanFinalize)
+                lock (_Engine._ObjectsToFinalize)
+                {
+                    _Engine._ObjectsToFinalize.Add(this);
+                    GC.ReRegisterForFinalize(this);
+                }
+        }
+
+        bool IFinalizable.CanFinalize { get; set; }
+
+        void IFinalizable.DoFinalize()
+        {
+            if (((ITemplateInternal)this)._ReferenceCount == 0
+            && _Engine.GetObjects(this).Length == 0
+            && Parent != null && _Engine.GetObjects(Parent).Length == 0)
+                Dispose();
+        }
+
+        public void Dispose() // TODO: !!! This will cause issues if removed while the native object exists. !!!
+        {
+            if (_NativeObjectTemplateProxy != null)
             {
                 _Engine._ClearAccessors(_NativeObjectTemplateProxy->ObjectID);
 
                 V8NetProxy.DeleteObjectTemplateProxy(_NativeObjectTemplateProxy); // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
-
                 _NativeObjectTemplateProxy = null;
             }
+
+            ((IFinalizable)this).CanFinalize = true;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -417,22 +422,18 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        [Obsolete("Renamed to 'SetCallAsFunctionHandler()' to stay inline with V8 engine ObjectTemplate function names.", true)]
-        public void RegisterInvokeHandler(JSFunction callback) { }
-
         /// <summary>
-        /// Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called
-        /// like a function.
+        /// Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called like a method.
         /// </summary>
-        /// <param name="callback">A callback that gets invoked when the object is used like a function.</param>
-        public void SetCallAsFunctionHandler(JSFunction callback)
+        /// <param name="callback">A callback that gets invoked </param>
+        public void RegisterInvokeHandler(JSFunction callback)
         {
-            ManagedJSFunctionCallback proxyCallback = (managedObjectID, isConstructCall, _this, args, argCount) =>
+            V8NetProxy.RegisterInvokeHandler(_NativeObjectTemplateProxy, (managedObjectID, isConstructCall, _this, args, argCount)
+                =>
                 {
                     return FunctionTemplate._CallBack(managedObjectID, isConstructCall, _this, args, argCount, callback);
-                };
-            V8NetProxy.SetCallAsFunctionHandler(_NativeObjectTemplateProxy, proxyCallback);
-            _Engine._StoreAccessor(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", proxyCallback);
+                });
+            _Engine._StoreAccessor<JSFunction>(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", callback);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -463,7 +464,7 @@ namespace V8.Net
 
             try
             {
-                obj._Handle.Set(V8NetProxy.CreateObjectFromTemplate(_NativeObjectTemplateProxy, obj.ID));
+                obj.Handle._Set(V8NetProxy.CreateObjectFromTemplate(_NativeObjectTemplateProxy, obj.ID));
                 // (note: setting '_NativeObject' also updates it's '_ManagedObject' field if necessary.
             }
             catch (Exception ex)
@@ -492,9 +493,16 @@ namespace V8.Net
         /// </summary>
         public void SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
+            try
+            {
+                if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
 
-            V8NetProxy.SetObjectTemplateProperty(_NativeObjectTemplateProxy, name, value, attributes);
+                V8NetProxy.SetObjectTemplateProperty(_NativeObjectTemplateProxy, name, value, attributes);
+            }
+            finally
+            {
+                value._DisposeIfFirst();
+            }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -516,7 +524,7 @@ namespace V8.Net
                    {
                        try
                        {
-                           return getter != null ? getter(_this, propertyName) : null;
+                           using (InternalHandle hThis = _this) { return getter != null ? getter(hThis, propertyName) : null; }
                        }
                        catch (Exception ex)
                        {
@@ -527,7 +535,7 @@ namespace V8.Net
                    {
                        try
                        {
-                           return setter != null ? setter(_this, propertyName, value) : null;
+                           using (InternalHandle hThis = _this) { return setter != null ? setter(hThis, propertyName, value) : null; }
                        }
                        catch (Exception ex)
                        {

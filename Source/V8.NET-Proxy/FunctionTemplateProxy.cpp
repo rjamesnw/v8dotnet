@@ -72,26 +72,15 @@ void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<V
 		for (auto i = 0; i < argLength; i++)
 			_args[i] = engine->GetHandleProxy(args[i]);
 
-		auto _this = engine->GetHandleProxy(args.Holder());
+		auto _this = engine->GetHandleProxy(args.This()); // (was args.Holder())
 
 		auto result = callback(0, args.IsConstructCall(), _this, _args, argLength);
 
-		if (result != nullptr) {
+		if (result != nullptr)
 			if (result->IsError())
-				args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString())));
+				args.GetReturnValue().Set(ThrowException(Exception::Error(result->Handle()->ToString(args.GetIsolate()))));
 			else
 				args.GetReturnValue().Set(result->Handle()); // (note: the returned value was created via p/invoke calls from the managed side, so the managed side is expected to tracked and free this handle when done)
-
-			result->TryDispose();
-		}
-
-		// ... do this LAST, as the result may be one of the arguments returned, or even '_this' itself ...
-
-		if (_this != nullptr)
-			_this->TryDispose();
-
-		for (auto i = 0; i < argLength; i++)
-			_args[i]->TryDispose();
 
 		// (result == null == undefined [which means the managed side didn't return anything])
 	}
@@ -115,8 +104,8 @@ ObjectTemplateProxy* FunctionTemplateProxy::GetPrototypeTemplateProxy()
 
 HandleProxy* FunctionTemplateProxy::GetFunction()
 {
-	auto obj = _FunctionTemplate->GetFunction();
-	auto proxyVal = _EngineProxy->GetHandleProxy(obj);
+	auto obj = _FunctionTemplate->GetFunction(_EngineProxy->Context());
+	auto proxyVal = _EngineProxy->GetHandleProxy(obj.ToLocalChecked());
 	return proxyVal;
 }
 
@@ -127,7 +116,7 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
 	Handle<Value>* hArgs = new Handle<Value>[argCount];
 	for (int i = 0; i < argCount; i++)
 		hArgs[i] = args[i]->Handle();
-	auto obj = _FunctionTemplate->GetFunction()->NewInstance(argCount, hArgs);
+	auto obj = _FunctionTemplate->GetFunction(_EngineProxy->Context()).ToLocalChecked()->NewInstance(_EngineProxy->Context(), argCount, hArgs).ToLocalChecked();
 	delete[] hArgs; // TODO: (does "disposed" still need to be called here for each item?)
 
 	if (managedObjectID == -1)
@@ -137,8 +126,8 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
 	proxyVal->_ObjectID = managedObjectID;
 	//??auto count = obj->InternalFieldCount();
 	obj->SetAlignedPointerInInternalField(0, this); // (stored a reference to the proxy instance for the call-back functions)
-	obj->SetInternalField(1, NewExternal((void*)managedObjectID)); // (stored a reference to the managed object for the call-back functions)
-	_EngineProxy->SetObjectPrivateValue(obj, "ManagedObjectID", NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+	obj->SetInternalField(1, NewExternal((void*)(int64_t)managedObjectID)); // (stored a reference to the managed object for the call-back functions)
+	obj->SetPrivate(_EngineProxy->Context(), NewPrivateString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
 	return proxyVal;
 }
 
@@ -146,8 +135,7 @@ HandleProxy* FunctionTemplateProxy::CreateInstance(int32_t managedObjectID, int3
 
 void FunctionTemplateProxy::Set(const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes)
 {
-	if (value != nullptr)
-		_FunctionTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
+	_FunctionTemplate->Set(NewUString(name), value->Handle(), attributes);  // TODO: Check how this affects objects created from templates!
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

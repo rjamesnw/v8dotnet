@@ -26,13 +26,13 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccProvider>SAK</SccProvider>
     <ProjectName>V8.Net-Proxy-x86</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -72,38 +72,40 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <TargetName>V8_Net_Proxy_x86</TargetName>
-    <IncludePath>$(ProgramData)\Google\V8Engine\V8\include;$(IncludePath)</IncludePath>
-    <IntDir>bin\$(Configuration)\$(PlatformTarget)\</IntDir>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
+    <IntDir>bin\$(Configuration)\x86\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
-    <LibraryPath>C:/windows/system32;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>V8_Net_Proxy_x64</TargetName>
-    <IncludePath>$(ProgramData)\Google\V8Engine\V8\include;$(IncludePath)</IncludePath>
+    <TargetName>V8_Net_Proxy_x86</TargetName>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
-    <OutDir>..\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
-    <IntDir>bin\$(Configuration)\$(PlatformTarget)\</IntDir>
+    <OutDir>..\bin\$(Configuration)\x86\</OutDir>
+    <IntDir>bin\$(Configuration)\x86\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProgramData)\Google\V8Engine\V8\include;$(IncludePath)</IncludePath>
-    <OutDir>..\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
-    <IntDir>bin\$(Configuration)\$(PlatformTarget)\</IntDir>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
+    <IntDir>bin\$(Configuration)\x86\</IntDir>
     <TargetName>V8_Net_Proxy_x86</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <LibraryPath>C:/windows/system32;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProgramData)\Google\V8Engine\V8\include;$(IncludePath)</IncludePath>
-    <OutDir>..\bin\$(Configuration)\$(PlatformTarget)\</OutDir>
-    <IntDir>bin\$(Configuration)\$(PlatformTarget)\</IntDir>
-    <TargetName>V8_Net_Proxy_x64</TargetName>
+    <IncludePath>$(V8_SRC)\v8\include;$(V8_SRC)\v8;$(IncludePath)</IncludePath>
+    <OutDir>..\bin\$(Configuration)\x86\</OutDir>
+    <IntDir>bin\$(Configuration)\x86\</IntDir>
+    <TargetName>V8_Net_Proxy_x86</TargetName>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <LibraryPath>C:/windows/system32;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\third_party\icu;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj\src\inspector;$(V8_SRC)\v8\out.gn\ia32.$(Configuration)\obj;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,26 +113,28 @@
       <Optimization>Disabled</Optimization>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(ProgramData)\Google\V8Engine\V8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
-      <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\v8.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\v8_libbase.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\v8_libplatform.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\mksnapshot.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\icuuc.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\icui18n.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>rem xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x86\" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -139,7 +143,7 @@
       <Optimization>Disabled</Optimization>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(ProgramData)\Google\V8Engine\V8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)V8\build\v8-x64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -151,14 +155,14 @@
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -167,37 +171,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProgramData)\Google\V8Engine\V8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <EnablePREfast>false</EnablePREfast>
-      <ExceptionHandling>Async</ExceptionHandling>
-      <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\v8.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\v8_libbase.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\v8_libplatform.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\mksnapshot.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\icuuc.dll.lib;$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration)\icui18n.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <GenerateMapFile>true</GenerateMapFile>
-      <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>$(ProgramData)\Google\V8Engine\V8\out.gn\ia32.$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Link>
-    <PreBuildEvent>
-      <Command>
-      </Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x86\" /Y</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProgramData)\Google\V8Engine\V8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)V8\build\v8-ia32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <ExceptionHandling>Async</ExceptionHandling>
       <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -211,14 +185,46 @@
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
       <MapExports>true</MapExports>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(TargetDir)$(TargetName).*" "$(ProjectDir)..\bin\3.5\$(Configuration)\x64\" /Y</Command>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(ProjectDir)V8\build\v8-x64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnablePREfast>false</EnablePREfast>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <PreprocessorDefinitions>_MSC_PLATFORM_TOOLSET=$(PlatformToolsetVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapExports>true</MapExports>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

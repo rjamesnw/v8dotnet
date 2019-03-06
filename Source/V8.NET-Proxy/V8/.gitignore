@@ -1,3 +1,5 @@
-# Ignore v8 source files
+# Ignore V source files
 
-/V8
+/build
+/old
+/src/*

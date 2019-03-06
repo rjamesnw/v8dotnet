@@ -23,16 +23,6 @@ extern "C"
 		delete engine;
 	}
 
-	EXPORT void STDCALL SetFlagsFromString(V8EngineProxy *engine, const char *flags)
-	{
-		BEGIN_ISOLATE_SCOPE(engine);
-		BEGIN_CONTEXT_SCOPE(engine);
-		if (flags != nullptr && strlen(flags) > 0)
-			v8:V8::SetFlagsFromString(flags, strlen(flags));
-		END_CONTEXT_SCOPE;
-		END_ISOLATE_SCOPE;
-	}
-
 	EXPORT void STDCALL RegisterGCCallback(V8EngineProxy* engine, ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback)
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
@@ -47,17 +37,16 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		engine->Isolate()->LowMemoryNotification();
-		while (!engine->Isolate()->IdleNotification(1000)) {}
+		while (!engine->Isolate()->IdleNotificationDeadline(1000)) {}
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
 
 	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1000)
 	{
-		if (engine->IsExecutingScript()) return false;
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
-		return engine->Isolate()->IdleNotification(hint);
+		return engine->Isolate()->IdleNotificationDeadline(hint);
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -82,18 +71,11 @@ extern "C"
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
-		if (script == nullptr || !script->IsScript())
+		if (!script->IsScript())
 			return engine->CreateError("Not a valid script handle.", JSV_ExecutionError);
-		auto h = engine->Execute(script->Script());
-		script->TryDispose();
-		return h;
+		return engine->Execute(script->Script());
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
-	}
-
-	EXPORT void STDCALL TerminateExecution(V8EngineProxy *engine)
-	{
-		engine->TerminateExecution();
 	}
 
 	// ------------------------------------------------------------------------------------------------------------------------
@@ -161,11 +143,11 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT void STDCALL SetCallAsFunctionHandler(ObjectTemplateProxy *proxy, ManagedJSFunctionCallback callback)
+	EXPORT void STDCALL RegisterInvokeHandler(ObjectTemplateProxy *proxy, ManagedJSFunctionCallback callback)
 	{
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
-		proxy->SetCallAsFunctionHandler(callback);
+		proxy->RegisterInvokeHandler(callback);
 		END_ISOLATE_SCOPE;
 	}
 
@@ -195,13 +177,13 @@ extern "C"
 		if (!handle.IsEmpty() && handle->IsObject())
 		{
 			auto obj = handleProxy->Handle().As<Object>();
-			if (obj->InternalFieldCount() > 1) // (this is used on templates only, where a number of fields can bet set before objects are created [not possible otherwise]) 
+			if (obj->InternalFieldCount() > 1)
 			{
 				if (templateProxy != nullptr)
 					obj->SetAlignedPointerInInternalField(0, templateProxy); // (stored a reference to the proxy instance for the call-back function(s))
-				obj->SetInternalField(1, NewExternal((void*)managedObjectID));
+				obj->SetInternalField(1, NewExternal((void*)(int64_t)managedObjectID));
 			}
-			engine->SetObjectPrivateValue(obj, "ManagedObjectID", NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
+			obj->SetPrivate(engine->Context(), NewPrivateString("ManagedObjectID"), NewInteger(managedObjectID)); // (won't be used on template created objects [fields are faster], but done anyhow for consistency)
 		}
 		handleProxy->SetManagedObjectID(managedObjectID);
 
@@ -230,14 +212,7 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
-		auto result = engine->Call(subject, functionName, _this, argCount, args);
-
-		if (args != nullptr)
-			for (int i = 0; i < argCount; ++i)
-				if (args[i] != nullptr)
-					args[i]->TryDispose();
-
-		return result;
+		return engine->Call(subject, functionName, _this, argCount, args);
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -248,49 +223,36 @@ extern "C"
 	EXPORT bool STDCALL SetObjectPropertyByName(HandleProxy *proxy, const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attribs = v8::None)
 	{
 		auto engine = proxy->EngineProxy();
-
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
 		auto handle = proxy->Handle();
-
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
-
-		//? ... managed objects must have a clone of their handle set because it may be made weak by the worker if abandoned, and the handle lost ...
-		//!Handle<Value> valueHandle = value == nullptr ? (Handle<Value>)V8Undefined : value->GetManagedObjectID() < 0 ? value->Handle() : value->Handle()->ToObject();
-		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
-
-		if (value != nullptr)
-			value->TryDispose();
-
 		auto obj = handle.As<Object>();
-		return obj->ForceSet(NewUString(name), valueHandle, attribs);
+		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
+		return obj->DefineOwnProperty(engine->Context(), NewUString(name), valueHandle, attribs).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT bool STDCALL SetObjectPropertyByIndex(HandleProxy *proxy, const uint16_t index, HandleProxy *value)
+	EXPORT bool STDCALL SetObjectPropertyByIndex(HandleProxy *proxy, const uint16_t index, HandleProxy *value, v8::PropertyAttribute attribs = v8::None)
 	{
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
 		auto handle = proxy->Handle();
-
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
-
 		auto obj = handle.As<Object>();
-
-		//!auto valueHandle = new CopyablePersistent<Value>(value != nullptr ? value->Handle() : V8Undefined);
 		Handle<Value> valueHandle = value != nullptr ? value->Handle() : V8Undefined;
 
-		if (value != nullptr)
-			value->TryDispose();
-
-		return obj->Set(index, valueHandle);
+		if (attribs == 0)
+			return obj->Set(index, valueHandle);
+		else
+			return obj->DefineOwnProperty(engine->Context(), Int32::New(engine->Isolate(), index)->ToString(engine->Isolate()), valueHandle, attribs).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -338,7 +300,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		return obj->Delete(NewUString(name));
+		return obj->Delete(engine->Context(), NewUString(name)).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -354,7 +316,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		return obj->Delete(index);
+		return obj->Delete(engine->Context(), index).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -364,9 +326,6 @@ extern "C"
 		ManagedAccessorGetter getter, ManagedAccessorSetter setter,
 		v8::AccessControl access, v8::PropertyAttribute attributes)
 	{
-		if (attributes < 0) // (-1 is "No Access" on the managed side, but there is no native support in V8 for this)
-			attributes = (PropertyAttribute)(ReadOnly | DontEnum);
-
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -377,15 +336,14 @@ extern "C"
 
 		auto obj = handle.As<Object>();
 
-		engine->SetObjectPrivateValue(obj, "ManagedObjectID", NewInteger(managedObjectID));
+		obj->SetPrivate(engine->Context(), NewPrivateString("ManagedObjectID"), NewInteger(managedObjectID));
 
 		auto accessors = NewArray(3); // [0] == ManagedObjectID, [1] == getter, [2] == setter
 		accessors->Set(0, NewInteger(managedObjectID));
 		accessors->Set(1, NewExternal(getter));
 		accessors->Set(2, NewExternal(setter));
 
-		obj->Delete(NewUString(name)); // ForceDelete()?
-		obj->SetAccessor(NewUString(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
+		obj->SetAccessor(engine->Context(), NewName(name), ObjectTemplateProxy::AccessorGetterCallbackProxy, ObjectTemplateProxy::AccessorSetterCallbackProxy, accessors, access, attributes);  // TODO: Check how this affects objects created from templates!
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -413,9 +371,6 @@ extern "C"
 
 		proxy->Set(name, value, attributes);  // TODO: Check how this affects objects created from templates!
 
-		if (value != nullptr)
-			value->TryDispose();
-
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -430,7 +385,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		auto names = obj->GetPropertyNames();
+		auto names = obj->GetPropertyNames(engine->Context()).ToLocalChecked();
 		return proxy->EngineProxy()->GetHandleProxy(names);
 
 		END_CONTEXT_SCOPE;
@@ -447,7 +402,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		auto names = obj->GetOwnPropertyNames();
+		auto names = obj->GetOwnPropertyNames(engine->Context()).ToLocalChecked();
 		return proxy->EngineProxy()->GetHandleProxy(names);
 
 		END_CONTEXT_SCOPE;
@@ -464,7 +419,7 @@ extern "C"
 		if (handle.IsEmpty() || !handle->IsObject())
 			throw exception("The handle does not represent an object.");
 		auto obj = handle.As<Object>();
-		return obj->GetPropertyAttributes(NewUString(name));
+		return obj->GetPropertyAttributes(engine->Context(), NewUString(name)).ToChecked();
 
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -531,20 +486,12 @@ extern "C"
 	}
 	//??EXPORT HandleProxy* STDCALL GetFunctionPrototype(FunctionTemplateProxy *proxy, int32_t managedObjectID, ObjectTemplateProxy *objTemplate)
 	//??{ return proxy->GetPrototype(managedObjectID, objTemplate); }
-	EXPORT HandleProxy* STDCALL CreateInstanceFromFunctionTemplate(FunctionTemplateProxy *proxy, int32_t managedObjectID, int32_t argCount = 0, HandleProxy** args = nullptr)
+	EXPORT HandleProxy* STDCALL CreateFunctionInstance(FunctionTemplateProxy *proxy, int32_t managedObjectID, int32_t argCount = 0, HandleProxy** args = nullptr)
 	{
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
-		auto result = proxy->CreateInstance(managedObjectID, argCount, args);
-
-		if (args != nullptr)
-			for (int i = 0; i < argCount; ++i)
-				if (args[i] != nullptr)
-					args[i]->TryDispose();
-
-		return result;
-
+		return proxy->CreateInstance(managedObjectID, argCount, args);
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -555,8 +502,6 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		proxy->Set(name, value, attributes);  // TODO: Check how this affects objects created from templates!
-		if (value != nullptr)
-			value->TryDispose();
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
@@ -570,21 +515,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL CreateString(V8EngineProxy *engine, uint16_t* str) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateString(str); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
 	EXPORT HandleProxy* STDCALL CreateDate(V8EngineProxy *engine, double ms) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateDate(ms); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
 	EXPORT HandleProxy* STDCALL CreateObject(V8EngineProxy *engine, int32_t managedObjectID) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateObject(managedObjectID); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
-	EXPORT HandleProxy* STDCALL CreateArray(V8EngineProxy *engine, HandleProxy** items, uint16_t length)
-	{
-		BEGIN_ISOLATE_SCOPE(engine);
-		BEGIN_CONTEXT_SCOPE(engine);
-		auto a = engine->CreateArray(items, length);
-
-		if (items != nullptr)
-			for (int i = 0; i < length; ++i)
-				if (items[i] != nullptr)
-					items[i]->TryDispose();
-
-		return a;
-		END_CONTEXT_SCOPE;
-		END_ISOLATE_SCOPE;
-	}
+	EXPORT HandleProxy* STDCALL CreateArray(V8EngineProxy *engine, HandleProxy** items, uint16_t length) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateArray(items, length); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
 	EXPORT HandleProxy* STDCALL CreateStringArray(V8EngineProxy *engine, uint16_t **items, uint16_t length) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateArray(items, length); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
 
 	EXPORT HandleProxy* STDCALL CreateNullValue(V8EngineProxy *engine) { BEGIN_ISOLATE_SCOPE(engine); BEGIN_CONTEXT_SCOPE(engine); return engine->CreateNullValue(); END_CONTEXT_SCOPE; END_ISOLATE_SCOPE; }
@@ -599,20 +530,11 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
-
-			if (engine->IsExecutingScript())
-			{
-				// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
-				engine->QueueMakeWeak(handleProxy);
-			}
-			else
-			{
-				BEGIN_ISOLATE_SCOPE(engine);
-				BEGIN_CONTEXT_SCOPE(engine);
-				handleProxy->MakeWeak();
-				END_CONTEXT_SCOPE;
-				END_ISOLATE_SCOPE;
-			}
+			BEGIN_ISOLATE_SCOPE(engine);
+			BEGIN_CONTEXT_SCOPE(engine);
+			handleProxy->MakeWeak();
+			END_CONTEXT_SCOPE;
+			END_ISOLATE_SCOPE;
 		}
 	}
 	EXPORT void STDCALL MakeStrongHandle(HandleProxy *handleProxy)
@@ -620,20 +542,11 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
-
-			if (engine->IsExecutingScript())
-			{
-				// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
-				engine->QueueMakeStrong(handleProxy);
-			}
-			else
-			{
-				BEGIN_ISOLATE_SCOPE(engine);
-				BEGIN_CONTEXT_SCOPE(engine);
-				handleProxy->MakeStrong();
-				END_CONTEXT_SCOPE;
-				END_ISOLATE_SCOPE;
-			}
+			BEGIN_ISOLATE_SCOPE(engine);
+			BEGIN_CONTEXT_SCOPE(engine);
+			handleProxy->MakeStrong();
+			END_CONTEXT_SCOPE;
+			END_ISOLATE_SCOPE;
 		}
 	}
 
@@ -681,7 +594,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL CreateHandleProxyTest()
 	{
 		byte* data = new byte[sizeof(HandleProxy)];
-		for (int i = 0; i < sizeof(HandleProxy); i++)
+		for (byte i = 0; i < sizeof(HandleProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = HandleProxyClass;
@@ -691,7 +604,7 @@ extern "C"
 	EXPORT V8EngineProxy* STDCALL CreateV8EngineProxyTest()
 	{
 		byte* data = new byte[sizeof(V8EngineProxy)];
-		for (int i = 0; i < sizeof(V8EngineProxy); i++)
+		for (byte i = 0; i < sizeof(V8EngineProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = V8EngineProxyClass;
@@ -701,7 +614,7 @@ extern "C"
 	EXPORT ObjectTemplateProxy* STDCALL CreateObjectTemplateProxyTest()
 	{
 		byte* data = new byte[sizeof(ObjectTemplateProxy)];
-		for (int i = 0; i < sizeof(ObjectTemplateProxy); i++)
+		for (byte i = 0; i < sizeof(ObjectTemplateProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = ObjectTemplateProxyClass;
@@ -711,7 +624,7 @@ extern "C"
 	EXPORT FunctionTemplateProxy* STDCALL CreateFunctionTemplateProxyTest()
 	{
 		byte* data = new byte[sizeof(FunctionTemplateProxy)];
-		for (int i = 0; i < sizeof(FunctionTemplateProxy); i++)
+		for (byte i = 0; i < sizeof(FunctionTemplateProxy); i++)
 			data[i] = i;
 		TProxyObjectType* pType = (TProxyObjectType*)data;
 		*pType = FunctionTemplateProxyClass;

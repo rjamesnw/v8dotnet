@@ -402,7 +402,7 @@ namespace V8.Net
                             //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
                             Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
 
-                            count = 200000000;
+                            count = 2000000;
 
                             Console.WriteLine("\r\nTesting global property write speed ... ");
                             startTime = timer.ElapsedMilliseconds;
@@ -418,7 +418,7 @@ namespace V8.Net
                             result2 = (double)elapsed / count;
                             Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
-                            count = 200000;
+                            count = 2000000;
 
                             Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
                             _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();
@@ -716,7 +716,7 @@ public class V8DotNetTester : V8ManagedObject
         Console.WriteLine("Creating test property 1 (adding new JSProperty directly) ...");
 
         var myProperty1 = new JSProperty(Engine.CreateValue("Test property 1"));
-        this.Properties.Add("testProperty1", myProperty1);
+        this.NamedProperties.Add("testProperty1", myProperty1);
 
         Console.WriteLine("Creating test property 2 (adding new JSProperty using the IV8ManagedObject interface) ...");
 
@@ -726,11 +726,11 @@ public class V8DotNetTester : V8ManagedObject
         Console.WriteLine("Creating test property 3 (reusing JSProperty instance for property 1) ...");
 
         // Note: This effectively links property 3 to property 1, so they will both always have the same value, even if the value changes.
-        this.Properties.Add("testProperty3", myProperty1); // (reuse a value)
+        this.NamedProperties.Add("testProperty3", myProperty1); // (reuse a value)
 
         Console.WriteLine("Creating test property 4 (just creating a 'null' property which will be intercepted later) ...");
 
-        this.Properties.Add("testProperty4", JSProperty.Empty);
+        this.NamedProperties.Add("testProperty4", JSProperty.Empty);
 
         Console.WriteLine("Creating test property 5 (test the 'this' overload in V8ManagedObject, which will set/update property 5 without calling into V8) ...");
 

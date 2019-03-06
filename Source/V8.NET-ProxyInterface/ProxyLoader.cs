@@ -286,7 +286,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-        public static unsafe extern bool SetObjectPropertyByIndex(HandleProxy* proxy, Int32 index, HandleProxy* value);
+        public static unsafe extern bool SetObjectPropertyByIndex(HandleProxy* proxy, Int32 index, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]

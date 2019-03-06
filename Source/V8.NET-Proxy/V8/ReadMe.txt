@@ -1,125 +1,76 @@
-﻿---------------
-I. Introduction
----------------
+Steps to download and build V8:
 
-Welcome to V8.NET!
+1. Make sure you have depot_tools installed and environment variables setup correctly (including DEPOT_TOOLS_WIN_TOOLCHAIN):
+   https://chromium.googlesource.com/chromium/src/+/master/docs/windows_build_instructions.md#install
 
-V8.NET is a pure managed library that allows you to add scripting to your .NET
-applications. The entire system is designed with pure p/invokes to make it
-easy to port to other systems using Mono.  The proxy C++ library is also based
-on pure native coding patterns to allow recompiling on non-windows systems!
+   Make sure to set these environment variables for the tools:
+   * DEPOT_TOOLS_WIN_TOOLCHAIN=0
+   * GYP_MSVS_VERSION=2017
 
-V8.NET wraps Google's V8 engine - a high-performance open-source JavaScript
-engine.
+2. Download the source into 'C:\ProgramData\Google\V8\src\'.
+   Follow instructions here: https://v8.dev/docs/source-code
 
--------------------
-II. Building V8.NET
--------------------
-
-The provided project and solution files require Visual Studio 2012. They
-produce architecture-neutral managed libraries that target .NET Framework 4.5,
-although V8.NET has been tested with .NET Framework 4.0 as well. It does
-not support older environments.
-
-In order to build V8.NET support, you must first acquire, build, and import V8:
-
-1. NOTE: This procedure and the update script are provided for your convenience.
-   V8.NET does not managed the V8 source code, nor does it come with any
-   third-party software required to download and build V8. Rights to V8 and its
-   prerequisites are provided by their rights holders.
-
-2. Install Git (http://subversion.apache.org/packages.html) and add it
-   to your executable path. This will allow the automation of the V8 source
-   download and builds.
-
-3. Download and install the Windows SDK (as of Dec 8, 2016, this is required in
-   order to build the source).
-
-4. Make sure the tools that are required to setup the build environment are
-   available (depot_tools specifically). See here: https://goo.gl/3jemcG
-   Also, make sure to run "gclient" from the command line (with no parameters)
-   at least once for it to initialize and download some other tools.
-
-5. Navigate to "V8.NET\Source\V8.NET Proxy\V8" and double click "V8Update.cmd".
-   Simply follow the easy to read prompts to download and build V8!!!
-   We have made this extremely simple for you - and you're welcome. 8)
-
-   a) Download the V8 dsource.
-   b) Update the build tools.
-   c) Build V8 as needed (debug/release).
-
-   This script calls other google python scripts to download the latest version
-   of V8 and related prerequisites, and build the 32-bit and 64-bit V8 shared
-   libraries. The source requires approximately 2+GB of additional disk space.
-
-   If you'd like to use a specific version of V8 instead of the latest one, set
-   an environment variable named V8REV to the desired V8 trunk revision number
-   before running the script. See http://code.google.com/p/v8/source/list.
+   If you want to compile a specified version, execute:
+   > git checkout #.#.### (where # is the version to checkout)
+   > gclient sync
    
 
---------------------------
-III. Debugging with V8.NET (NOTE: not yet completed - a work in progress)
---------------------------
+4. Go to "src\v8", open a command prompt, and execute this:
+   > python tools\dev\v8gen.py x64.release
+   > python tools\dev\v8gen.py ia32.release
+   
+   This will output files that can be compiled in the "src\v8\out.gn" folder.
+   Tip: Run "python tools\dev\v8gen.py list" to see a list of possible build configurations.
+		 
+   More details on V8 source building is here: https://v8.dev/docs/build
+   
+5. Build files will be in 'v8\out.gn' in a sub-folder for each build configuration.
+   For each configuration we need to update the args.gn file.  Run this:
+   
+   > gn args out.gn\x64.release
+   
+   Which will open notepad (or other text editor) to make changes. Use these settings:
+    
+     is_debug = false
+     target_cpu = "x64"
+     is_component_build = false
+     v8_static_library = true
+     use_custom_libcxx = false
+     use_custom_libcxx_for_host = false
+     v8_use_external_startup_data = false
+     is_clang = false   
+ 
+   After saving the changes and closing the editor the 'gn' script will re-generate some files.
+   Do this again for the 32-bit version (don't forget to change "x64" to "x86" for "target_cpu":
+	
+   > gn args out.gn\ia32.release
+ 
+   Replace "x64" with "x86" for "target_cpu" when updating "ia32.release\args.gn".
+   If you do not set "is_clang" to false in the settings then VS will complain the .lib files are corrupt.
+   
+   If "v8_use_external_startup_data" is true, then V8 will start more quickly, but two .bin files in the
+   out.gn\*.release folders will need to be included with the V8.Net output files.
+   
+   Follow these same steps for 'x64.debug' and 'ia32.debug' as well; however, make sure to set 'is_debug = true' instead.
+   
+6. To build, run these:
+   * ninja -C out.gn/x64.debug v8
+   * ninja -C out.gn/ia32.debug v8
+   * ninja -C out.gn/x64.release v8
+   * ninja -C out.gn/ia32.release v8
 
-V8 does not support standard Windows script debugging. Instead, it implements
-its own TCP/IP-based debugging protocol. A convenient way to debug JavaScript
-code running in V8 is to use the open-source Eclipse IDE:
+   Note: If you get an error that 'cctest' failed to compile, we don't need it, so ignore it.
+         Adding 'v8' at the end of the command will skip 'cctest', so you may have missed that flag. ;)
+ 
+7. If you set "v8_use_external_startup_data=true", don't forget to copy '*.bin' from both folders in "v8\out.gn\*.release" to the output folder for V8.Net for x64 and x86.
 
-1. Install Eclipse:
+You should now be ready to build V8.NET! :)
 
-    http://www.eclipse.org/downloads/
+Note: The proxy C++ projects expect the V8 source to be in "C:\ProgramData\Google\V8\src\" by default.  The "Common Properties" property page contains a "$(V8_SRC)" macro that must be updated to match where the source exists. The property pages are in "View->Other Windows->Property Manager" (expand the tree nodes). Open "Common Properties" and select "User Macros".
 
-2. Install Google Chrome Developer Tools for Java:
+Optionally you can try the automated process by running V8Update.cmd - but Google likes to break things often so it may not always work.
+   
+Staying up to date: https://v8.dev/docs/source-code#staying-up-to-date
 
-    a. Launch Eclipse and click "Help" -> "Install New Software...".
-    b. Paste the following URL into the "Work with:" field:
-
-        http://chromedevtools.googlecode.com/svn/update/dev/
-
-    c. Select "Google Chrome Developer Tools" and complete the dialog.
-    d. Restart Eclipse.
-
-3. Enable script debugging in your application by invoking the V8ScriptEngine
-   constructor with V8ScriptEngineFlags.EnableDebugging and an available TCP/IP
-   port number. The default port number is 9222.
-
-4. Attach the Eclipse debugger to your application:
-
-    a. In Eclipse, select "Run" -> "Debug Configurations...".
-    b. Right-click on "Standalone V8 VM" and select "New".
-    c. Fill in the correct port number and click "Debug".
-
-Note that you can also attach Visual Studio to your application for
-simultaneous debugging of script, managed, and native code.
-
--------------------------------------
-IV. V8 Known Differences From JScript
--------------------------------------
-
-JScript is Microsoft's JavaScript engine.  The following are some differences:
-
-1. V8 doesn't support indexers - properties with one or more parameters. Given
-   the general syntax "A.B(C,D) = E" where A is an external object, JScript
-   performs a single operation that assigns E to A's property B with index
-   arguments C and D. This syntax allows for multiple indices and arbitrary
-   index types. V8 interprets it as an attempt to use a value on the left side
-   of an assignment - something that makes no sense in JavaScript. JScript's
-   behavior appears to be an extension, but it's a convenient one because
-   indexers are common in the CLR.
-
-   WORKAROUND: Create a 'set' function yourself, such as "A.B.set(C,D,E)".
-
-2. V8 doesn't support default properties. This is only an issue in conjunction
-   with (1). The problematic syntax is of the form "A(B, C) = D", which in
-   JScript means "assign D to external object A's default property with index
-   arguments B and C".
-
-   WORKAROUND: Create a 'set' function yourself, such as "A.set(B,C,D)".
-
-3. V8 treats properties and methods identically. A method call is simply the
-   invocation of a property. This causes ambiguity when an object has both a
-   property and a method with the same name. An example of this in the CLR is
-   an instance of System.Collections.Generic.List with LINQ extensions; such
-   an object has both a property and a method named Count.
-
-   WORKAROUND: None.
+If you continue to have issues, there's a good post on it here that may also help:
+https://medium.com/dailyjs/how-to-build-v8-on-windows-and-not-go-mad-6347c69aacd4
