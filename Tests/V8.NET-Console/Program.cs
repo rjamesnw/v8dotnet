@@ -381,21 +381,40 @@ namespace V8.Net
                         {
                             Console.WriteLine("\r\nTesting garbage collection ... ");
 
-                            V8NativeObject tempObj;
-                            InternalHandle internalHandle = InternalHandle.Empty;
-                            int i;
+                            int objectId = -1;
 
-                            Console.WriteLine("Setting 'tempObj' to a new managed object ...");
+                            InternalHandle internalHandle = ((Func<V8Engine, InternalHandle>)((engine) =>
+                            {
+                                V8NativeObject tempObj;
 
-                            _JSServer.DynamicGlobalObject.tempObj = tempObj = _JSServer.CreateObject<V8NativeObject>();
-                            internalHandle = InternalHandle.GetUntrackedHandleFromObject(tempObj);
+                                Console.WriteLine("Setting 'tempObj' to a new managed object ...");
 
-                            Console.WriteLine("Nullifying 'tempObj' to release the object ...");
-                            tempObj = null;
+                                engine.DynamicGlobalObject.tempObj = tempObj = engine.CreateObject<V8NativeObject>();
+                                InternalHandle ih = InternalHandle.GetUntrackedHandleFromObject(tempObj);
+
+                                objectId = tempObj.ID;
+
+                                Console.WriteLine("Generation of test instance before collect: " + GC.GetGeneration(tempObj));
+
+                                Console.WriteLine("Releasing the object on the managed side ...");
+                                tempObj = null;
+
+                                return ih;
+                            }))(_JSServer);
+
+                            // (we wait for the object to be sent for disposal by the worker)
 
                             GC.Collect();
                             GC.WaitForPendingFinalizers();
-                            // (we wait for the object to be sent for disposal by the worker)
+
+                            var testobj = _JSServer.GetObjectByID(objectId);
+                            if (testobj != null)
+                                Console.WriteLine("Generation of test instance after collect: " + GC.GetGeneration(testobj));
+                            else
+                                Console.WriteLine("Generation of test instance after collect: Object null for ID: " + objectId);
+                            testobj = null;
+
+                            int i;
 
                             for (i = 0; i < 3000 && !internalHandle.IsDisposing; i++)
                                 System.Threading.Thread.Sleep(1); // (just wait for the worker)
@@ -403,8 +422,8 @@ namespace V8.Net
                             if (!internalHandle.IsDisposing)
                                 throw new Exception("The temp object's handle is still not pending disposal ... something is wrong.");
 
-                            Console.WriteLine("Success! The temp object's handle is going through the disposal process.");
-                            Console.WriteLine("Clearing the handle object reference next ...");
+                            Console.WriteLine("Success! The test object's handle is going through the disposal process.");
+                            //Console.WriteLine("Clearing the handle object reference next ...");
 
                             // object handles will finally be disposed when the native V8 GC calls back regarding them ...
 
@@ -439,7 +458,9 @@ namespace V8.Net
                             long startTime, elapsed;
                             long count;
                             double result1, result2, result3, result4;
-
+#if DEBUG
+                            Console.WriteLine(Environment.NewLine + "WARNING: You are running in debug mode, so the speed will be REALLY slow compared to release.");
+#endif
                             Console.WriteLine(Environment.NewLine + "Running the speed tests ... ");
 
                             timer.Start();
@@ -447,7 +468,11 @@ namespace V8.Net
                             //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
                             Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
 
+#if DEBUG
+                            count = 20000000;
+#else
                             count = 200000000;
+#endif
 
                             Console.WriteLine("\r\nTesting global property write speed ... ");
                             startTime = timer.ElapsedMilliseconds;
@@ -463,7 +488,12 @@ namespace V8.Net
                             result2 = (double)elapsed / count;
                             Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
-                            count = 20000;
+#if DEBUG
+                            count = 10000;
+#else
+                            count = 2000
+                                000;
+#endif
 
                             Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
                             _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();

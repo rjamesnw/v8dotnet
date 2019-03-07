@@ -132,6 +132,9 @@ namespace V8.NET.Console.ObjectExamples
 
             //  =============================================================================================================================================
             // Take your pick. ;)
+
+            System.Console.WriteLine("Script executions completed. Press any key to exit.");
+            System.Console.ReadKey(true);
         }
     }
 }
