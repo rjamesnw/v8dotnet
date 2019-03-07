@@ -1,6 +1,7 @@
 // https://thlorenz.github.io/v8-dox/build/v8-3.25.30/html/index.html (more up to date)
 
 #include "ProxyTypes.h"
+#include <experimental/filesystem>
 
 // ------------------------------------------------------------------------------------------------------------------------
 
@@ -51,6 +52,11 @@ bool V8EngineProxy::IsDisposed(int32_t engineID)
 	return _DisposedEngines[engineID];
 }
 
+bool V8EngineProxy::IsExecutingScript()
+{
+	return _IsExecutingScript;
+}
+
 // ------------------------------------------------------------------------------------------------------------------------
 
 Isolate* V8EngineProxy::Isolate() { return _Isolate; }
@@ -67,15 +73,22 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 //};
 
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
-	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr),
-	_Strings(1000, _StringItem()), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _NextNonTemplateObjectID(-2)
+	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr), _NextNonTemplateObjectID(-2),
+	_IsExecutingScript(false), _IsTerminatingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _HandlesToBeMadeWeak(1000, nullptr),
+	_HandlesToBeMadeStrong(1000, nullptr), _Objects(1000, nullptr), _Strings(1000, _StringItem())
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
+		v8::V8::InitializeICU();
+	
+		//?v8::V8::InitializeExternalStartupData(PLATFORM_TARGET "\\");
+		// (Startup data is not included by default anymore)
+		
 		_Platform = v8::platform::NewDefaultPlatform();
 		v8::V8::InitializePlatform(_Platform.get());
-		v8::V8::InitializeICU();
+
 		v8::V8::Initialize();
+
 		_V8Initialized = true;
 	}
 
@@ -87,6 +100,9 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 
 	_Handles.clear();
 	_DisposedHandles.clear();
+	_HandlesToBeMadeWeak.clear();
+	_HandlesToBeMadeStrong.clear();
+	_Objects.clear();
 	_Strings.clear();
 
 	_ManagedV8GarbageCollectionRequestCallback = nullptr;
@@ -195,23 +211,43 @@ void V8EngineProxy::DisposeNativeString(_StringItem &item)
  */
 HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 {
-	lock_guard<recursive_mutex> handleSection(_HandleSystemMutex);
+	HandleProxy* handleProxy = nullptr;
 
-	HandleProxy* handleProxy;
+	// ... first check if this handle is an object with an ID, and if so, try to pull an existing handle ...
 
-	if (_DisposedHandles.size() > 0)
+	auto id = HandleProxy::GetManagedObjectID(handle);
+
+	if (id >= 0 && id < (int)_Objects.size())
+		handleProxy = _Objects.at(id);
+
+	if (handleProxy == nullptr)
 	{
-		auto id = _DisposedHandles.back();
-		_DisposedHandles.pop_back();
-		handleProxy = _Handles.at(id);
-		handleProxy->Initialize(handle);
-	}
-	else
-	{
-		handleProxy = (new HandleProxy(this, (int32_t)_Handles.size()))->Initialize(handle);
-		_Handles.push_back(handleProxy); // (keep a record of all handles created)
+		lock_guard<recursive_mutex> handleSection(_HandleSystemMutex);
 
-		//_Isolate->IdleNotification(100); // (handles should not have to be created all the time, so this helps to free them up)
+		ProcessWeakStrongHandleQueue();
+
+		if (_DisposedHandles.size() == 0)
+		{
+			// (no handles are disposed/cached, which means a new one is required)
+			// ... try to trigger disposal of weak handles ...
+			//if (_HandlesToBeMadeWeak.size() > 1000)
+			_Isolate->IdleNotificationDeadline(100); // (handles should not have to be created all the time, so this helps to free them up if too many start adding up in weak state)
+		}
+
+		if (_DisposedHandles.size() > 0)
+		{
+			auto id = _DisposedHandles.back();
+			_DisposedHandles.pop_back();
+			handleProxy = _Handles.at(id);
+			handleProxy->Initialize(handle);
+		}
+		else
+		{
+			handleProxy = (new HandleProxy(this, (int32_t)_Handles.size()))->Initialize(handle);
+			_Handles.push_back(handleProxy); // (keep a record of all handles created)
+
+			ProcessWeakStrongHandleQueue(); // (process one more time to make this twice as fast as long as new handles are being created)
+		}
 	}
 
 	return handleProxy;
@@ -221,8 +257,54 @@ void V8EngineProxy::DisposeHandleProxy(HandleProxy *handleProxy)
 {
 	lock_guard<recursive_mutex> handleSection(_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
 
+	if (handleProxy->_ObjectID >= 0 && handleProxy->_ObjectID < (int)_Objects.size())
+		_Objects[handleProxy->_ObjectID] = nullptr;
+
 	if (handleProxy->_Dispose(false))
 		_DisposedHandles.push_back(handleProxy->_ID); // (this is a queue of disposed handles to use for recycling; Note: the persistent handles are NEVER disposed until they become reinitialized)
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+void V8EngineProxy::QueueMakeWeak(HandleProxy *handleProxy)
+{
+	if (handleProxy->IsDisposingManagedSide())
+	{
+		lock_guard<recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+		_HandlesToBeMadeWeak.push_back(handleProxy);
+	}
+}
+
+void V8EngineProxy::QueueMakeStrong(HandleProxy *handleProxy) // TODO: "MakeStrong" requests may no longer be needed.
+{
+	if (handleProxy->IsWeak())
+	{
+		lock_guard<recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+		_HandlesToBeMadeStrong.push_back(handleProxy);
+	}
+}
+
+void V8EngineProxy::ProcessWeakStrongHandleQueue()
+{
+	// ... process one of each per call ...
+
+	HandleProxy * h;
+
+	if (_HandlesToBeMadeWeak.size() > 0)
+	{
+		lock_guard<recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // PROTECTS AGAINST THE WORKER THREAD
+		h = _HandlesToBeMadeWeak.back();
+		_HandlesToBeMadeWeak.pop_back();
+		h->MakeWeak();
+	}
+
+	if (_HandlesToBeMadeStrong.size() > 0)
+	{
+		lock_guard<recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // PROTECTS AGAINST THE WORKER THREAD
+		h = _HandlesToBeMadeStrong.back();
+		_HandlesToBeMadeStrong.pop_back();
+		h->MakeStrong(); // TODO: "MakeStrong" requests may no longer be needed.
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -273,85 +355,79 @@ HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-// ??
-//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-//void V8EngineProxy::WithIsolateScope(CallbackAction action)
-//{
-//    BEGIN_ISOLATE_SCOPE(this);
-//    if (action != nullptr) action();
-//    END_ISOLATE_SCOPE;
-//}
-//
-//// ------------------------------------------------------------------------------------------------------------------------
-// ??
-//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-//void V8EngineProxy::WithContextScope(CallbackAction action)
-//{
-//    BEGIN_ISOLATE_SCOPE(this);
-//    BEGIN_CONTEXT_SCOPE(this);
-//    if (action != nullptr) action();
-//    END_CONTEXT_SCOPE;
-//    END_ISOLATE_SCOPE;
-//}
-//
-//// ------------------------------------------------------------------------------------------------------------------------
-// ??
-//// To support the nature of V8, the managed side is required to select a scope to execute delegates in (Isolate, Context, or Handle based). This is why the macros only exist here. ;)
-//void V8EngineProxy::WithHandleScope(CallbackAction action)
-//{
-//    BEGIN_HANDLE_SCOPE(this);
-//    if (action != nullptr) action();
-//    END_HANDLE_SCOPE;
-//}
-
-// ------------------------------------------------------------------------------------------------------------------------
 
 Local<String> V8EngineProxy::GetErrorMessage(Local<v8::Context> ctx, TryCatch &tryCatch)
 {
-	auto msg = tryCatch.Exception()->ToString(ctx->GetIsolate());
+	auto isolate = ctx->GetIsolate();
+	auto msg = tryCatch.Message();
+	auto messageExists = !msg.IsEmpty();
+	auto excep = tryCatch.Exception();
+	auto exceptionExists = !excep.IsEmpty();
+	Local<Value> stack;
+	bool stackExists = tryCatch.StackTrace(ctx).ToLocal(&stack) && !stack->IsUndefined();
 
-	auto stack = tryCatch.StackTrace(ctx).ToLocalChecked();
-	bool showStackMsg = !stack.IsEmpty() && !stack->IsUndefined();
 	Local<String> stackStr;
 
-	if (showStackMsg)
+	if (stackExists && exceptionExists)
 	{
-		stackStr = stack->ToString(ctx->GetIsolate());
+		stackStr = stack->ToString(isolate);
+
+		auto exceptionMsg = tryCatch.Exception()->ToString(isolate);
 
 		// ... detect if the start of the stack message is the same as the exception message, then remove it (seems to happen when managed side returns an error) ...
 
-		if (stackStr->Length() >= msg->Length())
+		if (stackStr->Length() >= exceptionMsg->Length())
 		{
 			uint16_t* ss = new uint16_t[stackStr->Length() + 1];
-			stack->ToString(ctx->GetIsolate())->Write(ctx->GetIsolate(), ss);
-			auto subStackStr = NewSizedUString(ss, msg->Length());
-			auto stackPartStr = NewSizedUString(ss + msg->Length(), stackStr->Length() - msg->Length());
-			delete[] ss;
+			stack->ToString(isolate)->Write(isolate, ss); // (copied to a new array in order to offset the character pointer to extract a substring)
 
-			if (msg->Equals(ctx, subStackStr).ToChecked())
+			// ... get the same number of characters from the stack message as the exception message length ...
+			auto subStackStr = NewSizedUString(ss, exceptionMsg->Length());
+
+			if (exceptionMsg->Equals(ctx, subStackStr).ToChecked())
+			{
+				// ... using the known exception message length, ...
+				auto stackPartStr = NewSizedUString(ss + exceptionMsg->Length(), stackStr->Length() - exceptionMsg->Length());
 				stackStr = stackPartStr;
+			}
+
+			delete[] ss;
 		}
 	}
 
-	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("\r\n"));
+	auto msgStr = messageExists ? msg->Get() : NewString("");
 
-	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("  Line: "));
-	auto line = NewInteger(tryCatch.Message()->GetLineNumber(ctx).ToChecked())->ToString(ctx).ToLocalChecked();
-	msg = msg->Concat(ctx->GetIsolate(), msg, line);
-
-	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("  Column: "));
-	auto col = NewInteger(tryCatch.Message()->GetStartColumn(ctx).ToChecked())->ToString(ctx).ToLocalChecked();
-	msg = msg->Concat(ctx->GetIsolate(), msg, col);
-	msg = msg->Concat(ctx->GetIsolate(), msg, NewString("\r\n"));
-
-	if (showStackMsg)
+	if (tryCatch.HasTerminated())
 	{
-		msg = msg->Concat(ctx->GetIsolate(), msg, NewString("  Stack: "));
-		msg = msg->Concat(ctx->GetIsolate(), msg, stackStr);
-		msg = msg->Concat(ctx->GetIsolate(), msg, NewString("\r\n"));
+		if (msgStr->Length() > 0)
+			msgStr = msgStr->Concat(isolate, msgStr, NewString("\r\n"));
+		msgStr = msgStr->Concat(isolate, msgStr, NewString("Script execution aborted by request."));
 	}
 
-	return msg;
+	if (messageExists)
+	{
+		msgStr = msgStr->Concat(isolate, msgStr, NewString("\r\n"));
+
+		msgStr = msgStr->Concat(isolate, msgStr, NewString("  Line: "));
+		auto line = NewInteger(msg->GetLineNumber(ctx).ToChecked())->ToString(ctx).ToLocalChecked();
+		msgStr = msgStr->Concat(isolate, msgStr, line);
+
+		msgStr = msgStr->Concat(isolate, msgStr, NewString("  Column: "));
+		auto col = NewInteger(msg->GetStartColumn(ctx).ToChecked())->ToString(ctx).ToLocalChecked();
+		msgStr = msgStr->Concat(isolate, msgStr, col);
+	}
+
+	if (stackExists)
+	{
+		msgStr = msgStr->Concat(isolate, msgStr, NewString("\r\n"));
+
+		msgStr = msgStr->Concat(isolate, msgStr, NewString("  Stack: "));
+		msgStr = msgStr->Concat(isolate, msgStr, stackStr);
+	}
+
+	msgStr = msgStr->Concat(isolate, msgStr, NewString("\r\n"));
+
+	return msgStr;
 }
 
 HandleProxy* V8EngineProxy::Execute(const uint16_t* script, uint16_t* sourceName)
@@ -395,15 +471,19 @@ HandleProxy* V8EngineProxy::Execute(Handle<Script> script)
 		TryCatch __tryCatch(_Isolate);
 		//__tryCatch.SetVerbose(true);
 
+		_IsExecutingScript = true;
 		auto result = script->Run(_Context);
+		_IsExecutingScript = false;
 
 		if (__tryCatch.HasCaught())
 		{
 			returnVal = GetHandleProxy(GetErrorMessage(_Context, __tryCatch));
-			returnVal->_Type = JSV_ExecutionError;
+			returnVal->_Type = __tryCatch.HasTerminated() ? JSV_ExecutionTerminated : JSV_ExecutionError;
 		}
 		else  if (!result.IsEmpty())
 			returnVal = GetHandleProxy(result.ToLocalChecked());
+
+		_IsTerminatingScript = false;
 	}
 	catch (exception ex)
 	{
@@ -450,6 +530,16 @@ HandleProxy* V8EngineProxy::Compile(const uint16_t* script, uint16_t* sourceName
 	}
 
 	return returnVal;
+}
+
+void V8EngineProxy::TerminateExecution()
+{
+	if (_IsExecutingScript)
+	{
+		_IsExecutingScript = false;
+		_IsTerminatingScript = true;
+		_Isolate->TerminateExecution();
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -528,6 +618,23 @@ HandleProxy* V8EngineProxy::CreateBoolean(bool b)
 HandleProxy* V8EngineProxy::CreateString(const uint16_t* str)
 {
 	return GetHandleProxy(NewUString(str));
+}
+
+Local<Private> V8EngineProxy::CreatePrivateString(const char* value)
+{
+	return Private::ForApi(_Isolate, NewString(value)); // ('ForApi' is required, otherwise a new "virtual" symbol reference of some sort will be created with the same name on each request [duplicate names, but different symbols virtually])
+}
+
+void V8EngineProxy::SetObjectPrivateValue(Local<Object> obj, const char* name, Local<Value> value)
+{
+	obj->SetPrivate(_Context, CreatePrivateString("ManagedObjectID"), value);
+}
+
+Local<Value> V8EngineProxy::GetObjectPrivateValue(Local<Object> obj, const char* name)
+{
+	auto phandle = obj->GetPrivate(_Context, CreatePrivateString("ManagedObjectID"));
+	if (phandle.IsEmpty()) return V8Undefined;
+	return phandle.ToLocalChecked();
 }
 
 HandleProxy* V8EngineProxy::CreateError(const uint16_t* message, JSValueType errorType)

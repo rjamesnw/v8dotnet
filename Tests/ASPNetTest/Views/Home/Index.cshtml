@@ -14,11 +14,7 @@
         <p> 
             V8.NET Library CodeBase: @Type.GetType("V8.Net.V8Engine, V8.Net").Assembly.CodeBase; <br />
             V8.NET Library Path: @Type.GetType("V8.Net.V8Engine, V8.Net").Assembly.Location; <br />
-            2 x 3 = 
-            @{
-                var engine = new V8.Net.V8Engine();
-                @engine.Execute("2*3", "V8.NET ASP Test").AsString;
-            }
+            2 x 3 = @ViewBag.Result
         </p>
     </div>
     <div class="col-md-4">

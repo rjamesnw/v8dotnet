@@ -16,7 +16,7 @@ namespace V8.Net
         /// <summary>
         /// No valid attribute exists (unlike 'None', which *explicitly* defines that no attributes are set).
         /// The native PROXY (not V8) will interpret this to mean "let V8 continue on to the default behavior".
-        /// <para>Warning: This cannot be bitwise "OR"ed with the other enum values.</para>
+        /// <para>Warning: This cannot be bitwise "OR"ed with the other enum values. Also, this is not supported on the native V8 side.</para>
         /// </summary>
         Undefined = -1,
 
@@ -93,14 +93,19 @@ namespace V8.Net
     public enum JSValueType : int
     {
         /// <summary>
+        /// Script execution was terminated upon request.
+        /// </summary>
+        ExecutionTerminated = -4,
+
+        /// <summary>
         /// An error has occurred while attempting to execute the compiled script.
         /// </summary>
-        ExecutionError = -2,
+        ExecutionError = -3,
 
         /// <summary>
         /// An error has occurred compiling the script (usually a syntax error).
         /// </summary>
-        CompilerError = -3,
+        CompilerError = -2,
 
         /// <summary>
         /// An internal error has occurred (before or after script execution).
@@ -108,9 +113,14 @@ namespace V8.Net
         InternalError = -1,
 
         /// <summary>
+        /// The value has not been read yet from the native V8 handle, so a call to 'V8NetProxy.UpdateHandleValue(_HandleProxy)' is required.
+        /// </summary>
+        Uninitialized = 0,
+
+        /// <summary>
         /// The value is undefined (no value set).  This is NOT the same as 'null'.
         /// </summary>
-        Undefined = 0,
+        Undefined,
 
         /// <summary>
         /// The handle proxy represents pre-compiled JavaScript.

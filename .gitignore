@@ -160,3 +160,6 @@ $RECYCLE.BIN/
 
 !LICENSE
 !README.md
+/V8.Net.VC.VC.opendb
+/V8.Net.VC.db
+/.vs/V8.Net/v15

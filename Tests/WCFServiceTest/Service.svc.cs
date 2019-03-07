@@ -12,9 +12,9 @@ namespace WCFServiceTest
     /* V8.NET integration into ASP.NET:
      * 1. Create a project folder specifically named "V8.NET", or change the name using 'V8Engine.ASPBINSubFolderName'.
      *    Note: This test project has a PRE-Build event that copies files to "$(ProjectDir)V8.NET" - this must match 'V8Engine.ASPBINSubFolderName'.
-     *    Note: 'V8Engine.ASPBINSubFolderName' is set to "V8.NET"  by default.
-     * 2. For all DLLS in "x86" and "x64" under "$(ProjectDir)V8.NET", change "Copy to Output Directory" to "Copy if newer".  This should also tell Visual Studio that this
-     *    content is required for the application.
+     *    Note: 'V8Engine.ASPBINSubFolderName' is set to "V8.NET" by default.
+     * 2. For all DLLS in the "x86" and "x64" folders under this "$(ProjectDir)V8.NET" folder, change "Copy to Output Directory" to "Copy if newer".  This should also
+     *    tell Visual Studio that this content is required for the application.
      * 3. Set any DLLs that you have already referenced in the "$(ProjectDir)V8.NET" root folder to "Do not copy" - the build action will copy referenced DLLs by default.
      * 
      * When setup correctly, Visual Studio will replicate the folder structure for the DLLs in the "V8.NET" folder into the 'bin' folder, and the referenced DLLs will end
@@ -39,7 +39,7 @@ namespace WCFServiceTest
         {
             // V8Engine.ASPBINSubFolderName = "V8.NET"; // It is already "V8.NET" by default, so just delete this line if not needed.  Please see integration steps at the top for more details.
             var engine = new V8Engine();
-            Handle result = engine.Execute("'You entered: '+" + value, "V8.NET Web Service Test");
+            var result = engine.Execute("'You entered: '+" + value, "V8.NET Web Service Test");
             return result.AsString;
         }
 

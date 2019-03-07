@@ -12,6 +12,55 @@ using V8.Net;
 
 namespace V8.Net
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using V8.Net;
+
+//    namespace Test
+//    {
+//        class GlobalUtils
+//        {
+//            public static void WriteLine(string s) { Console.WriteLine(s); }
+//        }
+
+//        public class BaseClass
+//        {
+//            public BaseClass() { }
+//            public void Foo(InternalHandle _this) { Console.WriteLine("BaseClass::Foo: " + _this.GetProperty("y")); }
+//            public void Bar() { Console.WriteLine("BaseClass::Bar"); }
+//        }
+
+//        class Program
+//        {
+//            public static void MainFunc(V8Engine js, string[] args)
+//            {
+//                js.RegisterType<GlobalUtils>("utils", false, ScriptMemberSecurity.Locked);
+//                js.GlobalObject.SetProperty(typeof(GlobalUtils));
+
+//                js.RegisterType<BaseClass>(null, false, ScriptMemberSecurity.ReadWrite);
+//                js.GlobalObject.SetProperty(typeof(BaseClass));
+
+//                js.ConsoleExecute(jssrc);
+//            }
+
+//            private static string jssrc = @"
+//function Derived() { }
+
+//Derived.prototype = Object.create(new BaseClass());
+//Derived.prototype.constructor = Derived;
+
+//for (var p in Derived.prototype.__proto__)
+//    Derived.prototype[p] = new Function(""return Derived.prototype.__proto__['""+p+""'].call(Derived.prototype.__proto__, this, ...arguments);"");
+
+//var x = new Derived();
+//x.y = 1;
+//x.Foo();
+//x.Bar();
+//";
+//        }
+//    }
+
     public class Program
     {
         static V8Engine _JSServer;
@@ -25,6 +74,8 @@ namespace V8.Net
 
             try
             {
+                Console.WriteLine("V8.Net Version: " + V8Engine.Version);
+
                 Console.Write(Environment.NewLine + "Creating a V8Engine instance ...");
                 _JSServer = new V8Engine();
                 Console.WriteLine(" Done!");
@@ -39,14 +90,29 @@ namespace V8.Net
                 {
                     if (!_JSServer.IsDisposed)
                         Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
-                            + " / Pending Native GC: " + _JSServer.TotalHandlesPendingDisposal
+                            + " / Pending Disposal: " + _JSServer.TotalHandlesPendingDisposal
+                            + " / Pending Native GC: " + _JSServer.TotalHandlesPendingV8GC
                             + " / Cached: " + _JSServer.TotalHandlesCached
-                            + " / In Use: " + (_JSServer.TotalHandles - _JSServer.TotalHandlesCached) + ")";
+                            + " / In Use: " + (_JSServer.TotalHandlesInUse) + ")";
                     else
                         Console.Title = "V8.Net Console - Shutting down...";
                 };
                 _TitleUpdateTimer.Start();
 
+                Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
+                _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
+                    + @" if (typeof o.valueOf=='undefined') return ""'valueOf()' is missing on '""+(typeof o)+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
+                    + @" if (typeof o.toString=='undefined') return ""'toString()' is missing on '""+o.valueOf()+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
+                    + @" for (var p in o) {var ov='', pv=''; try{ov=o.valueOf();}catch(e){ov='{error: '+e.message+': '+dump(o)+'}';} try{pv=o[p];}catch(e){pv=e.message;} s+='* '+ov+'.'+p+' = ('+pv+')\r\n'; } return s; }");
+
+                Console.WriteLine("Setting up test...");
+
+                //_JSServer.RegisterType<Test>(null, null, ScriptMemberSecurity.ReadOnly);
+                //_JSServer.GlobalObject.SetProperty(typeof(Test));
+
+                //?Test.Program.MainFunc(_JSServer, args);
+
+                //if (false) // (comment this out to run the initial tests and examples)
                 {
                     Console.WriteLine(Environment.NewLine + "Creating some global CLR types ...");
 
@@ -61,7 +127,7 @@ namespace V8.Net
                     _JSServer.RegisterType(typeof(char), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(int), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(Int16), null, true, ScriptMemberSecurity.Locked);
-                    _JSServer.RegisterType(typeof(Int32), null, true, ScriptMemberSecurity.Locked);
+                    _JSServer.RegisterType(typeof(Int32), null, true, ScriptMemberSecurity.ReadWrite);
                     _JSServer.RegisterType(typeof(Int64), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(UInt16), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(UInt32), null, true, ScriptMemberSecurity.Locked);
@@ -69,7 +135,7 @@ namespace V8.Net
                     _JSServer.RegisterType(typeof(Enumerable), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(System.IO.File), null, true, ScriptMemberSecurity.Locked);
 
-                    ObjectHandle hSystem = _JSServer.CreateObject();
+                    InternalHandle hSystem = _JSServer.CreateObject().KeepAlive();
                     _JSServer.DynamicGlobalObject.System = hSystem;
                     hSystem.SetProperty(typeof(Object)); // (Note: No optional parameters used, so this will simply lookup and apply the existing registered type details above.)
                     hSystem.SetProperty(typeof(String));
@@ -81,6 +147,7 @@ namespace V8.Net
                     _JSServer.GlobalObject.SetProperty(typeof(int));
                     _JSServer.GlobalObject.SetProperty(typeof(Int16));
                     _JSServer.GlobalObject.SetProperty(typeof(Int32));
+                    _JSServer.GetTypeBinder(typeof(Int32)).ChangeMemberSecurity("MaxValue", ScriptMemberSecurity.Hidden);
                     _JSServer.GlobalObject.SetProperty(typeof(Int64));
                     _JSServer.GlobalObject.SetProperty(typeof(UInt16));
                     _JSServer.GlobalObject.SetProperty(typeof(UInt32));
@@ -94,12 +161,6 @@ namespace V8.Net
 
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<int, string>), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
                     _JSServer.GlobalObject.SetProperty(typeof(GenericTest<string, int>), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
-
-                    Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
-                    _JSServer.ConsoleExecute(@"dump = function(o) { var s=''; if (typeof(o)=='undefined') return 'undefined';"
-                        + @" if (typeof o.valueOf=='undefined') return ""'valueOf()' is missing on '""+(typeof o)+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
-                        + @" if (typeof o.toString=='undefined') return ""'toString()' is missing on '""+o.valueOf()+""' - if you are inheriting from V8ManagedObject, make sure you are not blocking the property."";"
-                        + @" for (var p in o) {var ov='', pv=''; try{ov=o.valueOf();}catch(e){ov='{error: '+e.message+': '+dump(o)+'}';} try{pv=o[p];}catch(e){pv=e.message;} s+='* '+ov+'.'+p+' = ('+pv+')\r\n'; } return s; }");
 
                     Console.WriteLine(Environment.NewLine + "Creating a global 'assert(msg, a,b)' function for property value assertion ...");
                     _JSServer.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
@@ -153,10 +214,12 @@ namespace V8.Net
                         {
                             Console.WriteLine(@"Special console commands (all commands are triggered via a preceding '\' character so as not to confuse it with script code):");
                             Console.WriteLine(@"\cls - Clears the screen.");
+                            Console.WriteLine(@"\flags --flag1 --flag2 --etc... - Sets one or more flags (use '\flags --help' for more details).");
                             Console.WriteLine(@"\test - Starts the test process.");
                             Console.WriteLine(@"\gc - Triggers garbage collection (for testing purposes).");
                             Console.WriteLine(@"\v8gc - Triggers garbage collection in V8 (for testing purposes).");
                             Console.WriteLine(@"\gctest - Runs a simple GC test against V8.NET and the native V8 engine.");
+                            Console.WriteLine(@"\handles - Dumps the current list of known handles.");
                             Console.WriteLine(@"\speedtest - Runs a simple test script to test V8.NET performance with the V8 engine.");
                             Console.WriteLine(@"\mtest - Runs a simple test script to test V8.NET integration/marshalling compatibility with the V8 engine on your system.");
                             Console.WriteLine(@"\newenginetest - Creates 3 new engines (each time) and runs simple expressions in each one (note: new engines are never removed once created).");
@@ -164,6 +227,25 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\cls")
                             Console.Clear();
+                        else if (lcInput == @"\flags" || lcInput.StartsWith(@"\flags "))
+                        {
+                            string flags = lcInput.Substring(6).Trim();
+                            if (flags.Length > 0)
+                            {
+                                try
+                                {
+                                    _JSServer.SetFlagsFromString(flags); // TODO: This seems to crash after listing for some reason ...?
+                                }
+                                catch { }
+                                if (lcInput.Contains("--help"))
+                                {
+                                    Console.WriteLine("Press any key to continue ..." + Environment.NewLine);
+                                    Console.ReadKey();
+                                }
+                            }
+                            else
+                                Console.WriteLine(@"You did not specify any options.");
+                        }
                         else if (lcInput == @"\test")
                         {
                             try
@@ -226,7 +308,12 @@ namespace V8.Net
                                     tester.Execute();
 
                                     Console.WriteLine("\r\nReleasing managed tester object ...\r\n");
-                                    tester.Handle.ReleaseManagedObject();
+                                    (~tester).ReleaseManagedObject(); // (this is not the same as Dispose(), and just releases the underlying managed object from its handle, and thus, the underlying native handle as well)
+                                    if (tester.InternalHandle.IsEmpty)
+                                        Console.WriteLine(" Ok.");
+                                    else
+                                        throw new Exception("Failed to release the managed object from its handle.");
+
                                 }
 
                                 Console.WriteLine("\r\n===============================================================================\r\n");
@@ -244,16 +331,51 @@ namespace V8.Net
                         }
                         else if (lcInput == @"\gc")
                         {
-                            Console.Write("\r\nForcing garbage collection ... ");
-                            GC.Collect();
+                            Console.Write(Environment.NewLine + "Forcing garbage collection ... ");
+                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                            GC.WaitForPendingFinalizers();
+                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                             GC.WaitForPendingFinalizers();
                             Console.WriteLine("Done.\r\n");
+                            Console.WriteLine("Currently Used Memory: " + GC.GetTotalMemory(true));
                         }
                         else if (lcInput == @"\v8gc")
                         {
-                            Console.Write("\r\nForcing V8 garbage collection ... ");
+                            Console.Write(Environment.NewLine + "Forcing V8 garbage collection ... ");
                             _JSServer.ForceV8GarbageCollection();
                             Console.WriteLine("Done.\r\n");
+                        }
+                        else if (lcInput == @"\handles")
+                        {
+                            Console.Write(Environment.NewLine + "Active handles list ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_Active)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.Write(Environment.NewLine + "Managed side dispose-ready handles (usually due to a GC attempt) ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_ManagedSideDisposeReady)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.Write(Environment.NewLine + "Native side V8 handles now marked 'weak' (though may still be in use) ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_NativeSideWeak)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.Write(Environment.NewLine + "Native side V8 handles that are now cached for reuse ... " + Environment.NewLine);
+
+                            foreach (var h in _JSServer.Handles_DisposedAndCached)
+                            {
+                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                            }
+
+                            Console.WriteLine(Environment.NewLine + "Done." + Environment.NewLine);
                         }
                         else if (lcInput == @"\gctest")
                         {
@@ -263,48 +385,28 @@ namespace V8.Net
                             InternalHandle internalHandle = InternalHandle.Empty;
                             int i;
 
-                            {
-                                Console.WriteLine("Setting 'this.tempObj' to a new managed object ...");
+                            Console.WriteLine("Setting 'tempObj' to a new managed object ...");
 
-                                tempObj = _JSServer.CreateObject<V8NativeObject>();
-                                internalHandle = tempObj.Handle;
-                                Handle testHandle = internalHandle;
-                                _JSServer.DynamicGlobalObject.tempObj = tempObj;
+                            _JSServer.DynamicGlobalObject.tempObj = tempObj = _JSServer.CreateObject<V8NativeObject>();
+                            internalHandle = InternalHandle.GetUntrackedHandleFromObject(tempObj);
 
-                                // ... because we have a strong reference to the handle in 'testHandle', the managed and native objects are safe; however,
-                                // this block has the only strong reference, so once the reference goes out of scope, the managed GC should attempt to
-                                // collect it, which will mark the handle as ready for collection (but it will not be destroyed just yet until V8 is ready) ...
-
-                                Console.WriteLine("Clearing managed references and running the garbage collector ...");
-                                testHandle = null;
-                            }
-
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-                            // (we wait for the 'testHandle' handle object to be collected, which will dispose the handle)
-                            // (note: we do not call 'Set()' on 'internalHandle' because the "Handle" type takes care of the disposal)
-
-                            for (i = 0; i < 3000 && internalHandle.ReferenceCount > 1; i++)
-                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
-
-                            if (internalHandle.ReferenceCount > 1)
-                                throw new Exception("Handle is still not ready for GC ... something is wrong.");
-
-                            Console.WriteLine("Success! The managed handle instance is pending disposal.");
-                            Console.WriteLine("Clearing the handle object reference next ...");
-
-                            // ... because we still have a reference to 'tempObj' at this point, the managed and native objects are safe; however, this 
-                            // block scope has the only strong reference to the managed object keeping everything alive (including the underlying handle),
-                            // so once the reference goes out of scope, the managed GC will collect it, which will mark the managed object as ready for
-                            // collection. Once both the managed object and handle are marked, this in turn marks the native handle as weak. When the native
-                            // V8 engine's garbage collector is ready to dispose of the handle, as call back is triggered and the native object and
-                            // handles will finally be removed ...
-
+                            Console.WriteLine("Nullifying 'tempObj' to release the object ...");
                             tempObj = null;
 
-                            Console.WriteLine("Forcing CLR garbage collection ... ");
                             GC.Collect();
                             GC.WaitForPendingFinalizers();
+                            // (we wait for the object to be sent for disposal by the worker)
+
+                            for (i = 0; i < 3000 && !internalHandle.IsDisposing; i++)
+                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
+
+                            if (!internalHandle.IsDisposing)
+                                throw new Exception("The temp object's handle is still not pending disposal ... something is wrong.");
+
+                            Console.WriteLine("Success! The temp object's handle is going through the disposal process.");
+                            Console.WriteLine("Clearing the handle object reference next ...");
+
+                            // object handles will finally be disposed when the native V8 GC calls back regarding them ...
 
                             Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
 
@@ -326,9 +428,9 @@ namespace V8.Net
 
                             Console.WriteLine("Looking for object ...");
 
-                            if (!internalHandle.IsDisposed) throw new Exception("Managed object was not garbage collected.");
+                            if (!internalHandle.IsDisposed) throw new Exception("Managed object's handle did not dispose.");
                             // (note: this call is only valid as long as no more objects are created before this point)
-                            Console.WriteLine("Success! The managed V8NativeObject instance is disposed.");
+                            Console.WriteLine("Success! The managed V8NativeObject native handle is now disposed.");
                             Console.WriteLine("\r\nDone.\r\n");
                         }
                         else if (lcInput == @"\speedtest")
@@ -345,7 +447,7 @@ namespace V8.Net
                             //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
                             Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
 
-                            count = 2000000;
+                            count = 200000000;
 
                             Console.WriteLine("\r\nTesting global property write speed ... ");
                             startTime = timer.ElapsedMilliseconds;
@@ -361,7 +463,7 @@ namespace V8.Net
                             result2 = (double)elapsed / count;
                             Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
-                            count = 2000000;
+                            count = 20000;
 
                             Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
                             _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();
@@ -583,13 +685,13 @@ public sealed class SealedObject : IV8NativeObject
 
     public SealedObject(InternalHandle h1, InternalHandle h2)
     {
-        H1.Set(h1);
+        H1 = h1.KeepAlive();
         H2 = h2;
     }
 
     public string Test(int a, string b) { FieldA = a; FieldB = b; return a + "_" + b; }
     public InternalHandle SetHandle1(InternalHandle h) { return H1.Set(h); }
-    public Handle SetHandle2(Handle h) { return H2.Set(h); }
+    public Handle SetHandle2(Handle h) { return H2 = h; }
     public InternalHandle SetEngine(V8Engine engine) { Engine = engine; return Engine.GlobalObject; }
 
     public void Test<t2, t>(t2 a, string b) { }
@@ -606,7 +708,7 @@ public sealed class SealedObject : IV8NativeObject
     {
     }
 
-    public void Dispose()
+    public void OnDispose()
     {
     }
 }
@@ -616,7 +718,7 @@ public sealed class SealedObject : IV8NativeObject
 /// </summary>
 public class V8DotNetTesterFunction : V8Function
 {
-    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+    public override InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         Callback = ConstructV8DotNetTesterWrapper;
 
@@ -625,7 +727,7 @@ public class V8DotNetTesterFunction : V8Function
 
     public InternalHandle ConstructV8DotNetTesterWrapper(V8Engine engine, bool isConstructCall, InternalHandle _this, params InternalHandle[] args)
     {
-        return isConstructCall ? engine.GetObject<V8DotNetTesterWrapper>(_this, true, false).Initialize(isConstructCall, args).AsInternalHandle : InternalHandle.Empty;
+        return isConstructCall ? engine.GetObject<V8DotNetTesterWrapper>(_this, true, false).Initialize(isConstructCall, args) : InternalHandle.Empty;
         // (note: V8DotNetTesterWrapper would cause an error here if derived from V8ManagedObject)
     }
 }
@@ -638,11 +740,11 @@ public class V8DotNetTesterWrapper : V8NativeObject // (I can also implement IV8
 {
     V8DotNetTester _Tester;
 
-    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+    public override InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         _Tester = Engine.CreateObjectTemplate().CreateObject<V8DotNetTester>();
         SetProperty("tester", _Tester); // (or _Tester.Handle works also)
-        return Handle;
+        return this;
     }
 }
 
@@ -650,7 +752,7 @@ public class V8DotNetTester : V8ManagedObject
 {
     IV8Function _MyFunc;
 
-    public override ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+    public override InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
     {
         base.Initialize(isConstructCall, args);
 
@@ -692,7 +794,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\n... initialization complete.");
 
-        return Handle;
+        return this;
     }
 
     public void Execute()
@@ -708,7 +810,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\nTesting JS function call from native side ...\r\n");
 
-        ObjectHandle f = (ObjectHandle)Engine.ConsoleExecute("f = function(arg1) { return arg1; }");
+        InternalHandle f = Engine.ConsoleExecute("f = function(arg1) { return arg1; }");
         var fresult = f.StaticCall(Engine.CreateValue(10));
         Console.WriteLine("f(10) == " + fresult);
         if (fresult != 10)
@@ -716,7 +818,7 @@ public class V8DotNetTester : V8ManagedObject
 
         Console.WriteLine("\r\nTesting JS function call exception from native side ...\r\n");
 
-        f = (ObjectHandle)Engine.ConsoleExecute("f = function() { return thisdoesntexist; }");
+        f = Engine.ConsoleExecute("f = function() { return thisdoesntexist; }");
         fresult = f.StaticCall();
         Console.WriteLine("f() == " + fresult);
         if (!fresult.ToString().Contains("Error"))
@@ -786,7 +888,7 @@ public class V8DotNetTester : V8ManagedObject
         var obj = new V8NativeObject();
         for (var i = 0; i < 1000; i++)
         {
-            obj.Handle = Engine.GlobalObject.GetProperty("obj");
+            obj.InternalHandle = Engine.GlobalObject.GetProperty("obj"); // (note here that 'obj.InternalHandle' is a *property* and must be assigned, instead of calling 'Set()', in order to change the object's handle)
         }
         Console.WriteLine(" Done.");
     }

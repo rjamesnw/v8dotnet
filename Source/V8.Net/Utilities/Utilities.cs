@@ -21,7 +21,8 @@ namespace V8.Net
         }
         public void Dispose()
         {
-            _RWLock.ReleaseReaderLock();
+            if (_RWLock != null)
+                _RWLock.ReleaseReaderLock();
         }
     }
 
@@ -35,7 +36,8 @@ namespace V8.Net
         }
         public void Dispose()
         {
-            _RWLock.ReleaseWriterLock();
+            if (_RWLock != null)
+                _RWLock.ReleaseWriterLock();
         }
     }
 

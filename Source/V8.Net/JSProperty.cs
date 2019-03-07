@@ -30,12 +30,14 @@ namespace V8.Net
     /// Developers can inherit from this class if desired, or choose to go with a custom implementation using the IJSProperty interface instead.
     /// </summary>
     /// <typeparam name="TValueSource">When implementing properties for an IV8ManagedObject, this is the type that will store the property source value/details (such as 'object' - as already implemented in the derived 'JSProperty' class [the non-generic version]).</typeparam>
-    public class JSProperty<TValueSource> : IJSProperty, IHandleBased, IFinalizable
+    public class JSProperty<TValueSource> : IJSProperty, IHandleBased, IV8Disposable
     {
         /// <summary>
         /// This is a developer-defined source reference for the JavaScript 'Value' property if needed. It is not used by V8.Net.
         /// </summary>
         public TValueSource Source;
+
+        public V8Engine Engine { get { return _Value.Engine; } }
 
         /// <summary>
         /// A JavaScript associated value.  By default, this returns 'Handle.Empty' (which means 'Value' is 'null' internally).
@@ -43,7 +45,7 @@ namespace V8.Net
         /// <para>Note: Because this is a value type property, just assign a value to the property - DON'T call '{InternalHandle}.Set()', it will not work as expected.</para>
         /// </summary>
         InternalHandle IJSProperty.Value { get { return _Value; } set { _Value.Set(value); } }
-        InternalHandle _Value;
+        internal InternalHandle _Value;
 
         /// <summary>
         /// 'V8PropertyAttributes' flags combined to describe the value, such as visibility, or what kind of access is allowed.
@@ -66,17 +68,12 @@ namespace V8.Net
 
         ~JSProperty()
         {
-            if (!((IFinalizable)this).CanFinalize && _Value.Engine != null)
-                lock (_Value.Engine._ObjectsToFinalize)
-                {
-                    _Value.Engine._ObjectsToFinalize.Add(this);
-                    GC.ReRegisterForFinalize(this);
-                }
+            this.Finalizing();
         }
 
-        bool IFinalizable.CanFinalize { get { return _Value.IsEmpty; } set { } }
+        public bool CanDispose { get { return _Value.CanDispose; } }
 
-        void IFinalizable.DoFinalize()
+        public void Dispose()
         {
             _Value.Dispose();
         }
@@ -90,8 +87,7 @@ namespace V8.Net
         }
 
         V8Engine IHandleBased.Engine { get { return _Value.Engine; } }
-        Handle IHandleBased.AsHandle() { return (Handle)_Value; }
-        InternalHandle IHandleBased.AsInternalHandle { get { return _Value; } }
+        InternalHandle IHandleBased.InternalHandle { get { return _Value; } }
         V8NativeObject IHandleBased.Object { get { return _Value.Object; } }
     }
 

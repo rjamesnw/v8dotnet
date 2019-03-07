@@ -9,7 +9,6 @@ using System.Text;
 namespace V8.Net
 {
     // ########################################################################################################################
-    // WARNING:
 
     public unsafe static class V8NetProxy
     {
@@ -32,14 +31,32 @@ namespace V8.Net
 #endif
         public static extern void DestroyV8EngineProxy(NativeV8EngineProxy* engine);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void WithV8IsolateScope(NativeV8EngineProxy* engine, Action action);
+        //#if x86
+        //        [DllImport("V8_Net_Proxy_x86")]
+        //#elif x64
+        //        [DllImport("V8_Net_Proxy_x64")]
+        //#else
+        //        [DllImport("V8_Net_Proxy")]
+        //#endif
+        //?        public static extern void WithV8IsolateScope(NativeV8EngineProxy* engine, Action action);
+
+        //#if x86
+        //        [DllImport("V8_Net_Proxy_x86")]
+        //#elif x64
+        //        [DllImport("V8_Net_Proxy_x64")]
+        //#else
+        //        [DllImport("V8_Net_Proxy")]
+        //#endif
+        //?        public static extern void WithV8ContextScope(NativeV8EngineProxy* engine, Action action);
+
+        //#if x86
+        //        [DllImport("V8_Net_Proxy_x86")]
+        //#elif x64
+        //        [DllImport("V8_Net_Proxy_x64")]
+        //#else
+        //        [DllImport("V8_Net_Proxy")]
+        //#endif
+        //?        public static extern void WithV8HandleScope(NativeV8EngineProxy* engine, Action action);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86")]
@@ -48,16 +65,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-        public static extern void WithV8ContextScope(NativeV8EngineProxy* engine, Action action);
-
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void WithV8HandleScope(NativeV8EngineProxy* engine, Action action);
+        public static unsafe extern void SetFlagsFromString(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86")]
@@ -105,13 +113,22 @@ namespace V8.Net
         public static extern HandleProxy* V8Compile(NativeV8EngineProxy* engine, string script, string sourceName = null);
 
 #if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
+        [DllImport("V8_Net_Proxy_x86")]
 #elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
+        [DllImport("V8_Net_Proxy_x64")]
 #else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
+        [DllImport("V8_Net_Proxy")]
 #endif
         public static extern HandleProxy* V8ExecuteCompiledScript(NativeV8EngineProxy* engine, HandleProxy* script);
+
+#if x86
+        [DllImport("V8_Net_Proxy_x86")]
+#elif x64
+        [DllImport("V8_Net_Proxy_x64")]
+#else
+        [DllImport("V8_Net_Proxy")]
+#endif
+        public static extern void TerminateExecution(NativeV8EngineProxy* engine);
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
@@ -198,7 +215,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-        public static extern void RegisterInvokeHandler(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+        public static extern void SetCallAsFunctionHandler(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
 
 #if x86
         [DllImport("V8_Net_Proxy_x86")]
@@ -416,7 +433,7 @@ namespace V8.Net
 #else
         [DllImport("V8_Net_Proxy")]
 #endif
-        public static unsafe extern void* GetFunctionPrototypeTemplateProxy(NativeFunctionTemplateProxy* functionTemplateProxy);
+        public static unsafe extern NativeObjectTemplateProxy* GetFunctionPrototypeTemplateProxy(NativeFunctionTemplateProxy* functionTemplateProxy);
         // Return: NativeObjectTemplateProxy*
 
 #if x86
@@ -437,9 +454,9 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy")]
 #endif
 #if V1_1 || V2 || V3 || V3_5
-        public static unsafe extern HandleProxy* CreateFunctionInstance(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount, HandleProxy** args);
+        public static unsafe extern HandleProxy* CreateInstanceFromFunctionTemplate(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount, HandleProxy** args);
 #else
-        public static unsafe extern HandleProxy* CreateFunctionInstance(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount = 0, HandleProxy** args = null);
+        public static unsafe extern HandleProxy* CreateInstanceFromFunctionTemplate(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount = 0, HandleProxy** args = null);
         // Return: HandleProxy*
 #endif
 

@@ -14,9 +14,14 @@ namespace V8.Net
     public enum ScriptMemberSecurity
     {
         /// <summary>
-        /// Used internally to prevent access to a script member.
+        /// Used internally to prevent access to a script member on instance types.
+        /// <para>Warning: This has no affect on STATIC bound properties.  There is no such related security option in V8 
+        /// when setting properties. Bound instance objects use an ObjectBinder that wraps an object created from an ObjectTemplate.
+        /// This allows advanced access control.  Class/struct declarations use V8 FunctionTemplates instead, which do not
+        /// provide any callback interception for properties.  If set on the native side (not using ObjectTemplates), then this
+        /// will map to both 'Locked|Hidden' flags being set.</para>
         /// </summary>
-        NoAcccess = -1, // (note: maps to 'V8PropertyAttributes.Undefined' [also -1]; Undefined members will be ignored.)
+        NoAcccess = -1, // (note: maps to 'V8PropertyAttributes.Undefined' [also -1]; Undefined settings are ignored.)
 
         /// <summary>
         /// If this flag is set, then the property can be read and/or written to.

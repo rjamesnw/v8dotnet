@@ -21,19 +21,27 @@ namespace V8.Net
         /// <summary>
         /// Holds an index of all the created objects.
         /// </summary>
-        internal readonly IndexedObjectList<ObservableWeakReference<V8NativeObject>> _Objects = new IndexedObjectList<ObservableWeakReference<V8NativeObject>>();
+        internal readonly IndexedObjectList<WeakReference> _Objects = new IndexedObjectList<WeakReference>();
         internal readonly ReaderWriterLock _ObjectsLocker = new ReaderWriterLock();
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        internal ObservableWeakReference<V8NativeObject> _GetObjectWeakReference(Int32 objectID) // (performs the lookup in a lock block)
+        ///// <summary>
+        ///// A list of objects that no longer have any CLR references.  These objects will sit indefinitely until the V8 GC says
+        ///// to removed them.
+        ///// </summary>
+        //?internal readonly IEnumerable<IV8NativeObject> _AbandondObjects; // (objects are abandoned when {ObservableWeakReference}.IsGCReady becomes true)
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        internal WeakReference _GetObjectWeakReference(Int32 objectID) // (performs the lookup in a lock block)
         {
             using (_ObjectsLocker.ReadLock()) { return _Objects[objectID]; } // (Note: if index is outside bounds, then null is returned.)
         }
 
-        internal V8NativeObject _GetObjectAsIs(Int32 objectID) // (performs the object lookup in a lock block without causing a GC reset)
+        internal V8NativeObject _GetExistingObject(Int32 objectID) // (performs the object lookup in a lock block without causing a GC reset)
         {
-            using (_ObjectsLocker.ReadLock()) { var weakRef = _Objects[objectID]; return weakRef != null ? weakRef.Object : null; }
+            using (_ObjectsLocker.ReadLock()) { var weakRef = _Objects[objectID]; return weakRef != null ? (V8NativeObject)weakRef.Target : null; }
         }
 
         internal void _RemoveObjectWeakReference(Int32 objectID) // (performs the removal in a lock block)
@@ -65,56 +73,51 @@ namespace V8.Net
         {
             T newObject;
 
-            try
+            if (typeof(V8ManagedObject).IsAssignableFrom(typeof(T)) && template == null)
+                throw new InvalidOperationException("You've attempted to create the type '" + typeof(T).Name + "' which implements IV8ManagedObject without a template (ObjectTemplate). The native V8 engine only supports interceptor hooks for objects generated from object templates.  At the very least, you can derive from 'V8NativeObject' and use the 'SetAccessor()' method.");
+
+            if (!handle.IsUndefined)
+                if (!handle.IsObjectType)
+                    throw new InvalidOperationException("The specified handle does not represent an native V8 object.");
+                else
+                    if (connectNativeObject && handle.HasObject)
+                        throw new InvalidOperationException("Cannot create a managed object for this handle when one already exists. Existing objects will not be returned by 'Create???' methods to prevent initializing more than once.");
+
+            handle._Object = newObject = new T();  // (set the object reference on handle now so the GC doesn't take it later)
+            newObject._Engine = this;
+            newObject.Template = template;
+            newObject._Handle = handle;
+
+            using (_ObjectsLocker.WriteLock()) // (need a lock because of the worker thread)
             {
-                if (typeof(V8ManagedObject).IsAssignableFrom(typeof(T)) && template == null)
-                    throw new InvalidOperationException("You've attempted to create the type '" + typeof(T).Name + "' which implements IV8ManagedObject without a template (ObjectTemplate). The native V8 engine only supports interceptor hooks for objects generated from object templates.  At the very least, you can derive from 'V8NativeObject' and use the 'SetAccessor()' method.");
+                var objID = _Objects.Add(new WeakReference(newObject, true));
+                newObject._ID = objID;
+                newObject._Handle.ObjectID = objID;
+            }
 
-                if (!handle.IsUndefined)
-                    if (!handle.IsObjectType)
-                        throw new InvalidOperationException("The specified handle does not represent an native V8 object.");
-                    else
-                        if (connectNativeObject && handle.HasObject)
-                            throw new InvalidOperationException("Cannot create a managed object for this handle when one already exists. Existing objects will not be returned by 'Create???' methods to prevent initializing more than once.");
-
-                newObject = new T();
-                newObject._Engine = this;
-                newObject.Template = template;
-                newObject.Handle = handle;
-
-                using (_ObjectsLocker.WriteLock()) // (need a lock because of the worker thread)
+            if (!handle.IsUndefined)
+            {
+                if (connectNativeObject)
                 {
-                    newObject.ID = _Objects.Add(new ObservableWeakReference<V8NativeObject>(newObject));
-                }
-
-                if (!handle.IsUndefined)
-                {
-                    if (connectNativeObject)
+                    try
                     {
-                        try
-                        {
-                            void* templateProxy = (template is ObjectTemplate) ? (void*)((ObjectTemplate)template)._NativeObjectTemplateProxy :
-                                (template is FunctionTemplate) ? (void*)((FunctionTemplate)template)._NativeFunctionTemplateProxy : null;
+                        void* templateProxy = (template is ObjectTemplate) ? (void*)((ObjectTemplate)template)._NativeObjectTemplateProxy :
+                            (template is FunctionTemplate) ? (void*)((FunctionTemplate)template)._NativeFunctionTemplateProxy : null;
 
-                            V8NetProxy.ConnectObject(handle, newObject.ID, templateProxy);
+                        V8NetProxy.ConnectObject(handle, newObject.ID, templateProxy);
 
-                            /* The V8 object will have an associated internal field set to the index of the created managed object above for quick lookup.  This index is used
-                             * to locate the associated managed object when a call-back occurs. The lookup is a fast O(1) operation using the custom 'IndexedObjectList' manager.
-                             */
-                        }
-                        catch (Exception ex)
-                        {
-                            // ... something went wrong, so remove the new managed object ...
-                            _RemoveObjectWeakReference(newObject.ID);
-                            handle.ObjectID = -1; // (existing ID no longer valid)
-                            throw ex;
-                        }
+                        /* The V8 object will have an associated internal field set to the index of the created managed object above for quick lookup.  This index is used
+                         * to locate the associated managed object when a call-back occurs. The lookup is a fast O(1) operation using the custom 'IndexedObjectList' manager.
+                         */
+                    }
+                    catch (Exception ex)
+                    {
+                        // ... something went wrong, so remove the new managed object ...
+                        _RemoveObjectWeakReference(newObject.ID);
+                        handle.ObjectID = -1; // (existing ID no longer valid)
+                        throw ex;
                     }
                 }
-            }
-            finally
-            {
-                handle._DisposeIfFirst();
             }
 
             return newObject;
@@ -146,7 +149,7 @@ namespace V8.Net
             if (handle.IsFunction)
                 return GetObject<V8Function>(handle, createIfNotFound, initializeOnCreate);
             else
-                return GetObject<V8NativeObject>(handle, createIfNotFound, initializeOnCreate); 
+                return GetObject<V8NativeObject>(handle, createIfNotFound, initializeOnCreate);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -157,33 +160,23 @@ namespace V8.Net
         internal T _GetObject<T>(ITemplate template, InternalHandle handle, bool createIfNotFound = true, bool initializeOnCreate = true, bool connectNativeObject = true)
             where T : V8NativeObject, new()
         {
-            T obj = null;
+            if (handle.IsEmpty)
+                return null;
 
-            try
+            if (handle.Engine != this)
+                throw new InvalidOperationException("The specified handle was not generated from this V8Engine instance.");
+
+            var obj = (T)_GetExistingObject(handle.ObjectID); // (if out of bounds or invalid, this will simply return null)
+
+            if (obj != null)
             {
-                if (handle.IsEmpty)
-                    return null;
-
-                if (handle.Engine != this)
-                    throw new InvalidOperationException("The specified handle was not generated from this V8Engine instance.");
-
-                var weakRef = _GetObjectWeakReference(handle.ObjectID); // (if out of bounds or invalid, this will simply return null)
-                if (weakRef != null)
-                {
-                    obj = weakRef.Reset() as T;
-                    if (obj != null && !typeof(T).IsAssignableFrom(obj.GetType()))
-                        throw new InvalidCastException("The existing object of type '" + obj.GetType().Name + "' cannot be converted to type '" + typeof(T).Name + "'.");
-                }
-
-                if (obj == null && createIfNotFound)
-                {
-                    handle.ObjectID = -1; // (managed object doesn't exist [perhaps GC'd], so reset the ID)
-                    obj = _CreateObject<T>(template, handle.PassOn(), initializeOnCreate, connectNativeObject);
-                }
+                if (!typeof(T).IsAssignableFrom(obj.GetType()))
+                    throw new InvalidCastException("The existing object of type '" + obj.GetType().Name + "' cannot be converted to type '" + typeof(T).Name + "'.");
             }
-            finally
+            else if (createIfNotFound)
             {
-                handle._DisposeIfFirst();
+                handle.ObjectID = -1; // (managed object doesn't exist [perhaps GC'd], so reset the ID)
+                obj = _CreateObject<T>(template, handle, initializeOnCreate, connectNativeObject);
             }
 
             return obj;
@@ -200,23 +193,42 @@ namespace V8.Net
         /// between the time you read an object's ID, and the time this method is called, then you can safely use this method.</para>
         /// </summary>
         public V8NativeObject GetObjectByID(int objectID)
-        { 
-            var weakRef = _Objects[objectID]; 
-            return weakRef != null ? weakRef.Reset() : null; 
+        {
+            return _GetExistingObject(objectID) as V8NativeObject;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Returns all the objects associated with a template reference.
+        /// Returns all the objects using a filter expression. If no expression is given, all objects will be included.
+        /// <para>Warning: This method enumerates using 'yield return' while keeping a read lock on the internal V8NativeObject 
+        /// WeakReference collection. It is recommended to dump the results to an array or list if enumeration will be deferred
+        /// at any point.</para>
         /// </summary>
-        public V8NativeObject[] GetObjects(ITemplate template)
+        public IEnumerable<V8NativeObject> GetObjects(Func<V8NativeObject, bool> filter = null)
         {
-            using (_ObjectsLocker.ReadLock())
+            ReaderLock readerLock = new ReaderLock();
+
+            try
             {
-                return (from o in _Objects where o.Object.Template == template select o.Object).ToArray();
+                if (!_ObjectsLocker.IsReaderLockHeld)
+                    readerLock = _ObjectsLocker.ReadLock();
+
+                for (var i = _Objects.Count - 1; i >= 0; --i) // (just in case items get added [whish should never happen!])
+                {
+                    var wref = _Objects[i];
+                    if (wref != null)
+                    {
+                        var obj = wref.Target as V8NativeObject;
+                        if (obj != null && (filter == null || filter(obj)))
+                            yield return obj;
+                    }
+                }
             }
-            // (WARNING: cannot enumerate objects in this block as it may cause a deadlock - 'lock (_Objects){}' can conflict with the finalizer thread if 'o.Object' blocks to wait on it)
+            finally
+            {
+                readerLock.Dispose();
+            }
         }
 
         // --------------------------------------------------------------------------------------------------------------------

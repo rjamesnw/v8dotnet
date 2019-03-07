@@ -39,6 +39,7 @@ namespace V8.Net
         /// Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
         /// <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
         /// </summary>
+        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         InternalHandle NamedPropertySetter(ref string propertyName, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
@@ -68,9 +69,17 @@ namespace V8.Net
         InternalHandle IndexedPropertyGetter(int index);
 
         /// <summary>
-        /// Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
-        /// <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
+        ///     Intercepts JavaScript access for properties on the associated JavaScript object for setting values.
+        ///     <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
         /// </summary>
+        /// <param name="index"> Zero-based index to set. </param>
+        /// <param name="value"> The value to set. </param>
+        /// <param name="attributes">
+        ///     (Optional) Flags that describe the property behavior.  They must be 'OR'd together as needed.
+        ///     <para>Warning: V8 does not support setting attributes using numerical indexes.  If you set an attribute, the given
+        ///     value is converted to a string, and a named property setter will be used instead. </para>
+        /// </param>
+        /// <returns> An InternalHandle. </returns>
         InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined);
 
         /// <summary>
@@ -113,7 +122,7 @@ namespace V8.Net
         /// You should never change handles on managed objects because they are usually associated with object interceptors,
         /// and changing the handle will break the call-back system.
         /// </summary>
-        new Handle Handle { get { return _Handle; } }
+        Handle Handle { get { return _Handle; } }
 
         /// <summary>
         /// A reference to the ObjectTemplate instance that owns this object.

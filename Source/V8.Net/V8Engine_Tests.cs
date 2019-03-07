@@ -118,8 +118,8 @@ namespace V8.Net
                 if ((Int32)hp->_ObjectID != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "_ObjectID", ofs, data, (byte*)&hp->_ObjectID);
                 ofs = (byte)((int)&hp->_CLRTypeID - (int)hp);
                 if ((Int32)hp->_CLRTypeID != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "_CLRTypeID", ofs, data, (byte*)&hp->_CLRTypeID);
-                ofs = (byte)((int)&hp->_ValueType - (int)hp);
-                if ((Int32)hp->_ValueType != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "_ValueType", ofs, data, (byte*)&hp->_ValueType);
+                ofs = (byte)((int)&hp->_Type - (int)hp);
+                if ((Int32)hp->_Type != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "_ValueType", ofs, data, (byte*)&hp->_Type);
                 // region ### HANDLE VALUE ### - Note: This is only valid upon calling 'UpdateValue()'.
                 ofs = (byte)((int)&hp->V8Boolean - (int)hp);
                 if ((byte)hp->V8Boolean != _GetMarshalTestByteValue(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "V8Boolean", ofs, data, (byte*)&hp->V8Boolean);
@@ -128,8 +128,8 @@ namespace V8.Net
                 ofs = (byte)((int)&hp->V8String - (int)hp);
                 if ((Int64)hp->V8String != _GetMarshalTestPTRValue(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "V8String", ofs, data, (byte*)&hp->V8String);
                 // endregion
-                ofs = (byte)((int)&hp->ManagedReferenceCount - (int)hp);
-                if ((Int64)hp->ManagedReferenceCount != _GetMarshalTestInt64Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "ManagedReferenceCount", ofs, data, (byte*)&hp->ManagedReferenceCount); // The number of references on the managed side.
+                ofs = (byte)((int)&hp->ManagedReference - (int)hp);
+                if ((Int64)hp->ManagedReference != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "ManagedReference", ofs, data, (byte*)&hp->ManagedReference); // The number of references on the managed side.
                 ofs = (byte)((int)&hp->Disposed - (int)hp);
                 if ((Int32)hp->Disposed != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "Disposed", ofs, data, (byte*)&hp->Disposed); // (0 = in use, 1 = managed side ready to dispose, 2 = object is weak (if applicable), 3 = disposed/cached)
                 ofs = (byte)((int)&hp->EngineID - (int)hp);
