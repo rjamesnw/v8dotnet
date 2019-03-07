@@ -12,11 +12,54 @@ using V8.Net;
 
 namespace V8.Net
 {
-    //public class Test
-    //{
-    //    public string GetName() => "Test";
-    //    public static string SGetName() => "STest";
-    //}
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using V8.Net;
+
+//    namespace Test
+//    {
+//        class GlobalUtils
+//        {
+//            public static void WriteLine(string s) { Console.WriteLine(s); }
+//        }
+
+//        public class BaseClass
+//        {
+//            public BaseClass() { }
+//            public void Foo(InternalHandle _this) { Console.WriteLine("BaseClass::Foo: " + _this.GetProperty("y")); }
+//            public void Bar() { Console.WriteLine("BaseClass::Bar"); }
+//        }
+
+//        class Program
+//        {
+//            public static void MainFunc(V8Engine js, string[] args)
+//            {
+//                js.RegisterType<GlobalUtils>("utils", false, ScriptMemberSecurity.Locked);
+//                js.GlobalObject.SetProperty(typeof(GlobalUtils));
+
+//                js.RegisterType<BaseClass>(null, false, ScriptMemberSecurity.ReadWrite);
+//                js.GlobalObject.SetProperty(typeof(BaseClass));
+
+//                js.ConsoleExecute(jssrc);
+//            }
+
+//            private static string jssrc = @"
+//function Derived() { }
+
+//Derived.prototype = Object.create(new BaseClass());
+//Derived.prototype.constructor = Derived;
+
+//for (var p in Derived.prototype.__proto__)
+//    Derived.prototype[p] = new Function(""return Derived.prototype.__proto__['""+p+""'].call(Derived.prototype.__proto__, this, ...arguments);"");
+
+//var x = new Derived();
+//x.y = 1;
+//x.Foo();
+//x.Bar();
+//";
+//        }
+//    }
 
     public class Program
     {
@@ -66,6 +109,8 @@ namespace V8.Net
 
                 //_JSServer.RegisterType<Test>(null, null, ScriptMemberSecurity.ReadOnly);
                 //_JSServer.GlobalObject.SetProperty(typeof(Test));
+
+                //?Test.Program.MainFunc(_JSServer, args);
 
                 //if (false) // (comment this out to run the initial tests and examples)
                 {
@@ -191,7 +236,7 @@ namespace V8.Net
                                 {
                                     _JSServer.SetFlagsFromString(flags); // TODO: This seems to crash after listing for some reason ...?
                                 }
-                                catch { }                                    
+                                catch { }
                                 if (lcInput.Contains("--help"))
                                 {
                                     Console.WriteLine("Press any key to continue ..." + Environment.NewLine);
@@ -402,7 +447,7 @@ namespace V8.Net
                             //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
                             Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
 
-                            count = 2000000;
+                            count = 200000000;
 
                             Console.WriteLine("\r\nTesting global property write speed ... ");
                             startTime = timer.ElapsedMilliseconds;
@@ -418,7 +463,7 @@ namespace V8.Net
                             result2 = (double)elapsed / count;
                             Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
-                            count = 2000000;
+                            count = 20000;
 
                             Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
                             _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();

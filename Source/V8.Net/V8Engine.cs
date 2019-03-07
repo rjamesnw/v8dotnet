@@ -6,6 +6,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
 using System.Text;
+using System.Threading;
 using System.Web;
 
 namespace V8.Net
@@ -35,6 +37,17 @@ namespace V8.Net
         /// Set to the fixed date of Jan 1, 1970. This is used when converting DateTime values to JavaScript Date objects.
         /// </summary>
         public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        public static string Version
+        {
+            get
+            {
+                return _Version ?? (_Version = FileVersionInfo.GetVersionInfo(typeof(V8Engine).Assembly.Location).FileVersion);
+            }
+        }
+        static string _Version;
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -64,7 +77,8 @@ namespace V8.Net
 
         ObjectTemplate _GlobalObjectTemplateProxy;
 
-        public ObjectHandle GlobalObject { get; private set; }
+        public InternalHandle GlobalObject { get { return _GlobalObject; } }
+        internal InternalHandle _GlobalObject; // TODO: Consider supporting a new global context.
 
 #if !(V1_1 || V2 || V3 || V3_5)
         public dynamic DynamicGlobalObject { get { return GlobalObject; } }
@@ -72,95 +86,156 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// The sub-folder that is the root for the dependent libraries required by V8.NET.  This is set to "V8.NET" by default.
-        /// </summary>
-        public static string ASPBINSubFolderName = "V8.NET";
+        ///// <summary>
+        ///// The sub-folder that is the root for the dependent libraries (x86 and x64).  This is set to "V8.NET" by default.
+        ///// <para>This setting allows copying the V8.NET libraries to a project, and having the assemblies "Copy if never" automatically.</para>
+        ///// </summary>
+        //public static string AlternateRootSubPath = "V8.NET";
 
-        static Assembly Resolver(object sender, ResolveEventArgs args)
-        {
-            if (args.Name.StartsWith("V8.Net.Proxy.Interface"))
-            {
-                string assemblyRoot = "";
+        //static Exception _TryLoadProxyInterface(string assemblyRoot, Exception lastError, out Assembly assembly)
+        //{
+        //    assembly = null;
 
-                if (HttpContext.Current != null)
-                    assemblyRoot = HttpContext.Current.Server.MapPath("~/bin");
-                else
-                {
-                    var codebaseuri = Assembly.GetExecutingAssembly().CodeBase;
-                    Uri codebaseURI = null;
-                    if (Uri.TryCreate(codebaseuri, UriKind.Absolute, out codebaseURI))
-                        assemblyRoot = Path.GetDirectoryName(codebaseURI.LocalPath); // (check pre-shadow copy location first)
-                    if (!Directory.Exists(assemblyRoot))
-                        assemblyRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location); // (check loaded assembly location next)
-                }
+        //    //// ... validate access to the root folder ...
+        //    //var permission = new FileIOPermission(FileIOPermissionAccess.Read, assemblyRoot);
+        //    //var permissionSet = new PermissionSet(PermissionState.None);
+        //    //permissionSet.AddPermission(permission);
+        //    //if (!permissionSet.IsSubsetOf(AppDomain.CurrentDomain.PermissionSet))
 
-                if (Directory.Exists(Path.Combine(assemblyRoot, ASPBINSubFolderName)))
-                    assemblyRoot = Path.Combine(assemblyRoot, ASPBINSubFolderName);
+        //    if (!Directory.Exists(assemblyRoot))
+        //        return new DirectoryNotFoundException("The path '" + assemblyRoot + "' does not exist, or is not accessible.");
 
-                //// ... validate access to the root folder ...
-                //var permission = new FileIOPermission(FileIOPermissionAccess.Read, assemblyRoot);
-                //var permissionSet = new PermissionSet(PermissionState.None);
-                //permissionSet.AddPermission(permission);
-                //if (!permissionSet.IsSubsetOf(AppDomain.CurrentDomain.PermissionSet))
+        //    // ... check for a "V8.NET" sub-folder, which allows for copying the assemblies to a child folder of the project ...
+        //    // (DLLs in the "x86" and "x64" folders of this child folder can be set to "Copy if newer" using this method)
 
-                // ... get platform details ...
+        //    if (Directory.Exists(Path.Combine(assemblyRoot, AlternateRootSubPath)))
+        //        assemblyRoot = Path.Combine(assemblyRoot, AlternateRootSubPath); // (exists, so move into it as the new root)
 
-                var bitStr = Environment.Is64BitProcess ? "x64" : "x86"; //IntPtr.Size == 8 ? "x64" : "x86";
-                var platformLibraryPath = Path.Combine(assemblyRoot, bitStr);
-                string fileName = Path.Combine(assemblyRoot, "V8.Net.Proxy.Interface." + bitStr + ".dll"); // (try the current assembly location first)
+        //    // ... get platform details ...
 
-                // ... if the file doesn't exist locally, try loading assemblies from the platform folder, if present ...
+        //    var bitStr = IntPtr.Size == 8 ? "x64" : "x86";
+        //    var platformLibraryPath = Path.Combine(assemblyRoot, bitStr);
+        //    string fileName;
 
-                if (!File.Exists(fileName) && Directory.Exists(platformLibraryPath))
-                    fileName = Path.Combine(platformLibraryPath, "V8.Net.Proxy.Interface." + bitStr + ".dll"); // (try the platform specific sub-folder next)
+        //    // ... if the platform folder doesn't exist, try loading assemblies from the current folder ...
 
-                // ... attempt to update environment variable automatically for the native DLLs ...
-                // (see: http://stackoverflow.com/questions/7996263/how-do-i-get-iis-to-load-a-native-dll-referenced-by-my-wcf-service
-                //   and http://stackoverflow.com/questions/344608/unmanaged-dlls-fail-to-load-on-asp-net-server)
+        //    if (Directory.Exists(platformLibraryPath))
+        //        fileName = Path.Combine(platformLibraryPath, "V8.Net.Proxy.Interface." + bitStr + ".dll");
+        //    else
+        //        fileName = Path.Combine(assemblyRoot, "V8.Net.Proxy.Interface." + bitStr + ".dll");
 
-                try
-                {
-                    var path = System.Environment.GetEnvironmentVariable("PATH"); // TODO: Detect other systems if necessary.
-                    System.Environment.SetEnvironmentVariable("PATH", platformLibraryPath + ";" + path);
-                }
-                catch { }
+        //    // ... attempt to update environment variable automatically for the native DLLs ...
+        //    // (see: http://stackoverflow.com/questions/7996263/how-do-i-get-iis-to-load-a-native-dll-referenced-by-my-wcf-service
+        //    //   and http://stackoverflow.com/questions/344608/unmanaged-dlls-fail-to-load-on-asp-net-server)
 
-                AppDomain.CurrentDomain.AssemblyResolve -= Resolver;  // (handler is only needed once)
+        //    try
+        //    {
+        //        // ... add the search location to the path so "Assembly.LoadFrom()" can find other dependant assemblies if needed ...
 
-                // ... if the current directory has an x86 or x64 folder for the bit depth, automatically change to that folder ...
-                // (this is required to load the correct VC++ libraries if made available locally)
+        //        var path = System.Environment.GetEnvironmentVariable("PATH"); // TODO: Detect other systems if necessary.
+        //        System.Environment.SetEnvironmentVariable("PATH", platformLibraryPath + ";" + path);
+        //    }
+        //    catch { }
 
-                var bitLibFolder = Path.Combine(Directory.GetCurrentDirectory(), bitStr);
-                if (Directory.Exists(bitLibFolder))
-                    Directory.SetCurrentDirectory(bitLibFolder);
+        //    //// ... check 
+        //    //var bitLibFolder = Path.Combine(Directory.GetCurrentDirectory(), bitStr);
+        //    //if (Directory.Exists(bitLibFolder))
+        //    //    Directory.SetCurrentDirectory(bitLibFolder);
 
-                try
-                {
-                    return Assembly.LoadFrom(fileName);
-                }
-                catch (Exception ex)
-                {
-                    var msg = "Failed to load '" + fileName + "'.  V8.NET is running in the '" + bitStr + "' mode.  Some areas to check: \r\n"
-                        + "1. The VC++ 2012 redistributable libraries are included, but if missing  for some reason, download and install from the Microsoft Site.\r\n"
-                        + "2. Did you download the DLLs from a ZIP file? If done so on Windows, you must open the file properties of the zip file and 'Unblock' it before extracting the files.\r\n"
-                        ;
-                    if (HttpContext.Current != null)
-                        msg += "3. Make sure the path '" + assemblyRoot + "' is accessible to the application pool identity (usually Read & Execute for 'IIS_IUSRS', or a similar user/group)";
-                    else
-                        msg += "3. Make sure the path '" + assemblyRoot + "' is accessible to the application for loading the required libraries.";
-                    msg += "Locations searched: " + Environment.NewLine + " * " + assemblyRoot + Environment.NewLine + " * " + platformLibraryPath;
-                    throw new InvalidOperationException(msg + "\r\n", ex);
-                }
-            }
+        //    try
+        //    {
+        //        assembly = Assembly.LoadFrom(fileName);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var msg = "Failed to load '" + fileName + "': " + ex.GetFullErrorMessage();
+        //        if (lastError != null)
+        //            return new FileNotFoundException(msg + Environment.NewLine + Environment.NewLine, lastError);
+        //        else
+        //            return new FileNotFoundException(msg + Environment.NewLine + Environment.NewLine);
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        static V8Engine()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += Resolver;
-        }
+        //static Assembly Resolver(object sender, ResolveEventArgs args)
+        //{
+        //    if (args.Name.StartsWith("V8.Net.Proxy.Interface"))
+        //    {
+        //        AppDomain.CurrentDomain.AssemblyResolve -= Resolver;  // (handler is only needed once)
+
+        //        Exception error = null;
+        //        string assemblyRoot = "";
+        //        Assembly assembly = null;
+
+        //        // ... first check for a bin folder for ASP.NET sites ...
+
+        //        if (HttpContext.Current != null)
+        //        {
+        //            assemblyRoot = HttpContext.Current.Server.MapPath("~/bin");
+        //            if (Directory.Exists(assemblyRoot))
+        //            {
+        //                error = _TryLoadProxyInterface(assemblyRoot, error, out assembly);
+        //                if (assembly != null) return assembly;
+        //            }
+        //        }
+
+        //        // ... next check 'codebaseuri' - this is the *original* assembly location before it was cached for ASP.NET pages ...
+
+        //        var codebaseuri = Assembly.GetExecutingAssembly().CodeBase;
+        //        Uri codebaseURI = null;
+        //        if (Uri.TryCreate(codebaseuri, UriKind.Absolute, out codebaseURI))
+        //        {
+        //            assemblyRoot = Path.GetDirectoryName(codebaseURI.LocalPath); // (check pre-shadow copy location first)
+        //            error = _TryLoadProxyInterface(assemblyRoot, error, out assembly);
+        //            if (assembly != null) return assembly;
+        //        }
+
+        //        // ... not found, so try the executing assembly's own location ...
+        //        // (note: this is not done first, as the executing location might be in a cache location and not the original location!!!)
+
+        //        var thisAssmeblyLocation = Assembly.GetExecutingAssembly().Location;
+        //        if (!string.IsNullOrEmpty(thisAssmeblyLocation))
+        //        {
+        //            assemblyRoot = Path.GetDirectoryName(thisAssmeblyLocation); // (check loaded assembly location next)
+        //            error = _TryLoadProxyInterface(assemblyRoot, error, out assembly);
+        //            if (assembly != null) return assembly;
+        //        }
+
+        //        // ... finally, try the current directory ...
+
+        //        assemblyRoot = Directory.GetCurrentDirectory(); // (check loaded assembly location next)
+        //        error = _TryLoadProxyInterface(assemblyRoot, error, out assembly);
+        //        if (assembly != null) return assembly;
+
+        //        // ... if the current directory has an x86 or x64 folder for the bit depth, automatically change to that folder ...
+        //        // (this is required to load the correct VC++ libraries if made available locally)
+
+        //        var bitStr = IntPtr.Size == 8 ? "x64" : "x86";
+        //        var msg = "Failed to load 'V8.Net.Proxy.Interface.x??.dll'.  V8.NET is running in the '" + bitStr + "' mode.  Some areas to check: " + Environment.NewLine
+        //            + "1. The VC++ 2012 redistributable libraries are included, but if missing  for some reason, download and install from the Microsoft Site." + Environment.NewLine
+        //            + "2. Did you download the DLLs from a ZIP file? If done so on Windows, you must open the file properties of the zip file and 'Unblock' it before extracting the files." + Environment.NewLine;
+
+        //        if (HttpContext.Current != null)
+        //            msg += "3. Make sure the path '" + assemblyRoot + "' is accessible to the application pool identity (usually Read & Execute for 'IIS_IUSRS', or a similar user/group)" + Environment.NewLine;
+        //        else
+        //            msg += "3. Make sure the path '" + assemblyRoot + "' is accessible to the application for loading the required libraries." + Environment.NewLine;
+
+        //        if (error != null)
+        //            throw new InvalidOperationException(msg + Environment.NewLine, error);
+        //        else
+        //            throw new InvalidOperationException(msg + Environment.NewLine);
+        //    }
+
+        //    return null;
+        //}
+
+        //static V8Engine()
+        //{
+        //    AppDomain.CurrentDomain.AssemblyResolve += Resolver;
+        //}
+
+        static V8Engine() { Loader.ResolveDependencies(); }
 
         public V8Engine()
         {
@@ -172,9 +247,9 @@ namespace V8.Net
 
                 _RegisterEngine(_NativeV8EngineProxy->ID);
 
-                _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>();
-                _GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
-                GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
+                _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>(false);
+                //?_GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
+                _GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
             }
 
             ___V8GarbageCollectionRequestCallback = _V8GarbageCollectionRequestCallback;
@@ -204,22 +279,31 @@ namespace V8.Net
                 {
                     hProxy = _HandleProxies[i];
                     if (hProxy != null && !hProxy->IsDisposed)
+                    {
                         hProxy->_ObjectID = -2; // (note: this must be <= -2, otherwise the ID auto updates -1 to -2 to flag the ID as already processed)
+                        hProxy->ManagedReference = 0;
+                        V8NetProxy.DisposeHandleProxy(hProxy);
+                        _HandleProxies[i] = null;
+                    }
                 }
 
                 // ... allow all objects to be finalized by the GC ...
 
-                ObservableWeakReference<V8NativeObject> weakRef;
+                WeakReference weakRef;
+                V8NativeObject obj;
 
                 for (var i = 0; i < _Objects.Count; i++)
-                    if ((weakRef = _Objects[i]) != null && weakRef.Object != null)
+                    if ((weakRef = _Objects[i]) != null && (obj = (V8NativeObject)weakRef.Target) != null)
                     {
-                        weakRef.Object._ID = null;
-                        weakRef.Object.Template = null;
-                        weakRef.Object._Handle = ObjectHandle.Empty;
+                        obj.OnDispose();
+                        obj._ID = null;
+                        obj.Template = null;
+                        obj._Handle = InternalHandle.Empty;
+                        GC.SuppressFinalize(obj);
                     }
 
                 // ... destroy the native engine ...
+                // TODO: Consider caching the engine instead and reuse with a new context.
 
                 if (_NativeV8EngineProxy != null)
                 {
@@ -234,6 +318,26 @@ namespace V8.Net
         /// Returns true once this engine has been disposed.
         /// </summary>
         public bool IsDisposed { get { return _NativeV8EngineProxy == null; } }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Sets V8 command line options.
+        /// </summary>
+        /// <param name="flags">Command line options/flags separated by a space.</param>
+        public void SetFlagsFromString(string flags) // (http://bespin.cz/~ondras/html/classv8_1_1V8.html#ab263a85e6f97ea79d944bd20bb09a95f)
+        {
+            V8NetProxy.SetFlagsFromString(_NativeV8EngineProxy, flags);
+        }
+
+        /// <summary>
+        /// Sets V8 command line options.
+        /// <para>Just a convenient way to call 'SetFlagsFromString()' by joining all strings together, delimited by a space.</para>
+        /// </summary>
+        public void SetFlagsFromCommandLine(string[] args) // (http://bespin.cz/~ondras/html/classv8_1_1V8.html#a63157ad9284ffad1c0ab62b21aadd08c)
+        {
+            SetFlagsFromString(string.Join(" ", args));
+        }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -267,9 +371,12 @@ namespace V8.Net
         {
             if (persistedObjectHandle->_ObjectID >= 0)
             {
-                var weakRef = _GetObjectWeakReference(persistedObjectHandle->_ObjectID);
-                if (weakRef != null)
-                    return weakRef.Object._OnNativeGCRequested(); // (notify the object that a V8 GC is requested)
+                var obj = _GetExistingObject(persistedObjectHandle->_ObjectID);
+                if (obj != null)
+                    lock (obj)
+                    {
+                        return obj._OnNativeGCRequested(); // (notify the object that a V8 GC is requested; the worker thread should pick it up later)
+                    }
             }
             return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])
         }
@@ -282,15 +389,24 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
-            Handle result = V8NetProxy.V8Execute(_NativeV8EngineProxy, script, sourceName);
+            Timer timer = null;
+
+            if (timeout > 0)
+                timer = new Timer((state) => { TerminateExecution(); }, this, timeout, Timeout.Infinite);
+
+            InternalHandle result = V8NetProxy.V8Execute(_NativeV8EngineProxy, script, sourceName);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
+
+            if (timer != null)
+                timer.Dispose();
 
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -299,18 +415,27 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle Execute(Handle script, bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle Execute(InternalHandle script, bool throwExceptionOnError = false, int timeout = 0)
         {
             if (script.ValueType != JSValueType.Script)
                 throw new InvalidOperationException("The handle must represent pre-compiled JavaScript.");
 
-            Handle result = V8NetProxy.V8ExecuteCompiledScript(_NativeV8EngineProxy, script);
+            Timer timer = null;
+
+            if (timeout > 0)
+                timer = new Timer((state) => { TerminateExecution(); }, this, timeout, Timeout.Infinite);
+
+            InternalHandle result = V8NetProxy.V8ExecuteCompiledScript(_NativeV8EngineProxy, script);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
+
+            if (timer != null)
+                timer.Dispose();
 
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -321,11 +446,12 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
-            Handle result = Execute(script, sourceName, throwExceptionOnError);
+            InternalHandle result = Execute(script, sourceName, throwExceptionOnError, timeout);
             Console.WriteLine(result.AsString);
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -337,12 +463,13 @@ namespace V8.Net
         /// <param name="script">The script to run.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        public Handle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        public InternalHandle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
             Console.WriteLine(script);
-            Handle result = Execute(script, sourceName, throwExceptionOnError);
+            InternalHandle result = Execute(script, sourceName, throwExceptionOnError, timeout);
             Console.WriteLine(result.AsString);
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -353,15 +480,24 @@ namespace V8.Net
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
         /// <returns>A handle to the compiled script.</returns>
-        public Handle Compile(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public InternalHandle Compile(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
-            Handle result = V8NetProxy.V8Compile(_NativeV8EngineProxy, script, sourceName);
+            InternalHandle result = V8NetProxy.V8Compile(_NativeV8EngineProxy, script, sourceName);
             // (note: speed is not an issue when executing whole scripts, so the result is returned in a handle object instead of a value [safer])
 
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result;
+            return result.KeepAlive();
+        }
+
+        /// <summary>
+        /// Forcefully terminate the current thread of JavaScript execution.
+        /// This method can be used by any thread. 
+        /// </summary>
+        public void TerminateExecution()
+        {
+            V8NetProxy.TerminateExecution(_NativeV8EngineProxy);
         }
 
         /// <summary>
@@ -370,9 +506,9 @@ namespace V8.Net
         /// <param name="scriptFile">The script file to load.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
-        public Handle LoadScript(string scriptFile, string sourceName = null, bool throwExceptionOnError = false)
+        public InternalHandle LoadScript(string scriptFile, string sourceName = null, bool throwExceptionOnError = false)
         {
-            Handle result;
+            InternalHandle result;
             try
             {
                 var jsText = File.ReadAllText(scriptFile);
@@ -385,9 +521,9 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle.__HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
-            return result;
+            return result.KeepAlive();
         }
 
         /// <summary>
@@ -397,9 +533,9 @@ namespace V8.Net
         /// <param name="scriptFile">The script file to load.</param>
         /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
         /// <param name="throwExceptionOnError">If true, and the return value represents an error, or the file fails to load, an exception is thrown (default is 'false').</param>
-        public Handle LoadScriptCompiled(string scriptFile, string sourceName = "V8.NET", bool throwExceptionOnError = false)
+        public InternalHandle LoadScriptCompiled(string scriptFile, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
-            Handle result;
+            InternalHandle result;
             try
             {
                 var jsText = File.ReadAllText(scriptFile);
@@ -412,9 +548,9 @@ namespace V8.Net
                 if (throwExceptionOnError)
                     throw ex;
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
-                result._Handle.__HandleProxy->_ValueType = JSValueType.InternalError; // (required to flag that an error has occurred)
+                result._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
-            return result;
+            return result.KeepAlive();
         }
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -524,23 +660,16 @@ namespace V8.Net
         internal T _CreateObject<T>(ITemplate template, InternalHandle v8Object, bool initialize = true, bool connectNativeObject = true)
             where T : V8NativeObject, new()
         {
-            try
-            {
-                if (!v8Object.IsObjectType)
-                    throw new InvalidOperationException("An object handle type is required (such as a JavaScript object or function handle).");
+            if (!v8Object.IsObjectType)
+                throw new InvalidOperationException("An object handle type is required (such as a JavaScript object or function handle).");
 
-                // ... create the new managed JavaScript object, store it (to get the "ID"), and connect it to the native V8 object ...
-                var obj = _CreateManagedObject<T>(template, v8Object.PassOn(), connectNativeObject);
+            // ... create the new managed JavaScript object, store it (to get the "ID"), and connect it to the native V8 object ...
+            var obj = _CreateManagedObject<T>(template, v8Object, connectNativeObject);
 
-                if (initialize)
-                    obj.Initialize(false, null);
+            if (initialize)
+                obj.Initialize(false, null);
 
-                return obj;
-            }
-            finally
-            {
-                v8Object._DisposeIfFirst();
-            }
+            return obj;
         }
 
         /// <summary>
@@ -579,7 +708,7 @@ namespace V8.Net
             try
             {
                 // ... create a new native object and associated it with the new managed object ID ...
-                obj._Handle._Set(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID));
+                obj._Handle.Set(V8NetProxy.CreateObject(_NativeV8EngineProxy, obj.ID));
 
                 /* The V8 object will have an associated internal field set to the index of the created managed object above for quick lookup.  This index is used
                  * to locate the associated managed object when a call-back occurs. The lookup is a fast O(1) operation using the custom 'IndexedObjectList' manager.
@@ -607,11 +736,12 @@ namespace V8.Net
         public InternalHandle CreateObject(Int32 objectID = -2)
         {
             if (objectID > -2) throw new InvalidOperationException("Object IDs must be <= -2.");
-            return V8NetProxy.CreateObject(_NativeV8EngineProxy, objectID);
+            return (Handle)V8NetProxy.CreateObject(_NativeV8EngineProxy, objectID);
         }
 
         /// <summary>
         /// Calls the native V8 proxy library to create a JavaScript array for use within the V8 JavaScript environment.
+        /// <para>Note: The given handles are not disposed, and the caller is still responsible.</para>
         /// </summary>
         public InternalHandle CreateArray(params InternalHandle[] items)
         {
@@ -633,14 +763,32 @@ namespace V8.Net
         public InternalHandle CreateValue(IEnumerable enumerable, bool ignoreErrors = false)
         {
             var values = (enumerable).Cast<object>().ToArray();
+            var maxQuickInitLength = values.Length < 1000 ? values.Length : 1000;
 
-            InternalHandle[] handles = new InternalHandle[values.Length];
+            InternalHandle[] handles = new InternalHandle[maxQuickInitLength];
 
-            for (var i = 0; i < values.Length; i++)
+            for (var i = 0; i < maxQuickInitLength; i++)
                 try { handles[i] = CreateValue(values[i]); }
                 catch (Exception ex) { if (!ignoreErrors) throw ex; }
 
-            return CreateArray(handles);
+            InternalHandle array = CreateArray(handles); // (faster to initialize on the native side all at once, which is fine for a small number of handles)
+
+            // .. must dispose the internal handles now ...
+
+            for (var i = 0; i < maxQuickInitLength; i++)
+                handles[i].Dispose();
+
+            // ... if the shear number of items is large it will cause a spike in handle counts, so set the remaining items one by one instead on a native array ...
+
+            var remainingItemLength = values.Length - maxQuickInitLength;
+            if (remainingItemLength > 0)
+            {
+                for (var i = maxQuickInitLength; i < values.Length; i++)
+                    try { array.SetProperty(i, CreateValue(values[i])); }
+                    catch (Exception ex) { if (!ignoreErrors) throw ex; }
+            }
+
+            return array;
         }
 
         /// <summary>
@@ -650,31 +798,29 @@ namespace V8.Net
         /// </summary>
         public InternalHandle CreateValue(IEnumerable<string> items)
         {
-            if (items == null) return V8NetProxy.CreateArray(_NativeV8EngineProxy, null, 0);
+            var _items = items?.ToArray(); // (the enumeration could be lengthy depending on the implementation, so iterate it only once and dump it to an array)
+            if (_items == null || _items.Length == 0) return V8NetProxy.CreateArray(_NativeV8EngineProxy, null, 0);
 
-            var itemsEnum = items.GetEnumerator();
             int strBufSize = 0; // (size needed for the string chars portion of the memory block)
             int itemsCount = 0;
 
-            while (itemsEnum.MoveNext())
+            for (int i = 0, n = _items.Length; i < n; ++i)
             {
                 // get length of all strings together
-                strBufSize += itemsEnum.Current.Length + 1; // (+1 for null char)
+                strBufSize += _items[i].Length + 1; // (+1 for null char)
                 itemsCount++;
             }
 
-            itemsEnum.Reset();
-
             int strPtrBufSize = Marshal.SizeOf(typeof(IntPtr)) * itemsCount; // start buffer size with size needed for all string pointers.
-            char** oneBigStringBlock = (char**)Utilities.AllocNativeMemory(strPtrBufSize + Marshal.SystemDefaultCharSize * strBufSize); // (we will mash the pointer table AND strings together and send ONE block)
+            char** oneBigStringBlock = (char**)Utilities.AllocNativeMemory(strPtrBufSize + Marshal.SystemDefaultCharSize * strBufSize);
             char** ptrWritePtr = oneBigStringBlock;
-            char* strWritePtr = (char*)(((byte*)oneBigStringBlock) + strPtrBufSize); // (start writing at the END of the pointer table)
+            char* strWritePtr = (char*)(((byte*)oneBigStringBlock) + strPtrBufSize);
             int itemLength;
 
-            while (itemsEnum.MoveNext())
+            for (int i = 0, n = _items.Length; i < n; ++i)
             {
-                itemLength = itemsEnum.Current.Length;
-                Marshal.Copy(itemsEnum.Current.ToCharArray(), 0, (IntPtr)strWritePtr, itemLength);
+                itemLength = _items[i].Length;
+                Marshal.Copy(_items[i].ToCharArray(), 0, (IntPtr)strWritePtr, itemLength);
                 Marshal.WriteInt16((IntPtr)(strWritePtr + itemLength), 0);
                 Marshal.WriteIntPtr((IntPtr)ptrWritePtr++, (IntPtr)strWritePtr);
                 strWritePtr += itemLength + 1;
@@ -714,7 +860,7 @@ namespace V8.Net
             if (value == null)
                 return CreateNullValue();
             else if (value is IHandleBased)
-                return ((IHandleBased)value).AsInternalHandle; // (already a V8.NET value!)
+                return ((IHandleBased)value).InternalHandle; // (already a V8.NET value!)
             else if (value is bool)
                 return CreateValue((bool)value);
             else if (value is byte)

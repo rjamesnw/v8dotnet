@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>V8.Net.Loader</name>
+    </assembly>
+    <members>
+        <member name="F:V8.Net.Loader.AlternateRootSubPath">
+            <summary>
+            The sub-folder that is the root for the dependent libraries (x86 and x64).  This is set to "V8.NET" by default.
+            <para>This setting allows copying the V8.NET libraries to a project, and having the assemblies "Copy if never"
+            automatically. Typically the path is relative, but an absolute root path can also be given.</para>
+            </summary>
+        </member>
+        <member name="P:V8.Net.Loader._ValidPaths">
+            <summary>
+            Returns a list of valid paths to check for assemblies, in proper order.
+            </summary>
+        </member>
+        <member name="M:V8.Net.Loader._Resolver(System.Object,System.ResolveEventArgs)">
+            <summary>
+            This method watches for and attempts to resolve any assembly requests with names beginning with "V8.Net".
+            </summary>
+        </member>
+    </members>
+</doc>

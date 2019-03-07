@@ -103,10 +103,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="InternalHandle.cs" />
-    <Compile Include="Utilities\Exceptions.cs" />
-    <Compile Include="Utilities\ObservableWeakReference.cs" />
-    <Compile Include="Utilities\Utilities.cs" />
+    <Compile Include="DynamicHandle.cs" />
     <Compile Include="V8Engine_Tests.cs" />
     <Compile Include="Handle.cs" />
     <Compile Include="V8Engine_Binding.cs" />
@@ -154,9 +151,9 @@ REM msbuild "$(SolutionDir)V8.NET-ProxyInterface\V8.NET-ProxyInterface.csproj" /
 
 REM if "%25ERRORLEVEL%25"=="0" msbuild "$(SolutionDir)V8.NET-ProxyInterface\V8.NET-ProxyInterface.csproj" /nologo /p:Configuration=$(Configuration) /p:Platform=x64
 
-REM del "$(TargetDir)V8.NET.Proxy.Interface.*"
-REM if exist "$(TargetDir)\x64\" rd "$(TargetDir)\x64" /d /q
-REM if exist "$(TargetDir)\x86\"rd "$(TargetDir)\x86" /d /q
+REM  del "$(TargetDir)V8.NET.Proxy.Interface.*"
+REM  del "$(TargetDir)\x64\V8.Net.SharedTypes.*"
+REM  del "$(TargetDir)\x86\V8.Net.SharedTypes.*"
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
