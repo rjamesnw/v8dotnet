@@ -18,8 +18,15 @@ namespace V8.Net
     /// The arguments passed to 'Initialize(...)' ('isConstructCall' and 'args') are the responsibility of the developer - except for the binder, which will
     /// pass in the values as expected.
     /// </summary>
-    public interface IV8NativeObject : IDisposable
+    public interface IV8NativeObject
     {
+        // --------------------------------------------------------------------------------------------------------------------
+
+        ///// <summary>
+        ///// Returns the ID used to track the underlying object.
+        ///// </summary>
+        //?public Int32 ID { get; }
+
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
@@ -35,16 +42,16 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Called when there are no more references (on either the managed or native side) and the object is ready to be deleted from the V8.NET system.
-        /// You should never call this from code directly unless you need to force the release of native resources associated with a custom implementation
-        /// (and if so, a custom internal flag should be kept indicating whether or not the resources have been disposed).
-        /// You should always override/implement this if you need to dispose of any native resources in custom implementations.
-        /// DO NOT rely on the destructor (finalizer) - the object can still survive it.
-        /// <para>Note: This can be triggered either by the worker thread, or on the call-back from the V8 garbage collector.  In either case, tread it as if
-        /// it was called from the GC finalizer (not on the main thread).</para>
-        /// *** If overriding, DON'T call back to this method, otherwise it will call back and end up in a cyclical call (and a stack overflow!). ***
+        /// Called when there are no more references on either the managed or native side.  In such case the object is ready to
+        /// be deleted from the V8.NET system.
+        /// <para>You should never call this from code directly unless you need to force the release of native resources associated
+        /// with a custom implementation (and if so, a custom internal flag should be kept indicating whether or not the
+        /// resources have been disposed to be safe).</para>
+        /// <para>You should always override/implement this if you need to dispose of any native resources in custom implementations.</para>
+        /// <para>DO NOT rely on the destructor (finalizer) - some objects may survive it (due to references on the native V8 side).</para>
+        /// <para>Note: This can be triggered via the worker thread.</para>
         /// </summary>
-        new void Dispose();
+        void OnDispose();
 
         // --------------------------------------------------------------------------------------------------------------------
     }
@@ -53,7 +60,7 @@ namespace V8.Net
     /// Represents a basic JavaScript object. This class wraps V8 functionality for operations required on any native V8 object (including managed ones).
     /// <para>This class implements 'DynamicObject' to make setting properties a bit easier.</para>
     /// </summary>
-    public unsafe class V8NativeObject : IHandleBased, IV8Object, IV8NativeObject, IDynamicMetaObjectProvider, IFinalizable
+    public unsafe class V8NativeObject : Handle, IV8NativeObject, IV8Object, IDynamicMetaObjectProvider
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -61,12 +68,10 @@ namespace V8.Net
         /// A reference to the V8Engine instance that owns this object.
         /// The default implementation for 'V8NativeObject' is to cache and return 'base.Engine', since it inherits from 'Handle'.
         /// </summary>
-        public V8Engine Engine { get { return _Engine ?? (_Engine = _Handle.Engine); } }
+        new public V8Engine Engine { get { return _Engine ?? (_Engine = _Handle.Engine); } }
         internal V8Engine _Engine;
 
-        public Handle AsHandle() { return _Handle; }
-        public InternalHandle AsInternalHandle { get { return _Handle._Handle; } }
-        public V8NativeObject Object { get { return this; } }
+        new public V8NativeObject Object { get { return this; } }
 
         /// <summary>
         /// The V8.NET ObjectTemplate or FunctionTemplate instance associated with this object, if any, or null if this object was not created using a V8.NET template.
@@ -88,14 +93,18 @@ namespace V8.Net
         /// </summary>
         public Int32 ID
         {
-            get { var id = _Handle.ObjectID; return id < 0 ? _ID ?? id : id; } // (this attempts to return the underlying managed object ID of the handle proxy, or the local ID if -1)
-            internal set
+            get { var id = _Handle.ObjectID; return id < 0 ? (_ID ?? id) : id; } // (this attempts to return the underlying managed object ID of the handle proxy, or the local ID if -1)
+            set
             {
-                _Handle.ObjectID = value;
+                if ((_ID ?? -1) >= 0)
+                    throw new InvalidOperationException("Cannot set the ID of a V8NativeObject that is created from within V8Engine.");
+                if (value >= 0)
+                    throw new InvalidOperationException("Invalid object ID: Values >= 0 are reserved for V8NativeObject instances created from within V8Engine.");
+                _Handle.ObjectID = value; // (just to make sure, as it may be -1 [default value on native side])
                 _ID = value;
-            } // (once set, the managed object will be fixed to the ID as long as the underlying handle has a handle-based object ID less than 0)
+            }
         }
-        internal Int32? _ID; // ('_ID' is used within object collection to determine if the worker needs to get involved [{handle}.ObjectID cannot be used as it may call into the native side])
+        internal Int32? _ID;
 
         /// <summary>
         /// Another object of the same interface to direct actions to (such as 'Initialize()').
@@ -115,29 +124,34 @@ namespace V8.Net
         /// Setting this property will call the inherited 'Set()' method to replace the handle associated with this object instance (this should never be done on
         /// objects created from templates ('V8ManagedObject' objects), otherwise callbacks from JavaScript to the managed side will not act as expected, if at all).
         /// </summary>
-        public ObjectHandle Handle
+        public override InternalHandle InternalHandle
         {
             get { return _Handle; }
             set
             {
-                var handle = value != null ? (InternalHandle)value : InternalHandle.Empty;
-
-                if (handle.ObjectID >= 0 && handle.Object != this)
+                if (value.ObjectID >= 0 && value.Object != this)
                     throw new InvalidOperationException("Another managed object is already bound to this handle.");
 
                 if (!_Handle.IsEmpty && _Handle.ObjectID >= 0)
-                    throw new InvalidOperationException("Cannot replace a the handle of a V8Engine create object once it has been set."); // (IDs < 0 are not tracked in the V8.NET's object list)
+                    throw new InvalidOperationException("Cannot replace a the handle of an object created by the V8Engine once it has been set."); // (IDs < 0 are not tracked in the V8.NET's object list)
                 else
                 {
-                    if (!handle.IsEmpty && !handle.IsObjectType)
-                        throw new InvalidCastException(string.Format(InternalHandle._VALUE_NOT_AN_OBJECT_ERRORMSG, handle));
+                    if (!value.IsEmpty && !value.IsObjectType)
+                        throw new InvalidCastException(string.Format(InternalHandle._VALUE_NOT_AN_OBJECT_ERRORMSG, value));
 
-                    _Handle.Set((Handle)value);
-                    ID = _Handle.ObjectID;
+                    _Handle._Object = null; // (REQUIRED to unlock the handle)
+                    _Handle.Dispose();
+                    _Handle = value;
+
+                    if (!_Handle.IsEmpty)
+                    {
+                        _Handle._Object = this;
+                        _ID = _Handle._HandleProxy->_ObjectID; // (MUST CHANGE THIS FIRST before setting '_Handle.ObjectID', else the '_Object' reference will be nullified)
+                        _Handle.ObjectID = _Handle._HandleProxy->_ObjectID; // (setting 'ObjectID' anyway, which may cause other updates)
+                    }
                 }
             }
         }
-        internal ObjectHandle _Handle = ObjectHandle.Empty;
 
 #if !(V1_1 || V2 || V3 || V3_5)
         /// <summary>
@@ -149,25 +163,20 @@ namespace V8.Net
         /// <summary>
         /// The prototype of the object (every JavaScript object implicitly has a prototype).
         /// </summary>
-        public ObjectHandle Prototype
+        public InternalHandle Prototype
         {
             get
             {
-                if (_Prototype == null && _Handle.IsObjectType)
+                if (_Prototype.IsEmpty && _Handle.IsObjectType)
                 {
                     // ... the prototype is not yet set, so get the prototype and wrap it ...
-                    _Prototype = _Handle.Prototype;
+                    _Prototype = _Handle.GetPrototype();
                 }
 
                 return _Prototype;
             }
         }
-        internal ObjectHandle _Prototype;
-
-        /// <summary>
-        /// Returns true if this object is ready to be garbage collected by the native side.
-        /// </summary>
-        public bool IsManagedObjectWeak { get { using (Engine._ObjectsLocker.ReadLock()) { return _ID != null ? Engine._Objects[_ID.Value].IsGCReady : true; } } }
+        internal InternalHandle _Prototype;
 
         /// <summary>
         /// Used internally to quickly determine when an instance represents a binder object type, or static type binder function (faster than reflection!).
@@ -203,13 +212,27 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
+#if DEBUG && TRACE
+        /// <summary>
+        /// Holds the call stack responsible for creating this object (available in debugging only with DEBUG and TRACE defined).
+        /// </summary>
+        string _CreationStack;
+#endif
+
+
         public V8NativeObject()
         {
+#if DEBUG && TRACE
+            _CreationStack = Environment.StackTrace;
+#endif
             _Proxy = this;
         }
 
         public V8NativeObject(IV8NativeObject proxy)
         {
+#if DEBUG && TRACE
+            _CreationStack = Environment.StackTrace;
+#endif
             _Proxy = proxy ?? this;
         }
 
@@ -223,14 +246,14 @@ namespace V8.Net
         /// <para>Note: Because this method is virtual, it does not guarantee that 'IsInitialized' will be considered.  Implementations should check against
         /// the 'IsInitilized' property.</para>
         /// </summary>
-        public virtual ObjectHandle Initialize(bool isConstructCall, params InternalHandle[] args)
+        public virtual InternalHandle Initialize(bool isConstructCall, params InternalHandle[] args)
         {
             if (_Proxy != this && !IsInitilized)
                 _Proxy.Initialize(this, isConstructCall, args);
 
             IsInitilized = true;
 
-            return Handle;
+            return _Handle;
         }
 
         /// <summary>
@@ -242,104 +265,81 @@ namespace V8.Net
                 Initialize(isConstructCall, args);
         }
 
-        /// <summary>
-        /// This is called on the GC finalizer thread to flag that this managed object entry can be collected.
-        /// <para>Note: There are no longer any managed references to the object at this point; HOWEVER, there may still be NATIVE ones.
-        /// This means the object may survive this process, at which point it's up to the worker thread to clean it up when the native V8 GC is ready.</para>
-        /// </summary>
-        ~V8NativeObject()
+        public override bool CanDispose
         {
-            if (_ID != null && _ID.Value >= 0 && Engine != null) // (if there's no object ID, then let the instance die [skipping this block may allow the finalizer to complete])
-            {
-                var weakRef = Engine._GetObjectWeakReference(_ID.Value);
-                weakRef.DoFinalize(this); // (will re-register this object for finalization)
-                // (the native GC has not reported we can remove this yet, so just flag the collection attempt [note: if 'weakRef.CanCollect' is true here, then finalize will succeed])
-                // (WARNING: 'lock (Engine._Objects){}' can conflict with the main thread if care is not taken)
-                // (Past issue: When '{Engine}.GetObjects()' was called, and an '_Objects[?].Object' is accessed, a deadlock can occur since the finalizer has nulled all the weak references)
-            }
+            get { return _Handle.IsEmpty || !_Handle.IsObjectType; }
+        }
 
-            // ... check if the finalizer can reclaim this object, otherwise it needs to be placed in a queue for the worker, which will attempt to perform 
-            // necessary tasks that shouldn't execute in a finalizer (such as trying to dispose of the native handle first before the object gets destroyed) ...
-            // (note: 'CanFinalize' should return true if the object has no ties to V8.NET's object list, or association with template objects)
-            if (!((IFinalizable)this).CanFinalize)
-                lock (Engine._ObjectsToFinalize) // (this lock is sufficient, since only the worker accesses it, and the worker only locks when getting a reference from the array [and nothing more])
+        public override void Dispose()
+        {
+            _OnNativeGCRequested();
+        }
+
+        /// <summary>
+        /// Called when there are no more references on either the managed or native side.  In such case the object is ready to
+        /// be deleted from the V8.NET system.
+        /// <para>You should never call this from code directly unless you need to force the release of native resources associated
+        /// with a custom implementation (and if so, a custom internal flag should be kept indicating whether or not the
+        /// resources have been disposed to be safe).</para>
+        /// <para>You should always override/implement this if you need to dispose of any native resources in custom implementations.</para>
+        /// <para>DO NOT rely on the destructor (finalizer) - some objects may survive it (due to references on the native V8 side).</para>
+        /// <para>Note: This can be triggered via the worker thread.</para>
+        /// </summary>
+        public virtual void OnDispose()
+        {
+            if (_Proxy != this)
+                _Proxy.OnDispose();
+        }
+
+        internal bool _OnNativeGCRequested() // WARNING: The worker thread may cause a V8 GC callback in its own thread!
+        {
+            if (!_Handle.IsEmpty)
+            {
+                _Handle.IsDisposing = true;
+                var engine = Engine;
+
+                // ... remove this object from the abandoned queue ...
+
+                lock (engine._AbandondObjects)
                 {
-                    _Engine._ObjectsToFinalize.Add(this); // (defer the finalize event to the worker thread instead)
-                    GC.ReRegisterForFinalize(this);
+                    LinkedListNode<IV8Disposable> node;
+                    if (engine._AbandondObjectsIndex.TryGetValue(this, out node))
+                    {
+                        engine._AbandondObjects.Remove(node);
+                        engine._AbandondObjectsIndex.Remove(this);
+                    }
                 }
-        }
 
-        bool IFinalizable.CanFinalize { get { return (_ID == null || _ID.Value < 0) && _Template == null; } set { } }
+                // ... notify any custom dispose methods to clean up ...
 
-        void IFinalizable.DoFinalize()
-        {
-            if (_Handle.IsWeakHandle) // (a handle is weak when there is only one reference [itself], which means this object is ready for the worker)
-                _TryDisposeNativeHandle();
-        }
-
-        /// <summary>
-        /// Called when there are no more references (on either the managed or native side) and the object is ready to be deleted from the V8.NET system.
-        /// You should never call this from code directly unless you need to force the release of native resources associated with a custom implementation
-        /// (and if so, a custom internal flag should be kept indicating whether or not the resources have been disposed).
-        /// You should always override/implement this if you need to dispose of any native resources in custom implementations.
-        /// DO NOT rely on the destructor (finalizer) - the object can still survive it.
-        /// <para>Note: This can be triggered either by the worker thread, or on the call-back from the V8 garbage collector.  In either case, tread it as if
-        /// it was called from the GC finalizer (not on the main thread).</para>
-        /// *** If overriding, DON'T call back to this method, otherwise it will call back and end up in a cyclical call (and a stack overflow!). ***
-        /// </summary>
-        public virtual void Dispose()
-        {
-            if (_Proxy != this) _Proxy.Dispose();
-        }
-
-        /// <summary>
-        /// This is called automatically when both the handle AND reference for the managed object are weak [no longer in use], in which case this object
-        /// info instance is ready to be removed.
-        /// </summary>
-        internal void _TryDisposeNativeHandle()
-        {
-            if (IsManagedObjectWeak && (_Handle.IsEmpty || _Handle.IsWeakHandle && !_Handle.IsInPendingDisposalQueue))
-            {
-                _Handle.IsInPendingDisposalQueue = true; // (this also helps to make sure this method isn't called again)
-
-                lock (_Engine._WeakObjects)
+                try
                 {
-                    _Engine._WeakObjects.Add(_ID.Value); // (queue on the worker to set a native weak reference to dispose of this object later when the native GC is ready)
+                    OnDispose();
                 }
-            }
-        }
+                finally
+                {
+                }
 
-        /// <summary>
-        /// Called by the worker thread to make the native handle weak.  Once the native GC attempts to collect the underlying native object, then
-        /// '_OnNativeGCRequested()' will get called to finalize the disposal of the managed object.
-        /// </summary>
-        internal void _MakeWeak()
-        {
-            V8NetProxy.MakeWeakHandle(_Handle);
-            // (once the native V8 engine agrees, this instance will be removed due to a global GC callback registered when the engine was created)
-        }
+                // ... if this belongs to a function template, then this is a V8Function object, so remove it from the template's type list ...
 
-        internal bool _OnNativeGCRequested() // WARNING: The worker thread may trigger a V8 GC callback in its own thread!
-        {
-            using (Engine._ObjectsLocker.WriteLock())
-            {
                 if (Template is FunctionTemplate)
                     ((FunctionTemplate)Template)._RemoveFunctionType(ID);// (make sure to remove the function references from the template instance)
 
-                Dispose(); // (notify any custom dispose methods to clean up)
+                // ... clear any registered accessors ...
 
-                GC.SuppressFinalize(this); // (required otherwise the object's finalizer will be triggered again)
+                engine._ClearAccessors(_ID.Value); // (just to be sure - accessors are no longer needed once the native handle is GC'd)
 
-                _Handle.Dispose(); // (note: this may already be disposed, in which case this call does nothing)
-
-                Engine._ClearAccessors(_ID.Value); // (just to be sure - accessors are no longer needed once the native handle is GC'd)
+                if (!_Handle.IsEmpty)
+                {
+                    _Handle.ObjectID = -1; // (resets the object ID on the native side [though this happens anyhow once cached], which also causes the reference to clear)
+                    // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.CanDispose' will return false])
+                    _Handle.Dispose();
+                }
 
                 if (_ID != null)
-                    _Engine._RemoveObjectWeakReference(_ID.Value);
+                    engine._RemoveObjectWeakReference(_ID.Value);
 
-                _Handle.ObjectID = -1;
-
-                Template = null; // (note: this decrements a template counter; allows the GC finalizer to collect the object)
+                Template = null; // (note: this decrements a template counter, allowing the template object to be finally allowed to dispose)
                 _ID = null; // (also allows the GC finalizer to collect the object)
             }
 
@@ -348,9 +348,8 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        public static implicit operator InternalHandle(V8NativeObject obj) { return obj != null ? obj._Handle._Handle : InternalHandle.Empty; }
-        public static implicit operator Handle(V8NativeObject obj) { return obj != null ? obj._Handle : ObjectHandle.Empty; }
-        public static implicit operator ObjectHandle(V8NativeObject obj) { return obj != null ? obj._Handle : ObjectHandle.Empty; }
+        public static implicit operator InternalHandle(V8NativeObject obj) { return obj != null ? obj._Handle : InternalHandle.Empty; }
+        public static implicit operator HandleProxy*(V8NativeObject obj) { return obj != null ? obj._Handle._HandleProxy : null; }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -364,7 +363,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
 #if !(V1_1 || V2 || V3 || V3_5)
-        public DynamicMetaObject GetMetaObject(Expression parameter)
+        new public DynamicMetaObject GetMetaObject(Expression parameter)
         {
             return new DynamicHandle(this, parameter);
         }
@@ -379,17 +378,23 @@ namespace V8.Net
         /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
         public virtual bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
-            return _Handle._Handle.SetProperty(name, value, attributes);
+            return _Handle.SetProperty(name, value, attributes);
         }
 
         /// <summary>
         /// Calls the V8 'Set()' function on the underlying native object.
         /// Returns true if successful.
         /// </summary>
-        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        /// <param name="index"> Zero-based index to set. </param>
+        /// <param name="value"> The value to set. </param>
+        /// <param name="attributes">
+        ///     (Optional) Flags that describe the property behavior.  They must be 'OR'd together as needed.
+        ///     <para>Warning: V8 does not support setting attributes using numerical indexes.  If you set an attribute, the given
+        ///     value is converted to a string, and a named property setter will be used instead. </para>
+        /// </param>
         public virtual bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            return _Handle._Handle.SetProperty(index, value, attributes);
+            return _Handle.SetProperty(index, value, attributes);
         }
 
         /// <summary>
@@ -407,7 +412,7 @@ namespace V8.Net
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         public virtual bool SetProperty(string name, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
-            return _Handle._Handle.SetProperty(name, obj, className, recursive, memberSecurity);
+            return _Handle.SetProperty(name, obj, className, recursive, memberSecurity);
         }
 
         /// <summary>
@@ -424,7 +429,7 @@ namespace V8.Net
         /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
         public virtual bool SetProperty(Type type, V8PropertyAttributes propertyAttributes = V8PropertyAttributes.None, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
         {
-            return _Handle._Handle.SetProperty(type, propertyAttributes, className, recursive, memberSecurity);
+            return _Handle.SetProperty(type, propertyAttributes, className, recursive, memberSecurity);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -435,7 +440,7 @@ namespace V8.Net
         /// </summary>
         public virtual InternalHandle GetProperty(string name)
         {
-            return _Handle._Handle.GetProperty(name);
+            return _Handle.GetProperty(name);
         }
 
         /// <summary>
@@ -444,7 +449,7 @@ namespace V8.Net
         /// </summary>
         public virtual InternalHandle GetProperty(Int32 index)
         {
-            return _Handle._Handle.GetProperty(index);
+            return _Handle.GetProperty(index);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -455,7 +460,7 @@ namespace V8.Net
         /// </summary>
         public virtual bool DeleteProperty(string name)
         {
-            return _Handle._Handle.GetProperty(name);
+            return _Handle.GetProperty(name);
         }
 
         /// <summary>
@@ -464,7 +469,7 @@ namespace V8.Net
         /// </summary>
         public virtual bool DeleteProperty(Int32 index)
         {
-            return _Handle._Handle.GetProperty(index);
+            return _Handle.GetProperty(index);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -476,7 +481,7 @@ namespace V8.Net
             V8NativeObjectPropertyGetter getter, V8NativeObjectPropertySetter setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
-            _Handle._Handle.SetAccessor(name, getter, setter, attributes, access);
+            _Handle.SetAccessor(name, getter, setter, attributes, access);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -486,7 +491,7 @@ namespace V8.Net
         /// </summary>
         public virtual string[] GetPropertyNames()
         {
-            return _Handle._Handle.GetPropertyNames();
+            return _Handle.GetPropertyNames();
         }
 
         /// <summary>
@@ -494,7 +499,7 @@ namespace V8.Net
         /// </summary>
         public virtual string[] GetOwnPropertyNames()
         {
-            return _Handle._Handle.GetOwnPropertyNames();
+            return _Handle.GetOwnPropertyNames();
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -506,7 +511,7 @@ namespace V8.Net
         /// </summary>
         public virtual V8PropertyAttributes GetPropertyAttributes(string name)
         {
-            return _Handle._Handle.GetPropertyAttributes(name);
+            return _Handle.GetPropertyAttributes(name);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -517,7 +522,7 @@ namespace V8.Net
         /// </summary>
         public virtual InternalHandle Call(string functionName, InternalHandle _this, params InternalHandle[] args)
         {
-            return _Handle._Handle.Call(functionName, _this, args);
+            return _Handle.Call(functionName, _this, args);
         }
 
         /// <summary>
@@ -525,7 +530,7 @@ namespace V8.Net
         /// </summary>
         public virtual InternalHandle StaticCall(string functionName, params InternalHandle[] args)
         {
-            return _Handle._Handle.StaticCall(functionName, args);
+            return _Handle.StaticCall(functionName, args);
         }
 
         /// <summary>
@@ -534,7 +539,7 @@ namespace V8.Net
         /// </summary>
         public virtual InternalHandle Call(InternalHandle _this, params InternalHandle[] args)
         {
-            return _Handle._Handle.Call(_this, args);
+            return _Handle.Call(_this, args);
         }
 
         /// <summary>
@@ -543,7 +548,7 @@ namespace V8.Net
         /// </summary>
         public virtual InternalHandle StaticCall(params InternalHandle[] args)
         {
-            return _Handle._Handle.StaticCall(args);
+            return _Handle.StaticCall(args);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

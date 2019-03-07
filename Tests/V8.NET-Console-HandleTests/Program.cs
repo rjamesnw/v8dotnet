@@ -14,7 +14,6 @@ namespace V8.Net
     class Program
     {
         static V8Engine _JSServer;
-
         static System.Timers.Timer _TitleUpdateTimer;
 
         static void Main(string[] args)

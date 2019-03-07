@@ -7,7 +7,6 @@ using V8.Net;
 
 namespace V8.NET.Console.ObjectExamples
 {
-
     public class Person : V8NativeObject
     {
         public string name { get { return GetProperty("name"); } set { SetProperty("name", value); } }
