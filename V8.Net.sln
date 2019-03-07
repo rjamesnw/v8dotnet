@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.329
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net-Console", "Tests\V8.NET-Console\V8.Net-Console.csproj", "{33E19C30-D103-45B3-8A89-5986F195F605}"
 EndProject
@@ -79,6 +79,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "User", "User", "{D222B695-DC3F-425B-977B-45D00C98E9C7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "V8.Net.Loader", "Source\V8.Net.Loader\V8.Net.Loader.csproj", "{40277739-C6D1-4620-8B05-41B02C3A1EFC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET Standard", ".NET Standard", "{C23849EB-8154-4226-BAF4-74215035CA31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -462,5 +464,8 @@ Global
 		{9298F6AD-5E2B-42F5-930C-8BCD06B99FD2} = {E1EE6B1C-CBBE-48C8-AD7F-2F402EF9C32D}
 		{D222B695-DC3F-425B-977B-45D00C98E9C7} = {677064CB-0ED0-4758-AEEF-73CEEFD3030B}
 		{40277739-C6D1-4620-8B05-41B02C3A1EFC} = {4CC56C49-DA3A-444E-B051-D1ECC8B51D7D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9BA30ACD-8C21-44AD-A730-89A3F3A4F596}
 	EndGlobalSection
 EndGlobal

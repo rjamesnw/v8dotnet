@@ -20,6 +20,8 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <Use64BitIISExpress />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -198,61 +200,25 @@
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
     <Content Include="Scripts\_references.js" />
-    <Content Include="V8.NET\V8.Net Tests.dll" />
-    <Content Include="V8.NET\V8.Net.dll" />
-    <Content Include="V8.NET\V8.Net.SharedTypes.dll" />
-    <Content Include="V8.NET\x64\icudt.dll">
+    <Content Include="V8.NET\V8.Net.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="V8.NET\x64\icui18n.dll">
+    <Content Include="V8.NET\V8.Net.Loader.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="V8.NET\x64\icuuc.dll">
+    <Content Include="V8.NET\V8.Net.Proxy.Interface.x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="V8.NET\x64\msvcp110d.dll">
+    <Content Include="V8.NET\V8.Net.Proxy.Interface.x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="V8.NET\x64\msvcr110d.dll">
+    <Content Include="V8.NET\V8.Net.SharedTypes.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="V8.NET\x64\v8-x64.dll">
+    <Content Include="V8.NET\V8_Net_Proxy_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="V8.NET\x64\V8.Net.Proxy.Interface.x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x64\V8_Net_Proxy_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x64\vccorlib110d.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\icudt.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\icui18n.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\icuuc.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\msvcp110d.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\msvcr110d.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\v8-ia32.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\V8.Net.Proxy.Interface.x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\V8_Net_Proxy_x86.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="V8.NET\x86\vccorlib110d.dll">
+    <Content Include="V8.NET\V8_Net_Proxy_x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Web.config" />

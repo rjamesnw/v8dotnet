@@ -114,7 +114,7 @@ namespace V8.Net
         }
 
         public static implicit operator InternalHandle(Handle h) { return h._Handle; }
-        public static implicit operator Handle(HandleProxy* hp) { return ((InternalHandle)hp).GetTrackerHandle(); }
+        public static implicit operator Handle(HandleProxy* hp) { return ((InternalHandle)hp).GetTrackableHandle(); }
         public static InternalHandle operator ~(Handle h) { return h._Handle; }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -173,13 +173,14 @@ namespace V8.Net
         public static readonly InternalHandle Empty = new InternalHandle((HandleProxy*)null);
 
         /// <summary>
-        /// Returns a handle that initially does not have any trackers associated, and only references the underlying native
-        /// proxy handle object.  This can be useful for "watching" the proxy handle. For example, in testing garbage collection,
-        /// one can test IsDisposed, IsDisposing, or IsNativelyWeak without blocking the GC collection due to a reference of any
-        /// associated managed object in the handle.
-        /// <para>Warning: Tracker handles are shared via index IDs on a global array in the engine.  As such, accessing certain
-        /// properties and methods can trigger a pull to update the local reference with the tracker.  Normally this is not a
-        /// problem, unless one is testing the GC, as it may prevent the GC from collecting the object during the test.</para>
+        ///     Returns a handle that initially does not have any trackers associated, and only references the underlying native
+        ///     proxy handle object.  This can be useful for "watching" the proxy handle. For example, in testing garbage collection,
+        ///     one can test IsDisposed, IsDisposing, or IsNativelyWeak without blocking the GC collection due to a reference of any
+        ///     associated managed object in the handle.
+        ///     <para>Warning: Tracker handles are shared via index IDs on a global array in the engine.  As such, accessing certain
+        ///     properties and methods on the untracked handle can trigger a pull to update the untracked handle with the tracker.
+        ///     Normally this is not a problem, unless one is testing the GC, as it may prevent the GC from collecting the object
+        ///     during the test.</para>
         /// </summary>
         public static InternalHandle GetUntrackedHandleFromInternal(InternalHandle source) { var h = Empty; h._HandleProxy = source; return h; }
         public static InternalHandle GetUntrackedHandleFromProxy(HandleProxy* source) { var h = Empty; h._HandleProxy = source; return h; }
@@ -194,7 +195,7 @@ namespace V8.Net
         /// If this handle does not represent a managed object, then this may be set to a 'Handle' instead to allow tracking 
         /// and disposing the internal handle value within external user code.
         /// </summary>
-        internal Handle _Object;
+        internal Handle _Object; // (or "Handle" tracker)
 
         /// <summary>
         /// InternalHandle values are disposed within the engine automatically.  If a handle is to be used outside the engine,
@@ -208,7 +209,7 @@ namespace V8.Net
         /// </summary>
         public InternalHandle KeepAlive()
         {
-            GetTrackerHandle(); // (never return this value - the object responsible for this handle may itself have a null handle currently)
+            GetTrackableHandle(); // (never return this value - the object responsible for this handle may itself have a null handle currently)
             return this;
         }
 
@@ -229,7 +230,7 @@ namespace V8.Net
         /// <para>Tracker handles are objects, instead of values, and are used to dispose of value base handles via the garbage
         /// collector. This method is called implicitly when converting from an InternalHandle value to a Handle type.</para>
         /// </param>
-        public Handle GetTrackerHandle(bool createIfMissing = true)
+        public Handle GetTrackableHandle(bool createIfMissing = true)
         {
             if (_Object == null && !IsEmpty && !IsDisposed)
             {
@@ -384,7 +385,7 @@ namespace V8.Net
 #endif
                     }
 
-                    GetTrackerHandle(false);
+                    GetTrackableHandle(false);
                 }
             }
 
@@ -408,7 +409,7 @@ namespace V8.Net
                     return false;
 
                 if (_Object == null)
-                    GetTrackerHandle(false);
+                    GetTrackableHandle(false);
 
                 unsafe
                 {
@@ -526,7 +527,7 @@ namespace V8.Net
 
         public static implicit operator Handle(InternalHandle handle)
         {
-            return handle._HandleProxy == null ? Handle.Empty : handle.GetTrackerHandle();
+            return handle._HandleProxy == null ? Handle.Empty : handle.GetTrackableHandle();
         }
 
         public static implicit operator V8NativeObject(InternalHandle handle)
@@ -613,11 +614,13 @@ namespace V8.Net
         // Managed Object Properties and References
 
         /// <summary>
-        /// The ID of the managed object represented by this handle.
-        /// This ID is expected when handles are passed to 'V8ManagedObject.GetObject()'.
-        /// <para>If this value is less than 0 then it is a user specified ID tracking value, and as such there is no associated
-        /// 'V8NativeObject' object, and the 'Object' property will be null.  This occurs </para>
+        ///     The ID of the managed object represented by this handle. This ID is expected when handles are passed to
+        ///     'V8ManagedObject.GetObject()'.
+        ///     <para>If this value is less than 0 then it is a user specified ID tracking value, and as such there is no associated
+        ///     'V8NativeObject' object, and the 'Object' property will be null.  This can occur when native objects are created in
+        ///     script and returned to the managed side. </para>
         /// </summary>
+        /// <value> The identifier of the object. </value>
         public Int32 ObjectID
         {
             get

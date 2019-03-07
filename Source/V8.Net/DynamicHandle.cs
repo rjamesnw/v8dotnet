@@ -62,7 +62,7 @@ namespace V8.Net
         // (Gets the internal handle from an object reference if IHandleBased is implemented)
         static InternalHandle _GetInternalHandleFromObject(object obj) => (obj as IHandleBased)?.InternalHandle ?? InternalHandle.Empty;
 
-        static Handle _GetHandleFromObject(object obj) => (obj as IHandleBased)?.InternalHandle.GetTrackerHandle() ?? Handle.Empty;
+        static Handle _GetHandleFromObject(object obj) => (obj as IHandleBased)?.InternalHandle.GetTrackableHandle() ?? Handle.Empty;
 
         // (Get an object from an internal handle [value type] if the handle represents a managed V8 object, otherwise just return the internal handle as an object)
         static object _GetObjectOrHandle(InternalHandle h) => h.HasObject ? h.Object : (Handle)h;
