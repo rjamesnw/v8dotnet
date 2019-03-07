@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +18,11 @@ namespace V8.Net
         /// automatically. Typically the path is relative, but an absolute root path can also be given.</para>
         /// </summary>
         public static string AlternateRootSubPath = "V8.NET";
+
+#if NETSTANDARD
+        /// <summary> Supports .Net Core web app paths. </summary>
+        public static IHostingEnvironment HostingEnvironment;
+#endif
 
         static bool _LocalPathEnvUpdated;
 
@@ -106,10 +113,12 @@ namespace V8.Net
 
                 // ... check for a bin folder for ASP.NET sites ...
 
-                if (HttpContext.Current != null)
-                    foreach (var path in _GetValidPaths(HttpContext.Current.Server.MapPath("~/bin")))
+#if NETFULL
+                //if (HttpContext.Current != null)
+               if (HostingEnvironment?.ContentRootPath != null)
+                    foreach (var path in _GetValidPaths(HostingEnvironment.ContentRootPath /*HttpContext.Current.Server.MapPath("~/bin")*/))
                         yield return path;
-
+#endif
                 // ... check 'codebaseuri' - this is the *original* assembly location before it was cached for ASP.NET pages ...
 
                 var codebaseuri = Assembly.GetExecutingAssembly().CodeBase;

@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("V8.NET")]
 [assembly: AssemblyDescription(".NET Wrapper for the V8 JavaScript engine.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Surreal Logic")]
+[assembly: AssemblyCompany("Inossis")]
 [assembly: AssemblyProduct("V8.NET")]
-[assembly: AssemblyCopyright("Copyright © Surreal Logic 2013")]
+[assembly: AssemblyCopyright("Copyright © Inossis 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,4 +33,4 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.5.2019.3")]
-[assembly: AssemblyFileVersion("1.5.43.1")]
+[assembly: AssemblyFileVersion("1.5.43.3")]

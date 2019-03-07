@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.2;net461</TargetFrameworks>
+    <RootNamespace>V8.NET_Console_NetCore</RootNamespace>
+  </PropertyGroup>
+
+</Project>
