@@ -6,4 +6,9 @@
     <RootNamespace>V8.NET_Console_NetCore</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\V8.Net-SharedTypes\V8.Net-SharedTypes-Standard.csproj" />
+    <ProjectReference Include="..\..\Source\V8.Net\V8.Net-Standard.csproj" />
+  </ItemGroup>
+
 </Project>

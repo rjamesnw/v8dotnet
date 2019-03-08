@@ -1,0 +1,352 @@
+﻿<#@ template language="C#" hostSpecific="true" debug="true" #>
+<#@ output extension="cs" #>
+<#/* Assemblies Used */#>
+<#@ assembly name="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\System.Core.dll" #>
+<#@ assembly name="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\System.Xml.dll"#>
+<#@ assembly name="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\System.Xml.Linq.dll" #>
+<#@ assembly name="EnvDTE" #>
+<#@ assembly name="EnvDTE80" #>
+<#@ import namespace="EnvDTE80" #>
+<#/* "using" Statements */#>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Linq.Expressions" #>
+<#@ Import Namespace="System.Collections" #>
+<#@ Import Namespace="System.Collections.Generic" #>
+<#@ Import Namespace="EnvDTE" #>
+/* AUTO-GENERATED CODE - DO NOT EDIT */
+<#    
+
+// ... this is where we get the host reference for this running T4 template ...
+
+Type transformationType = this.GetType();
+System.Reflection.PropertyInfo hostProperty = transformationType.GetProperty("Host");
+if (hostProperty == null)
+{
+    throw new Exception("Unable to get a reference to the templating engine's host. Make sure you set hostspecific=\"True\" in the \<#@ template #"+"> directive.");
+}
+
+// ... get details for the current project this script is in ...
+
+var host = (Microsoft.VisualStudio.TextTemplating.ITextTemplatingEngineHost)hostProperty.GetValue(this, null);
+IServiceProvider hostServiceProvider = (IServiceProvider)host;
+EnvDTE.DTE dte = (EnvDTE.DTE)hostServiceProvider.GetService(typeof(EnvDTE.DTE));
+EnvDTE.ProjectItem containingProjectItem = dte.Solution.FindProjectItem(host.TemplateFile);
+Project project = containingProjectItem.ContainingProject; // (get the current project this script is running in)
+
+// ... get all the elements in the solution project tree ...
+
+var elements = CodeElementsInProjectItems(project.ProjectItems);
+
+// ... locate all the classes ...
+
+var classes = elements.Where(el => el.Kind == vsCMElement.vsCMElementClass) // (other types: http://157.56.25.106/en-us/library/envdte.vscmelement(VS.110).aspx)
+                      .Cast<CodeClass2>()
+					  .Where(cl => cl.IsShared);
+                      //.Where(cl => Attributes(cl).Any(at => at.Name=="DependencyProperty"));
+
+string classNamespace = containingProjectItem.Properties.Item("CustomToolNamespace")?.Value.ToString();
+if (string.IsNullOrWhiteSpace(classNamespace))
+	classNamespace = project.Properties.Item("DefaultNamespace")?.Value.ToString();
+if (string.IsNullOrWhiteSpace(classNamespace))
+	classNamespace  = "Error_NoNamespaceDetected";
+
+foreach (var cls in classes)
+	GenerateClass(cls);
+
+#>
+<#+
+
+/// <summary>
+/// Generates a class along with its associated DPs
+/// </summary>
+private void GenerateClass(CodeClass2 @class)
+{
+    string classNamespace = @class.Namespace.Name;
+    string className =  @class.Name;
+
+    bool classRaisesPropertyChanged = false;
+#>
+
+namespace <#= classNamespace #>
+{
+    public partial class <#= className #> <#+ if(classRaisesPropertyChanged){ #>: INotifyPropertyChanged<#+ } #> 
+    {
+<#+
+    var staticFields = @class.Members.Cast<CodeElement2>().Where(m => m.Kind == vsCMElement.vsCMElementFunction && m.);
+    var attributes = Attributes(@class).Where(att => att.Name=="DependencyProperty");
+    foreach(CodeAttribute attribute in attributes)
+    {
+        string[] attributeValues = attribute.Value.Split(','); // [name, type, default value, summary]
+        
+        string propertyName = attributeValues[0].Trim().Replace("\"","");
+        string propertyType = attributeValues[1].Trim().Substring(7, attributeValues[1].Length - 9);
+        string defaultValue = attributeValues[2].Trim();
+        string summary = attributeValues[3].Trim().Replace("\"","");
+        string metadata = null;
+        string typeConverter = null;
+        bool propertyChangedCallback = true;
+        bool isAttached = false;
+        #>
+
+        #region <#= propertyName #>
+        <#+        
+        
+        GenerateCLRAccessor(typeConverter, propertyType, propertyName, summary);
+        
+        bool handleDPPropertyChanged = propertyChangedCallback || classRaisesPropertyChanged;
+        
+        GenerateDependencyProperty(className, propertyType, defaultValue, propertyName,
+                                   handleDPPropertyChanged, isAttached, metadata, summary);        
+        
+        if (handleDPPropertyChanged)
+        {
+            GenerateChangeEventHandler(className, propertyName, propertyChangedCallback, classRaisesPropertyChanged);
+        } 
+        
+        if (isAttached)
+        {
+            GenerateAttachedPropertyAccessor(propertyName, propertyType);
+        }
+        #>        
+        #endregion
+    <#+
+    } // end foreach dps
+
+    if (classRaisesPropertyChanged)
+    {
+        GenerateINotifyPropertChangedImpl();
+    }
+    #> 
+    }
+}
+
+<#+
+}
+
+/// <summary>
+/// Generates an implementation of INotifyPropertChanged
+/// </summary>
+private void GenerateINotifyPropertChangedImpl()
+{
+    #>    
+
+        #region INotifyPropertyChanged Members
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        #endregion
+    <#+
+}
+
+/// <summary>
+/// Generates a handler for the DP change event
+/// </summary>
+private void GenerateChangeEventHandler(string className, string propertyName,
+                                    bool propertyChangedCallback, bool classRaisesPropertyChanged)
+{
+    string raisePropertyChanged = classRaisesPropertyChanged ?
+        string.Format("myClass.OnPropertyChanged(\"{0}\");", propertyName) : "";
+    #>
+	
+        private static void On<#= propertyName #>PropertyChanged(DependencyObject d,
+            DependencyPropertyChangedEventArgs e)
+        {
+            <#= className #> myClass = d as <#= className #>;
+            <#= raisePropertyChanged #>
+            myClass.On<#= propertyName #>PropertyChanged(e);
+        }
+    
+        partial void On<#= propertyName #>PropertyChanged(DependencyPropertyChangedEventArgs e);
+        
+    <#+ 
+}
+
+/// <summary>
+/// Generates a DP definition
+/// </summary>
+private void GenerateDependencyProperty(string className, string propertyType, string defaultValue,
+                                        string propertyName, bool changedCallback, bool isAttached,
+                                        string metadata, string summary)
+{
+    string propertyMetadata;
+    string changedCallbackMethodName = changedCallback ? "On" + propertyName + "PropertyChanged" : "null";
+    
+    // if DP metadata is provided, create an instance of FrameworkPropertyMetadata, 
+    // this is WPF specific
+    if (!string.IsNullOrEmpty(metadata))
+    {
+        propertyMetadata = string.Format("new FrameworkPropertyMetadata({0}, {1}, {2})",
+            defaultValue, metadata, changedCallbackMethodName);
+    }
+    else 
+    {
+        propertyMetadata = string.Format("new PropertyMetadata({0}, {1})",
+            defaultValue, changedCallbackMethodName);
+    }
+       
+    string registerMethod = isAttached ? "RegisterAttached" : "Register";
+        
+	#>
+
+        /// <summary>
+        /// Identifies the <#= propertyName #> Dependency Property.
+        /// <summary>
+        public static readonly DependencyProperty <#= propertyName #>Property =
+            DependencyProperty.<#= registerMethod #>("<#= propertyName #>", typeof(<#= propertyType #>),
+            typeof(<#= className #>), <#= propertyMetadata #>);
+    
+    <#+
+}
+
+/// <summary>
+/// Generates a CLR accessor for a DP
+/// </summary>
+private void GenerateCLRAccessor(string typeConverter, string propertyType, string propertyName,
+                                string summary)
+{
+    string typeConverterDefinition = typeConverter!= null ?
+                        "[TypeConverter(typeof(" + typeConverter + "))]" : "";
+                        
+    if (!string.IsNullOrEmpty(summary))
+        GeneratePropertyComment(summary);
+        
+	#><#= typeConverterDefinition #>    
+        public <#= propertyType #> <#= propertyName #>
+        {
+            get { return (<#= propertyType #>)GetValue(<#= propertyName #>Property); }
+            set { SetValue(<#= propertyName #>Property, value); }
+        }
+    <#+
+}
+
+private void GenerateAttachedPropertyAccessor(string propertyName, string propertyType)
+{
+    #>
+    
+        // <#= propertyName #> attached property accessors
+        public static void Set<#= propertyName #>(UIElement element, <#= propertyType #> value)
+        {
+            element.SetValue(PlottedPropertyProperty, value);
+        }
+        public static <#= propertyType #> Get<#= propertyName #>(UIElement element)
+        {
+            return (<#= propertyType #>)element.GetValue(<#= propertyName #>Property);
+        }
+    <#+
+}
+
+/// <summary>
+/// Generates a comment block for a CLR or DP
+/// </summary>
+private void GeneratePropertyComment(string summary)
+{
+        WriteLine("\r\n        /// <summary>");
+        WriteLine("        /// " + summary + "<para>(This is a Dependency Property)</para>");
+        Write("        /// <summary>");
+}
+
+public IEnumerable<CodeAttribute> Attributes(CodeClass codeClass)
+{
+    foreach(CodeElement element in codeClass.Attributes)
+    {
+        yield return (CodeAttribute)element;
+    }
+}
+
+public IEnumerable<CodeElement> CodeElementsInProjectItems(ProjectItems projectItems)
+{
+    foreach (ProjectItem projectItem in projectItems)
+    {
+	    foreach(CodeElement el in CodeElementsInProjectItem(projectItem))
+	    {
+	        yield return el;
+	    }
+    }
+}
+
+public IEnumerable<CodeElement> CodeElementsInProjectItem(ProjectItem projectItem)
+{
+    FileCodeModel fileCodeModel = projectItem.FileCodeModel;
+	
+	if (fileCodeModel != null)
+	{
+		foreach (CodeElement codeElement in fileCodeModel.CodeElements)
+		{
+			//WalkElements(codeElement, null);
+			foreach(CodeElement el in CodeElementDescendantsAndSelf(codeElement))
+			{
+			    yield return el;
+			}
+		}
+	}
+	
+	if (projectItem.ProjectItems != null)
+	{
+	    foreach (ProjectItem childItem in projectItem.ProjectItems)
+		{
+			foreach (CodeElement el in CodeElementsInProjectItem(childItem))
+		    {
+			    yield return el;
+		    }
+		}
+	}		
+}
+
+
+public IEnumerable<CodeElement> CodeElementsDescendants(CodeElements codeElements)
+{
+    foreach(CodeElement element in codeElements)
+	{
+	    foreach (CodeElement descendant in CodeElementDescendantsAndSelf(element))
+        {
+            yield return descendant;			    
+        }
+    }
+}
+
+public IEnumerable<CodeElement> CodeElementDescendantsAndSelf(CodeElement codeElement)
+{
+    yield return codeElement;
+    
+    CodeElements codeElements;
+        	
+    switch(codeElement.Kind)
+	{		
+	
+	    /* namespaces */
+		case vsCMElement.vsCMElementNamespace:
+		{
+			CodeNamespace codeNamespace = (CodeNamespace)codeElement;										
+			codeElements = codeNamespace.Members;
+			foreach(CodeElement descendant in CodeElementsDescendants(codeElements))
+			{
+			    yield return descendant;			    
+	        }
+			break;
+		}
+		
+		/* Process classes */
+		case vsCMElement.vsCMElementClass:
+		{	        
+			CodeClass codeClass = (CodeClass)codeElement;			
+			codeElements = codeClass.Members;
+			foreach(CodeElement descendant in CodeElementsDescendants(codeElements))
+			{			    
+			    yield return descendant;			    
+	        }	        
+			break;	
+		}
+		
+	}
+	
+}
+
+#>

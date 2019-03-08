@@ -3,47 +3,47 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <RootNamespace>V8.Net</RootNamespace>
-    <BaseIntermediateOutputPath>obj_std\</BaseIntermediateOutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>V8.Net-SharedTypes</AssemblyName>
     <DefineConstants>NETSTANDARD</DefineConstants>
+    <NoWarn>1701,1702,1591</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>NETCORE;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETCORE;NETSTANDARD2_0</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
-    <DefineConstants>NETFULL;NET461</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETFULL;NET461</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <OutputPath>..\bin\netstandard\Debug\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <OutputPath>..\bin\netstandard\Release\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <DocumentationFile />
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="obj\**" />
+    <Compile Remove="obj_std\**" />
     <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="obj_std\**" />
     <None Remove="obj\**" />
+    <None Remove="obj_std\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Common properties -->
+  <PropertyGroup Condition='$(MSBuildProjectName.Contains("-Standard"))'>
+    <!-- SolutionDir is not defined when building projects explicitly -->
+    <SolutionDir Condition=" '$(SolutionDir)' == '' ">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), V8.Net.sln))\</SolutionDir>
+    <!-- Output paths -->
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)\obj_std\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(MSBuildProjectDirectory)\obj_std\</IntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(IntermediateOutputPath)\</MSBuildProjectExtensionsPath>
+    <OutputPath>$(SolutionDir)Source\bin\netstandard\$(Configuration)\</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(SolutionDir)Source\bin\netstandard\$(Configuration)\doc\$(MSBuildProjectName).xml</DocumentationFile>
+  </PropertyGroup>
+</Project>
