@@ -1,0 +1,246 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="EnvDTE" #>
+<#@ assembly name="EnvDTE80" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#@ import namespace="EnvDTE" #>
+<#@ import namespace="EnvDTE80" #>
+<#@ import namespace="System.IO" #>
+<#@ output extension="log" #>
+<#    // Get the Visual Studio API as a service:
+	try {
+
+		if (Host == null)
+		{
+			throw new Exception("Unable to get a reference to the templating engine's host. Make sure you set hostspecific=\"True\" in the \<#@ template #"+"> directive.");
+        }
+		
+		DTE dte = ((IServiceProvider)Host).GetService(typeof(DTE)) as DTE;
+		ProjectItem thisTemplateProjectItem = dte.Solution.FindProjectItem(Host.TemplateFile);
+
+		ProjectItem parentFolder = (ProjectItem)thisTemplateProjectItem.Collection.Parent;
+		string containingFolder = parentFolder.FileNames[0];
+		string templateFileFolderPath = containingFolder.TrimEnd('\\');
+
+		Project project = thisTemplateProjectItem.ContainingProject;
+
+		var projectItems = GetProjectItemsRecursively(project.ProjectItems);
+
+		var addedFiles = new List<string>();
+
+		var exportExtration = new Regex(@"^\s+(\[DllImport\(""(\w+_x64)""\)\])[^\u0000]*?extern.*\s[A-Z0-9*]+\s+(\w+)\(.*\);", RegexOptions.Multiline | RegexOptions.IgnoreCase); // (Note: Keep in sync with CodeExtractionCompiler.REGION_PARSER)
+
+		foreach (ProjectItem item in projectItems)
+		{
+			if (item.FileCount > 0)
+			{
+				string filename = item.FileNames[0];
+
+				if (filename.EndsWith(".cs") && Path.GetDirectoryName(filename) != templateFileFolderPath) // (make sure the file is not one of the existing embedded files)
+				{
+					WriteLine("Found " + item.Name + ".");
+
+					string code, clientCodeOutput = null, serverCodeOutput = null, msg;
+
+					// ... get code from open document, else get code from saved file ...
+
+					if (item.IsOpen && item.Document.Object() is TextDocument)
+					{
+						WriteLine("  - It is open in the editor.");
+
+						TextDocument doc = item.Document.Object() as TextDocument;
+						// ... document is open, so get the contents ...
+						msg = "Source: Copied from open document in editor on " + DateTime.Now.ToString("yyyy-MM-dd hh-mm-ss") + ".";
+						code = doc.StartPoint.CreateEditPoint().GetText(doc.EndPoint.CreateEditPoint());
+
+						var regions = exportExtration.Matches(code);
+                    
+						var matches = regions.Cast<Match>().Where(m => m.Groups.Count > 2).ToArray();
+
+						WriteLine("  - Regex Matches: " + matches.Length);
+					
+						foreach(var m in matches) 
+							WriteLine(m.Groups[0].Value+" -/- "+m.Groups[1].Value+", "+m.Groups[2].Value+", "+m.Groups[3].Value+", "+m.Groups[4].Value);
+
+						/*if (clientRegions.Length > 0)
+							clientCodeOutput = "// " + msg + Environment.NewLine
+								+ "#region JavaScript" + Environment.NewLine
+								+ string.Join(Environment.NewLine, clientRegions)
+								+ "#endregion";
+						else
+							clientCodeOutput = "";
+
+						if (serverRegions.Length > 0)
+							serverCodeOutput = "// " + msg + Environment.NewLine
+								+ "#region JavaScript Server" + Environment.NewLine
+								+ string.Join(Environment.NewLine, serverRegions)
+								+ "#endregion";
+						else
+							serverCodeOutput = "";*/
+					}
+					else
+					{
+						WriteLine("  - It is not open in the editor.");
+
+						if (File.Exists(filename))
+						{
+							msg = "Source: Copied from saved file on " + DateTime.Now.ToString("yyyy-MM-dd hh-mm-ss") + ".";
+							code = File.ReadAllText(filename);
+
+							MatchCollection regions = exportExtration.Matches(code);
+
+						var clientRegions = regions.Cast<Match>().Where(m => !string.Equals(m.Groups[1].Value, "Server", StringComparison.CurrentCultureIgnoreCase)).Select(m => m.Groups[2].Value).ToArray();
+						var serverRegions = regions.Cast<Match>().Where(m => string.Equals(m.Groups[1].Value, "Server", StringComparison.CurrentCultureIgnoreCase)).Select(m => m.Groups[2].Value).ToArray();
+
+							if (clientRegions.Length > 0)
+								clientCodeOutput = "// " + msg + Environment.NewLine 
+									+ "#region JavaScript" + Environment.NewLine
+									+ string.Join(Environment.NewLine, clientRegions)
+									+ "#endregion";
+							else
+								clientCodeOutput = "";
+
+							if (serverRegions.Length > 0)
+								serverCodeOutput = "// " + msg + Environment.NewLine
+									+ "#region JavaScript Server" + Environment.NewLine
+									+ string.Join(Environment.NewLine, serverRegions)
+									+ "#endregion";
+							else
+								serverCodeOutput = "";
+						}
+						else
+						{
+							msg = "File not found: '" + filename + "'";
+							WriteLine(msg);
+						}
+					}
+
+					// ... get the target file path ...
+					if (!string.IsNullOrWhiteSpace(clientCodeOutput))
+					{
+						string newFilename = Path.Combine(templateFileFolderPath, Path.GetFileName(filename));
+						SaveCode(thisTemplateProjectItem, clientCodeOutput, newFilename, addedFiles, msg);
+					}
+
+					if (!string.IsNullOrWhiteSpace(serverCodeOutput))
+					{
+						string newFilename = Path.Combine(templateFileFolderPath, Path.GetFileNameWithoutExtension(filename) + ".Server" + Path.GetExtension(filename));
+						SaveCode(thisTemplateProjectItem, serverCodeOutput, newFilename, addedFiles, msg);
+					}
+				}
+			}
+		}
+
+		// ... clear all items under the template file that were not added, and ignore the log file (will update automatically) ...
+
+		foreach (ProjectItem item in thisTemplateProjectItem.ProjectItems)
+		{
+			if (!item.Name.EndsWith(".log") && !addedFiles.Contains(item.Name))
+				try {
+					WriteLine("Removed item '" + item.Name + "' - no longer contains a JavaScript region.");
+					item.Delete();
+				}
+				catch(Exception ex) { WriteLine("Could not delete '" + item.Name + "': " + ex.Message); }
+		}
+
+	} catch(Exception ex) { WriteLine(Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace); }
+#>
+<#+
+	// (Note: Class feature blocks must be at the end.)
+    
+	enum prjBuildActionCompile  // From 'VSLangProj' namespace: (https://msdn.microsoft.com/en-us/library/vstudio/vslangproj.prjbuildaction.aspx)
+	{
+		prjBuildActionCompile = 1,
+		prjBuildActionContent = 2,
+		prjBuildActionEmbeddedResource = 3,
+		prjBuildActionNone = 4
+	}
+
+	void SaveCode(ProjectItem ttProjectItem, string code, string outputFilename, List<string> addedFiles, string msg)
+	{
+		DTE dte = ttProjectItem.DTE;
+
+		// ... create/recreate the file (keep existing project item if it still exists) ...
+
+		// ... add the file to the solution explorer ...
+
+		ProjectItem projectCodeItem =  dte.Solution.FindProjectItem(outputFilename);
+		if (projectCodeItem != null && projectCodeItem.Collection.Parent != ttProjectItem)
+		{
+			msg = "The file '"+outputFilename+"' already exists and is not properly nested.  As a precaution, this script will not continue until either it is deleted, or this text template is move to another folder.";
+			WriteLine(msg);
+			throw new Exception(msg);
+		}
+
+		if (File.Exists(outputFilename))
+			File.Delete(outputFilename);
+                
+		//var n = DateTime.Now.Ticks;
+		File.WriteAllText(outputFilename, code);
+
+		WriteLine(outputFilename + "\r\n" + msg + "\r\n");
+   
+		if (projectCodeItem == null)
+			projectCodeItem = ttProjectItem.ProjectItems.AddFromFile(outputFilename);
+
+		// ... set the build action so the code doesn't compile ...
+
+		projectCodeItem.Properties.Item("ItemType").Value = "Embedded Resource";
+		projectCodeItem.Properties.Item("BuildAction").Value = prjBuildActionCompile.prjBuildActionEmbeddedResource;
+
+		addedFiles.Add(Path.GetFileName(projectCodeItem.FileNames[0]));
+	}
+		
+	void SaveOutput(string outputFileName)
+	{
+		string templateDirectory = Path.GetDirectoryName(Host.TemplateFile);
+		string outputFilePath = Path.Combine(templateDirectory, outputFileName);
+		File.WriteAllText(outputFilePath, this.GenerationEnvironment.ToString()); 
+		this.GenerationEnvironment.Remove(0, this.GenerationEnvironment.Length);
+	}
+
+	List<ProjectItem> GetProjectItemsRecursively(ProjectItems items)
+	{
+		var ret = new List<ProjectItem>();
+		if (items == null) return ret;
+		foreach(ProjectItem item in items)
+		{
+			ret.Add(item);
+			ret.AddRange(GetProjectItemsRecursively(item.ProjectItems));
+		}
+		return ret;
+	}
+
+	/// <summary> Generates a type tree dump from a given element recursively. </summary>
+	void Dump(CodeElement2 ce, bool includeChildren = true, string margin = "")
+	{
+		WriteLine("");
+		var _margin = "// " + margin;
+		WriteLine(_margin + "Element: `" + ce.Name + "`, Type: " + ce.Kind.ToString() + ", On line: " + ce.StartPoint.Line);
+
+		if (ce is CodeAttribute2 attr)
+		{
+			WriteLine(_margin + "  Is Attribute (CodeAttribute2)");
+			WriteLine(_margin + "    Arguments: ");
+			foreach (CodeElement2 element in attr.Arguments)
+				Dump(element, true, margin + "      ");
+			return;
+		}
+		else if (ce is  CodeAttributeArgument arg)
+		{
+			WriteLine(_margin + "(CodeAttributeArgument) Value: " + arg.Value);
+			return;
+		}
+
+		if (includeChildren)
+			foreach (CodeElement2 element in ce.Children)
+			{  
+				Dump(element, true, margin + "  ");
+			}  
+	}
+
+    // http://t4-editor.tangible-engineering.com/blog/walking-the-visual-studio-code-model-with-t4-template.html
+#>

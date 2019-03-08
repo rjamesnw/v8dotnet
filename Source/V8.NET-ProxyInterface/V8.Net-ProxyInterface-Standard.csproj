@@ -58,22 +58,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Generate32BitExterns.tt">
+    <None Update="GeneratedExterns\Generate32BitExterns.log">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Generate32BitExterns.tt</DependentUpon>
+    </None>
+    <None Update="GeneratedExterns\Generate32BitExterns.tt">
+      <LastGenOutput>Generate32BitExterns.log</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Generate32BitExterns.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Generate32BitExterns.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Generate32BitExterns.tt</DependentUpon>
-    </Compile>
   </ItemGroup>
 
 </Project>

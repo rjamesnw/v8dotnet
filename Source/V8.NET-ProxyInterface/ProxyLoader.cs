@@ -37,17 +37,11 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
         // DllImport.*extern\s+([^ ]+)\s+(\w+)(.*)
         [DllImport("V8_Net_Proxy_x64")]
-        public static extern NativeV8EngineProxy* CreateV8EngineProxy(bool enableDebugging, void* debugMessageDispatcher, int debugPort);
+        public extern static NativeV8EngineProxy* CreateV8EngineProxy(bool enableDebugging, void* debugMessageDispatcher, int debugPort);
         //public delegate NativeV8EngineProxy* CreateV8EngineProxyFunc(bool enableDebugging, void* debugMessageDispatcher, int debugPort);
         //public static CreateV8EngineProxyFunc CreateV8EngineProxy = (Environment.Is64BitProcess ? (CreateV8EngineProxyFunc)CreateV8EngineProxy64 : CreateV8EngineProxy32);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy", ExactSpelling = false)]
-#endif
+        [DllImport("V8_Net_Proxy_x64", ExactSpelling = false)]
         public static extern void DestroyV8EngineProxy(NativeV8EngineProxy* engine);
 
         //#if x86
