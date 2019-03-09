@@ -11,7 +11,6 @@
     <AssemblyName>V8.Net.Loader</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <BaseIntermediateOutputPath>obj_3.5\</BaseIntermediateOutputPath>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -30,7 +29,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3' ">$(DefineConstants);V3</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v2' ">$(DefineConstants);V2</DefineConstants>
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v1.1' ">$(DefineConstants);V1_1</DefineConstants>
-    <LangVersion>4</LangVersion>
+    <LangVersion>default</LangVersion>
     <DocumentationFile>..\bin\Debug\V8.Net.Loader.XML</DocumentationFile>
     <NoWarn>1591,1592,1573,1571,1570,1572</NoWarn>
   </PropertyGroup>

@@ -235,8 +235,6 @@ namespace V8.Net
         //    AppDomain.CurrentDomain.AssemblyResolve += Resolver;
         //}
 
-        static V8Engine() { Loader.ResolveDependencies(); }
-
         public V8Engine()
         {
             this.RunMarshallingTests();

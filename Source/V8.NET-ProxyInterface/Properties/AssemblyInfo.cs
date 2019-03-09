@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("V8.NET Proxy Interface")]
 [assembly: AssemblyDescription("Interface to select the platform versions of the native proxy libraries.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Surreal Logic")]
+[assembly: AssemblyCompany("Inossis")]
 [assembly: AssemblyProduct("V8.NET Proxy Interface")]
-[assembly: AssemblyCopyright("Copyright © Surreal Logic 2013")]
+[assembly: AssemblyCopyright("Copyright © Inossis 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

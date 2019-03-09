@@ -124,6 +124,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GeneratedExterns\ProxyLoader.x86_DllImports.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProxyLoader.cs" />
   </ItemGroup>
@@ -133,6 +134,23 @@
       <Name>V8.Net-SharedTypes</Name>
       <Private>False</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GeneratedExterns\Generate32BitExterns.log" />
+    <None Include="GeneratedExterns\Generate32BitExterns1.log">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Generate32BitExterns.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="GeneratedExterns\Generate32BitExterns.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Generate32BitExterns1.log</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

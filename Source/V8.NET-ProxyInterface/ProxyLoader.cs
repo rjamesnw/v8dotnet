@@ -1,676 +1,313 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace V8.Net
 {
     // ########################################################################################################################
 
-    public unsafe static class V8NetProxy
+    public unsafe static partial class V8NetProxy
     {
         // --------------------------------------------------------------------------------------------------------------------
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern NativeV8EngineProxy* CreateV8EngineProxy(bool enableDebugging, void* debugMessageDispatcher, int debugPort);
+        
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateV8EngineProxy")]
+        public extern static NativeV8EngineProxy* CreateV8EngineProxy64(bool enableDebugging, void* debugMessageDispatcher, int debugPort);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void DestroyV8EngineProxy(NativeV8EngineProxy* engine);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DestroyV8EngineProxy", ExactSpelling = false)]
+        public static extern void DestroyV8EngineProxy64(NativeV8EngineProxy* engine);
 
-        //#if x86
-        //        [DllImport("V8_Net_Proxy_x86")]
-        //#elif x64
-        //        [DllImport("V8_Net_Proxy_x64")]
-        //#else
-        //        [DllImport("V8_Net_Proxy")]
-        //#endif
-        //?        public static extern void WithV8IsolateScope(NativeV8EngineProxy* engine, Action action);
+        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8IsolateScope")]
+        //? public static extern void WithV8IsolateScope64(NativeV8EngineProxy* engine, Action action);
 
-        //#if x86
-        //        [DllImport("V8_Net_Proxy_x86")]
-        //#elif x64
-        //        [DllImport("V8_Net_Proxy_x64")]
-        //#else
-        //        [DllImport("V8_Net_Proxy")]
-        //#endif
-        //?        public static extern void WithV8ContextScope(NativeV8EngineProxy* engine, Action action);
+        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8ContextScope")]
+        //? public static extern void WithV8ContextScope64(NativeV8EngineProxy* engine, Action action);
 
-        //#if x86
-        //        [DllImport("V8_Net_Proxy_x86")]
-        //#elif x64
-        //        [DllImport("V8_Net_Proxy_x64")]
-        //#else
-        //        [DllImport("V8_Net_Proxy")]
-        //#endif
-        //?        public static extern void WithV8HandleScope(NativeV8EngineProxy* engine, Action action);
+        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8HandleScope")]
+        //? public static extern void WithV8HandleScope64(NativeV8EngineProxy* engine, Action action);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern void SetFlagsFromString(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetFlagsFromString")]
+        public static unsafe extern void SetFlagsFromString64(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void RegisterGCCallback(NativeV8EngineProxy* engine, V8GarbageCollectionRequestCallback garbageCollectionRequestCallback);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "RegisterGCCallback")]
+        public static extern void RegisterGCCallback64(NativeV8EngineProxy* engine, V8GarbageCollectionRequestCallback garbageCollectionRequestCallback);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void ForceGC(NativeV8EngineProxy* engine);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "ForceGC")]
+        public static extern void ForceGC64(NativeV8EngineProxy* engine);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern bool DoIdleNotification(NativeV8EngineProxy* engine, int hint = 1000);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DoIdleNotification")]
+        public static extern bool DoIdleNotification64(NativeV8EngineProxy* engine, int hint = 1000);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static extern HandleProxy* V8Execute(NativeV8EngineProxy* engine, string script, string sourceName = null);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "V8Execute", CharSet = CharSet.Unicode)]
+        public static extern HandleProxy* V8Execute64(NativeV8EngineProxy* engine, string script, string sourceName = null);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static extern HandleProxy* V8Compile(NativeV8EngineProxy* engine, string script, string sourceName = null);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "V8Compile", CharSet = CharSet.Unicode)]
+        public static extern HandleProxy* V8Compile64(NativeV8EngineProxy* engine, string script, string sourceName = null);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern HandleProxy* V8ExecuteCompiledScript(NativeV8EngineProxy* engine, HandleProxy* script);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "V8ExecuteCompiledScript")]
+        public static extern HandleProxy* V8ExecuteCompiledScript64(NativeV8EngineProxy* engine, HandleProxy* script);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void TerminateExecution(NativeV8EngineProxy* engine);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "TerminateExecution")]
+        public static extern void TerminateExecution64(NativeV8EngineProxy* engine);
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern NativeObjectTemplateProxy* CreateObjectTemplateProxy(NativeV8EngineProxy* engine);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateObjectTemplateProxy")]
+        public static unsafe extern NativeObjectTemplateProxy* CreateObjectTemplateProxy64(NativeV8EngineProxy* engine);
+
         // Return: NativeObjectTemplateProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern unsafe void DeleteObjectTemplateProxy(NativeObjectTemplateProxy* objectTemplateProxy);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteObjectTemplateProxy")]
+        public static extern unsafe void DeleteObjectTemplateProxy64(NativeObjectTemplateProxy* objectTemplateProxy);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern HandleProxy* SetGlobalObjectTemplate(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* proxy);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetGlobalObjectTemplate")]
+        public static unsafe extern HandleProxy* SetGlobalObjectTemplate64(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* proxy);
+
         // Return: HandleProxy*
         // (Note: returns a handle to the global object created by the context when the object template was set)
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void RegisterNamedPropertyHandlers(NativeObjectTemplateProxy* proxy,
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "RegisterNamedPropertyHandlers")]
+        public static extern void RegisterNamedPropertyHandlers64(NativeObjectTemplateProxy* proxy,
+
             ManagedNamedPropertyGetter getter,
             ManagedNamedPropertySetter setter,
             ManagedNamedPropertyQuery query,
             ManagedNamedPropertyDeleter deleter,
             ManagedNamedPropertyEnumerator enumerator);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void RegisterIndexedPropertyHandlers(NativeObjectTemplateProxy* proxy,
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "RegisterIndexedPropertyHandlers")]
+        public static extern void RegisterIndexedPropertyHandlers64(NativeObjectTemplateProxy* proxy,
+
             ManagedIndexedPropertyGetter getter,
             ManagedIndexedPropertySetter setter,
             ManagedIndexedPropertyQuery query,
             ManagedIndexedPropertyDeleter deleter,
             ManagedIndexedPropertyEnumerator enumerator);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void UnregisterNamedPropertyHandlers(NativeObjectTemplateProxy* proxy);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "UnregisterNamedPropertyHandlers")]
+        public static extern void UnregisterNamedPropertyHandlers64(NativeObjectTemplateProxy* proxy);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void UnregisterIndexedPropertyHandlers(NativeObjectTemplateProxy* proxy);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void SetCallAsFunctionHandler(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "UnregisterIndexedPropertyHandlers")]
+        public static extern void UnregisterIndexedPropertyHandlers64(NativeObjectTemplateProxy* proxy);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern HandleProxy* CreateObjectFromTemplate(NativeObjectTemplateProxy* objectTemplateProxy, Int32 objID);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetCallAsFunctionHandler")]
+        public static extern void SetCallAsFunctionHandler64(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateObjectFromTemplate")]
+        public static unsafe extern HandleProxy* CreateObjectFromTemplate64(NativeObjectTemplateProxy* objectTemplateProxy, Int32 objID);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-#if V1_1 || V2 || V3 || V3_5
-        public static unsafe extern void ConnectObject(HandleProxy* handleProxy, Int32 objID, void* templateProxy);
-#else
-        public static unsafe extern void ConnectObject(HandleProxy* handleProxy, Int32 objID, void* templateProxy = null);
-#endif
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "ConnectObject")]
+        public static unsafe extern void ConnectObject64(HandleProxy* handleProxy, Int32 objID, void* templateProxy = null);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern HandleProxy* GetObjectPrototype(HandleProxy* handleProxy);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetObjectPrototype")]
+        public static unsafe extern HandleProxy* GetObjectPrototype64(HandleProxy* handleProxy);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "Call", CharSet = CharSet.Unicode)]
         /// <summary>
         /// Calls a property with a given name on a specified object as a function and returns the result.
         /// If the function name is null, then the subject is assumed to be a function object.
         /// </summary>
-        public static unsafe extern HandleProxy* Call(HandleProxy* subject, string functionName, HandleProxy* _this, Int32 argCount, HandleProxy** args);
+        public static unsafe extern HandleProxy* Call64(HandleProxy* subject, string functionName, HandleProxy* _this, Int32 argCount, HandleProxy** args);
         // Return: HandleProxy*
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-#if V1_1 || V2 || V3 || V3_5
-        public static unsafe extern bool SetObjectPropertyByName(HandleProxy* proxy, string name, HandleProxy* value, V8PropertyAttributes attributes);
-#else
-        public static unsafe extern bool SetObjectPropertyByName(HandleProxy* proxy, string name, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
-#endif
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectPropertyByName", CharSet = CharSet.Unicode)]
+        public static unsafe extern bool SetObjectPropertyByName64(HandleProxy* proxy, string name, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern bool SetObjectPropertyByIndex(HandleProxy* proxy, Int32 index, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern HandleProxy* GetObjectPropertyByName(HandleProxy* proxy, string name);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectPropertyByIndex")]
+        public static unsafe extern bool SetObjectPropertyByIndex64(HandleProxy* proxy, Int32 index, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
+
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetObjectPropertyByName", CharSet = CharSet.Unicode)]
+        public static unsafe extern HandleProxy* GetObjectPropertyByName64(HandleProxy* proxy, string name);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern HandleProxy* GetObjectPropertyByIndex(HandleProxy* proxy, Int32 index);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetObjectPropertyByIndex")]
+        public static unsafe extern HandleProxy* GetObjectPropertyByIndex64(HandleProxy* proxy, Int32 index);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern bool DeleteObjectPropertyByName(HandleProxy* proxy, string name);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteObjectPropertyByName", CharSet = CharSet.Unicode)]
+        public static unsafe extern bool DeleteObjectPropertyByName64(HandleProxy* proxy, string name);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern bool DeleteObjectPropertyByIndex(HandleProxy* proxy, Int32 index);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern void SetObjectAccessor(HandleProxy* proxy, Int32 managedObjectID, string name,
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteObjectPropertyByIndex")]
+        public static unsafe extern bool DeleteObjectPropertyByIndex64(HandleProxy* proxy, Int32 index);
+
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectAccessor", CharSet = CharSet.Unicode)]
+        public static unsafe extern void SetObjectAccessor64(HandleProxy* proxy, Int32 managedObjectID, string name,
+
             ManagedAccessorGetter getter, ManagedAccessorSetter setter,
             V8AccessControl access, V8PropertyAttributes attributes);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern void SetObjectTemplateAccessor(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectTemplateAccessor", CharSet = CharSet.Unicode)]
+        public static unsafe extern void SetObjectTemplateAccessor64(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
+
             ManagedAccessorGetter getter, ManagedAccessorSetter setter,
             V8AccessControl access, V8PropertyAttributes attributes);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern void SetObjectTemplateProperty(NativeObjectTemplateProxy* proxy, string name, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectTemplateProperty", CharSet = CharSet.Unicode)]
+        public static unsafe extern void SetObjectTemplateProperty64(NativeObjectTemplateProxy* proxy, string name, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern HandleProxy* GetPropertyNames(HandleProxy* proxy);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetPropertyNames")]
+        public static unsafe extern HandleProxy* GetPropertyNames64(HandleProxy* proxy);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern HandleProxy* GetOwnPropertyNames(HandleProxy* proxy);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetOwnPropertyNames")]
+        public static unsafe extern HandleProxy* GetOwnPropertyNames64(HandleProxy* proxy);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern V8PropertyAttributes GetPropertyAttributes(HandleProxy* proxy, string name);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetPropertyAttributes", CharSet = CharSet.Unicode)]
+        public static unsafe extern V8PropertyAttributes GetPropertyAttributes64(HandleProxy* proxy, string name);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern Int32 GetArrayLength(HandleProxy* proxy);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetArrayLength")]
+        public static unsafe extern Int32 GetArrayLength64(HandleProxy* proxy);
+
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy(NativeV8EngineProxy* engine, string className, ManagedJSFunctionCallback callback);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateFunctionTemplateProxy", CharSet = CharSet.Unicode)]
+        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy64(NativeV8EngineProxy* engine, string className, ManagedJSFunctionCallback callback);
+
         // Return: NativeFunctionTemplateProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern unsafe void DeleteFunctionTemplateProxy(NativeFunctionTemplateProxy* functionTemplateProxy);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteFunctionTemplateProxy")]
+        public static extern unsafe void DeleteFunctionTemplateProxy64(NativeFunctionTemplateProxy* functionTemplateProxy);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern NativeObjectTemplateProxy* GetFunctionInstanceTemplateProxy(NativeFunctionTemplateProxy* functionTemplateProxy);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetFunctionInstanceTemplateProxy")]
+        public static unsafe extern NativeObjectTemplateProxy* GetFunctionInstanceTemplateProxy64(NativeFunctionTemplateProxy* functionTemplateProxy);
+
         // Return: NativeObjectTemplateProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern NativeObjectTemplateProxy* GetFunctionPrototypeTemplateProxy(NativeFunctionTemplateProxy* functionTemplateProxy);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetFunctionPrototypeTemplateProxy")]
+        public static unsafe extern NativeObjectTemplateProxy* GetFunctionPrototypeTemplateProxy64(NativeFunctionTemplateProxy* functionTemplateProxy);
+
         // Return: NativeObjectTemplateProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static unsafe extern HandleProxy* GetFunction(NativeFunctionTemplateProxy* functionTemplateProxy);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetFunction")]
+        public static unsafe extern HandleProxy* GetFunction64(NativeFunctionTemplateProxy* functionTemplateProxy);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-#if V1_1 || V2 || V3 || V3_5
-        public static unsafe extern HandleProxy* CreateInstanceFromFunctionTemplate(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount, HandleProxy** args);
-#else
-        public static unsafe extern HandleProxy* CreateInstanceFromFunctionTemplate(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount = 0, HandleProxy** args = null);
-        // Return: HandleProxy*
-#endif
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateInstanceFromFunctionTemplate")]
+        public static unsafe extern HandleProxy* CreateInstanceFromFunctionTemplate64(NativeFunctionTemplateProxy* functionTemplateProxy, Int32 objID, Int32 argCount = 0, HandleProxy** args = null);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static unsafe extern void SetFunctionTemplateProperty(NativeFunctionTemplateProxy* proxy, string name, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
+        // Return: HandleProxy*
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetFunctionTemplateProperty", CharSet = CharSet.Unicode)]
+        public static unsafe extern void SetFunctionTemplateProperty64(NativeFunctionTemplateProxy* proxy, string name, HandleProxy* value, V8PropertyAttributes attributes = V8PropertyAttributes.None);
+
 
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern HandleProxy* CreateBoolean(NativeV8EngineProxy* engine, bool b);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateBoolean")]
+        public static extern HandleProxy* CreateBoolean64(NativeV8EngineProxy* engine, bool b);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern HandleProxy* CreateInteger(NativeV8EngineProxy* engine, Int32 num);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateInteger")]
+        public static extern HandleProxy* CreateInteger64(NativeV8EngineProxy* engine, Int32 num);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern HandleProxy* CreateNumber(NativeV8EngineProxy* engine, double num);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateNumber")]
+        public static extern HandleProxy* CreateNumber64(NativeV8EngineProxy* engine, double num);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static extern HandleProxy* CreateString(NativeV8EngineProxy* engine, string str);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateString", CharSet = CharSet.Unicode)]
+        public static extern HandleProxy* CreateString64(NativeV8EngineProxy* engine, string str);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static extern HandleProxy* CreateError(NativeV8EngineProxy* engine, string message, JSValueType errorType);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateError", CharSet = CharSet.Unicode)]
+        public static extern HandleProxy* CreateError64(NativeV8EngineProxy* engine, string message, JSValueType errorType);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern HandleProxy* CreateDate(NativeV8EngineProxy* engine, double ms);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateDate")]
+        public static extern HandleProxy* CreateDate64(NativeV8EngineProxy* engine, double ms);
+
         // Return: HandleProxy*
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern HandleProxy* CreateObject(NativeV8EngineProxy* engine, Int32 managedObjectID);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateObject")]
+        public static extern HandleProxy* CreateObject64(NativeV8EngineProxy* engine, Int32 managedObjectID);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-#if V1_1 || V2 || V3 || V3_5
-        public static extern HandleProxy* CreateArray(NativeV8EngineProxy* engine, HandleProxy** items, Int32 length);
-#else
-        public static extern HandleProxy* CreateArray(NativeV8EngineProxy* engine, HandleProxy** items = null, Int32 length = 0);
-#endif
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-#if V1_1 || V2 || V3 || V3_5
-        public static extern HandleProxy* CreateStringArray(NativeV8EngineProxy* engine, char** items, Int32 length);
-#else
-        public static extern HandleProxy* CreateStringArray(NativeV8EngineProxy* engine, char** items, Int32 length = 0);
-#endif
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateArray")]
+        public static extern HandleProxy* CreateArray64(NativeV8EngineProxy* engine, HandleProxy** items = null, Int32 length = 0);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
-#else
-        [DllImport("V8_Net_Proxy", CharSet = CharSet.Unicode)]
-#endif
-        public static extern HandleProxy* CreateNullValue(NativeV8EngineProxy* engine);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateStringArray", CharSet = CharSet.Unicode)]
+        public static extern HandleProxy* CreateStringArray64(NativeV8EngineProxy* engine, char** items, Int32 length = 0);
+
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateNullValue", CharSet = CharSet.Unicode)]
+        public static extern HandleProxy* CreateNullValue64(NativeV8EngineProxy* engine);
+
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void MakeWeakHandle(HandleProxy* handleProxy);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "MakeWeakHandle")]
+        public static extern void MakeWeakHandle64(HandleProxy* handleProxy);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void MakeStrongHandle(HandleProxy* handleProxy);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void DisposeHandleProxy(HandleProxy* handle);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "MakeStrongHandle")]
+        public static extern void MakeStrongHandle64(HandleProxy* handleProxy);
+
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DisposeHandleProxy")]
+        public static extern void DisposeHandleProxy64(HandleProxy* handle);
+
         // (required for disposing of the associated V8 handle marshalled in "_HandleProxy")
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void UpdateHandleValue(HandleProxy* handle);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "UpdateHandleValue")]
+        public static extern void UpdateHandleValue64(HandleProxy* handle);
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern int GetHandleManagedObjectID(HandleProxy* handle);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetHandleManagedObjectID")]
+        public static extern int GetHandleManagedObjectID64(HandleProxy* handle);
+
 
         // --------------------------------------------------------------------------------------------------------------------
         // Tests
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern HandleProxy* CreateHandleProxyTest();
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateHandleProxyTest")]
+        public static extern HandleProxy* CreateHandleProxyTest64();
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern NativeV8EngineProxy* CreateV8EngineProxyTest();
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern NativeObjectTemplateProxy* CreateObjectTemplateProxyTest();
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateV8EngineProxyTest")]
+        public static extern NativeV8EngineProxy* CreateV8EngineProxyTest64();
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxyTest();
 
-#if x86
-        [DllImport("V8_Net_Proxy_x86")]
-#elif x64
-        [DllImport("V8_Net_Proxy_x64")]
-#else
-        [DllImport("V8_Net_Proxy")]
-#endif
-        public static extern void DeleteTestData(void* data);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateObjectTemplateProxyTest")]
+        public static extern NativeObjectTemplateProxy* CreateObjectTemplateProxyTest64();
+
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateFunctionTemplateProxyTest")]
+        public static extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxyTest64();
+
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteTestData")]
+        public static extern void DeleteTestData64(void* data);
+
 
         // --------------------------------------------------------------------------------------------------------------------
     }

@@ -1,10 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#if NETSTANDARD
+using Microsoft.Extensions.Hosting;
+#else
+//using Microsoft.AspNetCore.Http;
+using System.Web;
+#endif
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Collections.Generic;
 using System.Text;
-using System.Web;
+using System.Runtime.InteropServices;
 
 namespace V8.Net
 {
@@ -17,7 +23,17 @@ namespace V8.Net
         /// </summary>
         public static string AlternateRootSubPath = "V8.NET";
 
+#if NETSTANDARD
+        /// <summary>
+        ///     Supports ASP.Net Core hosting environments.  If set, and <see cref="AlternateRootSubPath"/> is a relative path, then
+        ///     the relative path is combined with the context directory path.
+        /// </summary>
+        public static IHostingEnvironment HostingEnvironment;
+#endif
+
         static bool _LocalPathEnvUpdated;
+
+        static string _WebHostPath; // (only if detected/given)
 
         static Loader() // (note: don't access 'ValidPaths' here, because 'AlternateRootSubPath' CANNOT be set by the user before this)
         {
@@ -35,9 +51,9 @@ namespace V8.Net
                     // (see: http://stackoverflow.com/questions/7996263/how-do-i-get-iis-to-load-a-native-dll-referenced-by-my-wcf-service
                     //   and http://stackoverflow.com/questions/344608/unmanaged-dlls-fail-to-load-on-asp-net-server)
 
-                    var path = System.Environment.GetEnvironmentVariable("PATH"); // TODO: Detect other systems if necessary.
+                    var path = Environment.GetEnvironmentVariable("PATH"); // TODO: Detect other systems if necessary, such as Linux.
                     var newPaths = string.Join(";", ValidPaths.ToArray()) + ";";
-                    System.Environment.SetEnvironmentVariable("PATH", newPaths + path);
+                    Environment.SetEnvironmentVariable("PATH", newPaths + path);
                     _LocalPathEnvUpdated = true;
                 }
                 catch { }
@@ -54,39 +70,39 @@ namespace V8.Net
             return AppDomain.CurrentDomain.GetAssemblies().Any(a => string.Equals(a.FullName.Split(',')[0], assemblyName, StringComparison.CurrentCultureIgnoreCase));
         }
 
+        /// <summary>
+        ///     This is the main method to call to resolve all dependencies. This MUST be the first method called, which is
+        ///     automatically called by the V8Engine's static constructor. You can also call this directly in a "main" or "startup"
+        ///     file before touching any V8.Net type.
+        /// </summary>
         public static void ResolveDependencies()
         {
             _CheckLocalPathUpdated();
 
+            // ... force load the required assemblies now (this is assuming the method is called from the calling type's static constructor or main startup) ...
+
             if (!IsLoaded("V8.Net.SharedTypes"))
                 Assembly.Load("V8.Net.SharedTypes");
 
-            if (IntPtr.Size == 4)
-            {
-                if (!IsLoaded("V8.Net.Proxy.Interface.x86"))
-                    Assembly.Load("V8.Net.Proxy.Interface.x86");
-            }
-            else
+            if (Environment.Is64BitProcess)
             {
                 if (!IsLoaded("V8.Net.Proxy.Interface.x64"))
                     Assembly.Load("V8.Net.Proxy.Interface.x64");
+            }
+            else
+            {
+                if (!IsLoaded("V8.Net.Proxy.Interface.x86"))
+                    Assembly.Load("V8.Net.Proxy.Interface.x86");
             }
 
             if (!IsLoaded("V8.Net"))
                 Assembly.Load("V8.Net");
         }
 
-        public static IEnumerable<string> ValidPaths
-        {
-            get
-            {
-                return _ValidPaths.Distinct();
-            }
-        }
+        /// <summary> Compiles all the valid search paths, in proper order, based on the current settings. </summary>
+        /// <value> The valid paths. </value>
+        public static IEnumerable<string> ValidPaths => _ValidPaths.Distinct();
 
-        /// <summary>
-        /// Returns a list of valid paths to check for assemblies, in proper order.
-        /// </summary>
         static IEnumerable<string> _ValidPaths
         {
             get
@@ -97,43 +113,46 @@ namespace V8.Net
 
                 yield return currentDir;
 
-                // ... check for an 'AlternateRootSubPath' absolute path ...
+                // ... check for an 'AlternateRootSubPath' path if explicitly specified ...
 
                 if (!string.IsNullOrEmpty(AlternateRootSubPath))
-                    if (!String.IsNullOrEmpty(Path.GetPathRoot(AlternateRootSubPath)))
-                        foreach (var path in _GetValidPaths(AlternateRootSubPath))
-                            yield return path;
+                    foreach (var path in _GetValidPaths(currentDir, AlternateRootSubPath, false))
+                        yield return path;
 
                 // ... check for a bin folder for ASP.NET sites ...
 
-                if (HttpContext.Current != null)
-                    foreach (var path in _GetValidPaths(HttpContext.Current.Server.MapPath("~/bin")))
+#if !NETSTANDARD // (NETSTANDARD is set for assemblies targeting .Net Standard; which supports BOTH .Net Core and .Net Full)
+                _WebHostPath = HttpContext.Current.Server.MapPath("~/bin");
+#else
+                _WebHostPath = HostingEnvironment.ContentRootPath;
+#endif
+                if (!string.IsNullOrWhiteSpace(_WebHostPath))
+                    foreach (var path in _GetValidPaths(_WebHostPath))
                         yield return path;
 
-                // ... check 'codebaseuri' - this is the *original* assembly location before it was cached for ASP.NET pages ...
+                // ... check 'codebaseuri' - this is the *original* assembly location before it was shadow-copied for ASP.NET pages ...
 
                 var codebaseuri = Assembly.GetExecutingAssembly().CodeBase;
-                Uri codebaseURI = null;
-                if (Uri.TryCreate(codebaseuri, UriKind.Absolute, out codebaseURI))
+                if (Uri.TryCreate(codebaseuri, UriKind.Absolute, out Uri codebaseURI))
                     foreach (var path in _GetValidPaths(Path.GetDirectoryName(codebaseURI.LocalPath)))
                         yield return path;
 
                 // ... if not found, try the executing assembly's own location ...
                 // (note: this is not done first, as the executing location might be in a cache location and not the original location!!!)
 
-                var thisAssmeblyLocation = Assembly.GetExecutingAssembly().Location;
+                var thisAssmeblyLocation = Assembly.GetExecutingAssembly().Location; // (may be a shadow-copy path!)
                 if (!string.IsNullOrEmpty(thisAssmeblyLocation))
                     foreach (var path in _GetValidPaths(Path.GetDirectoryName(thisAssmeblyLocation)))
                         yield return path;
 
                 // ... finally, try the current directory ...
 
-                foreach (var path in _GetValidPaths(currentDir, false))
+                foreach (var path in _GetValidPaths(currentDir, null, false))
                     yield return path;
             }
         }
 
-        static IEnumerable<string> _GetValidPaths(string rootPath, bool includeRoot = true)
+        static IEnumerable<string> _GetValidPaths(string rootPath, string subPath = null, bool includeRoot = true)
         {
             if (Directory.Exists(rootPath))
             {
@@ -142,34 +161,41 @@ namespace V8.Net
 
                 // ... check for an 'AlternateRootSubPath' sub-folder, which allows for copying the assemblies to a child folder of the project ...
                 // (DLLs in the "x86" and "x64" folders of this child folder can be set to "Copy if newer" using this method)
-                if (!string.IsNullOrEmpty(AlternateRootSubPath))
+                if (!string.IsNullOrEmpty(rootPath))
                 {
-                    if (String.IsNullOrEmpty(Path.GetPathRoot(AlternateRootSubPath))) // (add and check relative alt paths only)
-                        foreach (var path in _GetValidPaths(Path.Combine(rootPath, AlternateRootSubPath)))
+                    //  ... add and check relative alt paths only; 'GetPathRoot()' looks for '?:\' and '\' ...
+
+                    var subPathIsRelative = string.IsNullOrEmpty(Path.GetPathRoot(subPath));
+
+                    if (subPathIsRelative) // ... alternate path is relative, so combine with the given root ...
+                        foreach (var path in _GetValidPaths(Path.Combine(rootPath, subPath)))
                             yield return path;
-
-                    // ... do a fixed check (always) for a nested "V8.NET" folder ...
-
-                    if (AlternateRootSubPath.ToUpper() != "V8.NET")
-                        foreach (var path in _GetValidPaths(Path.Combine(rootPath, "V8.NET")))
+                    else  // (sub path is also a root)
+                        foreach (var path in _GetValidPaths(subPath))
                             yield return path;
                 }
 
-                // ... check for platform folders in this root path location ...
+                // ... do a fixed check (always) for a nested "V8.NET" folder ...
+
+                if (rootPath.ToUpper() != "V8.NET" && subPath.ToUpper() != "V8.NET")
+                    foreach (var path in _GetValidPaths(Path.Combine(rootPath, "V8.NET")))
+                        yield return path;
+
+                // ... check for platform sub-folders as well in this root path location ...
 
                 string platformDir;
 
-                if (IntPtr.Size == 4)
-                    platformDir = Path.Combine(rootPath, "x86");
-                else
+                if (Environment.Is64BitProcess)
                     platformDir = Path.Combine(rootPath, "x64");
+                else
+                    platformDir = Path.Combine(rootPath, "x86");
 
                 if (Directory.Exists(platformDir))
                     yield return platformDir;
             }
         }
 
-        static Exception _TryLoadProxyInterface(string path, string filename, Exception lastError, out Assembly assembly)
+        static IOException _TryLoadProxyInterface(string path, string filename, Exception lastError, out Assembly assembly)
         {
             assembly = null;
 
@@ -219,22 +245,26 @@ namespace V8.Net
             string name = args.Name;
 
             if (name.StartsWith("V8.Net.Proxy.Interface", StringComparison.CurrentCultureIgnoreCase))
-                name = "V8.Net.Proxy.Interface.{platform}";
+                name = "V8.Net.Proxy.Interface.{bits}"; // (the system is looking for the proxy interface)
             else if (name.StartsWith("V8.Net", StringComparison.CurrentCultureIgnoreCase))
-                name = args.Name.Split(',')[0];
+                name = args.Name.Split(',')[0]; // (there is some other assembly the system is trying to find; perhaps due to ASP.NET shadow-copying)
             else
-                name = null;
+                return null; // (we will not deal with non-V8.Net assemblies)
 
             if (!string.IsNullOrEmpty(name))
             {
-                if (IntPtr.Size == 4)
-                    name = name.Replace("{platform}", "x86");
+                if (Environment.Is64BitProcess)
+                    name = name.Replace("{bits}", "x64");
                 else
-                    name = name.Replace("{platform}", "x64");
-
-                string filename = name + ".dll";
-
-                Exception error = null;
+                    name = name.Replace("{bits}", "x86");
+#if NETSTANDARD
+                string filename = name
+                    + (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? ".dylib" :
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? ".os" : ".dll");
+#else
+                string filename = name + ".dll"; // (not sure if anyone uses MONO 4.0+ still, but if so, this will need detection [not supported yet])
+#endif
+                IOException error = null;
                 Assembly assembly = GetExistingAssembly(name);
                 if (assembly != null) return assembly; // (already exists!)
 
@@ -242,24 +272,26 @@ namespace V8.Net
 
                 foreach (var path in ValidPaths)
                 {
-                    error = _TryLoadProxyInterface(path, filename, error, out assembly);
+                    error = _TryLoadProxyInterface(path, filename, error, out assembly); // (each 'error' feeds as "inner" to the next one)
                     if (assembly != null) return assembly;
                 }
 
-                var bitStr = IntPtr.Size == 8 ? "x64" : "x86";
-                var msg = "Failed to load 'V8.Net.Proxy.Interface.x??.dll'.  V8.NET is running in the '" + bitStr + "' mode.  Some areas to check: " + Environment.NewLine
-                    + "1. The VC++ 2012 redistributable libraries are included, but if missing  for some reason, download and install from the Microsoft Site." + Environment.NewLine
-                    + "2. Did you download the DLLs from a ZIP file? If done so on Windows, you must open the file properties of the zip file and 'Unblock' it before extracting the files." + Environment.NewLine;
+                var bitStr = Environment.Is64BitProcess ? "x64" : "x86";
+                var msg = $"Failed to load '{name}'.  V8.NET is running in the '" + bitStr + "' mode.  Some areas to check: " + Environment.NewLine
+                    // (these are now statically linked) + "1. The VC++ 2017 redistributable libraries are included, but if missing  for some reason, download and install from the Microsoft Site." + Environment.NewLine
+                    + "1. Did you download the DLLs from a ZIP file? If so you may have to unblock the file. On Windows, you must open the file properties of the zip file and 'Unblock' it BEFORE extracting the files." + Environment.NewLine;
 
-                if (HttpContext.Current != null)
-                    msg += "3. Review the searched paths in the nested errors and make sure the desired path is accessible to the application pool identity (usually Read & Execute for 'IIS_IUSRS', or a similar user/group)" + Environment.NewLine;
+                msg += "2. Review the searched paths in the nested errors below and make sure the desired path is accessible to the application ";
+
+                if (!string.IsNullOrWhiteSpace(_WebHostPath))
+                    msg += "pool identity (usually Read & Execute for 'IIS_IUSRS', or a similar user/group)" + Environment.NewLine;
                 else
-                    msg += "3. Review the searched paths in the nested errors and make sure the desired path is accessible to the application for loading the required libraries." + Environment.NewLine;
+                    msg += "for loading the required libraries under the current program's security context." + Environment.NewLine;
 
                 if (error != null)
-                    throw new InvalidOperationException(msg + Environment.NewLine, error);
+                    throw new IOException(msg + Environment.NewLine, error);
                 else
-                    throw new InvalidOperationException(msg + Environment.NewLine);
+                    throw new IOException(msg + Environment.NewLine);
             }
 
             return null;
