@@ -33,7 +33,7 @@
 
 		var addedFiles = new List<string>();
 
-		var exportExtration = new Regex(@"^\s+\[DllImport\(""(\w+_)(x64)""\)([^\u0000]*?extern.*\s([A-Z0-9*]+)\s+)(\w+)(\(.*\);)", RegexOptions.Multiline | RegexOptions.IgnoreCase); // (Note: Keep in sync with CodeExtractionCompiler.REGION_PARSER)
+		var exportExtration = new Regex(@"^\s+\[DllImport\(""(\w+_)(x64)""([^\u0000]*?extern.*\s([A-Z0-9*]+))\s+(\w+)64(\([^\u0000]*?\);)", RegexOptions.Multiline | RegexOptions.IgnoreCase); // (Note: Keep in sync with CodeExtractionCompiler.REGION_PARSER)
 
 		foreach (ProjectItem item in projectItems)
 		{
@@ -78,7 +78,8 @@
 
 					if (!string.IsNullOrWhiteSpace(code))
 					{
-						string classNamespace = GetNamespaces(item)?.FirstOrDefault()?.Name;
+						CodeNamespace namespaceElement = GetNamespaces(item)?.FirstOrDefault();
+						string classNamespace = namespaceElement?.Name;
 						if (string.IsNullOrWhiteSpace(classNamespace))
 							classNamespace = thisTemplateProjectItem.Properties.Item("CustomToolNamespace")?.Value.ToString();
 						if (string.IsNullOrWhiteSpace(classNamespace))
@@ -88,9 +89,7 @@
 						if (string.IsNullOrWhiteSpace(classNamespace))
 							classNamespace  = "Error_NoNamespaceDetected";
 
-						WriteLine("Namespace: " + classNamespace);
-
-						Dump(item);
+						WriteLine("  - Namespace: " + classNamespace);
 
 						var matches = exportExtration.Matches(code).Cast<Match>().ToArray();
                     
@@ -99,10 +98,15 @@
 						WriteLine("  - Regex Matches: " + matches.Length);
 					
 						codeOutput += string.Join(Environment.NewLine, GetImports(item).Select(imp => GetCode(imp))) + Environment.NewLine;
-						//codeOutput += "using System;" + Environment.NewLine;
-						//codeOutput += "using System.Runtime.InteropServices;" + Environment.NewLine;
 						codeOutput += "namespace " + classNamespace + Environment.NewLine + "{" + Environment.NewLine;
-						codeOutput += "    partial class " + Path.GetFileNameWithoutExtension(filename) + Environment.NewLine + "    {" + Environment.NewLine;
+						var classCode =  GetCode(GetClasses(namespaceElement)?.FirstOrDefault()) ?? "";
+						var classMatch = Regex.Match(classCode, @"(.*?\s+class\s+[A-Za-z0-9_]+)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+						var classModifiersAndName = "" + classMatch;
+						WriteLine(classModifiersAndName); 
+						if (!string.IsNullOrWhiteSpace(classModifiersAndName))
+							codeOutput += "    " + classModifiersAndName + Environment.NewLine + "    {" + Environment.NewLine;
+						else
+							codeOutput += "    partial class " + Path.GetFileNameWithoutExtension(filename) + Environment.NewLine + "    {" + Environment.NewLine;
 
 						foreach(var m in matches)
 						{
@@ -114,12 +118,13 @@
 							var returnType = m.Groups[4];
 							var funcName = m.Groups[5];
 							var delegateName = funcName + "_ImportFuncType";
+							var originalName = funcName + "64";
 							var newName = funcName + "32";
 							var parameters = m.Groups[6];
 
-							codeOutput += $"        [DllImport(\"{importName}\"){restOfImportStatementUpToReturnType} {newName}{parameters}" + Environment.NewLine; 
+							codeOutput += $"        [DllImport(\"{importName}\"{restOfImportStatementUpToReturnType} {newName}{parameters}" + Environment.NewLine; 
 							codeOutput += $"        public delegate {returnType} {delegateName}{parameters}" + Environment.NewLine; 
-							codeOutput += $"        public static {delegateName} {funcName} = (Environment.Is64BitProcess ? ({delegateName}){newName} : {newName});" + Environment.NewLine; 
+							codeOutput += $"        public static {delegateName} {funcName} = (Environment.Is64BitProcess ? ({delegateName}){originalName} : {newName});" + Environment.NewLine; 
 							codeOutput += Environment.NewLine; 
                         }
 
@@ -128,12 +133,14 @@
                     }
 					else WriteLine("The code is empty.");
 
+					Dump(item);
+
 					// ... get the target file path and save the code...
 
 					if (!string.IsNullOrWhiteSpace(codeOutput))
 					{
 						string newFilename = Path.Combine(templateFileFolderPath, Path.GetFileNameWithoutExtension(filename));
-						SaveCode(thisTemplateProjectItem, codeOutput, newFilename + ".DllImports" + Path.GetExtension(filename), addedFiles, msg);
+						SaveCode(thisTemplateProjectItem, codeOutput, newFilename + ".x86_DllImports" + Path.GetExtension(filename), addedFiles, msg);
 					}
 				}
 			}
@@ -287,11 +294,13 @@
                 {
 					WriteLine(_margin + "  Class full name: " + codeClass.FullName);
 					WriteLine(_margin + "    Namespace: " + codeClass.Namespace?.Name);
+					WriteLine(_margin + "    Data Type: " + codeClass.DataTypeKind);
 					WriteLine(_margin + "    Access attributes: " + codeClass.Access);
 					WriteLine(_margin + "    Location: " + codeClass.InfoLocation);
 					WriteLine(_margin + "    Inheritance: " + codeClass.InheritanceKind);
 					WriteLine(_margin + "    Is Abstract?: " + codeClass.IsAbstract);
 					WriteLine(_margin + "    Is Generic?: " + codeClass.IsGeneric);
+					WriteLine(_margin + "    Is Static?: " + codeClass.IsShared);
 					WriteLine(_margin + "    IMember count: " + codeClass.Members.Count);
 
 					WriteLine(_margin + "  Attributes: ");
@@ -347,7 +356,7 @@
 				WriteLine(_margin + "Project Properties ("+proj.Properties.Count+"): ");
 				foreach (var p in proj.Properties.Cast<Property>())
 				{
-					Dump(p, true, margin + " * ");
+					Dump(p, true, margin + "  ");
 				}
 				foreach (var el in proj.FileCodeModel.CodeElements)
 					Dump(el, true, margin + "  ");
@@ -368,7 +377,7 @@
 	
 	CodeNamespace[] GetNamespaces(ProjectItem proj) => FilterByKind<CodeNamespace>(proj.FileCodeModel.CodeElements, vsCMElement.vsCMElementNamespace).ToArray();
 	
-	//CodeClass[] GetClasses(ProjectItem proj) => proj.FileCodeModel.CodeElements.Cast<CodeElement2>().Where(e => e.Kind == vsCMElement.vsCMElementNamespace).Cast<CodeNamespace>().ToArray();
+	CodeClass2[] GetClasses(CodeNamespace ns) => FilterByKind<CodeClass2>(ns.Children, vsCMElement.vsCMElementClass).ToArray();
 
     // http://t4-editor.tangible-engineering.com/blog/walking-the-visual-studio-code-model-with-t4-template.html
 #>

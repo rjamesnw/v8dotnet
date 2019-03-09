@@ -56,14 +56,6 @@
     <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface-Standard.csproj">
       <Private>false</Private>
     </ProjectReference>
-    <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface-x32-Standard.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Private>true</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface-x64-Standard.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Private>true</Private>
-    </ProjectReference>
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes-Standard.csproj" />
   </ItemGroup>
 
