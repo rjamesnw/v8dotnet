@@ -53,6 +53,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="GeneratedExterns\Generate32BitExterns.tt~" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="GeneratedExterns\Generate32BitExterns.log">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Generate32BitExterns.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes-Standard.csproj" />
     <ProjectReference Include="..\V8.Net.Loader\V8.Net.Loader-Standard.csproj" />
   </ItemGroup>
@@ -66,6 +78,7 @@
     <None Update="GeneratedExterns\Generate32BitExterns.tt">
       <LastGenOutput>Generate32BitExterns.log</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
+      <CustomToolNamespace></CustomToolNamespace>
     </None>
   </ItemGroup>
 

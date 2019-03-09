@@ -2,9 +2,11 @@
 <#@ assembly name="System.Core" #>
 <#@ assembly name="EnvDTE" #>
 <#@ assembly name="EnvDTE80" #>
+<#@ assembly name="Microsoft.CSharp" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Collections" #>
 <#@ import namespace="System.Text.RegularExpressions" #>
 <#@ import namespace="EnvDTE" #>
 <#@ import namespace="EnvDTE80" #>
@@ -31,7 +33,7 @@
 
 		var addedFiles = new List<string>();
 
-		var exportExtration = new Regex(@"^\s+(\[DllImport\(""(\w+_x64)""\)\])[^\u0000]*?extern.*\s[A-Z0-9*]+\s+(\w+)\(.*\);", RegexOptions.Multiline | RegexOptions.IgnoreCase); // (Note: Keep in sync with CodeExtractionCompiler.REGION_PARSER)
+		var exportExtration = new Regex(@"^\s+\[DllImport\(""(\w+_)(x64)""\)([^\u0000]*?extern.*\s([A-Z0-9*]+)\s+)(\w+)(\(.*\);)", RegexOptions.Multiline | RegexOptions.IgnoreCase); // (Note: Keep in sync with CodeExtractionCompiler.REGION_PARSER)
 
 		foreach (ProjectItem item in projectItems)
 		{
@@ -43,7 +45,7 @@
 				{
 					WriteLine("Found " + item.Name + ".");
 
-					string code, clientCodeOutput = null, serverCodeOutput = null, msg;
+					string msg = null, code = null, codeOutput = "";
 
 					// ... get code from open document, else get code from saved file ...
 
@@ -54,32 +56,7 @@
 						TextDocument doc = item.Document.Object() as TextDocument;
 						// ... document is open, so get the contents ...
 						msg = "Source: Copied from open document in editor on " + DateTime.Now.ToString("yyyy-MM-dd hh-mm-ss") + ".";
-						code = doc.StartPoint.CreateEditPoint().GetText(doc.EndPoint.CreateEditPoint());
-
-						var regions = exportExtration.Matches(code);
-                    
-						var matches = regions.Cast<Match>().Where(m => m.Groups.Count > 2).ToArray();
-
-						WriteLine("  - Regex Matches: " + matches.Length);
-					
-						foreach(var m in matches) 
-							WriteLine(m.Groups[0].Value+" -/- "+m.Groups[1].Value+", "+m.Groups[2].Value+", "+m.Groups[3].Value+", "+m.Groups[4].Value);
-
-						/*if (clientRegions.Length > 0)
-							clientCodeOutput = "// " + msg + Environment.NewLine
-								+ "#region JavaScript" + Environment.NewLine
-								+ string.Join(Environment.NewLine, clientRegions)
-								+ "#endregion";
-						else
-							clientCodeOutput = "";
-
-						if (serverRegions.Length > 0)
-							serverCodeOutput = "// " + msg + Environment.NewLine
-								+ "#region JavaScript Server" + Environment.NewLine
-								+ string.Join(Environment.NewLine, serverRegions)
-								+ "#endregion";
-						else
-							serverCodeOutput = "";*/
+						code = GetCode(doc);
 					}
 					else
 					{
@@ -89,27 +66,6 @@
 						{
 							msg = "Source: Copied from saved file on " + DateTime.Now.ToString("yyyy-MM-dd hh-mm-ss") + ".";
 							code = File.ReadAllText(filename);
-
-							MatchCollection regions = exportExtration.Matches(code);
-
-						var clientRegions = regions.Cast<Match>().Where(m => !string.Equals(m.Groups[1].Value, "Server", StringComparison.CurrentCultureIgnoreCase)).Select(m => m.Groups[2].Value).ToArray();
-						var serverRegions = regions.Cast<Match>().Where(m => string.Equals(m.Groups[1].Value, "Server", StringComparison.CurrentCultureIgnoreCase)).Select(m => m.Groups[2].Value).ToArray();
-
-							if (clientRegions.Length > 0)
-								clientCodeOutput = "// " + msg + Environment.NewLine 
-									+ "#region JavaScript" + Environment.NewLine
-									+ string.Join(Environment.NewLine, clientRegions)
-									+ "#endregion";
-							else
-								clientCodeOutput = "";
-
-							if (serverRegions.Length > 0)
-								serverCodeOutput = "// " + msg + Environment.NewLine
-									+ "#region JavaScript Server" + Environment.NewLine
-									+ string.Join(Environment.NewLine, serverRegions)
-									+ "#endregion";
-							else
-								serverCodeOutput = "";
 						}
 						else
 						{
@@ -118,17 +74,66 @@
 						}
 					}
 
-					// ... get the target file path ...
-					if (!string.IsNullOrWhiteSpace(clientCodeOutput))
-					{
-						string newFilename = Path.Combine(templateFileFolderPath, Path.GetFileName(filename));
-						SaveCode(thisTemplateProjectItem, clientCodeOutput, newFilename, addedFiles, msg);
-					}
+					// ... process the code, if any ...
 
-					if (!string.IsNullOrWhiteSpace(serverCodeOutput))
+					if (!string.IsNullOrWhiteSpace(code))
 					{
-						string newFilename = Path.Combine(templateFileFolderPath, Path.GetFileNameWithoutExtension(filename) + ".Server" + Path.GetExtension(filename));
-						SaveCode(thisTemplateProjectItem, serverCodeOutput, newFilename, addedFiles, msg);
+						string classNamespace = GetNamespaces(item)?.FirstOrDefault()?.Name;
+						if (string.IsNullOrWhiteSpace(classNamespace))
+							classNamespace = thisTemplateProjectItem.Properties.Item("CustomToolNamespace")?.Value.ToString();
+						if (string.IsNullOrWhiteSpace(classNamespace))
+							classNamespace = item.Properties.Item("DefaultNamespace")?.Value.ToString();
+						if (string.IsNullOrWhiteSpace(classNamespace))
+							classNamespace = item.Properties.Item("RootNamespace")?.Value.ToString();
+						if (string.IsNullOrWhiteSpace(classNamespace))
+							classNamespace  = "Error_NoNamespaceDetected";
+
+						WriteLine("Namespace: " + classNamespace);
+
+						Dump(item);
+
+						var matches = exportExtration.Matches(code).Cast<Match>().ToArray();
+                    
+						matches = matches.Where(m => m.Groups.Count > 3 && m.Groups[2].Value == "x64").ToArray();
+
+						WriteLine("  - Regex Matches: " + matches.Length);
+					
+						codeOutput += string.Join(Environment.NewLine, GetImports(item).Select(imp => GetCode(imp))) + Environment.NewLine;
+						//codeOutput += "using System;" + Environment.NewLine;
+						//codeOutput += "using System.Runtime.InteropServices;" + Environment.NewLine;
+						codeOutput += "namespace " + classNamespace + Environment.NewLine + "{" + Environment.NewLine;
+						codeOutput += "    partial class " + Path.GetFileNameWithoutExtension(filename) + Environment.NewLine + "    {" + Environment.NewLine;
+
+						foreach(var m in matches)
+						{
+							WriteLine(string.Join(",", m.Groups.Cast<Group>().Select(g=>g.Name+"="+g.Value)));
+							WriteLine("Code: ");
+							var importNamePrefix = m.Groups[1];
+							var importName = importNamePrefix + "x86";
+							var restOfImportStatementUpToReturnType = m.Groups[3];
+							var returnType = m.Groups[4];
+							var funcName = m.Groups[5];
+							var delegateName = funcName + "_ImportFuncType";
+							var newName = funcName + "32";
+							var parameters = m.Groups[6];
+
+							codeOutput += $"        [DllImport(\"{importName}\"){restOfImportStatementUpToReturnType} {newName}{parameters}" + Environment.NewLine; 
+							codeOutput += $"        public delegate {returnType} {delegateName}{parameters}" + Environment.NewLine; 
+							codeOutput += $"        public static {delegateName} {funcName} = (Environment.Is64BitProcess ? ({delegateName}){newName} : {newName});" + Environment.NewLine; 
+							codeOutput += Environment.NewLine; 
+                        }
+
+						codeOutput += "    }" + Environment.NewLine;
+						codeOutput += "}" + Environment.NewLine;
+                    }
+					else WriteLine("The code is empty.");
+
+					// ... get the target file path and save the code...
+
+					if (!string.IsNullOrWhiteSpace(codeOutput))
+					{
+						string newFilename = Path.Combine(templateFileFolderPath, Path.GetFileNameWithoutExtension(filename));
+						SaveCode(thisTemplateProjectItem, codeOutput, newFilename + ".DllImports" + Path.GetExtension(filename), addedFiles, msg);
 					}
 				}
 			}
@@ -214,33 +219,156 @@
 		return ret;
 	}
 
-	/// <summary> Generates a type tree dump from a given element recursively. </summary>
-	void Dump(CodeElement2 ce, bool includeChildren = true, string margin = "")
+	string GetCode(dynamic obj) => obj?.StartPoint.CreateEditPoint().GetText(obj.EndPoint.CreateEditPoint()) ?? "";
+
+	/*enum vsCMElement
 	{
-		WriteLine("");
-		var _margin = "// " + margin;
-		WriteLine(_margin + "Element: `" + ce.Name + "`, Type: " + ce.Kind.ToString() + ", On line: " + ce.StartPoint.Line);
+		vsCMElementAssignmentStmt = 16, // An assignment statement element.
+		vsCMElementAttribute = 7, // An attribute element.
+		vsCMElementClass = 1, // A class element.
+		vsCMElementDeclareDecl = 24, // A declare declaration element.
+		vsCMElementDefineStmt = 25, // A define statement element.
+		vsCMElementDelegate = 9, // A delegate element.
+		vsCMElementEnum = 10, // An enumerator element.
+		vsCMElementEvent = 38, // An event element.
+		vsCMElementEventsDeclaration = 22, // An events declaration element.
+		vsCMElementFunction = 2, // A function element.
+		vsCMElementFunctionInvokeStmt = 14, // A function invoke statement element.
+		vsCMElementIDLCoClass = 33, // An IDL co-class element.
+		vsCMElementIDLImport = 31, // An IDL import element.
+		vsCMElementIDLImportLib = 32, // An IDL import library element.
+		vsCMElementIDLLibrary = 34, // An IDL library element.
+		vsCMElementImplementsStmt = 18, // An implements statement element.
+		vsCMElementImportStmt = 35, // An import statement element.
+		vsCMElementIncludeStmt = 27, // An include statement element.
+		vsCMElementInheritsStmt = 17, // An inherits statement element.
+		vsCMElementInterface = 8, // An interface element.
+		vsCMElementLocalDeclStmt = 13, // A local declaration statement element.
+		vsCMElementMacro = 29, // A macro element.
+		vsCMElementMap = 30, // A map element.
+		vsCMElementMapEntry = 36, // A map entry element.
+		vsCMElementModule = 39, // A module element.
+		vsCMElementNamespace = 5, // A namespace element.
+		vsCMElementOptionStmt = 19, // An option statement element.
+		vsCMElementOther = 0, // An element not in the list.
+		vsCMElementParameter = 6, // A parameter element.
+		vsCMElementProperty = 4, // A property element.
+		vsCMElementPropertySetStmt = 15, // A property set statement element.
+		vsCMElementStruct = 11, // A structure element.
+		vsCMElementTypeDef = 26, // A type definition element.
+		vsCMElementUDTDecl = 23, // A user-defined type declaration element.
+		vsCMElementUnion = 12, // A union element.
+		vsCMElementUsingStmt = 28, // A using statement element.
+		vsCMElementVariable = 3, // A variable element.
+		vsCMElementVBAttributeGroup = 21, // A VB attribute group element.
+		vsCMElementVBAttributeStmt = 20, // A VB attributes statement element.
+		vsCMElementVCBase = 37 // A VC base element.
+    }*/
 
-		if (ce is CodeAttribute2 attr)
-		{
-			WriteLine(_margin + "  Is Attribute (CodeAttribute2)");
-			WriteLine(_margin + "    Arguments: ");
-			foreach (CodeElement2 element in attr.Arguments)
-				Dump(element, true, margin + "      ");
-			return;
-		}
-		else if (ce is  CodeAttributeArgument arg)
-		{
-			WriteLine(_margin + "(CodeAttributeArgument) Value: " + arg.Value);
-			return;
-		}
+	/// <summary> Generates a type tree dump from a given element recursively. </summary>
+	void Dump(object obj, bool includeChildren = true, string margin = "")
+	{
+		var ce = obj as CodeElement2;
+		var proj = obj as ProjectItem;
+		var prop = obj as Property;
+		var _margin = "| " + margin;
 
-		if (includeChildren)
-			foreach (CodeElement2 element in ce.Children)
-			{  
-				Dump(element, true, margin + "  ");
-			}  
+		WriteLine("|");
+	
+		try
+		{
+			if (ce != null)
+			{
+				var name = "";
+				try { name = ce.Name; } catch(Exception ex) { name = "(this element type doesn't support names)"; }
+				WriteLine(_margin + "Element: `" + name + "`, Type: " + ce.Kind.ToString() + ", On line: " + ce.StartPoint.Line);
+
+				if (ce is CodeClass2 codeClass)
+                {
+					WriteLine(_margin + "  Class full name: " + codeClass.FullName);
+					WriteLine(_margin + "    Namespace: " + codeClass.Namespace?.Name);
+					WriteLine(_margin + "    Access attributes: " + codeClass.Access);
+					WriteLine(_margin + "    Location: " + codeClass.InfoLocation);
+					WriteLine(_margin + "    Inheritance: " + codeClass.InheritanceKind);
+					WriteLine(_margin + "    Is Abstract?: " + codeClass.IsAbstract);
+					WriteLine(_margin + "    Is Generic?: " + codeClass.IsGeneric);
+					WriteLine(_margin + "    IMember count: " + codeClass.Members.Count);
+
+					WriteLine(_margin + "  Attributes: ");
+					foreach (var attr in codeClass.Attributes)
+						Dump(attr, true, margin + "    ");
+
+					if (codeClass.IsShared)
+						WriteLine(_margin + "  Class is static, and thus does not inherit any bases or implement interfaces.");
+					else 
+					{
+						WriteLine(_margin + "  Inherits From: ");
+						foreach (var classBase in codeClass.Bases)
+							Dump(classBase, true, margin + "    ");
+							//WriteLine(_margin + GetCode(classBase));
+						WriteLine(_margin + "  Has interfaces: ");
+						foreach (var intf in codeClass.ImplementedInterfaces)
+							Dump(intf, true, margin + "    ");
+							//WriteLine(_margin + GetCode(classBase));
+                    }
+
+ 					WriteLine(_margin + "  Partial Classes: ");
+					foreach (CodeElement2 part in codeClass.Parts)
+						WriteLine(_margin + "    " + part.FullName + (part == codeClass ? " (this one)":""));
+               }
+				else if (ce is CodeImport imp)
+                {
+					WriteLine(_margin + "  Is 'using' directive: " + GetCode(imp));
+                }
+				else if (ce is CodeAttribute2 attr)
+				{
+					WriteLine(_margin + "  Is Attribute (CodeAttribute2)");
+					WriteLine(_margin + "    Arguments: ");
+					foreach (var element in attr.Arguments)
+						Dump(element, true, margin + "      ");
+					includeChildren = false;
+				}
+				else if (ce is  CodeAttributeArgument arg)
+				{
+					WriteLine(_margin + "(CodeAttributeArgument) Value: " + arg.Value);
+					includeChildren = false;
+				}
+
+				if (includeChildren)
+					foreach (var element in ce.Children)
+					{  
+						Dump(element, true, margin + "  ");
+					}
+			}
+			else if (proj != null)
+			{
+				Write(_margin + "Project Name: ");
+				WriteLine(proj.Name); // (in case pulling the name fails)
+				WriteLine(_margin + "Project Properties ("+proj.Properties.Count+"): ");
+				foreach (var p in proj.Properties.Cast<Property>())
+				{
+					Dump(p, true, margin + " * ");
+				}
+				foreach (var el in proj.FileCodeModel.CodeElements)
+					Dump(el, true, margin + "  ");
+			}
+			else if (prop != null)
+			{
+				string value = "";
+				try { value = ""+prop.Value; } catch(Exception ex) { value = ex.Message; }
+				WriteLine(_margin + " * " + prop.Name + "=" + value);
+			}
+        }
+		catch(Exception ex) { WriteLine(_margin + ex.Message); }
 	}
+
+	T[] FilterByKind<T>(IEnumerable collection, vsCMElement kind) => collection.Cast<CodeElement2>().Where(e => e.Kind == kind).Cast<T>().ToArray();
+
+	CodeImport[] GetImports(ProjectItem proj) => FilterByKind<CodeImport>(proj.FileCodeModel.CodeElements, vsCMElement.vsCMElementImportStmt).ToArray();
+	
+	CodeNamespace[] GetNamespaces(ProjectItem proj) => FilterByKind<CodeNamespace>(proj.FileCodeModel.CodeElements, vsCMElement.vsCMElementNamespace).ToArray();
+	
+	//CodeClass[] GetClasses(ProjectItem proj) => proj.FileCodeModel.CodeElements.Cast<CodeElement2>().Where(e => e.Kind == vsCMElement.vsCMElementNamespace).Cast<CodeNamespace>().ToArray();
 
     // http://t4-editor.tangible-engineering.com/blog/walking-the-visual-studio-code-model-with-t4-template.html
 #>
