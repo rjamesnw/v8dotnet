@@ -7,81 +7,46 @@ namespace V8.Net
 
     public unsafe static partial class V8NetProxy
     {
-        //[DllImport("kernel32.dll")]
-        //public static extern IntPtr LoadLibrary(string fileName);
-
-        //public const int RTLD_NOW = 0x002;
-        //[DllImport("libdl")] // (could be "libdl.so.2" also: https://github.com/mellinoe/nativelibraryloader/issues/2#issuecomment-414476716)
-        //public static extern IntPtr DLOpen(string fileName, int flags);
-
-        //[DllImport("libdl.so.2")]
-        //public static extern IntPtr DLOpen2(string fileName, int flags);
-
-        static V8NetProxy() // (See also: https://github.com/mellinoe/nativelibraryloader)
-        {
-            //var libname = "V8_Net_Proxy." + (Environment.Is64BitProcess ? "x64" : "x86");
-            ////Loader.ResolveDependencies();
-            //if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            //    try { DLOpen(libname + ".dylib", RTLD_NOW); } catch (Exception ex) { try { DLOpen2(libname + ".dylib", RTLD_NOW); } catch (Exception ex2) { throw new DllNotFoundException(ex2.GetFullErrorMessage(), ex); } }
-            //else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            //    try { DLOpen(libname + ".os", RTLD_NOW); } catch (Exception ex) { try { DLOpen2(libname + ".os", RTLD_NOW); } catch (Exception ex2) { throw new DllNotFoundException(ex2.GetFullErrorMessage(), ex); } }
-            //else
-            //    LoadLibrary(libname + ".dll");
-        }
-
         // --------------------------------------------------------------------------------------------------------------------
-        //, EntryPoint = "sd"
+        
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateV8EngineProxy")]
         public extern static NativeV8EngineProxy* CreateV8EngineProxy64(bool enableDebugging, void* debugMessageDispatcher, int debugPort);
-
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DestroyV8EngineProxy", ExactSpelling = false)]
         public static extern void DestroyV8EngineProxy64(NativeV8EngineProxy* engine);
 
+        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8IsolateScope")]
+        //? public static extern void WithV8IsolateScope64(NativeV8EngineProxy* engine, Action action);
 
-        //        [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8IsolateScope")]
-        //?        public static extern void WithV8IsolateScope64(NativeV8EngineProxy* engine, Action action);
+        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8ContextScope")]
+        //? public static extern void WithV8ContextScope64(NativeV8EngineProxy* engine, Action action);
 
-
-        //        [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8ContextScope")]
-        //?        public static extern void WithV8ContextScope64(NativeV8EngineProxy* engine, Action action);
-
-
-        //        [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8HandleScope")]
-        //?        public static extern void WithV8HandleScope64(NativeV8EngineProxy* engine, Action action);
-
+        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8HandleScope")]
+        //? public static extern void WithV8HandleScope64(NativeV8EngineProxy* engine, Action action);
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetFlagsFromString")]
         public static unsafe extern void SetFlagsFromString64(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
 
-
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "RegisterGCCallback")]
         public static extern void RegisterGCCallback64(NativeV8EngineProxy* engine, V8GarbageCollectionRequestCallback garbageCollectionRequestCallback);
-
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "ForceGC")]
         public static extern void ForceGC64(NativeV8EngineProxy* engine);
 
-
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DoIdleNotification")]
         public static extern bool DoIdleNotification64(NativeV8EngineProxy* engine, int hint = 1000);
-
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "V8Execute", CharSet = CharSet.Unicode)]
         public static extern HandleProxy* V8Execute64(NativeV8EngineProxy* engine, string script, string sourceName = null);
 
-
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "V8Compile", CharSet = CharSet.Unicode)]
         public static extern HandleProxy* V8Compile64(NativeV8EngineProxy* engine, string script, string sourceName = null);
-
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "V8ExecuteCompiledScript")]
         public static extern HandleProxy* V8ExecuteCompiledScript64(NativeV8EngineProxy* engine, HandleProxy* script);
 
-
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "TerminateExecution")]
         public static extern void TerminateExecution64(NativeV8EngineProxy* engine);
-
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
@@ -144,7 +109,7 @@ namespace V8.Net
 
         // Return: HandleProxy*
 
-        [DllImport("V8_Net_Proxy_x64", CharSet = CharSet.Unicode)]
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "Call", CharSet = CharSet.Unicode)]
         /// <summary>
         /// Calls a property with a given name on a specified object as a function and returns the result.
         /// If the function name is null, then the subject is assumed to be a function object.

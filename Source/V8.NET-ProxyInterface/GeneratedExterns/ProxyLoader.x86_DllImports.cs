@@ -133,7 +133,7 @@ namespace V8.Net
         public delegate HandleProxy* GetObjectPrototype_ImportFuncType(HandleProxy* handleProxy);
         public static GetObjectPrototype_ImportFuncType GetObjectPrototype = (Environment.Is64BitProcess ? (GetObjectPrototype_ImportFuncType)GetObjectPrototype64 : GetObjectPrototype32);
 
-        [DllImport("V8_Net_Proxy_x86", CharSet = CharSet.Unicode)]
+        [DllImport("V8_Net_Proxy_x86", EntryPoint = "Call", CharSet = CharSet.Unicode)]
         /// <summary>
         /// Calls a property with a given name on a specified object as a function and returns the result.
         /// If the function name is null, then the subject is assumed to be a function object.

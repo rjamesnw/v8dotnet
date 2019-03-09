@@ -123,18 +123,20 @@
     <Compile Include="V8ManagedObject.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\V8.NET-Proxy\V8.Net-Proxy-x64.vcxproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\V8.NET-Proxy\V8.Net-Proxy-x86.vcxproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface.csproj">
       <Project>{81752b54-1391-44cb-a1f5-eccf7279db71}</Project>
       <Name>V8.Net-ProxyInterface</Name>
-      <Private>False</Private>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
       <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
       <Name>V8.Net-SharedTypes</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\V8.Net.Loader\V8.Net.Loader.csproj">
-      <Project>{40277739-c6d1-4620-8b05-41b02c3a1efc}</Project>
-      <Name>V8.Net.Loader</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
