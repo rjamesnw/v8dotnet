@@ -13,6 +13,12 @@ I've carefully crafted a C++ proxy wrapper to help marshal fast data transfers b
 
 The documentation can be found here: https://github.com/rjamesnw/v8dotnet/wiki
 
+*Installation*
+
+Now on NugGet! Support for Net Standard targeting .Net 4.6.1+ and Net Standard 2.0+
+
+https://www.nuget.org/packages/V8.Net/
+
 *Building The Source*
 
 To build you need the V8 Source ([follow these steps](https://github.com/rjamesnw/v8dotnet/tree/master/Source/V8.NET-Proxy/V8)) and Visual Studio 2017.
