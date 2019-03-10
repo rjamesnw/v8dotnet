@@ -48,12 +48,14 @@ namespace V8.Net
 
         static V8NetProxy() // (See also: https://github.com/mellinoe/nativelibraryloader)
         {
+            var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+
             var searchLocations = new string[]
             {
                 "",
                 @"libs\",
-                Assembly.GetExecutingAssembly().CodeBase,
-                Assembly.GetExecutingAssembly().Location // (may be a shadow-copy path!)
+                codeBase.StartsWith("file:///") ? Path.GetDirectoryName(new Uri(codeBase,  UriKind.Absolute).AbsolutePath) : codeBase,
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) // (may be a shadow-copy path!)
             };
 
             foreach (var path in searchLocations)
