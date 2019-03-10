@@ -48,23 +48,26 @@ namespace V8.Net
 
         static V8NetProxy() // (See also: https://github.com/mellinoe/nativelibraryloader)
         {
-            var codeBase = Assembly.GetExecutingAssembly().CodeBase;
-
-            var searchLocations = new string[]
+            try
             {
+                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+
+                var searchLocations = new string[]
+                {
                 "",
                 @"libs\",
                 codeBase.StartsWith("file:///") ? Path.GetDirectoryName(new Uri(codeBase,  UriKind.Absolute).AbsolutePath) : codeBase,
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) // (may be a shadow-copy path!)
-            };
+                };
 
-            foreach (var path in searchLocations)
-                if (TryLoad(path))
-                    return;
-
+                foreach (var path in searchLocations)
+                    if (TryLoad(path))
+                        return;
 #if DEBUG
             throw new DllNotFoundException("Searched locations: " + string.Join(Environment.NewLine, searchLocations));
 #endif
+            }
+            catch { }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
