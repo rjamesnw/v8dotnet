@@ -26,11 +26,9 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DocumentationFile />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DocumentationFile />
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,11 +52,6 @@
 
   <ItemGroup>
     <None Remove="GeneratedExterns\Generate32BitExterns.tt~" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes-Standard.csproj" />
-    <ProjectReference Include="..\V8.Net.Loader\V8.Net.Loader-Standard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
