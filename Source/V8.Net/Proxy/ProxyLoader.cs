@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace V8.Net
@@ -22,32 +23,46 @@ namespace V8.Net
         public static extern IntPtr DLOpen2(string fileName, int flags);
 #endif
 
-        static void TryLoad(string rootPath)
+        static bool TryLoad(string rootPath)
         {
 #if NETSTANDARD
-            Exception innerEx = null;
             try
             {
+                // ... check 'codebaseuri' - this is the *original* assembly location before it was shadow-copied for ASP.NET pages ...
+
                 var libname = "V8_Net_Proxy_" + (Environment.Is64BitProcess ? "x64" : "x86");
                 var filepath = Path.Combine(rootPath, libname);
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                    try { DLOpen(filepath + ".dylib", RTLD_NOW); } catch (Exception ex) { innerEx = ex; DLOpen2(filepath + ".dylib", RTLD_NOW); }
+                    try { DLOpen(filepath + ".dylib", RTLD_NOW); } catch (Exception ex) { DLOpen2(filepath + ".dylib", RTLD_NOW); }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    try { DLOpen(filepath + ".os", RTLD_NOW); } catch (Exception ex) { innerEx = ex; DLOpen2(filepath + ".os", RTLD_NOW); }
+                    try { DLOpen(filepath + ".os", RTLD_NOW); } catch (Exception ex) { DLOpen2(filepath + ".os", RTLD_NOW); }
                 else
                     LoadLibrary(filepath + ".dll");
+                return true;
             }
-            catch (Exception ex) { throw new DllNotFoundException(ex.GetFullErrorMessage(), innerEx); }
+            catch { return false; }
+#else
+            return false;
 #endif
         }
 
         static V8NetProxy() // (See also: https://github.com/mellinoe/nativelibraryloader)
         {
-            if (Directory.Exists("libs"))
-                try { TryLoad(@"libs\"); }
-                catch
-                {
-                }
+            var searchLocations = new string[]
+            {
+                "",
+                @"libs\",
+                Assembly.GetExecutingAssembly().CodeBase,
+                Assembly.GetExecutingAssembly().Location // (may be a shadow-copy path!)
+            };
+
+            foreach (var path in searchLocations)
+                if (TryLoad(path))
+                    return;
+
+#if DEBUG
+            throw new DllNotFoundException("Searched locations: " + string.Join(Environment.NewLine, searchLocations));
+#endif
         }
 
         // --------------------------------------------------------------------------------------------------------------------

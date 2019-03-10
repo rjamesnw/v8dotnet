@@ -21,7 +21,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>V8.NET, V8, JavaScript, ClearScript, JScript, Chromium</PackageTags>
     <PackageReleaseNotes>Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo support .Net 4.0+ Full if needed.</PackageReleaseNotes>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Product>V8.Net</Product>
     <PackageId>V8.Net</PackageId>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
