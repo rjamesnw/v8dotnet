@@ -249,16 +249,16 @@ namespace V8.Net
                             _Object = h;
                         else
                             if (createIfMissing)
-                            {
-                                h = new Handle(this); // (need to create a new tracker handle)                   
-                                if (handleID >= engine._TrackerHandles.Length)
-                                    Array.Resize(ref engine._TrackerHandles, (100 + handleID) * 2); // (make sure the tracker handle quick reference array can contain the handle ID)
-                                if (wref != null)
-                                    wref.Target = h;
-                                else
-                                    engine._TrackerHandles[handleID] = new WeakReference(h);
-                                _Object = h;
-                            }
+                        {
+                            h = new Handle(this); // (need to create a new tracker handle)                   
+                            if (handleID >= engine._TrackerHandles.Length)
+                                Array.Resize(ref engine._TrackerHandles, (100 + handleID) * 2); // (make sure the tracker handle quick reference array can contain the handle ID)
+                            if (wref != null)
+                                wref.Target = h;
+                            else
+                                engine._TrackerHandles[handleID] = new WeakReference(h);
+                            _Object = h;
+                        }
                     }
                 }
                 else if (_Object is V8NativeObject && ((V8NativeObject)_Object)._Handle.IsEmpty)
@@ -535,11 +535,11 @@ namespace V8.Net
             return handle.Object;
         }
 
-        public static implicit operator HandleProxy*(InternalHandle handle)
+        public static implicit operator HandleProxy* (InternalHandle handle)
         {
             return handle._HandleProxy;
         }
-        
+
         public static implicit operator InternalHandle(HandleProxy* handleProxy)
         {
             return handleProxy != null ? new InternalHandle(handleProxy) : InternalHandle.Empty;
@@ -1598,6 +1598,31 @@ namespace V8.Net
             if (_Accessors.TryGetValue(id, out delegates))
                 delegates.Clear();
         }
+    }
+
+    // ========================================================================================================================
+
+    /// <summary>
+    ///     Represents a V8 context in which JavaScript is executed. You can call
+    ///     <see cref="V8Engine.CreateContext(ObjectTemplate)"/> to create new executing contexts with a new default/custom
+    ///     global object.
+    /// </summary>
+    /// <seealso cref="T:System.IDisposable"/>
+    public unsafe class Context : IDisposable
+    {
+        internal NativeContext* _NativeContext;
+        internal Context(NativeContext* nativeContext) { _NativeContext = nativeContext; }
+        //~Context() { V8NetProxy.DeleteContext(_NativeContext); _NativeContext = null; }
+
+        public void Dispose()
+        {
+            if (_NativeContext != null)
+                V8NetProxy.DeleteContext(_NativeContext);
+            _NativeContext = null;
+        }
+
+        public static implicit operator Context(NativeContext* ctx) => new Context(ctx);
+        public static implicit operator NativeContext* (Context ctx) => ctx._NativeContext;
     }
 
     // ========================================================================================================================

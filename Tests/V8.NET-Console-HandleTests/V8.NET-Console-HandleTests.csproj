@@ -46,10 +46,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Source\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
-      <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
-      <Name>V8.Net-SharedTypes</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Source\V8.Net\V8.Net.csproj">
       <Project>{8d612c41-7d95-499c-a82d-c5c3c82225b3}</Project>
       <Name>V8.Net</Name>

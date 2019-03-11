@@ -104,14 +104,15 @@ namespace V8.Net
             NativeV8EngineProxy* nv8ep = V8NetProxy.CreateV8EngineProxyTest();
             NativeObjectTemplateProxy* notp = V8NetProxy.CreateObjectTemplateProxyTest();
             NativeFunctionTemplateProxy* nftp = V8NetProxy.CreateFunctionTemplateProxyTest();
-
+            // TODO: Add ContextProxy to this.
+            
             byte[] data;
             byte ofs = 0; // (skip type)
 
             try
             {
                 ofs = (byte)((int)&hp->NativeClassType - (int)hp);
-                if (hp->NativeClassType != ProxyObjectType.HandleProxyClass) _ThrowMarshalTestError("HandleProxy", "NativeClassType", ofs, null, (byte*)&hp->NativeClassType, 4);
+                if (hp->NativeClassType != ProxyObjectType.HandleProxyClass) _ThrowMarshalTestError("HandleProxy", "NativeClassType", ofs, null, (byte*)&hp->NativeClassType, 4); // (if this fails then the enums may be off)
                 ofs = (byte)((int)&hp->ID - (int)hp);
                 if ((Int32)hp->ID != _GetMarshalTestInt32Value(ofs, out data)) _ThrowMarshalTestError("HandleProxy", "ID", ofs, data, (byte*)&hp->ID);
                 ofs = (byte)((int)&hp->_ObjectID - (int)hp);

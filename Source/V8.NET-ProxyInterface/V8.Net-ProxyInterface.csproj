@@ -129,13 +129,6 @@
     <Compile Include="ProxyLoader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes.csproj">
-      <Project>{ef90724b-3893-4acf-bfee-88532485b11a}</Project>
-      <Name>V8.Net-SharedTypes</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="GeneratedExterns\Generate32BitExterns.log" />
     <None Include="GeneratedExterns\Generate32BitExterns1.log">
       <AutoGen>True</AutoGen>

@@ -7,8 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Source\V8.Net-SharedTypes\V8.Net-SharedTypes-Standard.csproj" />
     <ProjectReference Include="..\..\Source\V8.Net\V8.Net-Standard.csproj" />
   </ItemGroup>
 
+  <Target Name="CopyNativeFiles" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <NativeFiles Include="..\..\Source\bin\$(Configuration)\V8_Net_Proxy_x*.*" />
+    </ItemGroup>
+    <Message Text="Copying native files ..." Importance="High" />
+    <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Message Text="Done copying native files." Importance="High" />
+  </Target>
+
+  <!--<Target Name="CopyNativeFilesOnPublish" AfterTargets="Publish">
+    <Message Text="Copying native files for publish ..." Importance="High" />
+    <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Message Text="Done copying native files for publish." Importance="High" />
+  </Target>-->
 </Project>

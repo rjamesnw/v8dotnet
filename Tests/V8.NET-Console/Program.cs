@@ -491,8 +491,7 @@ namespace V8.Net
 #if DEBUG
                             count = 10000;
 #else
-                            count = 2000
-                                000;
+                            count = 2000000;
 #endif
 
                             Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");

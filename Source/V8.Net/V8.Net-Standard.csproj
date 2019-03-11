@@ -7,6 +7,24 @@
     <AssemblyName>V8.Net</AssemblyName>
     <DefineConstants>NETSTANDARD</DefineConstants>
     <NoWarn>1701,1702,1591</NoWarn>
+    <Authors>James Wilkins</Authors>
+    <Company>Inossis.com</Company>
+    <Description>V8.Net is a wrapper for Google's V8 engine for JavaScript.</Description>
+    <Copyright>Inossis</Copyright>
+    <PackageLicenseUrl>https://github.com/rjamesnw/v8dotnet</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/rjamesnw/v8dotnet</PackageProjectUrl>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
+    <PackageIconUrl>https://v8.dev/_img/v8-outline.svg</PackageIconUrl>
+    <RepositoryUrl>https://github.com/rjamesnw/v8dotnet</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>V8.NET, V8, JavaScript, ClearScript, JScript, Chromium</PackageTags>
+    <PackageReleaseNotes>Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo support .Net 4.0+ Full if needed.</PackageReleaseNotes>
+    <Version>1.0.6</Version>
+    <Product>V8.Net</Product>
+    <PackageId>V8.Net</PackageId>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -19,18 +37,18 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DocumentationFile />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DocumentationFile />
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,20 +67,99 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Proxy\GeneratedExterns\Generate32BitExterns.tt~" />
     <None Remove="VersionUpdater.dll" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\V8.NET-Proxy\V8.Net-Proxy-x64.vcxproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\V8.NET-Proxy\V8.Net-Proxy-x86.vcxproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\V8.NET-ProxyInterface\V8.Net-ProxyInterface-Standard.csproj">
-      <Private>false</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\V8.Net-SharedTypes\V8.Net-SharedTypes-Standard.csproj" />
+    <Folder Include="runtimes\win10-x64\native\" />
+    <Folder Include="runtimes\win10-x86\native\" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Content Include="..\bin\Debug\V8_Net_Proxy_x64.*">
+      <Link>runtimes\win10-x64\native\%(Filename)%(Extension)</Link>
+      <!--<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    </Content>
+    <Content Include="..\bin\Debug\V8_Net_Proxy_x86.*">
+      <Link>runtimes\win10-x86\native\%(Filename)%(Extension)</Link>
+      <!--<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Content Include="..\bin\Debug\V8_Net_Proxy_x64.dll">
+      <Link>runtimes\win10-x64\native\%(Filename)%(Extension)</Link>
+      <!--<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    </Content>
+    <Content Include="..\bin\Debug\V8_Net_Proxy_x86.dll">
+      <Link>runtimes\win10-x86\native\%(Filename)%(Extension)</Link>
+      <!--<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Proxy\GeneratedExterns\Generate32BitExterns.log">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Generate32BitExterns.tt</DependentUpon>
+    </None>
+    <None Update="Proxy\GeneratedExterns\Generate32BitExterns.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Generate32BitExterns.log</LastGenOutput>
+    </None>
+    <None Update="Proxy\GeneratedExterns\Generate32BitExterns1.log">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Generate32BitExterns1.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Proxy\GeneratedExterns\Generate32BitExterns.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Generate32BitExterns.tt~</DependentUpon>
+    </Compile>
+    <Compile Update="Proxy\GeneratedExterns\Generate32BitExterns1.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Generate32BitExterns1.log</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <Target Name="CopyNativeFiles" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <NativeFiles Include="..\bin\$(Configuration)\V8_Net_Proxy_x*.*" />
+    </ItemGroup>
+    <Message Text="Copying native files ..." Importance="High" />
+    <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Message Text="Done copying native files." Importance="High" />
+  </Target>
+  
+  <Target Name="CopyNativeFilesOnPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <NativeFiles Include="..\bin\$(Configuration)\V8_Net_Proxy_x*.*" />
+    </ItemGroup>
+    <Message Text="Copying native files for publish ..." Importance="High" />
+    <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Message Text="Done copying native files for publish." Importance="High" />
+  </Target>
+  
+  <!--<Target Name="CopyNativeFiles" DependsOnTargets="CopyFilesToOutputDirectory">
+    <Message Text="Should run before build" Importance="High" />
+    <Copy
+        SourceFiles="@(NativeFiles)"
+        DestinationFiles="@(ExtraContent->'$(TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+        SkipUnchangedFiles="true" />
+  </Target>-->
+  
 </Project>
