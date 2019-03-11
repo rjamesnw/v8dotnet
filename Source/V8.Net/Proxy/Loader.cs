@@ -252,6 +252,9 @@ namespace V8.Net
 
                 // ... finally check for commonly named "lib" folders in projects ...
 
+                if (rootPath.Replace('/', '\\').ToUpper().Contains(@"\.NUGET\"))
+                    yield return Path.Combine(rootPath, @"..\..\content"); // (Net Standard projects that reference this nuget package will have a root path that matches this)
+
                 if (rootPath.ToUpper() != "LIB" && subPath == null)
                     yield return Path.Combine(rootPath, "lib");
 

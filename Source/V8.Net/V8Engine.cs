@@ -392,13 +392,18 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Executes JavaScript on the V8 engine and returns the result.
-        /// </summary>
-        /// <param name="script">The script to run.</param>
-        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
-        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        /// <summary> Executes JavaScript on the V8 engine and returns the result. </summary>
+        /// <param name="script"> The script to run. </param>
+        /// <param name="sourceName">
+        ///     (Optional) A string that identifies the source of the script (handy for debug purposes).
+        /// </param>
+        /// <param name="throwExceptionOnError">
+        ///     (Optional) If true, and the return value represents an error, an exception is thrown (default is 'false').
+        /// </param>
+        /// <param name="timeout">
+        ///     (Optional) The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.
+        /// </param>
+        /// <returns> An InternalHandle. </returns>
         public InternalHandle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
             Timer timer = null;
@@ -418,13 +423,16 @@ namespace V8.Net
             return result.KeepAlive();
         }
 
-        /// <summary>
-        /// Executes JavaScript on the V8 engine and returns the result.
-        /// </summary>
-        /// <param name="script">The script to run.</param>
-        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
-        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        /// <summary> Executes JavaScript on the V8 engine and returns the result. </summary>
+        /// <exception cref="InvalidOperationException"> Thrown when the requested operation is invalid. </exception>
+        /// <param name="script"> The script to run. </param>
+        /// <param name="throwExceptionOnError">
+        ///     (Optional) If true, and the return value represents an error, an exception is thrown (default is 'false').
+        /// </param>
+        /// <param name="timeout">
+        ///     (Optional) The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.
+        /// </param>
+        /// <returns> An InternalHandle. </returns>
         public InternalHandle Execute(InternalHandle script, bool throwExceptionOnError = false, int timeout = 0)
         {
             if (script.ValueType != JSValueType.Script)
@@ -448,14 +456,21 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications that support 'Console' methods).
-        /// <para>Note: This is just a shortcut to calling 'Execute()' followed by 'Console.WriteLine()'.</para>
+        ///     Executes JavaScript on the V8 engine and automatically writes the result to the console (only valid for applications
+        ///     that support 'Console' methods).
+        ///     <para>Note: This is just a shortcut to calling 'Execute()' followed by 'Console.WriteLine()'.</para>
         /// </summary>
-        /// <returns>The result of the executed script.</returns>
-        /// <param name="script">The script to run.</param>
-        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
-        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        /// <param name="script"> The script to run. </param>
+        /// <param name="sourceName">
+        ///     (Optional) A string that identifies the source of the script (handy for debug purposes).
+        /// </param>
+        /// <param name="throwExceptionOnError">
+        ///     (Optional) If true, and the return value represents an error, an exception is thrown (default is 'false').
+        /// </param>
+        /// <param name="timeout">
+        ///     (Optional) The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.
+        /// </param>
+        /// <returns> The result of the executed script. </returns>
         public InternalHandle ConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
             InternalHandle result = Execute(script, sourceName, throwExceptionOnError, timeout);
@@ -464,15 +479,22 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Executes JavaScript on the V8 engine and automatically writes the script given AND the result to the console (only valid for applications that support 'Console' methods).
-        /// The script is output to the console window before it gets executed.
-        /// <para>Note: This is just a shortcut to calling 'Console.WriteLine(script)', followed by 'ConsoleExecute()'.</para>
-        /// <returns>The result of the executed script.</returns>
+        ///     Executes JavaScript on the V8 engine and automatically writes the script given AND the result to the console (only
+        ///     valid for applications that support 'Console' methods). The script is output to the console window before it gets
+        ///     executed.
+        ///     <para>Note: This is just a shortcut to calling 'Console.WriteLine(script)', followed by 'ConsoleExecute()'.</para>
         /// </summary>
-        /// <param name="script">The script to run.</param>
-        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
-        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        /// <param name="timeout">The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.</param>
+        /// <param name="script"> The script to run. </param>
+        /// <param name="sourceName">
+        ///     (Optional) A string that identifies the source of the script (handy for debug purposes).
+        /// </param>
+        /// <param name="throwExceptionOnError">
+        ///     (Optional) If true, and the return value represents an error, an exception is thrown (default is 'false').
+        /// </param>
+        /// <param name="timeout">
+        ///     (Optional) The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.
+        /// </param>
+        /// <returns> The result of the executed script. </returns>
         public InternalHandle VerboseConsoleExecute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
         {
             Console.WriteLine(script);
@@ -482,13 +504,17 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Compiles JavaScript on the V8 engine and returns the result.
-        /// Since V8 JIT-compiles script every time, repeated tasks can take advantage of re-executing pre-compiled scripts for a speed boost.
+        ///     Compiles JavaScript on the V8 engine and returns the result. Since V8 JIT-compiles script every time, repeated tasks
+        ///     can take advantage of re-executing pre-compiled scripts for a speed boost.
         /// </summary>
-        /// <param name="script">The script to run.</param>
-        /// <param name="sourceName">A string that identifies the source of the script (handy for debug purposes).</param>
-        /// <param name="throwExceptionOnError">If true, and the return value represents an error, an exception is thrown (default is 'false').</param>
-        /// <returns>A handle to the compiled script.</returns>
+        /// <param name="script"> The script to run. </param>
+        /// <param name="sourceName">
+        ///     (Optional) A string that identifies the source of the script (handy for debug purposes).
+        /// </param>
+        /// <param name="throwExceptionOnError">
+        ///     (Optional) If true, and the return value represents an error, an exception is thrown (default is 'false').
+        /// </param>
+        /// <returns> A handle to the compiled script. </returns>
         public InternalHandle Compile(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false)
         {
             InternalHandle result = V8NetProxy.V8Compile(_NativeV8EngineProxy, script, sourceName);
@@ -614,16 +640,18 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Calls the native V8 proxy library to create a new context environment for use with executing JavaScript.
+        ///     Calls the native V8 proxy library to create a new context environment for use with executing JavaScript.
         /// </summary>
-        public Context CreateContext(ObjectTemplate globalTemplate)
+        /// <param name="globalTemplate"> (Optional) An optional global template (if null one will be created automatically). </param>
+        /// <returns> A context wrapper the references the native V8 context. </returns>
+        public Context CreateContext(ObjectTemplate globalTemplate = null)
         {
-            return V8NetProxy.CreateContext(_NativeV8EngineProxy, globalTemplate._NativeObjectTemplateProxy);
+            return V8NetProxy.CreateContext(_NativeV8EngineProxy, globalTemplate != null ? globalTemplate._NativeObjectTemplateProxy : null);
         }
 
         /// <summary>
         ///     Changes the V8 proxy engine context to a new execution context. Each context can be used as a "sandbox" to isolate
-        ///     executions from one another.
+        ///     executions from one another. This method also returns the global object handle associated with the context.
         ///     <para>In the normal "V8" way, you enter a context before executing JavaScript, then exit a context when done.  To
         ///     limit the overhead of calling from managed methods into native functions for entering and exiting contexts all the
         ///     time, V8.Net instead sets the current context on a native V8 engine proxy so all future calls use the new context.

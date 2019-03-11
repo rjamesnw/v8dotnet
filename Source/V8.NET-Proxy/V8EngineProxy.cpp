@@ -331,19 +331,25 @@ FunctionTemplateProxy* V8EngineProxy::CreateFunctionTemplate(uint16_t *className
 // Creates a new context and returns it.
 ContextProxy* V8EngineProxy::CreateContext(ObjectTemplateProxy* templateProxy)
 {
-	auto context = templateProxy != nullptr ?
-		v8::Context::New(_Isolate, nullptr, Local<ObjectTemplate>::New(_Isolate, templateProxy->_ObjectTemplate))
-		:
-		v8::Context::New(_Isolate);
+	if (templateProxy == nullptr)
+		templateProxy = CreateObjectTemplate();
+
+	auto context = v8::Context::New(_Isolate, nullptr, Local<ObjectTemplate>::New(_Isolate, templateProxy->_ObjectTemplate));
 
 	// ... the context auto creates the global object from the given template, BUT, we still need to update the internal fields with proper values expected
 	// for callback into managed code ...
+
+	context->Enter(); // (in case we need this now)
 
 	auto globalObject = context->Global()->GetPrototype()->ToObject(_Isolate);
 	globalObject->SetAlignedPointerInInternalField(0, templateProxy); // (proxy object reference)
 	globalObject->SetInternalField(1, External::New(_Isolate, (void*)-1)); // (manage object ID, which is only applicable when tracking many created objects [and not a single engine or global scope])
 
-	return new ContextProxy(this, context); // (the native side will own this, and is responsible to free it when done)
+	auto contextProxy = new ContextProxy(this, context); // (the native side will own this, and is responsible to free it when done)
+
+	context->Exit();
+
+	return contextProxy;
 }
 
 // Sets the context and returns a handle to the global object.

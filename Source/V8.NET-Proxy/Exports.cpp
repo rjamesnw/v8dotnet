@@ -61,9 +61,7 @@ extern "C"
 	EXPORT void STDCALL RegisterGCCallback(V8EngineProxy* engine, ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback)
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
-		BEGIN_CONTEXT_SCOPE(engine);
 		engine->RegisterGCCallback(managedV8GarbageCollectionRequestCallback);
-		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
 

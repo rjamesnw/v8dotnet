@@ -64,6 +64,7 @@ namespace V8.Net
     public class Program
     {
         static V8Engine _JSServer;
+        static Context _Context;
 
         static System.Timers.Timer _TitleUpdateTimer;
 
@@ -77,7 +78,10 @@ namespace V8.Net
                 Console.WriteLine("V8.Net Version: " + V8Engine.Version);
 
                 Console.Write(Environment.NewLine + "Creating a V8Engine instance ...");
-                _JSServer = new V8Engine();
+                _JSServer = new V8Engine(false);
+                _Context = _JSServer.CreateContext();
+                _JSServer.SetContext(_Context);
+
                 Console.WriteLine(" Done!");
 
                 Console.Write("Testing marshalling compatibility...");

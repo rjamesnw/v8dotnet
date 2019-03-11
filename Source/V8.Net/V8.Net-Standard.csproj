@@ -9,7 +9,8 @@
     <NoWarn>1701,1702,1591</NoWarn>
     <Authors>James Wilkins</Authors>
     <Company>Inossis.com</Company>
-    <Description>V8.Net is a wrapper for Google's V8 engine for JavaScript.</Description>
+    <Description>V8.Net is a wrapper for Google's V8 engine for JavaScript.
+Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo support .Net 4.0+ Full if needed.</Description>
     <Copyright>Inossis</Copyright>
     <PackageLicenseUrl>https://github.com/rjamesnw/v8dotnet</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/rjamesnw/v8dotnet</PackageProjectUrl>
@@ -20,8 +21,8 @@
     <RepositoryUrl>https://github.com/rjamesnw/v8dotnet</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>V8.NET, V8, JavaScript, ClearScript, JScript, Chromium</PackageTags>
-    <PackageReleaseNotes>Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo support .Net 4.0+ Full if needed.</PackageReleaseNotes>
-    <Version>1.0.7</Version>
+    <PackageReleaseNotes>Added better support for locating the native assemblies, and fixed some context creation bugs.</PackageReleaseNotes>
+    <Version>1.0.10</Version>
     <Product>V8.Net</Product>
     <PackageId>V8.Net</PackageId>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
@@ -153,7 +154,11 @@
     <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
     <Message Text="Done copying native files for publish." Importance="High" />
   </Target>
-  
+
+  <Target Name="PushPackageToLocal" AfterTargets="Pack">
+    <Exec Command="dotnet nuget push &quot;$(MSBuildProjectDirectory)\..\bin\netstandard\$(Configuration)\$(AssemblyName).$(Version).nupkg&quot; -s &quot;C:\Data\Visual Studio\Nuget Server\$(Configuration)&quot;" />
+  </Target>
+
   <!--<Target Name="CopyNativeFiles" DependsOnTargets="CopyFilesToOutputDirectory">
     <Message Text="Should run before build" Importance="High" />
     <Copy
