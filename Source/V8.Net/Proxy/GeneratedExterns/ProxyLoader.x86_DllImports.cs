@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 namespace V8.Net
 {
@@ -14,6 +15,21 @@ namespace V8.Net
         public static extern void DestroyV8EngineProxy32(NativeV8EngineProxy* engine);
         public delegate void DestroyV8EngineProxy_ImportFuncType(NativeV8EngineProxy* engine);
         public static DestroyV8EngineProxy_ImportFuncType DestroyV8EngineProxy = (Environment.Is64BitProcess ? (DestroyV8EngineProxy_ImportFuncType)DestroyV8EngineProxy64 : DestroyV8EngineProxy32);
+
+        [DllImport("V8_Net_Proxy_x86", EntryPoint = "CreateContext")]
+        public extern static NativeContext* CreateContext32(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* templatePoxy);
+        public delegate NativeContext* CreateContext_ImportFuncType(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* templatePoxy);
+        public static CreateContext_ImportFuncType CreateContext = (Environment.Is64BitProcess ? (CreateContext_ImportFuncType)CreateContext64 : CreateContext32);
+
+        [DllImport("V8_Net_Proxy_x86", EntryPoint = "DeleteContext")]
+        public extern static NativeContext* DeleteContext32(NativeContext *context);
+        public delegate NativeContext* DeleteContext_ImportFuncType(NativeContext *context);
+        public static DeleteContext_ImportFuncType DeleteContext = (Environment.Is64BitProcess ? (DeleteContext_ImportFuncType)DeleteContext64 : DeleteContext32);
+
+        [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetContext")]
+        public extern static HandleProxy* SetContext32(NativeV8EngineProxy* engine, NativeContext* context);
+        public delegate HandleProxy* SetContext_ImportFuncType(NativeV8EngineProxy* engine, NativeContext* context);
+        public static SetContext_ImportFuncType SetContext = (Environment.Is64BitProcess ? (SetContext_ImportFuncType)SetContext64 : SetContext32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetFlagsFromString")]
         public static unsafe extern void SetFlagsFromString32(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
@@ -64,11 +80,6 @@ namespace V8.Net
         public static extern unsafe void DeleteObjectTemplateProxy32(NativeObjectTemplateProxy* objectTemplateProxy);
         public delegate void DeleteObjectTemplateProxy_ImportFuncType(NativeObjectTemplateProxy* objectTemplateProxy);
         public static DeleteObjectTemplateProxy_ImportFuncType DeleteObjectTemplateProxy = (Environment.Is64BitProcess ? (DeleteObjectTemplateProxy_ImportFuncType)DeleteObjectTemplateProxy64 : DeleteObjectTemplateProxy32);
-
-        [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetGlobalObjectTemplate")]
-        public static unsafe extern HandleProxy* SetGlobalObjectTemplate32(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* proxy);
-        public delegate HandleProxy* SetGlobalObjectTemplate_ImportFuncType(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* proxy);
-        public static SetGlobalObjectTemplate_ImportFuncType SetGlobalObjectTemplate = (Environment.Is64BitProcess ? (SetGlobalObjectTemplate_ImportFuncType)SetGlobalObjectTemplate64 : SetGlobalObjectTemplate32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "RegisterNamedPropertyHandlers")]
         public static extern void RegisterNamedPropertyHandlers32(NativeObjectTemplateProxy* proxy,

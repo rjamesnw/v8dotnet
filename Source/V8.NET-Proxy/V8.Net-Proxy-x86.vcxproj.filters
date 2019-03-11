@@ -41,6 +41,9 @@
     <ClCompile Include="Exports.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ContextProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="V8.Net-Proxy-32.rc">

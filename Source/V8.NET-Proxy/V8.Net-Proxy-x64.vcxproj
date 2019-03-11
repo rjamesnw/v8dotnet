@@ -232,6 +232,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ContextProxy.cpp" />
     <ClCompile Include="Exports.cpp">
       <FileType>CppHeader</FileType>
     </ClCompile>

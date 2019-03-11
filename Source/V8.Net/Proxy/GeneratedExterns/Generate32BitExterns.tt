@@ -13,6 +13,9 @@
 <#@ import namespace="System.IO" #>
 <#@ output extension="log" #>
 <#    // Get the Visual Studio API as a service:
+	
+	bool overwriteFiles = true; // (set this to false during debug; when true files will be replaced)
+	
 	try {
 
 		if (Host == null)
@@ -144,7 +147,7 @@
 					if (!string.IsNullOrWhiteSpace(codeOutput))
 					{
 						string newFilename = Path.Combine(templateFileFolderPath, Path.GetFileNameWithoutExtension(filename));
-						SaveCode(thisTemplateProjectItem, codeOutput, newFilename + ".x86_DllImports" + Path.GetExtension(filename), addedFiles, msg);
+						SaveCode(thisTemplateProjectItem, codeOutput, newFilename + ".x86_DllImports" + Path.GetExtension(filename), addedFiles, msg, overwriteFiles);
 					}
 				}
 			}
@@ -156,7 +159,7 @@
 		{
 			if (!item.Name.EndsWith(".log") && !addedFiles.Contains(item.Name))
 				try {
-					WriteLine("Removed item '" + item.Name + "' - no longer contains a JavaScript region.");
+					WriteLine("Removed item '" + item.Name + "' - no longer matches the expected pattern.");
 					item.Delete();
 				}
 				catch(Exception ex) { WriteLine("Could not delete '" + item.Name + "': " + ex.Message); }
@@ -175,7 +178,7 @@
 		prjBuildActionNone = 4
 	}
 
-	void SaveCode(ProjectItem ttProjectItem, string code, string outputFilename, List<string> addedFiles, string msg)
+	void SaveCode(ProjectItem ttProjectItem, string code, string outputFilename, List<string> addedFiles, string msg, bool overwriteFile = false)
 	{
 		DTE dte = ttProjectItem.DTE;
 
@@ -184,7 +187,7 @@
 		// ... add the file to the solution explorer ...
 
 		ProjectItem projectCodeItem =  dte.Solution.FindProjectItem(outputFilename);
-		if (projectCodeItem != null && projectCodeItem.Collection.Parent != ttProjectItem)
+		if (!overwriteFile && projectCodeItem != null && projectCodeItem.Collection.Parent != ttProjectItem)
 		{
 			msg = "The file '"+outputFilename+"' already exists and is not properly nested.  As a precaution, this script will not continue until either it is deleted, or this text template is move to another folder.";
 			WriteLine(msg);
@@ -204,8 +207,10 @@
 
 		// ... set the build action so the code doesn't compile ...
 
-		projectCodeItem.Properties.Item("ItemType").Value = "Embedded Resource";
-		projectCodeItem.Properties.Item("BuildAction").Value = prjBuildActionCompile.prjBuildActionEmbeddedResource;
+		//projectCodeItem.Properties.Item("ItemType").Value = "Embedded Resource";
+		//projectCodeItem.Properties.Item("BuildAction").Value = prjBuildActionCompile.prjBuildActionEmbeddedResource;
+
+		projectCodeItem.Properties.Item("BuildAction").Value = prjBuildActionCompile.prjBuildActionCompile;
 
 		addedFiles.Add(Path.GetFileName(projectCodeItem.FileNames[0]));
 	}

@@ -91,14 +91,16 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DestroyV8EngineProxy", ExactSpelling = false)]
         public static extern void DestroyV8EngineProxy64(NativeV8EngineProxy* engine);
 
-        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8IsolateScope")]
-        //? public static extern void WithV8IsolateScope64(NativeV8EngineProxy* engine, Action action);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateContext")]
+        public extern static NativeContext* CreateContext64(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* templatePoxy);
 
-        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8ContextScope")]
-        //? public static extern void WithV8ContextScope64(NativeV8EngineProxy* engine, Action action);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteContext")]
+        public extern static NativeContext* DeleteContext64(NativeContext *context);
 
-        // [DllImport("V8_Net_Proxy_x64", EntryPoint = "WithV8HandleScope")]
-        //? public static extern void WithV8HandleScope64(NativeV8EngineProxy* engine, Action action);
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetContext")]
+        public extern static HandleProxy* SetContext64(NativeV8EngineProxy* engine, NativeContext* context);
+
+        //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetFlagsFromString")]
         public static unsafe extern void SetFlagsFromString64(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
@@ -134,9 +136,6 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteObjectTemplateProxy")]
         public static extern unsafe void DeleteObjectTemplateProxy64(NativeObjectTemplateProxy* objectTemplateProxy);
 
-
-        [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetGlobalObjectTemplate")]
-        public static unsafe extern HandleProxy* SetGlobalObjectTemplate64(NativeV8EngineProxy* engine, NativeObjectTemplateProxy* proxy);
 
         // Return: HandleProxy*
         // (Note: returns a handle to the global object created by the context when the object template was set)

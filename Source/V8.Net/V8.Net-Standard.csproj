@@ -21,7 +21,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>V8.NET, V8, JavaScript, ClearScript, JScript, Chromium</PackageTags>
     <PackageReleaseNotes>Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo support .Net 4.0+ Full if needed.</PackageReleaseNotes>
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <Product>V8.Net</Product>
     <PackageId>V8.Net</PackageId>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
@@ -100,14 +100,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNet.WebApi" Version="5.2.7" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Proxy\GeneratedExterns\Generate32BitExterns.log">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Generate32BitExterns.tt</DependentUpon>
+    </None>
     <None Update="Proxy\GeneratedExterns\Generate32BitExterns.tt">
-      <LastGenOutput>Generate32BitExterns.log</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Generate32BitExterns.log</LastGenOutput>
     </None>
     <None Update="Proxy\GeneratedExterns\Generate32BitExterns1.log">
       <Generator>TextTemplatingFileGenerator</Generator>

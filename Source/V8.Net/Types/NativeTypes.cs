@@ -15,6 +15,14 @@ namespace V8.Net
         public Int32 ID;
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public unsafe struct NativeContext
+    {
+        public ProxyObjectType NativeClassType;
+        public void* NativeEngineProxy;
+        public Int32 EngineID;
+    }
+
     // ========================================================================================================================
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -58,10 +66,10 @@ namespace V8.Net
 
         [FieldOffset(0), MarshalAs(UnmanagedType.I4)]
         public ProxyObjectType NativeClassType;
-        
+
         [FieldOffset(4), MarshalAs(UnmanagedType.I4)]
         public Int32 ID; // The native ID (index) of this handle proxy.
-        
+
         [FieldOffset(8), MarshalAs(UnmanagedType.I4)]
         public Int32 _ObjectID; // If set (>=0), then a managed object is associated with this handle. The default is -1.
 

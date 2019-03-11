@@ -2,8 +2,8 @@
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-v8::Handle<Value> HandleProxy::Handle() { return _Handle; }
-v8::Handle<Script> HandleProxy::Script() { return _Script; }
+v8::Local<Value> HandleProxy::Handle() { return _Handle; }
+v8::Local<Script> HandleProxy::Script() { return _Script; }
 
 // ------------------------------------------------------------------------------------------------------------------------
 

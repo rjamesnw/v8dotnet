@@ -204,7 +204,8 @@ namespace V8.Net
         ObjectTemplateProxyClass,
         FunctionTemplateProxyClass,
         V8EngineProxyClass,
-        HandleProxyClass
+        HandleProxyClass,
+        ContextProxyClass
     };
 
     // ========================================================================================================================

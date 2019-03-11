@@ -73,17 +73,17 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 //};
 
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
-	:ProxyBase(V8EngineProxyClass), _GlobalObjectTemplateProxy(nullptr), _NextNonTemplateObjectID(-2),
+	:ProxyBase(V8EngineProxyClass), /*?_GlobalObjectTemplateProxy(nullptr),*/ _NextNonTemplateObjectID(-2),
 	_IsExecutingScript(false), _IsTerminatingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _HandlesToBeMadeWeak(1000, nullptr),
 	_HandlesToBeMadeStrong(1000, nullptr), _Objects(1000, nullptr), _Strings(1000, _StringItem())
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
 	{
 		v8::V8::InitializeICU();
-	
+
 		//?v8::V8::InitializeExternalStartupData(PLATFORM_TARGET "\\");
 		// (Startup data is not included by default anymore)
-		
+
 		_Platform = v8::platform::NewDefaultPlatform();
 		v8::V8::InitializePlatform(_Platform.get());
 
@@ -147,7 +147,7 @@ V8EngineProxy::~V8EngineProxy()
 			_Handles[_DisposedHandles[i]]->_Dispose(false); // (engine is flagged as disposed, so this call will only delete the instance)
 
 		// Note: the '_GlobalObjectTemplateProxy' instance is not deleted because the managed GC will do that later (if not before this).
-		_GlobalObjectTemplateProxy = nullptr;
+		//?_GlobalObjectTemplateProxy = nullptr;
 
 		_GlobalObject.Reset();
 		_Context.Reset();
@@ -328,30 +328,43 @@ FunctionTemplateProxy* V8EngineProxy::CreateFunctionTemplate(uint16_t *className
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-HandleProxy* V8EngineProxy::SetGlobalObjectTemplate(ObjectTemplateProxy* proxy)
+// Creates a new context and returns it.
+ContextProxy* V8EngineProxy::CreateContext(ObjectTemplateProxy* templateProxy)
 {
-	if (!_Context.IsEmpty())
-		_Context.Reset();
-
-	if (_GlobalObjectTemplateProxy != nullptr)
-		delete _GlobalObjectTemplateProxy;
-
-	_GlobalObjectTemplateProxy = proxy;
-
-	auto context = v8::Context::New(_Isolate, nullptr, Local<ObjectTemplate>::New(_Isolate, _GlobalObjectTemplateProxy->_ObjectTemplate));
-
-	_Context = context;
+	auto context = templateProxy != nullptr ?
+		v8::Context::New(_Isolate, nullptr, Local<ObjectTemplate>::New(_Isolate, templateProxy->_ObjectTemplate))
+		:
+		v8::Context::New(_Isolate);
 
 	// ... the context auto creates the global object from the given template, BUT, we still need to update the internal fields with proper values expected
 	// for callback into managed code ...
 
 	auto globalObject = context->Global()->GetPrototype()->ToObject(_Isolate);
-	globalObject->SetAlignedPointerInInternalField(0, _GlobalObjectTemplateProxy); // (proxy object reference)
+	globalObject->SetAlignedPointerInInternalField(0, templateProxy); // (proxy object reference)
 	globalObject->SetInternalField(1, External::New(_Isolate, (void*)-1)); // (manage object ID, which is only applicable when tracking many created objects [and not a single engine or global scope])
 
-	_GlobalObject = globalObject; // (keep a reference to the global object for faster reference)
+	return new ContextProxy(this, context); // (the native side will own this, and is responsible to free it when done)
+}
 
-	return GetHandleProxy(globalObject); // (the native side will own this, and is responsible to free it when done)
+// Sets the context and returns a handle to the global object.
+HandleProxy* V8EngineProxy::SetContext(ContextProxy* contextProxy)
+{
+	//?if (_GlobalObjectTemplateProxy != nullptr)
+	//?	delete _GlobalObjectTemplateProxy;
+
+	//?_GlobalObjectTemplateProxy = proxy;
+
+	if (!_Context.IsEmpty())
+		_Context.Reset();
+
+	if (!_GlobalObject.IsEmpty())
+		_GlobalObject.Reset();
+
+	_Context = contextProxy->_Context;
+	auto global = _Context->Global()->GetPrototype()->ToObject(_Isolate); // (keep a reference to the global object for faster reference)
+	_GlobalObject = global;
+
+	return GetHandleProxy(global);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

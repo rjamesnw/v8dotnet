@@ -23,6 +23,31 @@ extern "C"
 		delete engine;
 	}
 
+	EXPORT ContextProxy* STDCALL CreateContext(V8EngineProxy *engine, ObjectTemplateProxy *templatePoxy)
+	{
+		BEGIN_ISOLATE_SCOPE(engine);
+		return engine->CreateContext(templatePoxy);
+		END_ISOLATE_SCOPE;
+	}
+
+	EXPORT void STDCALL DeleteContext(ContextProxy* context)
+	{
+		if (context != nullptr)
+		{
+			auto engine = context->EngineProxy();
+			BEGIN_ISOLATE_SCOPE(engine);
+			delete context;
+			END_ISOLATE_SCOPE;
+		}
+	}
+
+	EXPORT HandleProxy* STDCALL SetContext(V8EngineProxy *engine, ContextProxy* context) // (returns the global object handle)
+	{
+		BEGIN_ISOLATE_SCOPE(engine);
+		return engine->SetContext(context);
+		END_ISOLATE_SCOPE;
+	}
+
 	EXPORT void STDCALL SetFlagsFromString(V8EngineProxy *engine, const char *flags)
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
@@ -110,12 +135,6 @@ extern "C"
 		auto engine = proxy->EngineProxy();
 		BEGIN_ISOLATE_SCOPE(engine);
 		delete proxy;
-		END_ISOLATE_SCOPE;
-	}
-	EXPORT HandleProxy* STDCALL SetGlobalObjectTemplate(V8EngineProxy *engine, ObjectTemplateProxy *proxy)
-	{
-		BEGIN_ISOLATE_SCOPE(engine);
-		return engine->SetGlobalObjectTemplate(proxy);
 		END_ISOLATE_SCOPE;
 	}
 

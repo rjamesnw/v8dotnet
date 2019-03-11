@@ -77,6 +77,8 @@ namespace V8.Net
 
         ObjectTemplate _GlobalObjectTemplateProxy;
 
+        internal NativeContext* _NativeContext;
+
         public InternalHandle GlobalObject { get { return _GlobalObject; } }
         internal InternalHandle _GlobalObject; // TODO: Consider supporting a new global context.
 
@@ -235,9 +237,14 @@ namespace V8.Net
         //    AppDomain.CurrentDomain.AssemblyResolve += Resolver;
         //}
 
-        public V8Engine()
+        /// <summary> V8Engine constructor. </summary>
+        /// <param name="autoCreateGlobalContext">
+        ///     (Optional) True to automatically create a global context. If this is false then you must construct a context
+        ///     yourself before executing JavaScript or calling methods that require contexts.
+        /// </param>
+        public V8Engine(bool autoCreateGlobalContext = true)
         {
-            this.RunMarshallingTests();
+            RunMarshallingTests();
 
             lock (_GlobalLock) // (required because engine proxy instance IDs are tracked on the native side in a static '_DisposedEngines' vector [for quick disposal of handles])
             {
@@ -246,8 +253,12 @@ namespace V8.Net
                 _RegisterEngine(_NativeV8EngineProxy->ID);
 
                 _GlobalObjectTemplateProxy = CreateObjectTemplate<ObjectTemplate>(false);
-                //?_GlobalObjectTemplateProxy.UnregisterPropertyInterceptors(); // (it's much faster to use a native object for the global scope)
-                _GlobalObject = V8NetProxy.SetGlobalObjectTemplate(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy); // (returns the global object handle)
+
+                if (autoCreateGlobalContext)
+                {
+                    _NativeContext = V8NetProxy.CreateContext(_NativeV8EngineProxy, _GlobalObjectTemplateProxy._NativeObjectTemplateProxy);
+                    _GlobalObject = V8NetProxy.SetContext(_NativeV8EngineProxy, _NativeContext); // (returns the global object handle)
+                }
             }
 
             ___V8GarbageCollectionRequestCallback = _V8GarbageCollectionRequestCallback;
@@ -603,8 +614,35 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
+        /// Calls the native V8 proxy library to create a new context environment for use with executing JavaScript.
+        /// </summary>
+        public Context CreateContext(ObjectTemplate globalTemplate)
+        {
+            return V8NetProxy.CreateContext(_NativeV8EngineProxy, globalTemplate._NativeObjectTemplateProxy);
+        }
+
+        /// <summary>
+        ///     Changes the V8 proxy engine context to a new execution context. Each context can be used as a "sandbox" to isolate
+        ///     executions from one another.
+        ///     <para>In the normal "V8" way, you enter a context before executing JavaScript, then exit a context when done.  To
+        ///     limit the overhead of calling from managed methods into native functions for entering and exiting contexts all the
+        ///     time, V8.Net instead sets the current context on a native V8 engine proxy so all future calls use the new context.
+        ///     The context will be entered and exited automatically on the native side as needed. </para>
+        /// </summary>
+        /// <param name="context"> The new context to set. </param>
+        /// <returns> An InternalHandle. </returns>
+        public InternalHandle SetContext(Context context)
+        {
+            var hglobal = V8NetProxy.SetContext(_NativeV8EngineProxy, context); // (returns the global object handle)
+            _NativeContext = context;
+            _GlobalObject.Set(hglobal);
+            return _GlobalObject;
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
         /// Calls the native V8 proxy library to create the value instance for use within the V8 JavaScript environment.
-        /// It's ok to use 'WithHandleScope' with this method.
         /// </summary>
         public InternalHandle CreateValue(bool b) { return V8NetProxy.CreateBoolean(_NativeV8EngineProxy, b); }
 
