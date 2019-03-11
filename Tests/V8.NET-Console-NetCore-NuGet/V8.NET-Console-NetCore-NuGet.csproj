@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="V8.Net" Version="1.0.2" />
+    <PackageReference Include="V8.Net" Version="1.0.6" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +27,10 @@
     <Content Update="C:\Users\James\.nuget\packages\v8.net\1.0.2\contentFiles\any\netstandard2.0\V8_Net_Proxy_x86.dll" Link="libs\V8_Net_Proxy_x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Update="C:\Users\jwilkin2\.nuget\packages\v8.net\1.0.2\contentFiles\any\netstandard2.0\V8_Net_Proxy_x64.dll" Link="libs\V8_Net_Proxy_x64.dll" />
+    <Content Update="C:\Users\jwilkin2\.nuget\packages\v8.net\1.0.2\contentFiles\any\netstandard2.0\V8_Net_Proxy_x86.dll" Link="libs\V8_Net_Proxy_x86.dll" />
+    <Content Update="C:\Users\jwilkin2\.nuget\packages\v8.net\1.0.6\contentFiles\any\netstandard2.0\V8_Net_Proxy_x64.dll" Link="libs\V8_Net_Proxy_x64.dll" />
+    <Content Update="C:\Users\jwilkin2\.nuget\packages\v8.net\1.0.6\contentFiles\any\netstandard2.0\V8_Net_Proxy_x86.dll" Link="libs\V8_Net_Proxy_x86.dll" />
   </ItemGroup>
 
   <ItemGroup>

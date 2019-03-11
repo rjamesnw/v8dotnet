@@ -97,6 +97,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -105,6 +106,7 @@
   <ItemGroup>
     <Compile Include="DynamicHandle.cs" />
     <Compile Include="Proxy\GeneratedExterns\ProxyLoader.x86_DllImports.cs" />
+    <Compile Include="Proxy\Loader.cs" />
     <Compile Include="Proxy\ProxyLoader.cs" />
     <Compile Include="Types\Binding.cs" />
     <Compile Include="Types\Enums.cs" />
