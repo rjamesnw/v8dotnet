@@ -70,12 +70,12 @@ extern "C"
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		engine->Isolate()->LowMemoryNotification();
-		while (!engine->Isolate()->IdleNotificationDeadline(1000)) {}
+		while (!engine->Isolate()->IdleNotificationDeadline(1)) {}
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1000)
+	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1)
 	{
 		if (engine->IsExecutingScript()) return false;
 		BEGIN_ISOLATE_SCOPE(engine);

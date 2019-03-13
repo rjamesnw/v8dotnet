@@ -351,11 +351,14 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Calling this method forces an "idle" loop in the native proxy until the V8 engine finishes pending work tasks.
-        /// The work performed helps to reduce the memory footprint within the native V8 engine.
-        /// <para>(See also: <seealso cref="DoIdleNotification(int)"/>)</para>
-        /// <para>Note: You CANNOT GC CLR objects using this method.  This only applies to collection of native V8 handles that are no longer in use.
-        /// To *force* the disposal of an object, do this: "{Handle}.ReleaseManagedObject(); {Handle}.Dispose(); GC.Collect();"</para>
+        ///     Calling this method forces a native call to 'LowMemoryNotification()' and 'IdleNotificationDeadline()' to push the
+        ///     V8 engine to complete garbage collection tasks. The work performed helps to reduce the memory footprint within the
+        ///     native V8 engine.
+        ///     <para>(See also: <seealso cref="DoIdleNotification(int)"/>)</para>
+        ///     <para>Note: You CANNOT GC CLR objects using this method.  This only applies to collection of native V8 handles that
+        ///     are no longer in use. To *force* the disposal of an object, do this: "{Handle}.ReleaseManagedObject();
+        ///     {Handle}.Dispose(); GC.Collect();
+        ///     "</para>
         /// </summary>
         public void ForceV8GarbageCollection()
         {
@@ -363,17 +366,20 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Calling this method notifies the native V8 engine to perform up to 1000 pending work tasks before returning (this is the default setting in V8).
-        /// The work performed helps to reduce the memory footprint within V8.
-        /// This helps the garbage collector know when to start collecting objects and values that are no longer in use.
-        /// This method returns true if there is still more work pending.
-        /// <para>(See also: <seealso cref="ForceV8GarbageCollection()"/>)</para>
+        ///     Calling this method notifies the native V8 engine to perform work tasks before returning. The delay is the amount of
+        ///     time given to V8 to complete it's tasks, such as garbage collection. The work performed helps to reduce the memory
+        ///     footprint within V8. This helps the garbage collector know when to start collecting objects and values that are no
+        ///     longer in use. A true returned value indicates that V8 has done as much cleanup as it will be able to do.
+        ///     <para>(See also: <seealso cref="ForceV8GarbageCollection()"/>)</para>
         /// </summary>
-        /// <param name="hint">Gives the native V8 engine a hint on how much work can be performed before returning (V8's default is 1000 work tasks).</param>
-        /// <returns>True if more work is pending.</returns>
-        public bool DoIdleNotification(int hint = 1000)
+        /// <param name="delay">
+        ///     (Optional) The amount of time, in seconds, allocated to the V8 GC to run some tasks, such as garbage collection.
+        ///     V8.Net defaults this to 1 second.
+        /// </param>
+        /// <returns> False if more work is pending, and true when all work is completed (nothing more to do). </returns>
+        public bool DoIdleNotification(int delay = 1)
         {
-            return V8NetProxy.DoIdleNotification(_NativeV8EngineProxy, hint);
+            return V8NetProxy.DoIdleNotification(_NativeV8EngineProxy, delay);
         }
 
         bool _V8GarbageCollectionRequestCallback(HandleProxy* persistedObjectHandle)

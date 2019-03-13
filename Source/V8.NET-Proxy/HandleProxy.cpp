@@ -335,9 +335,9 @@ void HandleProxy::MakeStrong()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
+
 // When the managed side is ready to destroy a handle, it first marks it as weak.  When the V8 engine's garbage collector finally calls back, the managed side
 // object information is finally destroyed.
-
 void HandleProxy::_RevivableCallback(const WeakCallbackInfo<HandleProxy>& data)
 {
 	auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
