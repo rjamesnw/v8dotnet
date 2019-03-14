@@ -284,7 +284,7 @@ struct HandleValue
 
 #pragma pack(push, 1)
 // Provides a mechanism by which to keep track of V8 objects associated with managed side objects.
-struct HandleProxy : ProxyBase
+struct HandleProxy : ProxyBase // TODO: Make a separate VALUE based handle proxy and use this for templates also.
 {
 private:
 	int32_t _ID; // The ID of this handle (handles are cached/recycled and not destroyed). The ID is also used on the managed side.
@@ -298,7 +298,11 @@ private:
 
 	int32_t _ManagedReference; // This is set to 1 for InternalHandle references, and 2 if there is a managed side reference to this proxy object that is responsible for it.
 
-	int32_t _Disposed; // (0: handle is in use, 1: managed disposing in progress, 2: handle was made weak, 3: VIRTUALLY disposed [cached on native side for reuse])
+	// When a handle is created this is 0.  When the native side is ready to dispose the handle a callback is triggered.  If the handle does not have a managed side object
+	// then the handle is disposed, otherwise it survives the V8 GC process, and this field is set to 1.  If the managed side no longer has references to the handle then
+	// this is set to 2 and 'MakeWeak()' is called on the native handle. If this value is negative then it is queued for that stage.
+	int32_t _Disposed;  // (flags: 0 = handle is in use, 1 = native side is done with it, 2 = managed side is done with it, 3 - VIRTUALLY disposed [cached on native side for reuse]), 4 = queued for making weak (managed side call), 8 = 'weak' removal in progress.
+	//? Old Meaning: (0: handle is in use, 1: managed disposing in progress, 2: handle was made weak - managed side is done with it, 3: VIRTUALLY disposed [cached on native side for reuse])
 
 	int32_t _EngineID;
 
@@ -342,13 +346,13 @@ public:
 	bool Dispose();
 
 	// The handle is currently in use.
-	bool IsInUse() { return _Disposed == 0; }
-	// The managed side has queued the handle (and any related managed object) for disposal.
-	bool IsDisposingManagedSide() { return _Disposed == 1; }
-	// The handle has been made weak.
-	bool IsWeak() { return _Disposed == 2; }
+	bool IsInUse() { return (_Disposed & 3) != 3; }
+	// The native side is done with the handle.
+	bool IsNativeDisposed() { return (_Disposed & 1) > 0; }
+	// The managed side is done with the handle.
+	bool IsDisposedManagedSide() { return (_Disposed & 2) > 0 || (_Disposed & 4) > 0 || _ManagedReference < 2; }
 	// The handle is disposed and cached.
-	bool IsDisposed() { return _Disposed == 3; }
+	bool IsDisposed() { return (_Disposed & 3) == 3; }
 
 	// Attempts to dispose a handle passed in from the managed side.
 	// By default, handle proxies returned from callbacks to the managed side must be disposed, just like arguments.  The

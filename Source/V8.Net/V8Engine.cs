@@ -384,15 +384,15 @@ namespace V8.Net
 
         bool _V8GarbageCollectionRequestCallback(HandleProxy* persistedObjectHandle)
         {
-            if (persistedObjectHandle->_ObjectID >= 0)
-            {
-                var obj = _GetExistingObject(persistedObjectHandle->_ObjectID);
-                if (obj != null)
-                    lock (obj)
-                    {
-                        return obj._OnNativeGCRequested(); // (notify the object that a V8 GC is requested; the worker thread should pick it up later)
-                    }
-            }
+            //if (persistedObjectHandle->_ObjectID >= 0)
+            //{
+            //    var obj = _GetExistingObject(persistedObjectHandle->_ObjectID);
+            //    if (obj != null)
+            //        lock (obj)
+            //        {
+            //            return obj._OnNativeGCRequested(); // (notify the object that a V8 GC is requested; the worker thread should pick it up later)
+            //        }
+            //}
             return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])
         }
 

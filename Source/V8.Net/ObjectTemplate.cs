@@ -92,20 +92,26 @@ namespace V8.Net
         }
         ~TemplateBase()
         {
-            this.Finalizing();
+            if (!_Finalize(true))
+                GC.ReRegisterForFinalize(this); // (something failed on the native side so need to try again)
+            //?this.Finalizing();
         }
 
-        public virtual bool CanDispose
+        protected abstract bool _Finalize(bool finalizer);
+
+        /// <summary> Returns true if this template has child objects created from it. </summary>
+        public virtual bool HasChildObjects
         {
             get
             {
-                return (((ITemplateInternal)this)._ReferenceCount == 0
-                    && (Parent == null || ((ITemplateInternal)Parent)._ReferenceCount == 0));
+                return (((ITemplateInternal)this)._ReferenceCount > 0
+                    || (Parent == null || ((ITemplateInternal)Parent)._ReferenceCount > 0));
             }
         }
-        public virtual void Dispose()
-        {
-        }
+
+        public bool CanDispose => true;
+
+        public void Dispose() => _Finalize(false);
 
         protected abstract void OnInitialized();
 
@@ -340,16 +346,18 @@ namespace V8.Net
         {
         }
 
-        public override void Dispose() // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
+        protected override bool _Finalize(bool finalizer) // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
         {
-            if (_NativeObjectTemplateProxy != null && CanDispose)
+            if (_NativeObjectTemplateProxy != null)
             {
                 _Engine._ClearAccessors(_NativeObjectTemplateProxy->ObjectID);
 
-                V8NetProxy.DeleteObjectTemplateProxy(_NativeObjectTemplateProxy); // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
-
-                _NativeObjectTemplateProxy = null;
+                if (V8NetProxy.DeleteObjectTemplateProxy(_NativeObjectTemplateProxy)) // (delete the corresponding native object as well; WARNING: This may be done on the GC thread!)
+                    _NativeObjectTemplateProxy = null;
+                else 
+                    return false; // (bounced, a script might be in progress; try again later)
             }
+            return true;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

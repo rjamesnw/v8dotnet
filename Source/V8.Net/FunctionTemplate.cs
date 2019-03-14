@@ -55,28 +55,34 @@ namespace V8.Net
         {
         }
 
-        public override bool CanDispose
+        /// <summary> Returns true if this template has child objects created from it. </summary>
+        public override bool HasChildObjects
         {
             get
             {
-                return base.CanDispose
-                    && ((ITemplateInternal)PrototypeTemplate)._ReferenceCount == 0
-                    && ((ITemplateInternal)InstanceTemplate)._ReferenceCount == 0;
+                return base.HasChildObjects
+                    || ((ITemplateInternal)PrototypeTemplate)._ReferenceCount >0
+                    || ((ITemplateInternal)InstanceTemplate)._ReferenceCount > 0;
             }
         }
 
-        public override void Dispose()
+        protected override bool _Finalize(bool finalizer) // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
         {
-            if (_NativeFunctionTemplateProxy != null && CanDispose)
+            if (_NativeFunctionTemplateProxy != null)
             {
-                V8NetProxy.DeleteFunctionTemplateProxy(_NativeFunctionTemplateProxy); // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
-                _NativeFunctionTemplateProxy = null;
+                if (V8NetProxy.DeleteFunctionTemplateProxy(_NativeFunctionTemplateProxy)) // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
+                {
+                    _NativeFunctionTemplateProxy = null;
 
-                PrototypeTemplate.Parent = null;
-                InstanceTemplate.Parent = null;
-                PrototypeTemplate = null;
-                InstanceTemplate = null;
+                    PrototypeTemplate.Parent = null;
+                    InstanceTemplate.Parent = null;
+                    PrototypeTemplate = null;
+                    InstanceTemplate = null;
+                }
+                else
+                    return false; // (bounced, a script might be in progress; try again later)
             }
+            return true;
         }
 
         internal void _Initialize(V8Engine v8EngineProxy, string className)

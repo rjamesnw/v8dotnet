@@ -360,7 +360,7 @@ namespace V8.Net
 
                             Console.Write(Environment.NewLine + "Managed side dispose-ready handles (usually due to a GC attempt) ... " + Environment.NewLine);
 
-                            foreach (var h in _JSServer.Handles_ManagedSideDisposeReady)
+                            foreach (var h in _JSServer.Handles_ManagedSideDisposed)
                             {
                                 Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
                             }
@@ -420,41 +420,42 @@ namespace V8.Net
 
                             int i;
 
-                            for (i = 0; i < 3000 && !internalHandle.IsDisposing; i++)
+                            for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
                                 System.Threading.Thread.Sleep(1); // (just wait for the worker)
 
-                            if (!internalHandle.IsDisposing)
-                                throw new Exception("The temp object's handle is still not pending disposal ... something is wrong.");
+                            if (!internalHandle.IsDisposed)
+                                throw new Exception("The temp object's handle is still not disposed ... something is wrong.");
 
-                            Console.WriteLine("Success! The test object's handle is going through the disposal process.");
-                            //Console.WriteLine("Clearing the handle object reference next ...");
+                            Console.WriteLine("Success!");
+                            //Console.WriteLine("Success! The test object's handle is going through the disposal process.");
+                            ////Console.WriteLine("Clearing the handle object reference next ...");
 
-                            // object handles will finally be disposed when the native V8 GC calls back regarding them ...
+                            //// object handles will finally be disposed when the native V8 GC calls back regarding them ...
 
-                            Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
+                            //Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
 
-                            for (i = 0; i < 6000 && !internalHandle.IsNativelyWeak; i++)
-                                System.Threading.Thread.Sleep(1);
+                            //for (i = 0; i < 6000 && !internalHandle.IsNativeDisposed; i++)
+                            //    System.Threading.Thread.Sleep(1);
 
-                            if (!internalHandle.IsNativelyWeak)
-                                throw new Exception("Object is not weak yet ... something is wrong.");
+                            //if (!internalHandle.IsNativeDisposed)
+                            //    throw new Exception("Object is not weak yet ... something is wrong.");
 
-                            Console.WriteLine("The native side object is now weak and ready to be collected by V8.");
+                            //Console.WriteLine("The native side object is now weak and ready to be collected by V8.");
 
-                            Console.WriteLine("Forcing V8 garbage collection ... ");
-                            _JSServer.DynamicGlobalObject.tempObj = null;
-                            for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
-                            {
-                                _JSServer.ForceV8GarbageCollection();
-                                System.Threading.Thread.Sleep(1);
-                            }
+                            //Console.WriteLine("Forcing V8 garbage collection ... ");
+                            //_JSServer.DynamicGlobalObject.tempObj = null;
+                            //for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
+                            //{
+                            //    _JSServer.ForceV8GarbageCollection();
+                            //    System.Threading.Thread.Sleep(1);
+                            //}
 
-                            Console.WriteLine("Looking for object ...");
+                            //Console.WriteLine("Looking for object ...");
 
-                            if (!internalHandle.IsDisposed) throw new Exception("Managed object's handle did not dispose.");
-                            // (note: this call is only valid as long as no more objects are created before this point)
-                            Console.WriteLine("Success! The managed V8NativeObject native handle is now disposed.");
-                            Console.WriteLine("\r\nDone.\r\n");
+                            //if (!internalHandle.IsDisposed) throw new Exception("Managed object's handle did not dispose.");
+                            //// (note: this call is only valid as long as no more objects are created before this point)
+                            //Console.WriteLine("Success! The managed V8NativeObject native handle is now disposed.");
+                            //Console.WriteLine("\r\nDone.\r\n");
                         }
                         else if (lcInput == @"\speedtest")
                         {
@@ -480,7 +481,7 @@ namespace V8.Net
 
                             Console.WriteLine("\r\nTesting global property write speed ... ");
                             startTime = timer.ElapsedMilliseconds;
-                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = 0;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
+                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = i;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
                             elapsed = timer.ElapsedMilliseconds - startTime;
                             result1 = (double)elapsed / count;
                             Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result1.ToString("0.0#########") + " ms each pass.");
@@ -499,9 +500,10 @@ namespace V8.Net
 #endif
 
                             Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
-                            _JSServer.DynamicGlobalObject.mo = _JSServer.CreateObjectTemplate().CreateObject();
+                            var o = _JSServer.CreateObjectTemplate().CreateObject(); // (need to keep a reference to the object so the GC doesn't claim it)
+                            _JSServer.DynamicGlobalObject.mo = o;
                             startTime = timer.ElapsedMilliseconds;
-                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = 0;");
+                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = i;");
                             elapsed = timer.ElapsedMilliseconds - startTime;
                             result3 = (double)elapsed / count;
                             Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result3.ToString("0.0#########") + " ms each pass.");
@@ -517,6 +519,7 @@ namespace V8.Net
                             Console.WriteLine("\r\nReading native properties is {0:N2}x faster than managed ones.", result4 / result2);
 
                             Console.WriteLine("\r\nDone.\r\n");
+                            o = null;
                         }
                         else if (lcInput == @"\exit")
                         {

@@ -128,12 +128,15 @@ extern "C"
 		return engine->CreateObjectTemplate();
 		END_ISOLATE_SCOPE;
 	}
-	EXPORT void STDCALL DeleteObjectTemplateProxy(ObjectTemplateProxy *proxy)
+	EXPORT bool STDCALL DeleteObjectTemplateProxy(ObjectTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine->IsExecutingScript())
+			return false; // TODO: Consider queuing this also.
 		BEGIN_ISOLATE_SCOPE(engine);
 		delete proxy;
 		END_ISOLATE_SCOPE;
+		return true;
 	}
 
 	EXPORT void STDCALL RegisterNamedPropertyHandlers(ObjectTemplateProxy *proxy,
@@ -513,12 +516,15 @@ extern "C"
 		return engine->CreateFunctionTemplate(className, callback);
 		END_ISOLATE_SCOPE;
 	}
-	EXPORT void STDCALL DeleteFunctionTemplateProxy(FunctionTemplateProxy *proxy)
+	EXPORT bool STDCALL DeleteFunctionTemplateProxy(FunctionTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine->IsExecutingScript())
+			return false; // TODO: Consider queuing this also.
 		BEGIN_ISOLATE_SCOPE(engine);
 		delete proxy;
 		END_ISOLATE_SCOPE;
+		return true;
 	}
 	EXPORT ObjectTemplateProxy* STDCALL GetFunctionInstanceTemplateProxy(FunctionTemplateProxy *proxy)
 	{
@@ -662,11 +668,19 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
-			BEGIN_ISOLATE_SCOPE(engine);
-			BEGIN_CONTEXT_SCOPE(engine);
-			handleProxy->Dispose();
-			END_CONTEXT_SCOPE;
-			END_ISOLATE_SCOPE;
+			if (engine->IsExecutingScript())
+			{
+				// ... a script is running, so make it weak so the GC collects this later (if a script is running calling this will queue it up)...
+				MakeWeakHandle(handleProxy); // TODO: Create a queue for disposing handles as well.
+			}
+			else
+			{
+				BEGIN_ISOLATE_SCOPE(engine);
+				BEGIN_CONTEXT_SCOPE(engine);
+				handleProxy->Dispose();
+				END_CONTEXT_SCOPE;
+				END_ISOLATE_SCOPE;
+			}
 		}
 	}
 

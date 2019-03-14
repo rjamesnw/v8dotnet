@@ -111,32 +111,31 @@ namespace V8.Net
         /// <summary>
         /// The handle is still in use.
         /// </summary>
-        public bool IsActive { get { return Disposed == 0; } }
+        public bool IsActive { get { return (Disposed & 3) != 3; } }
 
         /// <summary>
-        /// The handle has lost all managed side references, OR is being disposed on request for non-objects.
+        /// The handle has lost all managed side references and was marked weak on the native side.
         /// </summary>
-        public bool IsPendingDisposal { get { return Disposed == 1; } }
+        public bool IsCLRDisposed { get { return (Disposed & 2) > 0 || (Disposed & 4) > 0 || ManagedReference < 2; } }
+
+        ///// <summary>
+        ///// The handle is going through the disposal process. 
+        ///// This us true if either 'IsPendingDisposal' or 'IsWeak' is true. 
+        ///// </summary>
+        //public bool IsDisposing
+        //{
+        //    get { return Disposed == 1 || Disposed == -1 || Disposed == 2 || Disposed == -2; }
+        //}
 
         /// <summary>
-        /// The handle is going through the disposal process. 
-        /// This us true if either 'IsPendingDisposal' or 'IsWeak' is true. 
+        /// The V8 GC tried to claim this already.
         /// </summary>
-        public bool IsDisposing
-        {
-            get { return Disposed == 1 || Disposed == 2; }
-            set { if (Disposed <= 1) Disposed = value ? 1 : 0; } // (once disposed is > 1, the process cannot be stopped, and thus this must never change)
-        }
-
-        /// <summary>
-        /// The native handle is weak.  The V8 GC will call back to reclaim the persistent handle when ready.
-        /// </summary>
-        public bool IsWeak { get { return Disposed == 2; } }
+        public bool IsNativeDisposed { get { return (Disposed & 1) > 0; } }
 
         /// <summary>
         /// The native persistent handle is disposed and cached.
         /// </summary>
-        public bool IsDisposed { get { return Disposed == 3; } }
+        public bool IsDisposed { get { return (Disposed & 3) == 3; } }
 
         // --------------------------------------------------------------------------------------------------------------------
 

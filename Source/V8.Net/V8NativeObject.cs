@@ -66,7 +66,7 @@ namespace V8.Net
 
         /// <summary>
         /// A reference to the V8Engine instance that owns this object.
-        /// The default implementation for 'V8NativeObject' is to cache and return 'base.Engine', since it inherits from 'Handle'.
+        /// The default implementation for <see cref="V8NativeObject"/> is to cache and return 'base.Engine', since it inherits from 'Handle'.
         /// </summary>
         new public V8Engine Engine { get { return _Engine ?? (_Engine = _Handle.Engine); } }
         internal V8Engine _Engine;
@@ -272,7 +272,7 @@ namespace V8.Net
 
         public override void Dispose()
         {
-            _OnNativeGCRequested();
+            _Dispose();
         }
 
         /// <summary>
@@ -291,24 +291,27 @@ namespace V8.Net
                 _Proxy.OnDispose();
         }
 
-        internal bool _OnNativeGCRequested() // WARNING: The worker thread may cause a V8 GC callback in its own thread!
+        /// <summary>
+        ///     Returns true if disposed, and false if already disposed.
+        /// </summary>
+        internal bool _Dispose() // WARNING: The worker thread may cause a V8 GC callback in its own thread!
         {
             if (!_Handle.IsEmpty)
             {
-                _Handle.IsDisposing = true;
+                //? _Handle.IsDisposing = true;
                 var engine = Engine;
 
-                // ... remove this object from the abandoned queue ...
+                //// ... remove this object from the abandoned queue ...
 
-                lock (engine._AbandondObjects)
-                {
-                    LinkedListNode<IV8Disposable> node;
-                    if (engine._AbandondObjectsIndex.TryGetValue(this, out node))
-                    {
-                        engine._AbandondObjects.Remove(node);
-                        engine._AbandondObjectsIndex.Remove(this);
-                    }
-                }
+                //lock (engine._AbandondObjects)
+                //{
+                //    LinkedListNode<IV8Disposable> node;
+                //    if (engine._AbandondObjectsIndex.TryGetValue(this, out node))
+                //    {
+                //        engine._AbandondObjects.Remove(node);
+                //        engine._AbandondObjectsIndex.Remove(this);
+                //    }
+                //}
 
                 // ... notify any custom dispose methods to clean up ...
 
@@ -332,8 +335,8 @@ namespace V8.Net
                 if (!_Handle.IsEmpty)
                 {
                     _Handle.ObjectID = -1; // (resets the object ID on the native side [though this happens anyhow once cached], which also causes the reference to clear)
-                    // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.CanDispose' will return false])
-                    _Handle.Dispose();
+                    // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.IsLocked' will return false])
+                    _Handle._Finalize(false);
                 }
 
                 if (_ID != null)
@@ -341,9 +344,11 @@ namespace V8.Net
 
                 Template = null; // (note: this decrements a template counter, allowing the template object to be finally allowed to dispose)
                 _ID = null; // (also allows the GC finalizer to collect the object)
+
+                return true;
             }
 
-            return true; // ("true" means to "continue disposal of native handle" [if not already empty])
+            return false;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

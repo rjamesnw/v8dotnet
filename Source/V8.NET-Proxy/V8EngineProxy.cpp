@@ -239,16 +239,22 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 			auto id = _DisposedHandles.back();
 			_DisposedHandles.pop_back();
 			handleProxy = _Handles.at(id);
-			handleProxy->Initialize(handle);
+			handleProxy = handleProxy->Initialize(handle); // (can return null if the engine is gone)
 		}
 		else
 		{
 			handleProxy = (new HandleProxy(this, (int32_t)_Handles.size()))->Initialize(handle);
-			_Handles.push_back(handleProxy); // (keep a record of all handles created)
 
-			ProcessWeakStrongHandleQueue(); // (process one more time to make this twice as fast as long as new handles are being created)
+			if (handleProxy != nullptr)
+			{
+				_Handles.push_back(handleProxy); // (keep a record of all handles created)
+
+				ProcessWeakStrongHandleQueue(); // (process one more time to make this twice as fast as long as new handles are being created)
+			}
 		}
 	}
+
+	if (handleProxy == nullptr) throw exception("V8EngineProxy::GetHandleProxy(): The engine is gone! Cannot create any handles.");
 
 	return handleProxy;
 }
@@ -268,18 +274,22 @@ void V8EngineProxy::DisposeHandleProxy(HandleProxy *handleProxy)
 
 void V8EngineProxy::QueueMakeWeak(HandleProxy *handleProxy)
 {
-	if (handleProxy->IsDisposingManagedSide())
+	lock_guard<recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+
+	if ((handleProxy->_Disposed & 4) == 0)
 	{
-		lock_guard<recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+		handleProxy->_Disposed |= 4;
 		_HandlesToBeMadeWeak.push_back(handleProxy);
 	}
 }
 
 void V8EngineProxy::QueueMakeStrong(HandleProxy *handleProxy) // TODO: "MakeStrong" requests may no longer be needed.
 {
-	if (handleProxy->IsWeak())
+	lock_guard<recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+
+	if ((handleProxy->_Disposed & 8) == 0)
 	{
-		lock_guard<recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+		handleProxy->_Disposed |= 8;
 		_HandlesToBeMadeStrong.push_back(handleProxy);
 	}
 }
@@ -292,18 +302,24 @@ void V8EngineProxy::ProcessWeakStrongHandleQueue()
 
 	if (_HandlesToBeMadeWeak.size() > 0)
 	{
-		lock_guard<recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // PROTECTS AGAINST THE WORKER THREAD
-		h = _HandlesToBeMadeWeak.back();
-		_HandlesToBeMadeWeak.pop_back();
-		h->MakeWeak();
+		lock_guard<recursive_mutex> makeWeakSection(_MakeWeakQueueMutex); // PROTECTS AGAINST THE WORKER THREAD - but only when the queue is not empty to be more efficient.
+		if (_HandlesToBeMadeWeak.size() > 0)
+		{
+			h = _HandlesToBeMadeWeak.back();
+			_HandlesToBeMadeWeak.pop_back();
+			h->MakeWeak();
+		}
 	}
 
 	if (_HandlesToBeMadeStrong.size() > 0)
 	{
-		lock_guard<recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // PROTECTS AGAINST THE WORKER THREAD
-		h = _HandlesToBeMadeStrong.back();
-		_HandlesToBeMadeStrong.pop_back();
-		h->MakeStrong(); // TODO: "MakeStrong" requests may no longer be needed.
+		lock_guard<recursive_mutex> makeStrongSection(_MakeStrongQueueMutex); // PROTECTS AGAINST THE WORKER THREAD - but only when the queue is not empty to be more efficient.
+		if (_HandlesToBeMadeStrong.size() > 0)
+		{
+			h = _HandlesToBeMadeStrong.back();
+			_HandlesToBeMadeStrong.pop_back();
+			h->MakeStrong(); // TODO: "MakeStrong" requests may no longer be needed.
+		}
 	}
 }
 

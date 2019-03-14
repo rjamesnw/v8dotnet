@@ -68,7 +68,15 @@ namespace V8.Net
 
         ~JSProperty()
         {
-            this.Finalizing();
+            if (CanDispose)
+            {
+                Dispose();
+            }
+            else
+            {
+                GC.SuppressFinalize(this);
+            }
+            //?this.Finalizing();
         }
 
         public bool CanDispose { get { return _Value.CanDispose; } }

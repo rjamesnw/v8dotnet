@@ -89,8 +89,9 @@ namespace V8.Net
 
         // Return: NativeObjectTemplateProxy*
 
+        /// <summary> Returns true if successful. False is returned if the engine is in the middle of running a script, or performing another request. </summary>
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteObjectTemplateProxy")]
-        public static extern unsafe void DeleteObjectTemplateProxy64(NativeObjectTemplateProxy* objectTemplateProxy);
+        public static extern unsafe bool DeleteObjectTemplateProxy64(NativeObjectTemplateProxy* objectTemplateProxy);
 
 
         // Return: HandleProxy*
@@ -215,10 +216,10 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateFunctionTemplateProxy", CharSet = CharSet.Unicode)]
         public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy64(NativeV8EngineProxy* engine, string className, ManagedJSFunctionCallback callback);
 
-        // Return: NativeFunctionTemplateProxy*
-
+        /// <summary> Returns true if successful. False is returned if the engine is in the middle of running a script, or performing another request. </summary>
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteFunctionTemplateProxy")]
-        public static extern unsafe void DeleteFunctionTemplateProxy64(NativeFunctionTemplateProxy* functionTemplateProxy);
+
+        public static extern unsafe bool DeleteFunctionTemplateProxy64(NativeFunctionTemplateProxy* functionTemplateProxy);
 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetFunctionInstanceTemplateProxy")]

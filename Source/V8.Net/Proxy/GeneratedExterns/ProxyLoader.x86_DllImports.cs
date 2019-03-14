@@ -77,8 +77,8 @@ namespace V8.Net
         public static CreateObjectTemplateProxy_ImportFuncType CreateObjectTemplateProxy = (Environment.Is64BitProcess ? (CreateObjectTemplateProxy_ImportFuncType)CreateObjectTemplateProxy64 : CreateObjectTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "DeleteObjectTemplateProxy")]
-        public static extern unsafe void DeleteObjectTemplateProxy32(NativeObjectTemplateProxy* objectTemplateProxy);
-        public delegate void DeleteObjectTemplateProxy_ImportFuncType(NativeObjectTemplateProxy* objectTemplateProxy);
+        public static extern unsafe bool DeleteObjectTemplateProxy32(NativeObjectTemplateProxy* objectTemplateProxy);
+        public delegate bool DeleteObjectTemplateProxy_ImportFuncType(NativeObjectTemplateProxy* objectTemplateProxy);
         public static DeleteObjectTemplateProxy_ImportFuncType DeleteObjectTemplateProxy = (Environment.Is64BitProcess ? (DeleteObjectTemplateProxy_ImportFuncType)DeleteObjectTemplateProxy64 : DeleteObjectTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "RegisterNamedPropertyHandlers")]
@@ -237,8 +237,8 @@ namespace V8.Net
         public static CreateFunctionTemplateProxy_ImportFuncType CreateFunctionTemplateProxy = (Environment.Is64BitProcess ? (CreateFunctionTemplateProxy_ImportFuncType)CreateFunctionTemplateProxy64 : CreateFunctionTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "DeleteFunctionTemplateProxy")]
-        public static extern unsafe void DeleteFunctionTemplateProxy32(NativeFunctionTemplateProxy* functionTemplateProxy);
-        public delegate void DeleteFunctionTemplateProxy_ImportFuncType(NativeFunctionTemplateProxy* functionTemplateProxy);
+        public static extern unsafe bool DeleteFunctionTemplateProxy32(NativeFunctionTemplateProxy* functionTemplateProxy);
+        public delegate bool DeleteFunctionTemplateProxy_ImportFuncType(NativeFunctionTemplateProxy* functionTemplateProxy);
         public static DeleteFunctionTemplateProxy_ImportFuncType DeleteFunctionTemplateProxy = (Environment.Is64BitProcess ? (DeleteFunctionTemplateProxy_ImportFuncType)DeleteFunctionTemplateProxy64 : DeleteFunctionTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "GetFunctionInstanceTemplateProxy")]

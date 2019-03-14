@@ -43,54 +43,54 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Called in an object's finalizer to handle disposal on the worker thread.  
-        /// </summary>
-        public static void Finalizing<T>(this T v8Object)
-            where T : IV8Disposable
-        {
-            if (v8Object != null)
-            {
-                var engine = v8Object.Engine; // (get the engine this handle/object belongs to [note: this will be null if an engine gets disposed with objects still floating in the GC])
+        ///// Called in an object's finalizer to handle disposal on the worker thread.  
+        ///// </summary>
+        //?public static void Finalizing<T>(this T v8Object)
+        //    where T : IV8Disposable
+        //{
+        //    if (v8Object != null)
+        //    {
+        //        var engine = v8Object.Engine; // (get the engine this handle/object belongs to [note: this will be null if an engine gets disposed with objects still floating in the GC])
 
-                // ... get handle and object details ...
-                if (engine != null)
-                    if (v8Object is V8NativeObject)
-                    {
-                        // ... queue the object (not the handle, so the object itself can be dealt with) ...
+        //        // ... get handle and object details ...
+        //        if (engine != null)
+        //            if (v8Object is V8NativeObject)
+        //            {
+        //                // ... queue the object (not the handle, so the object itself can be dealt with) ...
 
-                        lock (engine._DisposalQueue)
-                        {
-                            engine._DisposalQueue.Enqueue(v8Object); // (this will successfully resurrect the object; note: the finalize will NOT be called again! [nor does it need to be for dispose queued objects])
+        //                lock (engine._DisposalQueue)
+        //                {
+        //                    engine._DisposalQueue.Enqueue(v8Object); // (this will successfully resurrect the object; note: the finalize will NOT be called again! [nor does it need to be for dispose queued objects])
 
-                            // (note: lock on '_DisposalQueue' is kept so worker doesn't pull something before being finished here)
+        //                    // (note: lock on '_DisposalQueue' is kept so worker doesn't pull something before being finished here)
 
-                            if (v8Object is V8NativeObject)
-                            {
-                                var v8Obj = v8Object as V8NativeObject;
-                                v8Obj._Handle.IsDisposing = true;
-                            }
-                        }
-                    }
-                    else if (v8Object is Handle || v8Object is InternalHandle)
-                    {
-                        var h = ((IHandleBased)v8Object).InternalHandle;
-                        if (!h.IsEmpty && !h.IsDisposed && !h.IsDisposing)
-                            lock (engine._DisposalQueue)
-                            {
-                                h.IsDisposing = true;
-                                h._Object = null; // (release any tracker handle at this point, otherwise 'h.CanDispose' will keep returning false)
-                                engine._DisposalQueue.Enqueue(h);
-                            }
-                    }
-                    else
-                    {
-                        lock (engine._DisposalQueue)
-                        {
-                            engine._DisposalQueue.Enqueue(v8Object);
-                        }
-                    }
-            }
-        }
+        //                    if (v8Object is V8NativeObject)
+        //                    {
+        //                        var v8Obj = v8Object as V8NativeObject;
+        //                        //??v8Obj._Handle.IsDisposing = true;
+        //                    }
+        //                }
+        //            }
+        //            else if (v8Object is Handle || v8Object is InternalHandle)
+        //            {
+        //                var h = ((IHandleBased)v8Object).InternalHandle;
+        //                if (!h.IsEmpty && !h.IsDisposed && !h.IsDisposing)
+        //                    lock (engine._DisposalQueue)
+        //                    {
+        //                        //??h.IsDisposing = true;
+        //                        h._Object = null; // (release any tracker handle at this point, otherwise 'h.CanDispose' will keep returning false)
+        //                        engine._DisposalQueue.Enqueue(h);
+        //                    }
+        //            }
+        //            else
+        //            {
+        //                lock (engine._DisposalQueue)
+        //                {
+        //                    engine._DisposalQueue.Enqueue(v8Object);
+        //                }
+        //            }
+        //    }
+        //}
 
         // --------------------------------------------------------------------------------------------------------------------
     }
@@ -125,11 +125,11 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        void _Initialize_Worker()
+        void _Initialize_Worker() //? Depreciated.
         {
-            _Worker = new Thread(_WorkerLoop) { IsBackground = true }; // (note: must set 'IsBackground=true', else the app will hang on exit)
-            _Worker.Priority = ThreadPriority.Lowest;
-            _Worker.Start();
+            //_Worker = new Thread(_WorkerLoop) { IsBackground = true }; // (note: must set 'IsBackground=true', else the app will hang on exit)
+            //_Worker.Priority = ThreadPriority.Lowest;
+            //_Worker.Start();
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ namespace V8.Net
                     if (disposable is V8NativeObject)
                     {
                         var v8Obj = (V8NativeObject)disposable;
-                        if (!v8Obj.InternalHandle.IsEmpty && v8Obj.InternalHandle._HandleProxy->IsPendingDisposal)
+                        if (!v8Obj.InternalHandle.IsEmpty && v8Obj.InternalHandle._HandleProxy->IsCLRDisposed)
                         {
                             V8NetProxy.MakeWeakHandle(v8Obj.InternalHandle); // ('Disposed' will be 2 after this, so no worries about doing this more than once)
                             /* Once the native GC attempts to collect the underlying native object, then '_OnNativeGCRequested()' will get 

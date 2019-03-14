@@ -67,8 +67,8 @@ namespace V8.Net
         }
 
         public IEnumerable<InternalHandle> Handles_Active { get { return from h in Handles_All where h._HandleProxy->IsActive select h; } }
-        public IEnumerable<InternalHandle> Handles_ManagedSideDisposeReady { get { return from h in Handles_All where h._HandleProxy->IsPendingDisposal select h; } }
-        public IEnumerable<InternalHandle> Handles_NativeSideWeak { get { return from h in Handles_All where h._HandleProxy->IsWeak select h; } }
+        public IEnumerable<InternalHandle> Handles_ManagedSideDisposed { get { return from h in Handles_All where h._HandleProxy->IsCLRDisposed select h; } }
+        public IEnumerable<InternalHandle> Handles_NativeSideWeak { get { return from h in Handles_All where h._HandleProxy->IsNativeDisposed select h; } }
         public IEnumerable<InternalHandle> Handles_DisposedAndCached { get { return from h in Handles_All where h._HandleProxy->IsDisposed select h; } }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace V8.Net
                 {
                     var c = 0;
                     foreach (var item in _HandleProxies)
-                        if (item != null && item->IsPendingDisposal) c++;
+                        if (item != null && item->IsCLRDisposed) c++;
                     return c;
                 }
             }
@@ -118,7 +118,7 @@ namespace V8.Net
                 {
                     var c = 0;
                     foreach (var item in _HandleProxies)
-                        if (item != null && item->IsWeak) c++;
+                        if (item != null && item->IsNativeDisposed) c++;
                     return c;
                 }
             }

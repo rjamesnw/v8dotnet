@@ -36,7 +36,6 @@ namespace V8.Net
         public static readonly Handle Empty = new Handle(null);
 
         internal InternalHandle _Handle;
-        internal bool _WasFinalized;
 
         /// <summary>
         /// Just another shorter way to return the 'InternalHandle' value.
@@ -55,14 +54,16 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// This is called on the GC finalizer thread to flag that this managed object entry can be collected.
-        /// <para>Note: There are no longer any managed references to the object at this point; HOWEVER, there may still be NATIVE ones.
-        /// This means the object may survive this process, at which point it's up to the worker thread to clean it up when the native V8 GC is ready.</para>
+        ///     This is called on the GC finalizer thread to flag that this managed object entry can be collected. This is done by
+        ///     marking the native side handle as weak. If a script is running during this call then the native side will detect it 
+        ///     and queue the request for later.
+        ///     <para>Note: There are no longer any managed references to the object at this point; HOWEVER, there may still be
+        ///     NATIVE ones. This means the native object may survive this process.</para>
         /// </summary>
         ~Handle()
         {
-            this.Finalizing();
-            _WasFinalized = true;
+            _Handle._Finalize(true);
+            //?this.Finalizing();
         }
 
         /// <summary>
@@ -86,17 +87,43 @@ namespace V8.Net
             get { return _Handle.Engine; }
         }
 
+        /// <summary>
+        ///     Returns true if calling 'Dispose()' will release the native side handle immediately on the native side. All
+        ///     InternalHandle values not kept alive can be disposed quickly.  The only handle left on a managed object cannot be
+        ///     disposed, nor the global object handle, as these will be locked. If false is returned, then there is a managed
+        ///     object associated.
+        ///     <para>This may be overridden in derived types, such as <see cref="V8NativeObject"/>.</para>
+        /// </summary>
+        /// <value> A true or false value. </value>
+        /// <seealso cref="P:V8.Net.IV8Disposable.CanDispose"/>
         public virtual bool CanDispose
         {
-            get { return true; }
+            get { return _Handle.CanDispose; }
         }
 
         /// <summary>
-        /// Attempts to dispose the underlying internal handle.
+        ///     Disposes of the underlying native handle. If the handle cannot be disposed (perhaps because it is locked), an
+        ///     <see cref="InvalidOperationException"/> error will occur. Optionally you may find 'TryDispose()' more convenient to ignore such
+        ///     situations.
+        ///     <para>
+        ///     If the handle represents a managed V8NativeObject instance, the handle cannot be disposed externally. Managed
+        ///     objects will begin a disposal process when there are no more managed references. When this occurs, the native side
+        ///     V8 handle is made "weak".  When there are no more references in V8, the V8's GC calls back into the managed side to
+        ///     notify that disposal can complete. In all other cases, disposing a handle will succeed.
+        ///     </para>
         /// </summary>
         public virtual void Dispose()
         {
             _Handle.Dispose();
+        }
+
+        /// <summary>
+        /// Same as 'Dispose()', except that any errors are suppressed (i.e. if the handle is locked). 
+        /// If successful (which usually just means this handle was cleared), then 'true' is returned.
+        /// </summary>
+        public bool TryDispose()
+        {
+            return _Handle.TryDispose();
         }
 
         /// <summary>
@@ -198,27 +225,27 @@ namespace V8.Net
         internal Handle _Object; // (or "Handle" tracker)
 
         /// <summary>
-        /// InternalHandle values are disposed within the engine automatically.  If a handle is to be used outside the engine,
-        /// this should be called to allow the handle to be tracked by the managed GC.  While it may seem one should always
-        /// call this, it is unnecessary (and costly) to call this on handles created from one of the '{V8Engine}.Create???()'
-        /// methods used as return values in callbacks, as disposal will be blocked on the native side pending the managed GC
-        /// instead, delaying the process.
-        /// <para>Note: This should usually only need to be called on handles returned from methods on the engine.  This is not 
-        /// called by default on handles passed into callbacks, as those handles are disposed automatically upon return from 
-        /// the callback.  This method must be called to prevent any internal handle from being dispose in such case.</para>
+        ///     InternalHandle values are disposed within the engine system automatically.  If a handle is to be used outside the
+        ///     engine, this should be called to allow the handle to be tracked by the managed GC.
+        ///     <para>Note: This should usually only need to be called on handles returned from methods on the engine.  This is not
+        ///     called by default on handles passed into callbacks, as those handles are disposed automatically upon return from the
+        ///     callback.  When a callback completes, the native side calls '{HandleProxy}.TryDispose()' to try to dispose handles
+        ///     (such as those for arguments) automatically. This method must be called to prevent those handles from being
+        ///     disposed. If not called, and you store the handle value, you'll get an error if you try to use it later.</para>
         /// </summary>
+        /// <returns> An InternalHandle. </returns>
         public InternalHandle KeepAlive()
         {
             GetTrackableHandle(); // (never return this value - the object responsible for this handle may itself have a null handle currently)
             return this;
         }
 
-        /// <summary>
-        /// Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead.
-        /// </summary>
-        /// <returns></returns>
-        [Obsolete("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead.", true)]
-        public InternalHandle Clone() { throw new NotSupportedException("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead."); }
+        ///// <summary>
+        ///// Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead.
+        ///// </summary>
+        ///// <returns></returns>
+        //[Obsolete("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead.", true)]
+        //?public InternalHandle Clone() { throw new NotSupportedException("Cloning is no longer necessary.  Please use '{source}.KeepAlive()' or '{target}.Set({source})' instead."); }
 
         /// <summary>
         /// Returns a 'Handle' instance that can be used to track this value-based handle.  When no more value-based handles
@@ -309,13 +336,13 @@ namespace V8.Net
         {
             if (_HandleProxy != null)
             {
-                // ... check for a managed object and get the reference for this handle ...
-                if (_HandleProxy->_ObjectID >= 0 && _Object == null)
-                {
-                    _Object = Object;
-                }
-                else if (_Object is V8NativeObject && ((V8NativeObject)_Object).ID != _HandleProxy->_ObjectID)
+                if (!(_Object is V8NativeObject obj) || obj.ID != _HandleProxy->_ObjectID)
                     _Object = null; // (not a valid reference anymore)
+
+                // ... check for a managed object and get the reference for this handle ...
+
+                if (_HandleProxy->_ObjectID >= 0 && _Object == null)
+                    _Object = Object;
 
                 _HandleProxy->ManagedReference = _Object != null ? 2 : 1; // (no longer has a managed object reference)
             }
@@ -395,10 +422,11 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Returns true if this handle is directly accessed on a V8NativeObject object, or the global object.  Such handles are
-        /// disposed under a controlled process that must synchronize across both V8 and V8.Net environments (native and managed
-        /// sides).
+        ///     Returns true if this handle is directly accessed on a V8NativeObject based object, or the global object.  Such
+        ///     handles are disposed under a controlled process that must synchronize across both V8 and V8.Net environments (native
+        ///     and managed sides).
         /// </summary>
+        /// <value> A true or false value. </value>
         public bool IsLocked
         {
             get
@@ -417,15 +445,15 @@ namespace V8.Net
                     // on the underlying object, which is the case if the pointer to the proxy pointer is that same 
                     // between this value, and the one on the target object ...
 
-                    fixed (void* ptr1 = &this._HandleProxy, ptr2 = &engine._GlobalObject._HandleProxy)
+                    fixed (void* ptr1 = &_HandleProxy, ptr2 = &engine._GlobalObject._HandleProxy)
                     {
-                        if (ptr1 == ptr2) return true; // (if false, then handle proxy pointer is not on the same value as the global object handle)
+                        if (ptr1 == ptr2) return true; // (if true, then handle proxy pointer is the same value as the global object handle, and should be locked)
                     }
 
-                    if (_Object == null || !(_Object is V8NativeObject))
+                    if (_Object == null || !(_Object is V8NativeObject obj))
                         return false;
                     else
-                        fixed (void* ptr1 = &this._HandleProxy, ptr2 = &((V8NativeObject)_Object)._Handle._HandleProxy)
+                        fixed (void* ptr1 = &_HandleProxy, ptr2 = &obj._Handle._HandleProxy)
                         {
                             return ptr1 == ptr2; // (if false, then handle proxy pointers are copies, so this handle value can be safely cleared)
                         }
@@ -437,37 +465,33 @@ namespace V8.Net
         /// Returns true if calling 'Dispose()' will release the native side handle immediately on the native side.
         /// All InternalHandle values not kept alive can be disposed quickly.  The only handle left on a managed object cannot
         /// be disposed, nor the global object handle, as these will be locked. If false is returned, then there is a managed
-        /// object associated, and the worker thread is responsible for disposing the underlying proxy handle in a controlled
-        /// manner, coordinated with V8.
+        /// object associated.
         /// </summary>
-        public bool CanDispose
-        {
-            get
-            {
-                return !IsLocked && (_Object == null || !(_Object is V8NativeObject) || ((V8NativeObject)_Object)._Handle.ID != ID); // (only locked handles, or tracked handles with the SAME id, should not be disposed natively, but in a controlled manner)
-            }
-        }
+        //?public bool CanDispose
+        //{
+        //    get
+        //    {
+        //        return (_Object == null || !(_Object is V8NativeObject) || ((V8NativeObject)_Object)._Handle.ID != ID);
+        //    }
+        //}
+        public bool CanDispose => !IsLocked;
 
-        bool _Dispose(bool ignoreErrors)
+        /// <summary>
+        ///     Releases the unmanaged V8 handle resource. Returns true if released, and false if empty or already released.
+        /// </summary>
+        /// <param name="finalizer"> True if called via the Handle finalizer. </param>
+        internal bool _Finalize(bool finalizer) //? We may no need 'finalizer' anymore.
         {
             if (_HandleProxy != null)
             {
-                if (CanDispose)
-                {
-                    _HandleProxy->IsDisposing = true; // (sets '__HandleProxy->Disposed' to 1)
-                    _HandleProxy->ManagedReference = 1; // (can now dispose, so downgrade this just in case)
+                _HandleProxy->ManagedReference = 1; // (can now dispose, so downgrade this just in case)
+                // DO NOT clear '_HandleProxy->_ObjectID' as the engine needs it to clear references on it's end, if an object existed)
+                _HandleProxy->Disposed |= 2;
+                V8NetProxy.DisposeHandleProxy(_HandleProxy); // (note: this will not work unless '__HandleProxy->Disposed' is 1, which starts the disposal process)
 
-                    V8NetProxy.DisposeHandleProxy(_HandleProxy); // (note: this will not work unless '__HandleProxy->Disposed' is 1, which starts the disposal process)
+                _CurrentObjectID = -1;
 
-                    _CurrentObjectID = -1;
-
-                    GC.RemoveMemoryPressure((Marshal.SizeOf(typeof(HandleProxy))));
-                }
-                else if (IsLocked)
-                    if (ignoreErrors)
-                        return false;
-                    else
-                        throw new InvalidOperationException("The handle is locked and cannot be disposed. Locked handles belong to 'V8NativeObject' objects, which are responsible for disposing them under controlled conditions.");
+                GC.RemoveMemoryPressure((Marshal.SizeOf(typeof(HandleProxy))));
 
                 _HandleProxy = null;
                 _Object = null;
@@ -475,21 +499,35 @@ namespace V8.Net
             return true;
         }
 
-        /// <summary>
-        /// Disposes of the underlying native handle and clears the current value. This is an unconditional request. As such,
-        /// if the handle cannot be disposed because it is locked, an 'InvalidOperationException' error will occur. Optionally
-        /// you may find 'TryDispose()' more convenient to ignore such situations.
-        /// <para>
-        /// If the handle represents a managed V8NativeObject instance, the handle cannot be disposed externally. Managed objects
-        /// will begin a disposal process when there are no more managed references. When this occurs, the native side V8 handle
-        /// is made "weak".  When there are no more references in V8, the V8's GC calls back into the managed side to notify
-        /// that disposal can complete. In all other cases, disposing a handle will succeed and simply clears it, making it empty.
-        /// </para>
-        /// </summary>
-        public void Dispose()
+        bool _Dispose(bool ignoreErrors)
         {
-            _Dispose(false);
+            if (CanDispose)
+            {
+                _Finalize(false);
+                return true;
+            }
+            else if (IsLocked && !ignoreErrors)
+                throw new InvalidOperationException("The handle is locked and cannot be disposed. Locked handles are either the global object, or belong to 'V8NativeObject' objects, which are responsible for disposing them under controlled conditions.");
+            return false;
         }
+
+        /// <summary>
+        /// Forces disposal of the underlying native handle.
+        /// </summary>
+        public void ForceDispose() { _Finalize(false); }
+
+        /// <summary>
+        ///     Disposes of the underlying native handle. If the handle cannot be disposed (perhaps because it is locked), an
+        ///     <see cref="InvalidOperationException"/> error will occur. Optionally you may find 'TryDispose()' more convenient to ignore such
+        ///     situations.
+        ///     <para>
+        ///     If the handle represents a managed V8NativeObject instance, the handle cannot be disposed externally. Managed
+        ///     objects will begin a disposal process when there are no more managed references. When this occurs, the native side
+        ///     V8 handle is made "weak".  When there are no more references in V8, the V8's GC calls back into the managed side to
+        ///     notify that disposal can complete. In all other cases, disposing a handle will succeed.
+        ///     </para>
+        /// </summary>
+        public void Dispose() { _Dispose(false); }
 
         /// <summary>
         /// Same as 'Dispose()', except that any errors are suppressed (i.e. if the handle is locked). 
@@ -505,22 +543,29 @@ namespace V8.Net
         /// </summary>
         public bool IsDisposed { get { return _HandleProxy == null || _HandleProxy->IsDisposed; } }
 
+        ///// <summary>
+        ///// True if this handle is going through a disposal process.
+        ///// </summary>
+        //?public bool IsDisposing
+        //{
+        //    get { return _HandleProxy != null && _HandleProxy->IsDisposing; }
+        //    //?internal set { if (_HandleProxy != null) _HandleProxy->IsDisposing = value; }
+        //}
+
         /// <summary>
-        /// True if this handle is going through a disposal process.
+        /// Returns true if the native side tried to dispose the handle. This sets a bit flag that the handle can be disposed when the managed side is ready.
         /// </summary>
-        public bool IsDisposing
+        public bool IsNativeDisposed
         {
-            get { return _HandleProxy != null && _HandleProxy->IsDisposing; }
-            internal set { if (_HandleProxy != null) _HandleProxy->IsDisposing = value; }
+            get { return _HandleProxy != null && _HandleProxy->IsNativeDisposed; }
         }
 
         /// <summary>
-        /// True if this handle was made weak on the native side (for object handles only).  Once a handle is weak, the V8 garbage collector can collect the
-        /// handle (and any associated managed object) at any time.
+        /// Returns true if the managed side tried to dispose the handle. This sets a bit flag that the handle can be disposed when the native side is ready.
         /// </summary>
-        public bool IsNativelyWeak
+        public bool IsCLRDisposed
         {
-            get { return _HandleProxy != null && _HandleProxy->IsWeak; }
+            get { return _HandleProxy != null && _HandleProxy->IsCLRDisposed; }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -777,18 +822,18 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Returns 'true' if this handle is associated with a managed object that has no other CLR based references, and the
-        /// managed GC finalizer has attempted to claim it. The underlying native handle may also be in a weak state, in which 
-        /// case 'IsNativelyWeak' will also return true.
-        /// </summary>
-        public bool IsWeakManagedObject
-        {
-            get
-            {
-                return _HandleProxy != null && _HandleProxy->IsDisposing;
-            }
-        }
+        ///// <summary>
+        ///// Returns 'true' if this handle is associated with a managed object that has no other CLR based references, and the
+        ///// managed GC finalizer has attempted to claim it. The underlying native handle may also be in a weak state, in which 
+        ///// case 'IsNativelyWeak' will also return true.
+        ///// </summary>
+        //?public bool IsWeakManagedObject
+        //{
+        //    get
+        //    {
+        //        return _HandleProxy != null && _HandleProxy->IsDisposing;
+        //    }
+        //}
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -946,9 +991,9 @@ namespace V8.Net
                 switch (_HandleProxy->Disposed)
                 {
                     case 0: break;
-                    case 1: return "Ready For Disposal";
-                    case 2: return "Weak (waiting on V8 GC)";
-                    case 3: return "Disposed And cached";
+                    case 1: return "Dispose ready on the native side.";
+                    case 2: return "Dispose ready on the managed side.";
+                    case 3: return "Disposed and cached";
                 }
                 return "";
             }
