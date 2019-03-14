@@ -125,7 +125,9 @@ void ObjectTemplateProxy::GetProperty(Local<Name> hName, const PropertyCallbackI
 				ManagedAccessorInfo maInfo(proxy, managedObjectID, info);
 				auto hNameStr = hName->IsSymbol() ? hName.As<Symbol>()->Name().As<String>() : hName.As<String>();
 				auto str = proxy->_EngineProxy->GetNativeString(*hNameStr); // TODO: This can be faster - no need to allocate every time!
+				proxy->_EngineProxy->_InCallbackScope++;
 				auto result = proxy->NamedPropertyGetter(str.String, maInfo); // (assumes the 'str' memory will be released by the managed side)
+				proxy->_EngineProxy->_InCallbackScope--;
 				str.Dispose();
 				if (result != nullptr)
 				{

@@ -671,7 +671,7 @@ extern "C"
 			if (engine->IsExecutingScript())
 			{
 				// ... a script is running, so make it weak so the GC collects this later (if a script is running calling this will queue it up)...
-				MakeWeakHandle(handleProxy); // TODO: Create a queue for disposing handles as well.
+				engine->QueueHandleDisposal(handleProxy); // TODO: Create a queue for disposing handles as well.
 			}
 			else
 			{

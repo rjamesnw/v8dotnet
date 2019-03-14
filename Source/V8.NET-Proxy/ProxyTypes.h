@@ -731,8 +731,10 @@ protected:
 	vector<_StringItem> _Strings; // An array (cache) of string buffers to reuse when marshalling strings.
 
 	vector<HandleProxy*> _Handles; // An array of all allocated handles for this engine proxy.
+	vector<HandleProxy*> _HandlesPendingDisposal; // An array of handles for this engine proxy that are ready to be disposed.
 	vector<int> _DisposedHandles; // An array of handles (by ID [index]) that have been disposed. The managed GC thread uses this, so beware!
-	recursive_mutex _HandleSystemMutex; // A mutex is used to prevent access to the handle system as a "critical section".  NO ACCESS TO THE V8 ENGINE IS ALLOWED FOR MANAGED GARBAGE COLLECTION IN THIS CRITICAL SECTION.
+	std::mutex _DisposingHandleMutex; // A mutex used to prevent access to the handle disposal queue system as a "critical section".  NO ACCESS TO THE V8 ENGINE IS ALLOWED FOR MANAGED GARBAGE COLLECTION IN THIS CRITICAL SECTION.
+	recursive_mutex _HandleSystemMutex; // A mutex used to prevent access to the handle system as a "critical section".  NO ACCESS TO THE V8 ENGINE IS ALLOWED FOR MANAGED GARBAGE COLLECTION IN THIS CRITICAL SECTION.
 
 	vector<HandleProxy*> _HandlesToBeMadeWeak;
 	recursive_mutex _MakeWeakQueueMutex;
@@ -742,6 +744,7 @@ protected:
 	vector<HandleProxy*> _Objects; // An array of handle references by object ID. This allows pulling an already existing proxy handle for an object without having to allocate a new one.
 
 	bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
+	int _InCallbackScope; // >0 if currently in a scope that is/will call back to the manage side. This helps to notify when a callback causes another call back into the engine.
 	bool _IsTerminatingScript; // True if the engine was asked to terminate a script.  This is used to detect when a script is aborted.
 
 public:
@@ -769,6 +772,10 @@ public:
 	// Gets an available handle proxy, or creates a new one, for the specified handle.
 	HandleProxy* GetHandleProxy(Handle<Value> handle);
 
+	// Queue a handle for disposal later.  This is typically done when the engine is busy running a script and another call is made
+	// (possibly by the GC finalizer) to dispose a handle.
+	void QueueHandleDisposal(HandleProxy *handleProxy);
+		
 	// Registers the handle proxy as disposed for recycling.
 	void DisposeHandleProxy(HandleProxy *handleProxy);
 
@@ -777,7 +784,7 @@ public:
 	// Puts a handle proxy into a queue to be made strong via 'GetHandleProxy()' - which may be required during a long script execution.
 	void QueueMakeStrong(HandleProxy *handleProxy);
 
-	void ProcessWeakStrongHandleQueue(); // (must be called internally, NEVER externally [i.e. from managed side])
+	void ProcessHandleQueues(); // (must be called internally, NEVER externally [i.e. from managed side])
 
 	// Registers a request to dispose a handle proxy for recycling.
 	// WARNING: This is expected to be called by the GC to flag handles for disposal.

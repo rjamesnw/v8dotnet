@@ -64,7 +64,7 @@ bool HandleProxy::Dispose()
 	return _Dispose(true);
 }
 
-bool HandleProxy::TryDispose()
+bool HandleProxy::TryDispose() 
 {
 	if (IsInUse() && _ManagedReference < 2)
 	{

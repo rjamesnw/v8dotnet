@@ -54,7 +54,7 @@ bool V8EngineProxy::IsDisposed(int32_t engineID)
 
 bool V8EngineProxy::IsExecutingScript()
 {
-	return _IsExecutingScript;
+	return _IsExecutingScript || _InCallbackScope > 0;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ Handle<v8::Context> V8EngineProxy::Context() { return _Context; }
 
 V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debugMessageDispatcher, int debugPort)
 	:ProxyBase(V8EngineProxyClass), /*?_GlobalObjectTemplateProxy(nullptr),*/ _NextNonTemplateObjectID(-2),
-	_IsExecutingScript(false), _IsTerminatingScript(false), _Handles(1000, nullptr), _DisposedHandles(1000, -1), _HandlesToBeMadeWeak(1000, nullptr),
+	_IsExecutingScript(false), _IsTerminatingScript(false), _Handles(1000, nullptr), _HandlesPendingDisposal(1000, nullptr), _DisposedHandles(1000, -1), _HandlesToBeMadeWeak(1000, nullptr),
 	_HandlesToBeMadeStrong(1000, nullptr), _Objects(1000, nullptr), _Strings(1000, _StringItem())
 {
 	if (!_V8Initialized) // (the API changed: https://groups.google.com/forum/#!topic/v8-users/wjMwflJkfso)
@@ -99,6 +99,7 @@ V8EngineProxy::V8EngineProxy(bool enableDebugging, DebugMessageDispatcher* debug
 	BEGIN_ISOLATE_SCOPE(this);
 
 	_Handles.clear();
+	_HandlesPendingDisposal.clear();
 	_DisposedHandles.clear();
 	_HandlesToBeMadeWeak.clear();
 	_HandlesToBeMadeStrong.clear();
@@ -224,7 +225,7 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 	{
 		lock_guard<recursive_mutex> handleSection(_HandleSystemMutex);
 
-		ProcessWeakStrongHandleQueue();
+		ProcessHandleQueues();
 
 		if (_DisposedHandles.size() == 0)
 		{
@@ -249,7 +250,7 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 			{
 				_Handles.push_back(handleProxy); // (keep a record of all handles created)
 
-				ProcessWeakStrongHandleQueue(); // (process one more time to make this twice as fast as long as new handles are being created)
+				ProcessHandleQueues(); // (process one more time to make this twice as fast as long as new handles are being created)
 			}
 		}
 	}
@@ -259,9 +260,20 @@ HandleProxy* V8EngineProxy::GetHandleProxy(Handle<Value> handle)
 	return handleProxy;
 }
 
+void V8EngineProxy::QueueHandleDisposal(HandleProxy *handleProxy)
+{
+	lock_guard<std::mutex> handleSection(_DisposingHandleMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+	_HandlesPendingDisposal.push_back(handleProxy);
+}
+
 void V8EngineProxy::DisposeHandleProxy(HandleProxy *handleProxy)
 {
-	lock_guard<recursive_mutex> handleSection(_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+	// .. the GC finalizer might end up here, so try to get a lock first and queue the request on failure instead ...
+	std::unique_lock<recursive_mutex> lock(_HandleSystemMutex, std::try_to_lock);
+	if (!lock.owns_lock()) {
+		QueueHandleDisposal(handleProxy);
+		return;
+	}
 
 	if (handleProxy->_ObjectID >= 0 && handleProxy->_ObjectID < (int)_Objects.size())
 		_Objects[handleProxy->_ObjectID] = nullptr;
@@ -294,11 +306,22 @@ void V8EngineProxy::QueueMakeStrong(HandleProxy *handleProxy) // TODO: "MakeStro
 	}
 }
 
-void V8EngineProxy::ProcessWeakStrongHandleQueue()
+void V8EngineProxy::ProcessHandleQueues()
 {
 	// ... process one of each per call ...
 
 	HandleProxy * h;
+
+	if (_HandlesPendingDisposal.size() > 0)
+	{
+		lock_guard<std::mutex> handleSection(_DisposingHandleMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+		if (_HandlesPendingDisposal.size() > 0)
+		{
+			h = _HandlesPendingDisposal.back();
+			_HandlesPendingDisposal.pop_back();
+			h->TryDispose(); // (using TryDispose() in case a managed object is responsible to free it later, so we can skip it)
+		}
+	}
 
 	if (_HandlesToBeMadeWeak.size() > 0)
 	{
