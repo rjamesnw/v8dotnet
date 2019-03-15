@@ -64,6 +64,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "V8.NET-Console-NetCore", "T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "V8.NET-Console-NetCore-NuGet", "Tests\V8.NET-Console-NetCore-NuGet\V8.NET-Console-NetCore-NuGet.csproj", "{753CDFA2-BAF6-4C1D-85F3-255900474B7E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6332B817-DE7B-48C4-992D-BEBCDFA7783B}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug No Console|Any CPU = Debug No Console|Any CPU
