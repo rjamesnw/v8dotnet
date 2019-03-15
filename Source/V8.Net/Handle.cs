@@ -255,12 +255,15 @@ namespace V8.Net
         /// <seealso cref="Abandon"/>
         public InternalHandle KeepAlive()
         {
+            if (!IsObject) throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
             if (_HandleProxy->_ObjectID >= 0)
             {
                 if (_Object == null) _Object = Object;
                 if (Engine._MakeObjectRooted(_HandleProxy->_ObjectID)) // (returns false if already rooted)
                     V8NetProxy.MakeWeakHandle(this);
             }
+            else throw new InvalidOperationException($"This handle only tracks a native side object. {nameof(KeepAlive)}() only keeps alive managed-side objects from being garbage collected."
+                + " If you are creating accessors on a native-only object, then create the accessors first, then call this method.");
             return this;
         }
 
@@ -1419,16 +1422,33 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
         // TODO: DOES NOT WORK PROPERLY!!!!!!!!!!!!!!!!!!!
-        
+
         /// <summary>
-        /// Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
+        ///     Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by
+        ///     "getter" and "setter" callbacks.
+        ///     <para>WARNING: If you try to set managed accessors on a native-ONLY object (as in, this handle does not yet have a
+        ///     managed-side object associated with it) then
+        ///     <see cref="V8Engine.CreateObject(InternalHandle, bool)"/> will be called to create a wrapper object so the
+        ///     accessor delegates will not get garbage collected, causing errors. You can optionally take control of this yourself
+        ///     and call one of the 'CreateObject()' methods on <see cref="V8Engine"/>.</para>
         /// </summary>
-        public void SetAccessor(string name,
-            GetterAccessor getter, SetterAccessor setter,
+        /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
+        /// <exception cref="InvalidOperationException"> Thrown when the requested operation is invalid. </exception>
+        /// <param name="name"> The property name. </param>
+        /// <param name="getter">
+        ///     The property getter delegate that returns a value when the property is accessed within JavaScript.
+        /// </param>
+        /// <param name="setter">
+        ///     The property setter delegate that sets AND returns a value when the property is accessed within JavaScript.
+        /// </param>
+        /// <param name="attributes"> (Optional) The attributes to assign to the property. </param>
+        /// <param name="access"> (Optional) The access security on the property. </param>
+        /// <seealso cref="M:V8.Net.IV8Object.SetAccessor(string,GetterAccessor,SetterAccessor,V8PropertyAttributes,V8AccessControl)"/>
+        public void SetAccessor(string name, GetterAccessor getter, SetterAccessor setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
             if (name.IsNullOrWhiteSpace())
-                throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
+                throw new ArgumentNullException(nameof(name), "Cannot be null, empty, or only whitespace.");
             if (attributes == V8PropertyAttributes.Undefined)
                 attributes = V8PropertyAttributes.None;
             if (attributes < 0) throw new InvalidOperationException("'attributes' has an invalid value.");
@@ -1439,33 +1459,10 @@ namespace V8.Net
 
             var engine = Engine;
 
-            if (ObjectID == -1) throw new InvalidOperationException("This object has an invalid ID of -1, which means accessors cannot be added.");
+            if (!(Object is V8NativeObject o)) // (we need to first get the managed object if object exists)
+                o = engine.CreateObject(this); // (create a managed object to store and keep the accessors alive)
 
-            // TODO: Need a different native ID to track this.
-            V8NetProxy.SetObjectAccessor(this, ObjectID, name,
-                   Engine._StoreAccessor<NativeGetterAccessor>(ObjectID, "get_" + name, (HandleProxy* _this, string propertyName) =>
-                   {
-                       try
-                       {
-                           return getter != null ? getter(_this, propertyName) : null;
-                       }
-                       catch (Exception ex)
-                       {
-                           return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
-                       }
-                   }),
-                   Engine._StoreAccessor<NativeSetterAccessor>(ObjectID, "set_" + name, (HandleProxy* _this, string propertyName, HandleProxy* value) =>
-                   {
-                       try
-                       {
-                           return setter != null ? setter(_this, propertyName, value) : null;
-                       }
-                       catch (Exception ex)
-                       {
-                           return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
-                       }
-                   }),
-                   access, attributes);
+            o.SetAccessor(name, getter, setter, attributes, access);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1650,74 +1647,6 @@ namespace V8.Net
     /// <para>To allow the V8 engine to perform the default set action, return "Handle.Empty".</para>
     /// </summary>
     public delegate InternalHandle SetterAccessor(InternalHandle _this, string propertyName, InternalHandle value);
-
-    // ========================================================================================================================
-
-    public unsafe partial class V8Engine
-    {
-        internal readonly Dictionary<Int32, Dictionary<string, Delegate>> _Accessors = new Dictionary<Int32, Dictionary<string, Delegate>>();
-
-        /// <summary>
-        /// This is required in order prevent accessor delegates from getting garbage collected when used with P/Invoke related callbacks (a process called "thunking").
-        /// </summary>
-        /// <typeparam name="T">The type of delegate ('d') to store and return.</typeparam>
-        /// <param name="key">A native pointer (usually a proxy object) to associated the delegate to.</param>
-        /// <param name="d">The delegate to keep a strong reference to (expected to be of type 'T').</param>
-        /// <returns>The same delegate passed in, cast to type of 'T'.</returns>
-        internal T _StoreAccessor<T>(Int32 id, string propertyName, T d) where T : class
-        {
-            Dictionary<string, Delegate> delegates;
-            if (!_Accessors.TryGetValue(id, out delegates))
-                _Accessors[id] = delegates = new Dictionary<string, Delegate>();
-            delegates[propertyName] = (Delegate)(object)d;
-            return d;
-        }
-
-        /// <summary>
-        /// Returns true if there are any delegates associated with the given object reference.
-        /// </summary>
-        internal bool _HasAccessors(Int32 id)
-        {
-            Dictionary<string, Delegate> delegates;
-            return _Accessors.TryGetValue(id, out delegates) && delegates.Count > 0;
-        }
-
-        /// <summary>
-        /// Clears any accessor delegates associated with the given object reference.
-        /// </summary>
-        internal void _ClearAccessors(Int32 id)
-        {
-            Dictionary<string, Delegate> delegates;
-            if (_Accessors.TryGetValue(id, out delegates))
-                delegates.Clear();
-        }
-    }
-
-    // ========================================================================================================================
-
-    /// <summary>
-    ///     Represents a V8 context in which JavaScript is executed. You can call
-    ///     <see cref="V8Engine.CreateContext(ObjectTemplate)"/> to create new executing contexts with a new default/custom
-    ///     global object.
-    /// </summary>
-    /// <seealso cref="T:System.IDisposable"/>
-    public unsafe class Context : IDisposable
-    {
-        internal NativeContext* _NativeContext;
-        internal Context(NativeContext* nativeContext) { _NativeContext = nativeContext; }
-        //~Context() { V8NetProxy.DeleteContext(_NativeContext); _NativeContext = null; }
-
-        public void Dispose()
-        {
-            if (_NativeContext != null)
-                V8NetProxy.DeleteContext(_NativeContext);
-            _NativeContext = null;
-        }
-
-        public static implicit operator Context(NativeContext* ctx) => new Context(ctx);
-        public static implicit operator NativeContext* (Context ctx) => ctx._NativeContext;
-    }
-
     // ========================================================================================================================
 }
 

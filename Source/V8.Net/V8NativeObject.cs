@@ -74,6 +74,23 @@ namespace V8.Net
         new public V8NativeObject Object { get { return this; } }
 
         /// <summary>
+        ///     This is updated to hold a reference to the property value getter callback when
+        ///     <see cref="SetAccessor(string, GetterAccessor, SetterAccessor, V8PropertyAttributes, V8AccessControl)"/> is called.
+        ///     Without a rooted reference the delegate will get garbage collected causing callbacks from the native side will fail.
+        /// </summary>
+        /// <value> The getter. </value>
+        public GetterAccessor Getter { get; private set; }
+        NativeGetterAccessor _Getter;
+        /// <summary>
+        ///     This is updated to hold a reference to the property value setter callback when
+        ///     <see cref="SetAccessor(string, GetterAccessor, SetterAccessor, V8PropertyAttributes, V8AccessControl)"/> is called.
+        ///     Without a rooted reference the delegate will get garbage collected causing callbacks from the native side will fail.
+        /// </summary>
+        /// <value> The getter. </value>
+        public SetterAccessor Setter { get; private set; }
+        NativeSetterAccessor _Setter;
+
+        /// <summary>
         /// The V8.NET ObjectTemplate or FunctionTemplate instance associated with this object, if any, or null if this object was not created using a V8.NET template.
         /// </summary>
         public ITemplate Template
@@ -330,7 +347,12 @@ namespace V8.Net
 
                 // ... clear any registered accessors ...
 
-                engine._ClearAccessors(_ID.Value); // (just to be sure - accessors are no longer needed once the native handle is GC'd)
+                Getter = null;
+                _Getter = null;
+                Setter = null;
+                _Setter = null;
+
+                // ... reset and dispose the handle ...
 
                 if (!_Handle.IsEmpty)
                 {
@@ -480,13 +502,72 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
+        ///     Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by
+        ///     "getter" and "setter" callbacks.
+        ///     <para>WARNING: If you try to set managed accessors on a native-ONLY object (as in, this handle does not yet have a
+        ///     managed-side object associated with it) then
+        ///     <see cref="V8Engine.CreateObject(InternalHandle, bool)"/> will be called to create a wrapper object so the
+        ///     accessor delegates will not get garbage collected, causing errors. You can optionally take control of this yourself
+        ///     and call one of the 'CreateObject()' methods on <see cref="V8Engine"/>.</para>
         /// </summary>
-        public virtual void SetAccessor(string name,
-            GetterAccessor getter, SetterAccessor setter,
+        /// <param name="name"> The property name. </param>
+        /// <param name="getter">
+        ///     The property getter delegate that returns a value when the property is accessed within JavaScript.
+        /// </param>
+        /// <param name="setter">
+        ///     The property setter delegate that sets AND returns a value when the property is accessed within JavaScript.
+        /// </param>
+        /// <param name="attributes"> (Optional) The attributes to assign to the property. </param>
+        /// <param name="access"> (Optional) The access security on the property. </param>
+        /// <seealso cref="M:V8.Net.IV8Object.SetAccessor(string,GetterAccessor,SetterAccessor,V8PropertyAttributes,V8AccessControl)"/>
+        public virtual void SetAccessor(string name, GetterAccessor getter, SetterAccessor setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
-            _Handle.SetAccessor(name, getter, setter, attributes, access);
+            attributes = _CreateAccessorProxies(Engine, name, getter, setter, attributes, access, ref _Getter, ref _Setter);
+
+            Getter = getter;
+            Setter = setter;
+
+            V8NetProxy.SetObjectAccessor(this, ID, name, _Getter, _Setter, access, attributes);
+        }
+
+        static internal V8PropertyAttributes _CreateAccessorProxies(V8Engine engine, string name, GetterAccessor getter, SetterAccessor setter, V8PropertyAttributes attributes, V8AccessControl access, 
+            ref NativeGetterAccessor _Getter, ref NativeSetterAccessor _Setter)
+        {
+            if (name.IsNullOrWhiteSpace())
+                throw new ArgumentNullException(nameof(name), "Cannot be null, empty, or only whitespace.");
+            if (attributes == V8PropertyAttributes.Undefined)
+                attributes = V8PropertyAttributes.None;
+            if (attributes < 0) throw new InvalidOperationException("'attributes' has an invalid value.");
+            if (access < 0) throw new InvalidOperationException("'access' has an invalid value.");
+
+            if (getter != null && _Getter == null)
+                _Getter = (_this, _name) => // (only need to set this once on first use)
+                {
+                    try
+                    {
+                        return getter != null ? getter(_this, _name) : null;
+                    }
+                    catch (Exception ex)
+                    {
+                        return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+                    }
+                };
+
+            if (setter != null && _Setter == null)
+                _Setter = (_this, _name, _val) => // (only need to set this once on first use)
+                {
+                    try
+                    {
+                        return setter != null ? setter(_this, _name, _val) : null;
+                    }
+                    catch (Exception ex)
+                    {
+                        return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+                    }
+                };
+
+            return attributes;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

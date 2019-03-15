@@ -124,7 +124,7 @@ namespace V8.Net
 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetCallAsFunctionHandler")]
-        public static extern void SetCallAsFunctionHandler64(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+        public static extern void SetCallAsFunctionHandler64(NativeObjectTemplateProxy* proxy, NativeFunctionCallback callback);
 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateObjectFromTemplate")]
@@ -214,7 +214,7 @@ namespace V8.Net
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateFunctionTemplateProxy", CharSet = CharSet.Unicode)]
-        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy64(NativeV8EngineProxy* engine, string className, ManagedJSFunctionCallback callback);
+        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy64(NativeV8EngineProxy* engine, string className, NativeFunctionCallback callback);
 
         /// <summary> Returns true if successful. False is returned if the engine is in the middle of running a script, or performing another request. </summary>
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteFunctionTemplateProxy")]

@@ -1515,7 +1515,7 @@ namespace V8.Net
                         if (args.Length > 1)
                             return Engine.CreateError("You cannot pass more than one argument.", JSValueType.ExecutionError);
 
-                        handle = Engine.CreateObject(Int32.MinValue + TypeID);
+                        handle = Engine.CreateObject(/*Int32.MinValue + TypeID*/);
                         handle.SetProperty("$__Type", Engine.CreateValue(BoundType.AssemblyQualifiedName), V8PropertyAttributes.Locked);
                         handle.SetProperty("$__TypeID", Engine.CreateValue(TypeID), V8PropertyAttributes.Locked);
                         handle.SetProperty("$__Value", args.Length > 0 ? args[0] : InternalHandle.Empty, V8PropertyAttributes.DontDelete);

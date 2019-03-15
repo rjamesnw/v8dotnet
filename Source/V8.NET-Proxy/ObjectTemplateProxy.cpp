@@ -615,7 +615,7 @@ void ObjectTemplateProxy::AccessorSetterCallbackProxy(Local<Name> property, Loca
 			//        managedObjectID = (int32_t)hHiddenObjID->Int32Value();
 			//}
 
-			ManagedAccessorSetter setter = (ManagedAccessorSetter)hAccessors->Get(1).As<External>()->Value();
+			ManagedAccessorSetter setter = (ManagedAccessorSetter)hAccessors->Get(2).As<External>()->Value();
 
 			if (setter != nullptr)
 			{

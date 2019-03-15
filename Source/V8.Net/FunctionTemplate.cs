@@ -93,7 +93,7 @@ namespace V8.Net
                 (NativeFunctionTemplateProxy*)V8NetProxy.CreateFunctionTemplateProxy(
                     v8EngineProxy._NativeV8EngineProxy,
                     ClassName,
-                    _SetDelegate<ManagedJSFunctionCallback>(_CallBack)) // (create a corresponding native object)
+                    _SetDelegate<NativeFunctionCallback>(_CallBack)) // (create a corresponding native object)
             );
         }
 

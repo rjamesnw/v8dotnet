@@ -22,7 +22,7 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo support .Net 4
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>V8.NET, V8, JavaScript, ClearScript, JScript, Chromium</PackageTags>
     <PackageReleaseNotes>Added better support for locating the native assemblies, and fixed some context creation bugs.</PackageReleaseNotes>
-    <Version>1.0.10</Version>
+    <Version>1.1.0</Version>
     <Product>V8.Net</Product>
     <PackageId>V8.Net</PackageId>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>

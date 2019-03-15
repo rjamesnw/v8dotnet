@@ -256,7 +256,7 @@ namespace V8.Net
     // ========================================================================================================================
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public unsafe delegate HandleProxy* ManagedJSFunctionCallback(Int32 managedObjectID, [MarshalAs(UnmanagedType.I1)]bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount);
+    public unsafe delegate HandleProxy* NativeFunctionCallback(Int32 managedObjectID, [MarshalAs(UnmanagedType.I1)]bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount);
     // ('IntPtr' == HandleProxy*)
 
     // ========================================================================================================================
