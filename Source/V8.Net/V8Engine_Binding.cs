@@ -79,23 +79,45 @@ namespace V8.Net
             return _typeLibrary._Set(types, value, depth + 1);
         }
 
-        public T Get(params Type[] types)
+        /// <summary> Gets the object of type <typeparamref name="T"/> from the type tree based on given types. </summary>
+        /// <param name="strict">
+        ///     True to find exact type matches. If false is past in, and a type can't be found explicitly, then the best match is
+        ///     found based on assignability.
+        /// </param>
+        /// <param name="types"> A variable-length parameters list containing types. </param>
+        /// <returns> Returns the type 'T' instance. </returns>
+        public T Get(bool strict, params Type[] types)
         {
             if (types == null) types = new Type[0];
-            return _Get(types);
+            return _Get(types, strict);
         }
-        T _Get(Type[] types, int depth = 0)
+        T _Get(Type[] types, bool strict, int depth = 0)
         {
             if (depth >= types.Length) return Object;
             Type type = types[depth];
             if (!SubTypes.TryGetValue(type, out TypeLibrary<T> _typeLibrary))
-                return null; // (nothing found)
-            return _typeLibrary._Get(types, depth + 1);
+                if (strict)
+                    return null; // (nothing found)
+                else
+                    foreach (var item in SubTypes)
+                        if (item.Key.IsAssignableFrom(type))
+                        {
+                            _typeLibrary = item.Value;
+                            break;
+                        }
+            return _typeLibrary?._Get(types, strict, depth + 1);
         }
 
-        public bool Exists(params Type[] types)
+        /// <summary> Determine if an object exists using the given types. </summary>
+        /// <param name="strict">
+        ///     True to find exact type matches. If false is past in, and a type can't be found explicitly, then the best match is
+        ///     found based on assignability.
+        /// </param>
+        /// <param name="types"> A variable-length parameters list containing types. </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public bool Exists(bool strict, params Type[] types)
         {
-            return Get(types) == null;
+            return Get(strict, types) == null;
         }
 
         public IEnumerable<TypeLibrary<T>> Items { get { return _GetItems(); } }
@@ -437,17 +459,21 @@ namespace V8.Net
             public IEnumerable<MethodInfo> MethodMembers { get { return from m in Members where m.MemberType == MemberTypes.Method select (MethodInfo)m; } }
 
             /// <summary>
-            /// Given a list of types, returns the matching MemberInfo reference, or 'null' if not found.
-            /// This is used mainly with member details instances representing overloaded method members.
+            ///     Given a list of types, returns the matching MemberInfo reference, or 'null' if not found. This is used mainly with
+            ///     member details instances representing overloaded method members.
             /// </summary>
-            /// <param name="types"></param>
-            /// <returns></returns>
-            public MemberInfo FindMemberByTypes(params Type[] types)
+            /// <param name="strict">
+            ///     True to find exact type matches. If false is past in, and a type can't be found explicitly, then the best match is
+            ///     found based on assignability.
+            /// </param>
+            /// <param name="types"> . </param>
+            /// <returns> The found member by types. </returns>
+            public MemberInfo FindMemberByTypes(bool strict, params Type[] types)
             {
                 MemberInfo mi;
                 foreach (var mtl in MemberTypeLibraries)
                 {
-                    mi = mtl.Get(types);
+                    mi = mtl.Get(strict, types);
                     if (mi != null) return mi;
                 }
                 return null;
@@ -1221,7 +1247,7 @@ namespace V8.Net
                 if (memberDetails.ConstructedMemberGroups == null)
                     memberDetails.ConstructedMemberGroups = new TypeLibrary<TypeLibrary<MemberInfo>>();
 
-                constructedMembers = memberDetails.ConstructedMemberGroups.Get(genericSystemTypes);
+                constructedMembers = memberDetails.ConstructedMemberGroups.Get(true, genericSystemTypes);
 
                 if (constructedMembers == null)
                 {
@@ -1295,7 +1321,11 @@ namespace V8.Net
             else // ... more than one method exists (overloads) ..
             {
                 var systemTypes = ArgInfo.GetSystemTypes(argInfos);
-                var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(systemTypes); // (note: this expects exact types matches!)
+
+                var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(true, systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(true, systemTypes); // (note: this expects exact types matches!)
+                if (methodInfo == null)
+                    methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(false, systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(false, systemTypes); // (this is a lot more relaxed)
+
                 if (methodInfo == null)
                     throw new TargetInvocationException("There is no method matching the supplied parameter types ("
                         + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);

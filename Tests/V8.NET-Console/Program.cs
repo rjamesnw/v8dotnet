@@ -14,6 +14,7 @@ namespace V8.Net
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using V8.Net;
 
@@ -144,6 +145,12 @@ namespace V8.Net
                     hSystem.SetProperty(typeof(String));
                     hSystem.SetProperty(typeof(Boolean));
                     hSystem.SetProperty(typeof(Array));
+
+                    InternalHandle hIO = _JSServer.CreateObject().KeepTrack();
+                    hSystem.SetProperty(typeof(File));
+                    hSystem.SetProperty(typeof(Path));
+                    hSystem.SetProperty(typeof(Directory));
+
                     _JSServer.GlobalObject.SetProperty(typeof(Type));
                     _JSServer.GlobalObject.SetProperty(typeof(System.Collections.ArrayList));
                     _JSServer.GlobalObject.SetProperty(typeof(char));
