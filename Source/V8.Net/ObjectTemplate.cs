@@ -37,10 +37,10 @@ namespace V8.Net
         public V8Engine Engine { get { return _Engine; } }
         internal V8Engine _Engine;
 
-        /// <summary>
-        /// Returns true if this template object has been placed into the "abandoned" list due to a GC finalization attempt.
-        /// </summary>
-        internal bool _IsAbandoned { get { lock (_Engine._AbandondObjects) { return _Engine != null && _Engine._AbandondObjects.Contains(this); } } }
+        ///// <summary>
+        ///// Returns true if this template object has been placed into the "abandoned" list due to a GC finalization attempt.
+        ///// </summary>
+        //?internal bool _IsAbandoned { get { lock (_Engine._AbandondObjects) { return _Engine != null && _Engine._AbandondObjects.Contains(this); } } }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -92,20 +92,26 @@ namespace V8.Net
         }
         ~TemplateBase()
         {
-            this.Finalizing();
+            if (!_Finalize(true))
+                GC.ReRegisterForFinalize(this); // (something failed on the native side so need to try again)
+            //?this.Finalizing();
         }
 
-        public virtual bool CanDispose
+        protected abstract bool _Finalize(bool finalizer);
+
+        /// <summary> Returns true if this template has child objects created from it. </summary>
+        public virtual bool HasChildObjects
         {
             get
             {
-                return (((ITemplateInternal)this)._ReferenceCount == 0
-                    && (Parent == null || ((ITemplateInternal)Parent)._ReferenceCount == 0));
+                return (((ITemplateInternal)this)._ReferenceCount > 0
+                    || (Parent == null || ((ITemplateInternal)Parent)._ReferenceCount > 0));
             }
         }
-        public virtual void Dispose()
-        {
-        }
+
+        public bool CanDispose => true;
+
+        public void Dispose() => _Finalize(false);
 
         protected abstract void OnInitialized();
 
@@ -340,16 +346,16 @@ namespace V8.Net
         {
         }
 
-        public override void Dispose() // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
+        protected override bool _Finalize(bool finalizer) // (note: This can cause issues if removed while the native object exists [because of the callbacks].)
         {
-            if (_NativeObjectTemplateProxy != null && CanDispose)
+            if (_NativeObjectTemplateProxy != null)
             {
-                _Engine._ClearAccessors(_NativeObjectTemplateProxy->ObjectID);
-
-                V8NetProxy.DeleteObjectTemplateProxy(_NativeObjectTemplateProxy); // (delete the corresponding native object as well; WARNING: This is done on the GC thread!)
-
-                _NativeObjectTemplateProxy = null;
+                if (V8NetProxy.DeleteObjectTemplateProxy(_NativeObjectTemplateProxy)) // (delete the corresponding native object as well; WARNING: This may be done on the GC thread!)
+                    _NativeObjectTemplateProxy = null;
+                else
+                    return false; // (bounced, a script might be in progress; try again later)
             }
+            return true;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -420,19 +426,23 @@ namespace V8.Net
         [Obsolete("Renamed to 'SetCallAsFunctionHandler()' to stay inline with V8 engine ObjectTemplate function names.", true)]
         public void RegisterInvokeHandler(JSFunction callback) { }
 
+        NativeFunctionCallback _ProxyCallback; // (need to keep a reference)
+
         /// <summary>
-        /// Registers an invoke handler on the underlying native ObjectTemplate instance, which allows the object to be called
-        /// like a function.
+        ///     Registers an invoke handler on the underlying native ObjectTemplate instance, which allows objects to be called like
+        ///     a function.
+        ///     <para>A proxy delegate is used and stored locally to prevent it from being reclaimed by the
+        ///     GC. If you call this method again, the old proxy delegate will be replaced with a new one and registered again on
+        ///     the native side. </para>
         /// </summary>
-        /// <param name="callback">A callback that gets invoked when the object is used like a function.</param>
+        /// <param name="callback"> A callback that gets invoked when the object is used like a function. </param>
         public void SetCallAsFunctionHandler(JSFunction callback)
         {
-            ManagedJSFunctionCallback proxyCallback = (managedObjectID, isConstructCall, _this, args, argCount) =>
+            _ProxyCallback = (managedObjectID, isConstructCall, _this, args, argCount) =>
                 {
                     return FunctionTemplate._CallBack(managedObjectID, isConstructCall, _this, args, argCount, callback);
                 };
-            V8NetProxy.SetCallAsFunctionHandler(_NativeObjectTemplateProxy, proxyCallback);
-            _Engine._StoreAccessor(_NativeObjectTemplateProxy->ObjectID, "$__InvokeHandler", proxyCallback);
+            V8NetProxy.SetCallAsFunctionHandler(_NativeObjectTemplateProxy, _ProxyCallback);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -500,41 +510,36 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
+        ///     This is updated to hold a reference to the property value getter callback when
+        ///     <see cref="SetAccessor(string, GetterAccessor, SetterAccessor, V8PropertyAttributes, V8AccessControl)"/> is called.
+        ///     Without a rooted reference the delegate will get garbage collected causing callbacks from the native side will fail.
+        /// </summary>
+        /// <value> The getter. </value>
+        public GetterAccessor Getter { get; private set; }
+        NativeGetterAccessor _Getter;
+        /// <summary>
+        ///     This is updated to hold a reference to the property value setter callback when
+        ///     <see cref="SetAccessor(string, GetterAccessor, SetterAccessor, V8PropertyAttributes, V8AccessControl)"/> is called.
+        ///     Without a rooted reference the delegate will get garbage collected causing callbacks from the native side will fail.
+        /// </summary>
+        /// <value> The getter. </value>
+        public SetterAccessor Setter { get; private set; }
+        NativeSetterAccessor _Setter;
+
+        /// <summary>
         /// Calls the V8 'SetAccessor()' function on the underlying native 'v8::ObjectTenplate' instance to create a property that is controlled by "getter" and "setter" callbacks.
         /// <para>Note: This is template related, which means all objects created from this template will be affected by these special properties.</para>
         /// </summary>
         public void SetAccessor(string name,
-            V8NativeObjectPropertyGetter getter, V8NativeObjectPropertySetter setter,
+            GetterAccessor getter, SetterAccessor setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
+            attributes = V8NativeObject._CreateAccessorProxies(Engine, name, getter, setter, attributes, access, ref _Getter, ref _Setter);
 
-            var engine = Engine;
+            Getter = getter;
+            Setter = setter;
 
-            V8NetProxy.SetObjectTemplateAccessor(_NativeObjectTemplateProxy, -1, name,
-                   _Engine._StoreAccessor<ManagedAccessorGetter>(_NativeObjectTemplateProxy->ObjectID, "get_" + name, (HandleProxy* _this, string propertyName) =>
-                   {
-                       try
-                       {
-                           return getter != null ? getter(_this, propertyName) : null;
-                       }
-                       catch (Exception ex)
-                       {
-                           return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
-                       }
-                   }),
-                   _Engine._StoreAccessor<ManagedAccessorSetter>(_NativeObjectTemplateProxy->ObjectID, "set_" + name, (HandleProxy* _this, string propertyName, HandleProxy* value) =>
-                   {
-                       try
-                       {
-                           return setter != null ? setter(_this, propertyName, value) : null;
-                       }
-                       catch (Exception ex)
-                       {
-                           return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
-                       }
-                   }),
-                   access, attributes);
+            V8NetProxy.SetObjectTemplateAccessor(_NativeObjectTemplateProxy, -1, name, _Getter, _Setter, access, attributes);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

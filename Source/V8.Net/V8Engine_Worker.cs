@@ -43,249 +43,249 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Called in an object's finalizer to handle disposal on the worker thread.  
-        /// </summary>
-        public static void Finalizing<T>(this T v8Object)
-            where T : IV8Disposable
-        {
-            if (v8Object != null)
-            {
-                var engine = v8Object.Engine; // (get the engine this handle/object belongs to [note: this will be null if an engine gets disposed with objects still floating in the GC])
+        ///// Called in an object's finalizer to handle disposal on the worker thread.  
+        ///// </summary>
+        //?public static void Finalizing<T>(this T v8Object)
+        //    where T : IV8Disposable
+        //{
+        //    if (v8Object != null)
+        //    {
+        //        var engine = v8Object.Engine; // (get the engine this handle/object belongs to [note: this will be null if an engine gets disposed with objects still floating in the GC])
 
-                // ... get handle and object details ...
-                if (engine != null)
-                    if (v8Object is V8NativeObject)
-                    {
-                        // ... queue the object (not the handle, so the object itself can be dealt with) ...
+        //        // ... get handle and object details ...
+        //        if (engine != null)
+        //            if (v8Object is V8NativeObject)
+        //            {
+        //                // ... queue the object (not the handle, so the object itself can be dealt with) ...
 
-                        lock (engine._DisposalQueue)
-                        {
-                            engine._DisposalQueue.Enqueue(v8Object); // (this will successfully resurrect the object; note: the finalize will NOT be called again! [nor does it need to be for dispose queued objects])
+        //                lock (engine._DisposalQueue)
+        //                {
+        //                    engine._DisposalQueue.Enqueue(v8Object); // (this will successfully resurrect the object; note: the finalize will NOT be called again! [nor does it need to be for dispose queued objects])
 
-                            // (note: lock on '_DisposalQueue' is kept so worker doesn't pull something before being finished here)
+        //                    // (note: lock on '_DisposalQueue' is kept so worker doesn't pull something before being finished here)
 
-                            if (v8Object is V8NativeObject)
-                            {
-                                var v8Obj = v8Object as V8NativeObject;
-                                v8Obj._Handle.IsDisposing = true;
-                            }
-                        }
-                    }
-                    else if (v8Object is Handle || v8Object is InternalHandle)
-                    {
-                        var h = ((IHandleBased)v8Object).InternalHandle;
-                        if (!h.IsEmpty && !h.IsDisposed && !h.IsDisposing)
-                            lock (engine._DisposalQueue)
-                            {
-                                h.IsDisposing = true;
-                                h._Object = null; // (release any tracker handle at this point, otherwise 'h.CanDispose' will keep returning false)
-                                engine._DisposalQueue.Enqueue(h);
-                            }
-                    }
-                    else
-                    {
-                        lock (engine._DisposalQueue)
-                        {
-                            engine._DisposalQueue.Enqueue(v8Object);
-                        }
-                    }
-            }
-        }
+        //                    if (v8Object is V8NativeObject)
+        //                    {
+        //                        var v8Obj = v8Object as V8NativeObject;
+        //                        //??v8Obj._Handle.IsDisposing = true;
+        //                    }
+        //                }
+        //            }
+        //            else if (v8Object is Handle || v8Object is InternalHandle)
+        //            {
+        //                var h = ((IHandleBased)v8Object).InternalHandle;
+        //                if (!h.IsEmpty && !h.IsDisposed && !h.IsDisposing)
+        //                    lock (engine._DisposalQueue)
+        //                    {
+        //                        //??h.IsDisposing = true;
+        //                        h._Object = null; // (release any tracker handle at this point, otherwise 'h.CanDispose' will keep returning false)
+        //                        engine._DisposalQueue.Enqueue(h);
+        //                    }
+        //            }
+        //            else
+        //            {
+        //                lock (engine._DisposalQueue)
+        //                {
+        //                    engine._DisposalQueue.Enqueue(v8Object);
+        //                }
+        //            }
+        //    }
+        //}
 
         // --------------------------------------------------------------------------------------------------------------------
     }
 
     // ========================================================================================================================
 
-    public unsafe partial class V8Engine
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+    //public unsafe partial class V8Engine
+    //{
+    //    // --------------------------------------------------------------------------------------------------------------------
 
-        internal Thread _Worker;
+    //    internal Thread _Worker;
 
-        /// <summary>
-        /// When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.  
-        /// </summary>
-        internal readonly SortedSet<int> _WeakObjects = new SortedSet<int>(); // (note: a 'SortedSet' is used to prevent duplicates getting added)
+    //    /// <summary>
+    //    /// When 'V8NativeObject' objects are no longer in use, they are registered here for quick reference so the worker thread can dispose of them.  
+    //    /// </summary>
+    //    internal readonly SortedSet<int> _WeakObjects = new SortedSet<int>(); // (note: a 'SortedSet' is used to prevent duplicates getting added)
 
-        /// <summary>
-        /// Holds a list of all objects that the GC attempted to finalize. The managed side no longer has ownership of anything
-        /// in this list.  These objects/handles need to be disposed in sync with the native side.
-        /// </summary>
-        internal Queue<IV8Disposable> _DisposalQueue = new Queue<IV8Disposable>(100);
+    //    /// <summary>
+    //    /// Holds a list of all objects that the GC attempted to finalize. The managed side no longer has ownership of anything
+    //    /// in this list.  These objects/handles need to be disposed in sync with the native side.
+    //    /// </summary>
+    //    internal Queue<IV8Disposable> _DisposalQueue = new Queue<IV8Disposable>(100);
 
-        /// <summary>
-        /// Abandoned objects are objects that failed to dispose.  They may be retried later at a slower rate.
-        /// One such example is 'ObjectTemplate', where though all CLR references are gone, may still have V8 side references.
-        /// In such case, the 'ObjectTemplate' becomes effectively "abandoned" on the managed side, but still must remain.
-        /// Because there's no V8 GC for this, the worker will have to check these at a slower pace from time to time.
-        /// </summary>
-        internal readonly LinkedList<IV8Disposable> _AbandondObjects = new LinkedList<IV8Disposable>(); // TODO: Actually make the worker look into these on a slower frequency. ;)
-        internal readonly Dictionary<IV8Disposable, LinkedListNode<IV8Disposable>> _AbandondObjectsIndex = new Dictionary<IV8Disposable, LinkedListNode<IV8Disposable>>(); // (for faster removal)
+    //    /// <summary>
+    //    /// Abandoned objects are objects that failed to dispose.  They may be retried later at a slower rate.
+    //    /// One such example is 'ObjectTemplate', where though all CLR references are gone, may still have V8 side references.
+    //    /// In such case, the 'ObjectTemplate' becomes effectively "abandoned" on the managed side, but still must remain.
+    //    /// Because there's no V8 GC for this, the worker will have to check these at a slower pace from time to time.
+    //    /// </summary>
+    //    internal readonly LinkedList<IV8Disposable> _AbandondObjects = new LinkedList<IV8Disposable>(); // TODO: Actually make the worker look into these on a slower frequency. ;)
+    //    internal readonly Dictionary<IV8Disposable, LinkedListNode<IV8Disposable>> _AbandondObjectsIndex = new Dictionary<IV8Disposable, LinkedListNode<IV8Disposable>>(); // (for faster removal)
 
-        // --------------------------------------------------------------------------------------------------------------------
+    //    // --------------------------------------------------------------------------------------------------------------------
 
-        void _Initialize_Worker()
-        {
-            _Worker = new Thread(_WorkerLoop) { IsBackground = true }; // (note: must set 'IsBackground=true', else the app will hang on exit)
-            _Worker.Priority = ThreadPriority.Lowest;
-            _Worker.Start();
-        }
+    //    void _Initialize_Worker() //? Depreciated.
+    //    {
+    //        //_Worker = new Thread(_WorkerLoop) { IsBackground = true }; // (note: must set 'IsBackground=true', else the app will hang on exit)
+    //        //_Worker.Priority = ThreadPriority.Lowest;
+    //        //_Worker.Start();
+    //    }
 
-        // --------------------------------------------------------------------------------------------------------------------
+    //    // --------------------------------------------------------------------------------------------------------------------
 
-        volatile int _PauseWorker;
+    //    volatile int _PauseWorker;
 
-        const int _THREAD_SLEEP_DELAY = 100;
+    //    const int _THREAD_SLEEP_DELAY = 100;
 
-        void _WorkerLoop()
-        {
-            bool workPending = false;
+    //    void _WorkerLoop()
+    //    {
+    //        bool workPending = false;
 
-            while (true)
-            {
-                if (_PauseWorker == 1) _PauseWorker = 2;
-                else if (_PauseWorker == -1) break;
-                else
-                {
-                    workPending = _WeakObjects.Count > 0 || _DisposalQueue.Count > 0 || _AbandondObjects.Count > 0;
+    //        while (true)
+    //        {
+    //            if (_PauseWorker == 1) _PauseWorker = 2;
+    //            else if (_PauseWorker == -1) break;
+    //            else
+    //            {
+    //                workPending = _WeakObjects.Count > 0 || _DisposalQueue.Count > 0 || _AbandondObjects.Count > 0;
 
-                    while (workPending && _PauseWorker == 0)
-                    {
-                        workPending = _DoWorkStep();
-                        // (note: the above does not consider '_AbandondObjects.Count' upon return so that the thread can sleep more for the abandoned ones)
-                        //DoIdleNotification(10);
-                        Thread.Sleep(0); // (give time to other threads while looping)
-                    }
-                }
+    //                while (workPending && _PauseWorker == 0)
+    //                {
+    //                    workPending = _DoWorkStep();
+    //                    // (note: the above does not consider '_AbandondObjects.Count' upon return so that the thread can sleep more for the abandoned ones)
+    //                    //DoIdleNotification(10);
+    //                    Thread.Sleep(0); // (give time to other threads while looping)
+    //                }
+    //            }
 
-                Thread.Sleep(_THREAD_SLEEP_DELAY);
+    //            Thread.Sleep(_THREAD_SLEEP_DELAY);
 
-                DoIdleNotification(_THREAD_SLEEP_DELAY); // (do this last to allow the worker steps to make objects weak first, if any)
-            }
+    //            DoIdleNotification(_THREAD_SLEEP_DELAY); // (do this last to allow the worker steps to make objects weak first, if any)
+    //        }
 
-            _PauseWorker = -2;
-        }
+    //        _PauseWorker = -2;
+    //    }
 
-        /// <summary>
-        /// Does one step in the work process (mostly garbage collection for freeing up unused handles).
-        /// True is returned if more work is pending, and false otherwise.
-        /// </summary>
-        bool _DoWorkStep()
-        {
-            // ... check one abandoned object ...
+    //    /// <summary>
+    //    /// Does one step in the work process (mostly garbage collection for freeing up unused handles).
+    //    /// True is returned if more work is pending, and false otherwise.
+    //    /// </summary>
+    //    bool _DoWorkStep()
+    //    {
+    //        // ... check one abandoned object ...
 
-            LinkedListNode<IV8Disposable> abandoned = null;
+    //        LinkedListNode<IV8Disposable> abandoned = null;
 
-            lock (_AbandondObjects)
-            {
-                if (_AbandondObjects.Count > 0)
-                {
-                    abandoned = _AbandondObjects.First; // (take the first abandoned object and try to dispose of it)
-                    _AbandondObjects.RemoveFirst();
-                    // WARNING: Until '_AbandondObjectsIndex' is also updated, DO NOT release lock until the node is put back, or removed from the index!
-                }
+    //        lock (_AbandondObjects)
+    //        {
+    //            if (_AbandondObjects.Count > 0)
+    //            {
+    //                abandoned = _AbandondObjects.First; // (take the first abandoned object and try to dispose of it)
+    //                _AbandondObjects.RemoveFirst();
+    //                // WARNING: Until '_AbandondObjectsIndex' is also updated, DO NOT release lock until the node is put back, or removed from the index!
+    //            }
 
-                if (abandoned != null)
-                {
-                    if (abandoned.Value.CanDispose)
-                    {
-                        abandoned.Value.Dispose();
-                        GC.SuppressFinalize(abandoned); // (required otherwise the object's finalizer will be triggered again)
-                        _AbandondObjectsIndex.Remove(abandoned.Value);
-                    }
-                    else
-                        _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
-                }
-            }
+    //            if (abandoned != null)
+    //            {
+    //                if (abandoned.Value.CanDispose)
+    //                {
+    //                    abandoned.Value.Dispose();
+    //                    GC.SuppressFinalize(abandoned); // (required otherwise the object's finalizer will be triggered again)
+    //                    _AbandondObjectsIndex.Remove(abandoned.Value);
+    //                }
+    //                else
+    //                    _AbandondObjects.AddLast(abandoned); // (still can't dispose this yet)
+    //            }
+    //        }
 
-            // ... and do one handle ready to be disposed ...
+    //        // ... and do one handle ready to be disposed ...
 
-            IV8Disposable disposable = null;
+    //        IV8Disposable disposable = null;
 
-            lock (_DisposalQueue) // TODO: consider using read/write locks in more places
-            {
-                if (_DisposalQueue.Count > 0)
-                    disposable = _DisposalQueue.Dequeue();
-            }
+    //        lock (_DisposalQueue) // TODO: consider using read/write locks in more places
+    //        {
+    //            if (_DisposalQueue.Count > 0)
+    //                disposable = _DisposalQueue.Dequeue();
+    //        }
 
-            if (disposable != null)
-                if (disposable.CanDispose)
-                    disposable.Dispose();
-                else
-                {
-                    // ... cannot dispose this yet; place it in the "abandoned" queue for later (next generation disposal) ...
+    //        if (disposable != null)
+    //            if (disposable.CanDispose)
+    //                disposable.Dispose();
+    //            else
+    //            {
+    //                // ... cannot dispose this yet; place it in the "abandoned" queue for later (next generation disposal) ...
 
-                    lock (_AbandondObjects)
-                    {
-                        _AbandondObjectsIndex[disposable] = _AbandondObjects.AddLast(disposable);
-                    }
+    //                lock (_AbandondObjects)
+    //                {
+    //                    _AbandondObjectsIndex[disposable] = _AbandondObjects.AddLast(disposable);
+    //                }
 
-                    // ... if this is a manage object, it is now abandoned, so make the native handle weak ...
+    //                // ... if this is a manage object, it is now abandoned, so make the native handle weak ...
 
-                    if (disposable is V8NativeObject)
-                    {
-                        var v8Obj = (V8NativeObject)disposable;
-                        if (!v8Obj.InternalHandle.IsEmpty && v8Obj.InternalHandle._HandleProxy->IsPendingDisposal)
-                        {
-                            V8NetProxy.MakeWeakHandle(v8Obj.InternalHandle); // ('Disposed' will be 2 after this, so no worries about doing this more than once)
-                            /* Once the native GC attempts to collect the underlying native object, then '_OnNativeGCRequested()' will get 
-                             * called to finalize the disposal of the managed object.
-                             * Note 1: Once the native V8 engine agrees, this object will be removed due to a global V8 GC callback 
-                             *         registered when the V8.Net wrapper engine was created.
-                             * Note 2: Don't call this while '_Objects' is locked, because the main thread may be executing script that may 
-                             *         also need a lock, and this call may become blocked by a native side mutex.
-                             */
-                        }
-                    }
-                }
+    //                if (disposable is V8NativeObject)
+    //                {
+    //                    var v8Obj = (V8NativeObject)disposable;
+    //                    if (!v8Obj.InternalHandle.IsEmpty && v8Obj.InternalHandle._HandleProxy->IsCLRDisposed)
+    //                    {
+    //                        V8NetProxy.MakeWeakHandle(v8Obj.InternalHandle); // ('Disposed' will be 2 after this, so no worries about doing this more than once)
+    //                        /* Once the native GC attempts to collect the underlying native object, then '_OnNativeGCRequested()' will get 
+    //                         * called to finalize the disposal of the managed object.
+    //                         * Note 1: Once the native V8 engine agrees, this object will be removed due to a global V8 GC callback 
+    //                         *         registered when the V8.Net wrapper engine was created.
+    //                         * Note 2: Don't call this while '_Objects' is locked, because the main thread may be executing script that may 
+    //                         *         also need a lock, and this call may become blocked by a native side mutex.
+    //                         */
+    //                    }
+    //                }
+    //            }
 
-            return _WeakObjects.Count + _DisposalQueue.Count > 0;
-        }
+    //        return _WeakObjects.Count + _DisposalQueue.Count > 0;
+    //    }
 
-        /// <summary>
-        /// Pauses the worker thread (usually for debug purposes). (Note: The worker thread manages object GC along with the native V8 GC.)
-        /// </summary>
-        public void PauseWorker()
-        {
-            if (_Worker.IsAlive)
-            {
-                _PauseWorker = 1;
-                while (_PauseWorker == 1 && _Worker.IsAlive) { }
-            }
-        }
+    //    /// <summary>
+    //    /// Pauses the worker thread (usually for debug purposes). (Note: The worker thread manages object GC along with the native V8 GC.)
+    //    /// </summary>
+    //    public void PauseWorker()
+    //    {
+    //        if (_Worker.IsAlive)
+    //        {
+    //            _PauseWorker = 1;
+    //            while (_PauseWorker == 1 && _Worker.IsAlive) { }
+    //        }
+    //    }
 
-        /// <summary>
-        /// Terminates the worker thread, without a 3 second timeout to be sure.
-        /// This is called when the engine is shutting down. (Note: The worker thread manages the disposal queues, in sync with the native V8 GC.)
-        /// </summary>
-        internal void _TerminateWorker()
-        {
-            if (_Worker.IsAlive)
-            {
-                _PauseWorker = -1;
-                var timeoutCountdown = 3000;
-                while (_PauseWorker == -1 && _Worker.IsAlive)
-                    if (timeoutCountdown-- > 0)
-                        Thread.Sleep(1);
-                    else
-                    {
-                        _Worker.Abort();
-                        break;
-                    }
-            }
-        }
+    //    /// <summary>
+    //    /// Terminates the worker thread, without a 3 second timeout to be sure.
+    //    /// This is called when the engine is shutting down. (Note: The worker thread manages the disposal queues, in sync with the native V8 GC.)
+    //    /// </summary>
+    //    internal void _TerminateWorker()
+    //    {
+    //        if (_Worker.IsAlive)
+    //        {
+    //            _PauseWorker = -1;
+    //            var timeoutCountdown = 3000;
+    //            while (_PauseWorker == -1 && _Worker.IsAlive)
+    //                if (timeoutCountdown-- > 0)
+    //                    Thread.Sleep(1);
+    //                else
+    //                {
+    //                    _Worker.Abort();
+    //                    break;
+    //                }
+    //        }
+    //    }
 
-        /// <summary>
-        /// Unpauses the worker thread (see <see cref="PauseWorker"/>).
-        /// </summary>
-        public void ResumeWorker()
-        {
-            _PauseWorker = 0;
-        }
+    //    /// <summary>
+    //    /// Unpauses the worker thread (see <see cref="PauseWorker"/>).
+    //    /// </summary>
+    //    public void ResumeWorker()
+    //    {
+    //        _PauseWorker = 0;
+    //    }
 
-        // --------------------------------------------------------------------------------------------------------------------
-    }
+    //    // --------------------------------------------------------------------------------------------------------------------
+    //}
 
     // ========================================================================================================================
 }

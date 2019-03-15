@@ -35,6 +35,7 @@ extern "C"
 		if (context != nullptr)
 		{
 			auto engine = context->EngineProxy();
+			if (engine == nullptr) return; // (might have been destroyed)
 			BEGIN_ISOLATE_SCOPE(engine);
 			delete context;
 			END_ISOLATE_SCOPE;
@@ -61,9 +62,7 @@ extern "C"
 	EXPORT void STDCALL RegisterGCCallback(V8EngineProxy* engine, ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback)
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
-		BEGIN_CONTEXT_SCOPE(engine);
 		engine->RegisterGCCallback(managedV8GarbageCollectionRequestCallback);
-		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
 
@@ -71,17 +70,19 @@ extern "C"
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
+		engine->ProcessHandleQueues(1000);
 		engine->Isolate()->LowMemoryNotification();
-		while (!engine->Isolate()->IdleNotificationDeadline(1000)) {}
+		while (!engine->Isolate()->IdleNotificationDeadline(1)) {}
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1000)
+	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1)
 	{
 		if (engine->IsExecutingScript()) return false;
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
+		engine->ProcessHandleQueues(1000);
 		return engine->Isolate()->IdleNotificationDeadline(hint);
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
@@ -130,12 +131,16 @@ extern "C"
 		return engine->CreateObjectTemplate();
 		END_ISOLATE_SCOPE;
 	}
-	EXPORT void STDCALL DeleteObjectTemplateProxy(ObjectTemplateProxy *proxy)
+	EXPORT bool STDCALL DeleteObjectTemplateProxy(ObjectTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return false; // (might have been destroyed)
+		if (engine->IsExecutingScript())
+			return false; // TODO: Consider queuing this also.
 		BEGIN_ISOLATE_SCOPE(engine);
 		delete proxy;
 		END_ISOLATE_SCOPE;
+		return true;
 	}
 
 	EXPORT void STDCALL RegisterNamedPropertyHandlers(ObjectTemplateProxy *proxy,
@@ -515,12 +520,16 @@ extern "C"
 		return engine->CreateFunctionTemplate(className, callback);
 		END_ISOLATE_SCOPE;
 	}
-	EXPORT void STDCALL DeleteFunctionTemplateProxy(FunctionTemplateProxy *proxy)
+	EXPORT bool STDCALL DeleteFunctionTemplateProxy(FunctionTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return false; // (might have been destroyed)
+		if (engine->IsExecutingScript())
+			return false; // TODO: Consider queuing this also.
 		BEGIN_ISOLATE_SCOPE(engine);
 		delete proxy;
 		END_ISOLATE_SCOPE;
+		return true;
 	}
 	EXPORT ObjectTemplateProxy* STDCALL GetFunctionInstanceTemplateProxy(FunctionTemplateProxy *proxy)
 	{
@@ -622,19 +631,19 @@ extern "C"
 		{
 			auto engine = handleProxy->EngineProxy();
 
-			if (engine->IsExecutingScript())
-			{
-				// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
-				engine->QueueMakeWeak(handleProxy);
-			}
-			else
-			{
-				BEGIN_ISOLATE_SCOPE(engine);
-				BEGIN_CONTEXT_SCOPE(engine);
-				handleProxy->MakeWeak();
-				END_CONTEXT_SCOPE;
-				END_ISOLATE_SCOPE;
-			}
+			//if (engine->IsExecutingScript()) // TODO: Better to use thread detection perhaps...?
+			//{
+			//	// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
+			//	engine->QueueMakeWeak(handleProxy); // TODO: Not sure if this is still needed...?
+			//}
+			//else
+			//{
+			BEGIN_ISOLATE_SCOPE(engine);
+			BEGIN_CONTEXT_SCOPE(engine);
+			handleProxy->MakeWeak();
+			END_CONTEXT_SCOPE;
+			END_ISOLATE_SCOPE;
+			//}
 		}
 	}
 	EXPORT void STDCALL MakeStrongHandle(HandleProxy *handleProxy)
@@ -643,19 +652,19 @@ extern "C"
 		{
 			auto engine = handleProxy->EngineProxy();
 
-			if (engine->IsExecutingScript())
-			{
-				// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
-				engine->QueueMakeStrong(handleProxy);
-			}
-			else
-			{
-				BEGIN_ISOLATE_SCOPE(engine);
-				BEGIN_CONTEXT_SCOPE(engine);
-				handleProxy->MakeStrong();
-				END_CONTEXT_SCOPE;
-				END_ISOLATE_SCOPE;
-			}
+			//if (engine->IsExecutingScript())
+			//{
+			//	// ... a script is running, so have 'GetHandleProxy()' take some responsibility to check a queue ...
+			//	engine->QueueMakeStrong(handleProxy);
+			//}
+			//else
+			//{
+			BEGIN_ISOLATE_SCOPE(engine);
+			BEGIN_CONTEXT_SCOPE(engine);
+			handleProxy->MakeStrong();
+			END_CONTEXT_SCOPE;
+			END_ISOLATE_SCOPE;
+			//}
 		}
 	}
 
@@ -664,11 +673,20 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
-			BEGIN_ISOLATE_SCOPE(engine);
-			BEGIN_CONTEXT_SCOPE(engine);
-			handleProxy->Dispose();
-			END_CONTEXT_SCOPE;
-			END_ISOLATE_SCOPE;
+			if (engine != nullptr) // (might have been destroyed)
+				if (engine->IsExecutingScript())
+				{
+					// ... a script is running, so make it weak so the GC collects this later (if a script is running calling this will queue it up)...
+					engine->QueueHandleDisposal(handleProxy); // TODO: Create a queue for disposing handles as well.
+				}
+				else
+				{
+					BEGIN_ISOLATE_SCOPE(engine);
+					BEGIN_CONTEXT_SCOPE(engine);
+					handleProxy->Dispose();
+					END_CONTEXT_SCOPE;
+					END_ISOLATE_SCOPE;
+				}
 		}
 	}
 

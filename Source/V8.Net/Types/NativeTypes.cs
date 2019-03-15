@@ -94,7 +94,7 @@ namespace V8.Net
         public Int32 ManagedReference; // 0=native side only, 1=InternalHandle, 2=Managed Object; Lets the native side know if there's a managed reference responsible for disposing the native handle proxy.
 
         [FieldOffset(40), MarshalAs(UnmanagedType.I4)]
-        public Int32 Disposed; // (0 = in use, 1 = managed side ready to dispose, 2 = object is weak (if applicable), 3 = disposed/cached)
+        public Int32 Disposed; // (flags: 0 = handle is in use, 1 = native side is done with it, 2 = managed side is done with it, 3 - VIRTUALLY disposed [cached on native side for reuse]), 4 = queued for making weak (managed side call), 8 = 'weak' removal in progress, 16 = queued for disposal.
 
         [FieldOffset(44), MarshalAs(UnmanagedType.I4)]
         public Int32 EngineID;
@@ -111,32 +111,29 @@ namespace V8.Net
         /// <summary>
         /// The handle is still in use.
         /// </summary>
-        public bool IsActive { get { return Disposed == 0; } }
+        public bool IsActive => (Disposed & 19) == 0;
 
         /// <summary>
-        /// The handle has lost all managed side references, OR is being disposed on request for non-objects.
+        /// The handle has lost all managed side references and was marked weak on the native side.
         /// </summary>
-        public bool IsPendingDisposal { get { return Disposed == 1; } }
+        public bool IsCLRDisposed => (Disposed & 2) > 0 || (Disposed & 4) > 0 || ManagedReference < 2;
 
-        /// <summary>
-        /// The handle is going through the disposal process. 
-        /// This us true if either 'IsPendingDisposal' or 'IsWeak' is true. 
-        /// </summary>
-        public bool IsDisposing
-        {
-            get { return Disposed == 1 || Disposed == 2; }
-            set { if (Disposed <= 1) Disposed = value ? 1 : 0; } // (once disposed is > 1, the process cannot be stopped, and thus this must never change)
-        }
+        ///// <summary>
+        ///// The handle is going through the disposal process. 
+        ///// This us true if either 'IsPendingDisposal' or 'IsWeak' is true. 
+        ///// </summary>
+        //public bool IsDisposing
+        //{
+        //    get { return Disposed == 1 || Disposed == -1 || Disposed == 2 || Disposed == -2; }
+        //}
 
-        /// <summary>
-        /// The native handle is weak.  The V8 GC will call back to reclaim the persistent handle when ready.
-        /// </summary>
-        public bool IsWeak { get { return Disposed == 2; } }
+        /// <summary> The handle is queued for disposal. </summary>
+        public bool IsDisposing => (Disposed & 16) > 0;
 
         /// <summary>
         /// The native persistent handle is disposed and cached.
         /// </summary>
-        public bool IsDisposed { get { return Disposed == 3; } }
+        public bool IsDisposed => (Disposed & 1) > 0;
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -144,7 +141,8 @@ namespace V8.Net
         {
             get
             {
-                if ((int)_Type == -1) throw new InvalidOperationException("Type is unknown - you must call 'V8NetProxy.UpdateHandleValue()' first.");
+                if (_Type == JSValueType.Uninitialized)
+                    throw new InvalidOperationException("Type is not yet initialized - you must call 'V8NetProxy.UpdateHandleValue()' first.");
                 switch (_Type)
                 {
                     case JSValueType.Undefined: return "undefined";
@@ -155,6 +153,7 @@ namespace V8.Net
                     case JSValueType.Number: return V8Number;
                     case JSValueType.NumberObject: return V8Number; // TODO: Test this.
                     default: return V8String != null ? Marshal.PtrToStringUni((IntPtr)V8String) : null;
+                        // TODO: Detect arrays and return them also.
                 }
             }
         }
@@ -245,19 +244,19 @@ namespace V8.Net
     /// Otherwise, returns an empty handle.
     /// </summary>
     [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-    public unsafe delegate HandleProxy* ManagedAccessorSetter(HandleProxy* _this, string propertyName, HandleProxy* value);
+    public unsafe delegate HandleProxy* NativeSetterAccessor(HandleProxy* _this, string propertyName, HandleProxy* value);
 
     /// <summary>
     /// Returns the value if the setter intercepts the request.
     /// Otherwise, returns an empty handle.
     /// </summary>
     [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-    public unsafe delegate HandleProxy* ManagedAccessorGetter(HandleProxy* _this, string propertyName);
+    public unsafe delegate HandleProxy* NativeGetterAccessor(HandleProxy* _this, string propertyName);
 
     // ========================================================================================================================
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public unsafe delegate HandleProxy* ManagedJSFunctionCallback(Int32 managedObjectID, [MarshalAs(UnmanagedType.I1)]bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount);
+    public unsafe delegate HandleProxy* NativeFunctionCallback(Int32 managedObjectID, [MarshalAs(UnmanagedType.I1)]bool isConstructCall, HandleProxy* _this, HandleProxy** args, Int32 argCount);
     // ('IntPtr' == HandleProxy*)
 
     // ========================================================================================================================

@@ -77,8 +77,8 @@ namespace V8.Net
         public static CreateObjectTemplateProxy_ImportFuncType CreateObjectTemplateProxy = (Environment.Is64BitProcess ? (CreateObjectTemplateProxy_ImportFuncType)CreateObjectTemplateProxy64 : CreateObjectTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "DeleteObjectTemplateProxy")]
-        public static extern unsafe void DeleteObjectTemplateProxy32(NativeObjectTemplateProxy* objectTemplateProxy);
-        public delegate void DeleteObjectTemplateProxy_ImportFuncType(NativeObjectTemplateProxy* objectTemplateProxy);
+        public static extern unsafe bool DeleteObjectTemplateProxy32(NativeObjectTemplateProxy* objectTemplateProxy);
+        public delegate bool DeleteObjectTemplateProxy_ImportFuncType(NativeObjectTemplateProxy* objectTemplateProxy);
         public static DeleteObjectTemplateProxy_ImportFuncType DeleteObjectTemplateProxy = (Environment.Is64BitProcess ? (DeleteObjectTemplateProxy_ImportFuncType)DeleteObjectTemplateProxy64 : DeleteObjectTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "RegisterNamedPropertyHandlers")]
@@ -126,8 +126,8 @@ namespace V8.Net
         public static UnregisterIndexedPropertyHandlers_ImportFuncType UnregisterIndexedPropertyHandlers = (Environment.Is64BitProcess ? (UnregisterIndexedPropertyHandlers_ImportFuncType)UnregisterIndexedPropertyHandlers64 : UnregisterIndexedPropertyHandlers32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetCallAsFunctionHandler")]
-        public static extern void SetCallAsFunctionHandler32(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
-        public delegate void SetCallAsFunctionHandler_ImportFuncType(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+        public static extern void SetCallAsFunctionHandler32(NativeObjectTemplateProxy* proxy, NativeFunctionCallback callback);
+        public delegate void SetCallAsFunctionHandler_ImportFuncType(NativeObjectTemplateProxy* proxy, NativeFunctionCallback callback);
         public static SetCallAsFunctionHandler_ImportFuncType SetCallAsFunctionHandler = (Environment.Is64BitProcess ? (SetCallAsFunctionHandler_ImportFuncType)SetCallAsFunctionHandler64 : SetCallAsFunctionHandler32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "CreateObjectFromTemplate")]
@@ -187,22 +187,22 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetObjectAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectAccessor32(HandleProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public delegate void SetObjectAccessor_ImportFuncType(HandleProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public static SetObjectAccessor_ImportFuncType SetObjectAccessor = (Environment.Is64BitProcess ? (SetObjectAccessor_ImportFuncType)SetObjectAccessor64 : SetObjectAccessor32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetObjectTemplateAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectTemplateAccessor32(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public delegate void SetObjectTemplateAccessor_ImportFuncType(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public static SetObjectTemplateAccessor_ImportFuncType SetObjectTemplateAccessor = (Environment.Is64BitProcess ? (SetObjectTemplateAccessor_ImportFuncType)SetObjectTemplateAccessor64 : SetObjectTemplateAccessor32);
 
@@ -232,13 +232,13 @@ namespace V8.Net
         public static GetArrayLength_ImportFuncType GetArrayLength = (Environment.Is64BitProcess ? (GetArrayLength_ImportFuncType)GetArrayLength64 : GetArrayLength32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "CreateFunctionTemplateProxy", CharSet = CharSet.Unicode)]
-        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy32(NativeV8EngineProxy* engine, string className, ManagedJSFunctionCallback callback);
-        public delegate NativeFunctionTemplateProxy* CreateFunctionTemplateProxy_ImportFuncType(NativeV8EngineProxy* engine, string className, ManagedJSFunctionCallback callback);
+        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy32(NativeV8EngineProxy* engine, string className, NativeFunctionCallback callback);
+        public delegate NativeFunctionTemplateProxy* CreateFunctionTemplateProxy_ImportFuncType(NativeV8EngineProxy* engine, string className, NativeFunctionCallback callback);
         public static CreateFunctionTemplateProxy_ImportFuncType CreateFunctionTemplateProxy = (Environment.Is64BitProcess ? (CreateFunctionTemplateProxy_ImportFuncType)CreateFunctionTemplateProxy64 : CreateFunctionTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "DeleteFunctionTemplateProxy")]
-        public static extern unsafe void DeleteFunctionTemplateProxy32(NativeFunctionTemplateProxy* functionTemplateProxy);
-        public delegate void DeleteFunctionTemplateProxy_ImportFuncType(NativeFunctionTemplateProxy* functionTemplateProxy);
+        public static extern unsafe bool DeleteFunctionTemplateProxy32(NativeFunctionTemplateProxy* functionTemplateProxy);
+        public delegate bool DeleteFunctionTemplateProxy_ImportFuncType(NativeFunctionTemplateProxy* functionTemplateProxy);
         public static DeleteFunctionTemplateProxy_ImportFuncType DeleteFunctionTemplateProxy = (Environment.Is64BitProcess ? (DeleteFunctionTemplateProxy_ImportFuncType)DeleteFunctionTemplateProxy64 : DeleteFunctionTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "GetFunctionInstanceTemplateProxy")]

@@ -66,12 +66,29 @@ namespace V8.Net
 
         /// <summary>
         /// A reference to the V8Engine instance that owns this object.
-        /// The default implementation for 'V8NativeObject' is to cache and return 'base.Engine', since it inherits from 'Handle'.
+        /// The default implementation for <see cref="V8NativeObject"/> is to cache and return 'base.Engine', since it inherits from 'Handle'.
         /// </summary>
         new public V8Engine Engine { get { return _Engine ?? (_Engine = _Handle.Engine); } }
         internal V8Engine _Engine;
 
         new public V8NativeObject Object { get { return this; } }
+
+        /// <summary>
+        ///     This is updated to hold a reference to the property value getter callback when
+        ///     <see cref="SetAccessor(string, GetterAccessor, SetterAccessor, V8PropertyAttributes, V8AccessControl)"/> is called.
+        ///     Without a rooted reference the delegate will get garbage collected causing callbacks from the native side will fail.
+        /// </summary>
+        /// <value> The getter. </value>
+        public GetterAccessor Getter { get; private set; }
+        NativeGetterAccessor _Getter;
+        /// <summary>
+        ///     This is updated to hold a reference to the property value setter callback when
+        ///     <see cref="SetAccessor(string, GetterAccessor, SetterAccessor, V8PropertyAttributes, V8AccessControl)"/> is called.
+        ///     Without a rooted reference the delegate will get garbage collected causing callbacks from the native side will fail.
+        /// </summary>
+        /// <value> The getter. </value>
+        public SetterAccessor Setter { get; private set; }
+        NativeSetterAccessor _Setter;
 
         /// <summary>
         /// The V8.NET ObjectTemplate or FunctionTemplate instance associated with this object, if any, or null if this object was not created using a V8.NET template.
@@ -212,9 +229,9 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-#if DEBUG && TRACE
+#if TRACE
         /// <summary>
-        /// Holds the call stack responsible for creating this object (available in debugging only with DEBUG and TRACE defined).
+        /// Holds the call stack responsible for creating this object (available only with TRACE defined).
         /// </summary>
         string _CreationStack;
 #endif
@@ -222,7 +239,7 @@ namespace V8.Net
 
         public V8NativeObject()
         {
-#if DEBUG && TRACE
+#if  TRACE
             _CreationStack = Environment.StackTrace;
 #endif
             _Proxy = this;
@@ -230,7 +247,7 @@ namespace V8.Net
 
         public V8NativeObject(IV8NativeObject proxy)
         {
-#if DEBUG && TRACE
+#if TRACE
             _CreationStack = Environment.StackTrace;
 #endif
             _Proxy = proxy ?? this;
@@ -272,7 +289,7 @@ namespace V8.Net
 
         public override void Dispose()
         {
-            _OnNativeGCRequested();
+            _Dispose();
         }
 
         /// <summary>
@@ -291,24 +308,27 @@ namespace V8.Net
                 _Proxy.OnDispose();
         }
 
-        internal bool _OnNativeGCRequested() // WARNING: The worker thread may cause a V8 GC callback in its own thread!
+        /// <summary>
+        ///     Returns true if disposed, and false if already disposed.
+        /// </summary>
+        internal bool _Dispose() // WARNING: The worker thread may cause a V8 GC callback in its own thread!
         {
             if (!_Handle.IsEmpty)
             {
-                _Handle.IsDisposing = true;
+                //? _Handle.IsDisposing = true;
                 var engine = Engine;
 
-                // ... remove this object from the abandoned queue ...
+                //// ... remove this object from the abandoned queue ...
 
-                lock (engine._AbandondObjects)
-                {
-                    LinkedListNode<IV8Disposable> node;
-                    if (engine._AbandondObjectsIndex.TryGetValue(this, out node))
-                    {
-                        engine._AbandondObjects.Remove(node);
-                        engine._AbandondObjectsIndex.Remove(this);
-                    }
-                }
+                //lock (engine._AbandondObjects)
+                //{
+                //    LinkedListNode<IV8Disposable> node;
+                //    if (engine._AbandondObjectsIndex.TryGetValue(this, out node))
+                //    {
+                //        engine._AbandondObjects.Remove(node);
+                //        engine._AbandondObjectsIndex.Remove(this);
+                //    }
+                //}
 
                 // ... notify any custom dispose methods to clean up ...
 
@@ -327,13 +347,18 @@ namespace V8.Net
 
                 // ... clear any registered accessors ...
 
-                engine._ClearAccessors(_ID.Value); // (just to be sure - accessors are no longer needed once the native handle is GC'd)
+                Getter = null;
+                _Getter = null;
+                Setter = null;
+                _Setter = null;
+
+                // ... reset and dispose the handle ...
 
                 if (!_Handle.IsEmpty)
                 {
                     _Handle.ObjectID = -1; // (resets the object ID on the native side [though this happens anyhow once cached], which also causes the reference to clear)
-                    // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.CanDispose' will return false])
-                    _Handle.Dispose();
+                    // (MUST clear the object ID, else the handle will not get disposed [because '{Handle}.IsLocked' will return false])
+                    _Handle._Finalize(false);
                 }
 
                 if (_ID != null)
@@ -341,15 +366,17 @@ namespace V8.Net
 
                 Template = null; // (note: this decrements a template counter, allowing the template object to be finally allowed to dispose)
                 _ID = null; // (also allows the GC finalizer to collect the object)
+
+                return true;
             }
 
-            return true; // ("true" means to "continue disposal of native handle" [if not already empty])
+            return false;
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
         public static implicit operator InternalHandle(V8NativeObject obj) { return obj != null ? obj._Handle : InternalHandle.Empty; }
-        public static implicit operator HandleProxy*(V8NativeObject obj) { return obj != null ? obj._Handle._HandleProxy : null; }
+        public static implicit operator HandleProxy* (V8NativeObject obj) { return obj != null ? obj._Handle._HandleProxy : null; }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -475,13 +502,72 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
+        ///     Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by
+        ///     "getter" and "setter" callbacks.
+        ///     <para>WARNING: If you try to set managed accessors on a native-ONLY object (as in, this handle does not yet have a
+        ///     managed-side object associated with it) then
+        ///     <see cref="V8Engine.CreateObject(InternalHandle, bool)"/> will be called to create a wrapper object so the
+        ///     accessor delegates will not get garbage collected, causing errors. You can optionally take control of this yourself
+        ///     and call one of the 'CreateObject()' methods on <see cref="V8Engine"/>.</para>
         /// </summary>
-        public virtual void SetAccessor(string name,
-            V8NativeObjectPropertyGetter getter, V8NativeObjectPropertySetter setter,
+        /// <param name="name"> The property name. </param>
+        /// <param name="getter">
+        ///     The property getter delegate that returns a value when the property is accessed within JavaScript.
+        /// </param>
+        /// <param name="setter">
+        ///     The property setter delegate that sets AND returns a value when the property is accessed within JavaScript.
+        /// </param>
+        /// <param name="attributes"> (Optional) The attributes to assign to the property. </param>
+        /// <param name="access"> (Optional) The access security on the property. </param>
+        /// <seealso cref="M:V8.Net.IV8Object.SetAccessor(string,GetterAccessor,SetterAccessor,V8PropertyAttributes,V8AccessControl)"/>
+        public virtual void SetAccessor(string name, GetterAccessor getter, SetterAccessor setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
-            _Handle.SetAccessor(name, getter, setter, attributes, access);
+            attributes = _CreateAccessorProxies(Engine, name, getter, setter, attributes, access, ref _Getter, ref _Setter);
+
+            Getter = getter;
+            Setter = setter;
+
+            V8NetProxy.SetObjectAccessor(this, ID, name, _Getter, _Setter, access, attributes);
+        }
+
+        static internal V8PropertyAttributes _CreateAccessorProxies(V8Engine engine, string name, GetterAccessor getter, SetterAccessor setter, V8PropertyAttributes attributes, V8AccessControl access, 
+            ref NativeGetterAccessor _Getter, ref NativeSetterAccessor _Setter)
+        {
+            if (name.IsNullOrWhiteSpace())
+                throw new ArgumentNullException(nameof(name), "Cannot be null, empty, or only whitespace.");
+            if (attributes == V8PropertyAttributes.Undefined)
+                attributes = V8PropertyAttributes.None;
+            if (attributes < 0) throw new InvalidOperationException("'attributes' has an invalid value.");
+            if (access < 0) throw new InvalidOperationException("'access' has an invalid value.");
+
+            if (getter != null && _Getter == null)
+                _Getter = (_this, _name) => // (only need to set this once on first use)
+                {
+                    try
+                    {
+                        return getter != null ? getter(_this, _name) : null;
+                    }
+                    catch (Exception ex)
+                    {
+                        return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+                    }
+                };
+
+            if (setter != null && _Setter == null)
+                _Setter = (_this, _name, _val) => // (only need to set this once on first use)
+                {
+                    try
+                    {
+                        return setter != null ? setter(_this, _name, _val) : null;
+                    }
+                    catch (Exception ex)
+                    {
+                        return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
+                    }
+                };
+
+            return attributes;
         }
 
         // --------------------------------------------------------------------------------------------------------------------

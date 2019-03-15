@@ -300,7 +300,7 @@ namespace V8.Net
         /// Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
         /// </summary>
         void SetAccessor(string name,
-            V8NativeObjectPropertyGetter getter, V8NativeObjectPropertySetter setter,
+            GetterAccessor getter, SetterAccessor setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default);
 
         // --------------------------------------------------------------------------------------------------------------------

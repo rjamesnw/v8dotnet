@@ -14,71 +14,27 @@ namespace V8.Net
     {
         // --------------------------------------------------------------------------------------------------------------------
 
-#if NETSTANDARD
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr LoadLibrary(string fileName);
-
-        public const int RTLD_NOW = 0x002;
-        [DllImport("libdl")] // (could be "libdl.so.2" also: https://github.com/mellinoe/nativelibraryloader/issues/2#issuecomment-414476716)
-        public static extern IntPtr DLOpen(string fileName, int flags);
-
-        [DllImport("libdl.so.2")]
-        public static extern IntPtr DLOpen2(string fileName, int flags);
-
-        /// <summary>
-        ///     Supports ASP.Net Core hosting environments.  If set, and <see cref="AlternateRootSubPath"/> is a relative path, then
-        ///     the relative path is combined with the context directory path.
-        /// </summary>
-        public static IHostingEnvironment HostingEnvironment;
-#endif
-
-        static bool TryLoad(string rootPath)
-        {
-#if NETSTANDARD
-            try
-            {
-                // ... check 'codebaseuri' - this is the *original* assembly location before it was shadow-copied for ASP.NET pages ...
-
-                var libname = "V8_Net_Proxy_" + (Environment.Is64BitProcess ? "x64" : "x86");
-                var filepath = Path.Combine(rootPath, libname);
-                string filepathPlusExt = null;
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                    try { filepathPlusExt = filepath + ".dylib"; if (!File.Exists(filepathPlusExt)) return false; DLOpen(filepathPlusExt, RTLD_NOW); } catch (Exception ex) { DLOpen2(filepathPlusExt, RTLD_NOW); }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    try { filepathPlusExt = filepath + ".os"; if (!File.Exists(filepathPlusExt)) return false; DLOpen(filepathPlusExt, RTLD_NOW); } catch (Exception ex) { DLOpen2(filepathPlusExt, RTLD_NOW); }
-                else
-                {
-                    filepathPlusExt = filepath + ".dll";
-                    if (!File.Exists(filepathPlusExt)) return false;
-                    LoadLibrary(filepath + ".dll");
-                }
-                return true;
-            }
-            catch { return false; }
-#else
-            return false;
-#endif
-        }
-
         static V8NetProxy() // (See also: https://github.com/mellinoe/nativelibraryloader)
         {
             try
             {
-                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                //                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
 
-                var searchLocations = new string[]
-                {
-                    "",
-                    codeBase.StartsWith("file:///") ? Path.GetDirectoryName(new Uri(codeBase,  UriKind.Absolute).LocalPath) : codeBase,
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) // (may be a shadow-copy path!)
-                };
+                //                var searchLocations = new string[]
+                //                {
+                //                    "",
+                //                    codeBase.StartsWith("file:///") ? Path.GetDirectoryName(new Uri(codeBase,  UriKind.Absolute).LocalPath) : codeBase,
+                //                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) // (may be a shadow-copy path!)
+                //                };
 
-                foreach (var path in searchLocations)
-                    if (TryLoad(path) || TryLoad(Path.Combine(path, "libs")))
-                        return;
-#if DEBUG
-                throw new DllNotFoundException("Searched locations: " + string.Join(Environment.NewLine, searchLocations));
-#endif
+                //                foreach (var path in searchLocations)
+                //                    if (TryLoad(path) || TryLoad(Path.Combine(path, "libs")))
+                //                        return;
+                //#if DEBUG
+                //                throw new DllNotFoundException("Searched locations: " + string.Join(Environment.NewLine, searchLocations));
+                //#endif
+
+                Loader.ResolveDependencies();
             }
             catch { }
         }
@@ -133,8 +89,9 @@ namespace V8.Net
 
         // Return: NativeObjectTemplateProxy*
 
+        /// <summary> Returns true if successful. False is returned if the engine is in the middle of running a script, or performing another request. </summary>
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteObjectTemplateProxy")]
-        public static extern unsafe void DeleteObjectTemplateProxy64(NativeObjectTemplateProxy* objectTemplateProxy);
+        public static extern unsafe bool DeleteObjectTemplateProxy64(NativeObjectTemplateProxy* objectTemplateProxy);
 
 
         // Return: HandleProxy*
@@ -167,7 +124,7 @@ namespace V8.Net
 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetCallAsFunctionHandler")]
-        public static extern void SetCallAsFunctionHandler64(NativeObjectTemplateProxy* proxy, ManagedJSFunctionCallback callback);
+        public static extern void SetCallAsFunctionHandler64(NativeObjectTemplateProxy* proxy, NativeFunctionCallback callback);
 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateObjectFromTemplate")]
@@ -223,13 +180,13 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectAccessor64(HandleProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectTemplateAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectTemplateAccessor64(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectTemplateProperty", CharSet = CharSet.Unicode)]
@@ -257,12 +214,12 @@ namespace V8.Net
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "CreateFunctionTemplateProxy", CharSet = CharSet.Unicode)]
-        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy64(NativeV8EngineProxy* engine, string className, ManagedJSFunctionCallback callback);
+        public static unsafe extern NativeFunctionTemplateProxy* CreateFunctionTemplateProxy64(NativeV8EngineProxy* engine, string className, NativeFunctionCallback callback);
 
-        // Return: NativeFunctionTemplateProxy*
-
+        /// <summary> Returns true if successful. False is returned if the engine is in the middle of running a script, or performing another request. </summary>
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "DeleteFunctionTemplateProxy")]
-        public static extern unsafe void DeleteFunctionTemplateProxy64(NativeFunctionTemplateProxy* functionTemplateProxy);
+
+        public static extern unsafe bool DeleteFunctionTemplateProxy64(NativeFunctionTemplateProxy* functionTemplateProxy);
 
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetFunctionInstanceTemplateProxy")]

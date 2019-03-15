@@ -70,8 +70,7 @@ namespace V8.Net
         {
             if (depth >= types.Length) return (Object = value);
             Type type = types[depth];
-            TypeLibrary<T> _typeLibrary;
-            if (!SubTypes.TryGetValue(type, out _typeLibrary))
+            if (!SubTypes.TryGetValue(type, out TypeLibrary<T> _typeLibrary))
             {
                 // ... this sub type doesn't exist yet, so add it ...
                 _typeLibrary = new TypeLibrary<T>();
@@ -80,24 +79,45 @@ namespace V8.Net
             return _typeLibrary._Set(types, value, depth + 1);
         }
 
-        public T Get(params Type[] types)
+        /// <summary> Gets the object of type <typeparamref name="T"/> from the type tree based on given types. </summary>
+        /// <param name="strict">
+        ///     True to find exact type matches. If false is past in, and a type can't be found explicitly, then the best match is
+        ///     found based on assignability.
+        /// </param>
+        /// <param name="types"> A variable-length parameters list containing types. </param>
+        /// <returns> Returns the type 'T' instance. </returns>
+        public T Get(bool strict, params Type[] types)
         {
             if (types == null) types = new Type[0];
-            return _Get(types);
+            return _Get(types, strict);
         }
-        T _Get(Type[] types, int depth = 0)
+        T _Get(Type[] types, bool strict, int depth = 0)
         {
             if (depth >= types.Length) return Object;
             Type type = types[depth];
-            TypeLibrary<T> _typeLibrary;
-            if (!SubTypes.TryGetValue(type, out _typeLibrary))
-                return null; // (nothing found)
-            return _typeLibrary._Get(types, depth + 1);
+            if (!SubTypes.TryGetValue(type, out TypeLibrary<T> _typeLibrary))
+                if (strict)
+                    return null; // (nothing found)
+                else
+                    foreach (var item in SubTypes)
+                        if (item.Key.IsAssignableFrom(type))
+                        {
+                            _typeLibrary = item.Value;
+                            break;
+                        }
+            return _typeLibrary?._Get(types, strict, depth + 1);
         }
 
-        public bool Exists(params Type[] types)
+        /// <summary> Determine if an object exists using the given types. </summary>
+        /// <param name="strict">
+        ///     True to find exact type matches. If false is past in, and a type can't be found explicitly, then the best match is
+        ///     found based on assignability.
+        /// </param>
+        /// <param name="types"> A variable-length parameters list containing types. </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public bool Exists(bool strict, params Type[] types)
         {
-            return Get(types) == null;
+            return Get(strict, types) == null;
         }
 
         public IEnumerable<TypeLibrary<T>> Items { get { return _GetItems(); } }
@@ -439,17 +459,21 @@ namespace V8.Net
             public IEnumerable<MethodInfo> MethodMembers { get { return from m in Members where m.MemberType == MemberTypes.Method select (MethodInfo)m; } }
 
             /// <summary>
-            /// Given a list of types, returns the matching MemberInfo reference, or 'null' if not found.
-            /// This is used mainly with member details instances representing overloaded method members.
+            ///     Given a list of types, returns the matching MemberInfo reference, or 'null' if not found. This is used mainly with
+            ///     member details instances representing overloaded method members.
             /// </summary>
-            /// <param name="types"></param>
-            /// <returns></returns>
-            public MemberInfo FindMemberByTypes(params Type[] types)
+            /// <param name="strict">
+            ///     True to find exact type matches. If false is past in, and a type can't be found explicitly, then the best match is
+            ///     found based on assignability.
+            /// </param>
+            /// <param name="types"> . </param>
+            /// <returns> The found member by types. </returns>
+            public MemberInfo FindMemberByTypes(bool strict, params Type[] types)
             {
                 MemberInfo mi;
                 foreach (var mtl in MemberTypeLibraries)
                 {
-                    mi = mtl.Get(types);
+                    mi = mtl.Get(strict, types);
                     if (mi != null) return mi;
                 }
                 return null;
@@ -464,8 +488,8 @@ namespace V8.Net
             public ScriptMemberSecurity InheritedMemberSecurity { get { return MemberSecurity != null ? MemberSecurity.Value : BaseDetails != null ? BaseDetails.InheritedMemberSecurity : ScriptMemberSecurity.NoAcccess; } }
             public bool HasSecurityFlags(ScriptMemberSecurity memberSecurity) { var ims = InheritedMemberSecurity; return ims >= 0 && memberSecurity >= 0 ? ims.HasFlag(memberSecurity) : ims == memberSecurity; } // (any negative values must be checked with direct equality)
             public BindingMode BindingMode;
-            public V8NativeObjectPropertyGetter Getter;
-            public V8NativeObjectPropertySetter Setter;
+            public NativeGetterAccessor Getter;
+            public NativeSetterAccessor Setter;
             public V8Function Method;
             //??public TypeLibrary<V8Function> Methods; // (overloads ['SingleMethod' should be null])
             public InternalHandle ValueOverride; // (the value override is a user value that, if exists, overrides the bindings)
@@ -503,6 +527,18 @@ namespace V8.Net
         /// Enumerates all type binders in the inheritance hierarchy.
         /// </summary>
         public IEnumerable<TypeBinder> BaseBinders { get { var b = BaseTypeBinder; while (b != null) { yield return b; b = b.BaseTypeBinder; } } }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        //? internal List<Delegate> _Delegates; // (delegates to prevent getting garbage collected; this is not null only when a delegate is added)
+
+        ///// <summary> Prevents delegates associated with this . </summary>
+        //? internal void _AssociatedDelegate(Delegate d)
+        //{
+        //    if (_Delegates == null)
+        //        _Delegates = new List<Delegate>();
+        //    _Delegates.Add(d);
+        //}
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -780,7 +816,7 @@ namespace V8.Net
         /// <param name="setter">Returns the setter delegate to use for a native callback.</param>
         /// <param name="fieldInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the field name.</param>
         /// <returns>An exception on error, or null on success.</returns>
-        internal bool _GetBindingForDataMember(_MemberDetails memberDetails, out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter)
+        internal bool _GetBindingForDataMember(_MemberDetails memberDetails, out NativeGetterAccessor getter, out NativeSetterAccessor setter)
         {
             if (memberDetails.MemberType == MemberTypes.Field)
                 return _GetBindingForField(memberDetails, out getter, out setter);
@@ -794,7 +830,7 @@ namespace V8.Net
             }
         }
 
-        internal bool _GetBindingForField(_MemberDetails memberDetails, out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter)
+        internal bool _GetBindingForField(_MemberDetails memberDetails, out NativeGetterAccessor getter, out NativeSetterAccessor setter)
         {
             string memberName = memberDetails.MemberName;
             FieldInfo fieldInfo = (FieldInfo)memberDetails.FirstMember;
@@ -867,12 +903,13 @@ namespace V8.Net
             return true;
         }
 
-        V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             bool isInternalHandleTypeExpected = fieldInfo.FieldType == typeof(InternalHandle);
 
-            return (InternalHandle _this, string propertyName, InternalHandle value) =>
+            return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
             {
+                InternalHandle _this = __this, value = __value;
                 if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                 if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
@@ -892,13 +929,14 @@ namespace V8.Net
             };
         }
 
-        V8NativeObjectPropertyGetter _CreateGetAccessor<T>(_MemberDetails memberDetails, FieldInfo fieldInfo)
+        NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
 
             if (isSystemType)
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                     try
@@ -911,8 +949,9 @@ namespace V8.Net
                     catch (Exception ex) { return Engine.CreateValue(Exceptions.GetFullErrorMessage(ex)); }
                 };
             else
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (memberDetails.MemberSecurity < 0) return InternalHandle.Empty;
                     if (_this.IsBinder)
                         return Engine.CreateValue((T)fieldInfo.GetValue(_this.BoundObject));
@@ -921,13 +960,14 @@ namespace V8.Net
                 };
         }
 
-        V8NativeObjectPropertyGetter _CreateObjectGetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
+        NativeGetterAccessor _CreateObjectGetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
 
             if (isSystemType)
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
                     try
@@ -940,8 +980,9 @@ namespace V8.Net
                     catch (Exception ex) { return Engine.CreateValue(Exceptions.GetFullErrorMessage(ex)); }
                 };
             else
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (_this.IsBinder)
                         return Engine.CreateValue(fieldInfo.GetValue(_this.BoundObject), _Recursive);
@@ -960,7 +1001,7 @@ namespace V8.Net
         /// <param name="setter">Returns the setter delegate to use for a native callback.</param>
         /// <param name="propInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the property name.</param>
         /// <returns>An exception on error, or null on success.</returns>
-        internal bool _GetBindingForProperty(_MemberDetails memberDetails, out V8NativeObjectPropertyGetter getter, out V8NativeObjectPropertySetter setter)
+        internal bool _GetBindingForProperty(_MemberDetails memberDetails, out NativeGetterAccessor getter, out NativeSetterAccessor setter)
         {
             string memberName = memberDetails.MemberName;
             PropertyInfo propInfo = (PropertyInfo)memberDetails.FirstMember;
@@ -1033,14 +1074,15 @@ namespace V8.Net
             return true;
         }
 
-        V8NativeObjectPropertySetter _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             bool isInternalHandleTypeExpected = propertyInfo.PropertyType == typeof(InternalHandle);
             bool canRead = propertyInfo.CanRead;
             bool canWrite = propertyInfo.CanWrite;
 
-            return (InternalHandle _this, string propertyName, InternalHandle value) =>
+            return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
             {
+                InternalHandle _this = __this;
                 if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                 if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
@@ -1060,14 +1102,15 @@ namespace V8.Net
             };
         }
 
-        V8NativeObjectPropertyGetter _CreateGetAccessor<T>(_MemberDetails memberDetails, PropertyInfo propertyInfo)
+        NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
             //??var getMethod = propertyInfo.GetGetMethod();
 
             if (isSystemType)
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (propertyInfo.CanRead)
                     {
@@ -1084,8 +1127,9 @@ namespace V8.Net
                     return InternalHandle.Empty;
                 };
             else
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
                     if (propertyInfo.CanRead)
                     {
@@ -1098,14 +1142,15 @@ namespace V8.Net
                 };
         }
 
-        V8NativeObjectPropertyGetter _CreateObjectGetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
+        NativeGetterAccessor _CreateObjectGetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             var isSystemType = BoundType.Namespace == "System";
             //??var getMethod = propertyInfo.GetGetMethod();
 
             if (isSystemType)
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (propertyInfo.CanRead)
                     {
                         // (note: it's an error to read some properties in special cases on certain system type instances (such as 'Type.GenericParameterPosition'), so just ignore and return the message on system instances)
@@ -1121,8 +1166,9 @@ namespace V8.Net
                     return InternalHandle.Empty;
                 };
             else
-                return (InternalHandle _this, string propertyName) =>
+                return (HandleProxy* __this, string propertyName) =>
                 {
+                    InternalHandle _this = __this;
                     if (propertyInfo.CanRead)
                     {
                         if (_this.IsBinder)
@@ -1201,7 +1247,7 @@ namespace V8.Net
                 if (memberDetails.ConstructedMemberGroups == null)
                     memberDetails.ConstructedMemberGroups = new TypeLibrary<TypeLibrary<MemberInfo>>();
 
-                constructedMembers = memberDetails.ConstructedMemberGroups.Get(genericSystemTypes);
+                constructedMembers = memberDetails.ConstructedMemberGroups.Get(true, genericSystemTypes);
 
                 if (constructedMembers == null)
                 {
@@ -1275,7 +1321,11 @@ namespace V8.Net
             else // ... more than one method exists (overloads) ..
             {
                 var systemTypes = ArgInfo.GetSystemTypes(argInfos);
-                var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(systemTypes); // (note: this expects exact types matches!)
+
+                var methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(true, systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(true, systemTypes); // (note: this expects exact types matches!)
+                if (methodInfo == null)
+                    methodInfo = constructedMembers != null ? (MethodInfo)constructedMembers.Get(false, systemTypes) : (MethodInfo)memberDetails.FindMemberByTypes(false, systemTypes); // (this is a lot more relaxed)
+
                 if (methodInfo == null)
                     throw new TargetInvocationException("There is no method matching the supplied parameter types ("
                         + String.Join(", ", (from t in systemTypes select GetTypeName(t)).ToArray()) + ").", null);
@@ -1398,7 +1448,6 @@ namespace V8.Net
             TypeFunction = TypeTemplate.GetFunctionObject<TypeBinderFunction>((engine, isConstructCall, _this, args) =>
             {
                 InternalHandle handle;
-                ArgInfo[] argInfos;
                 uint argOffset = 0;
                 int paramIndex = -1;
                 TypeLibrary<MemberInfo> constructedMembers;
@@ -1418,7 +1467,7 @@ namespace V8.Net
 
                             // ... get the actual arguments passed from script into an argument value array in order to invoke the method ...
 
-                            _CopyArguments(_expectedParameters, convertedArgumentArrayCache, args, ref paramIndex, argOffset, out convertedArguments, out argInfos);
+                            _CopyArguments(_expectedParameters, convertedArgumentArrayCache, args, ref paramIndex, argOffset, out convertedArguments, out ArgInfo[] argInfos);
 
                             // ... invoke the constructor ...
 
@@ -1466,7 +1515,7 @@ namespace V8.Net
                         if (args.Length > 1)
                             return Engine.CreateError("You cannot pass more than one argument.", JSValueType.ExecutionError);
 
-                        handle = Engine.CreateObject(Int32.MinValue + TypeID);
+                        handle = Engine.CreateObject(/*Int32.MinValue + TypeID*/);
                         handle.SetProperty("$__Type", Engine.CreateValue(BoundType.AssemblyQualifiedName), V8PropertyAttributes.Locked);
                         handle.SetProperty("$__TypeID", Engine.CreateValue(TypeID), V8PropertyAttributes.Locked);
                         handle.SetProperty("$__Value", args.Length > 0 ? args[0] : InternalHandle.Empty, V8PropertyAttributes.DontDelete);
@@ -1484,11 +1533,8 @@ namespace V8.Net
 
             // TODO: Consolidate the below with the template version above (see '_ApplyBindingToTemplate()').
 
-            V8NativeObjectPropertyGetter getter;
-            V8NativeObjectPropertySetter setter;
-
             foreach (var details in _FieldDetails(BindingMode.Static))
-                if (_GetBindingForDataMember(details, out getter, out setter) && details.MemberSecurity >= 0)
+                if (_GetBindingForDataMember(details, out var getter, out var setter) && details.MemberSecurity >= 0)
                 {
                     details.Getter = getter;
                     details.Setter = setter;
@@ -1496,17 +1542,15 @@ namespace V8.Net
                 }
 
             foreach (var details in _PropertyDetails(BindingMode.Static))
-                if (_GetBindingForDataMember(details, out getter, out setter) && details.MemberSecurity >= 0)
+                if (_GetBindingForDataMember(details, out var getter, out var setter) && details.MemberSecurity >= 0)
                 {
                     details.Getter = getter;
                     details.Setter = setter;
                     _RefreshMemberSecurity(details);
                 }
 
-            V8Function func;
-
             foreach (var details in _MethodDetails(BindingMode.Static))
-                if (_GetBindingForMethod(details, out func) && details.MemberSecurity >= 0)
+                if (_GetBindingForMethod(details, out var func) && details.MemberSecurity >= 0)
                 {
                     details.Method = func;
                     _RefreshMemberSecurity(details);
@@ -1529,10 +1573,12 @@ namespace V8.Net
                     switch (member.MemberType)
                     {
                         case MemberTypes.Field:
-                            TypeFunction.SetAccessor(member.MemberName, member.Getter, member.Setter, propertyAttribs); // TODO: Investigate need to add access control value.
+                            V8NetProxy.SetObjectAccessor(TypeFunction, TypeFunction.Object.ID, member.MemberName, member.Getter, member.Setter, V8AccessControl.Default, propertyAttribs);
+                            //TypeFunction.SetAccessor(member.MemberName, member.Getter, member.Setter, propertyAttribs); // TODO: Investigate need to add access control value.
                             break;
                         case MemberTypes.Property:
-                            TypeFunction.SetAccessor(member.MemberName, member.Getter, member.Setter, propertyAttribs); // TODO: Investigate need to add access control value.
+                            V8NetProxy.SetObjectAccessor(TypeFunction, TypeFunction.Object.ID, member.MemberName, member.Getter, member.Setter, V8AccessControl.Default, propertyAttribs);
+                            //TypeFunction.SetAccessor(member.MemberName, member.Getter, member.Setter, propertyAttribs); // TODO: Investigate need to add access control value.
                             break;
                         case MemberTypes.Method:
                             TypeFunction.SetProperty(member.MemberName, member.Method, propertyAttribs); // TODO: Investigate need to add access control value.
@@ -1564,12 +1610,12 @@ namespace V8.Net
             if (objType != BoundType)
                 throw new InvalidOperationException("'obj' instance of type '" + objType.Name + "' is not compatible with type '" + BoundType.Name + "' as represented by this type binder.");
 
-            object binder;
+            var binder = InstanceTemplate.CreateObject<T>(initializeBinder);
 
-            binder = InstanceTemplate.CreateObject<T>(initializeBinder);
-            ((T)binder).Object = obj;
+            binder.Object = obj;
+            binder.InternalHandle.KeepAlive();
 
-            return (T)binder;
+            return binder;
         }
 
         /// <summary>
@@ -1633,7 +1679,7 @@ namespace V8.Net
     /// <summary>
     /// 'ObjectBinder' instances represent JavaScript object properties that are bound to CLR objects or types.
     /// </summary>
-    public class ObjectBinder : V8ManagedObject
+    public unsafe class ObjectBinder : V8ManagedObject
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -1763,8 +1809,7 @@ namespace V8.Net
                             if (getter == null)
                             {
                                 // .. first time access, create a binding ...
-                                V8NativeObjectPropertySetter setter;
-                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out NativeSetterAccessor setter);
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
@@ -1778,8 +1823,7 @@ namespace V8.Net
                             if (getter == null)
                             {
                                 // .. first time access, create a binding ...
-                                V8NativeObjectPropertySetter setter;
-                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out NativeSetterAccessor setter);
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
@@ -1809,7 +1853,7 @@ namespace V8.Net
                 // (override values exist because method properties cannot be overwritten; to restore, the property must be deleted)
                 if (!memberDetails.ValueOverride.IsEmpty)
                 {
-                    memberDetails.ValueOverride = value.KeepAlive();
+                    memberDetails.ValueOverride = value.KeepTrack();
                     if (!memberDetails.ValueOverride.IsUndefined)
                         return memberDetails.ValueOverride;
                 }
@@ -1825,8 +1869,7 @@ namespace V8.Net
                                 if (setter == null)
                                 {
                                     // .. first time access, create a binding ...
-                                    V8NativeObjectPropertyGetter getter;
-                                    TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                    TypeBinder._GetBindingForDataMember(memberDetails, out NativeGetterAccessor getter, out setter);
                                     memberDetails.Getter = getter;
                                     memberDetails.Setter = setter;
                                 }
@@ -1842,8 +1885,7 @@ namespace V8.Net
                             if (setter == null)
                             {
                                 // .. first time access, create a binding ...
-                                V8NativeObjectPropertyGetter getter;
-                                TypeBinder._GetBindingForDataMember(memberDetails, out getter, out setter);
+                                TypeBinder._GetBindingForDataMember(memberDetails, out NativeGetterAccessor getter, out setter);
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
@@ -1863,7 +1905,7 @@ namespace V8.Net
                             }
                             else
                             {
-                                return memberDetails.ValueOverride = value.KeepAlive();
+                                return memberDetails.ValueOverride = value.KeepTrack();
                             }
                         }
                 }

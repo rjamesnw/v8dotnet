@@ -74,7 +74,13 @@ void FunctionTemplateProxy::InvocationCallbackProxy(const FunctionCallbackInfo<V
 
 		auto _this = engine->GetHandleProxy(args.This()); // (was args.Holder())
 
-		auto result = callback(0, args.IsConstructCall(), _this, _args, argLength);
+		engine->_InCallbackScope++;
+		HandleProxy* result = nullptr;
+		try {
+			result = callback(0, args.IsConstructCall(), _this, _args, argLength);
+		}
+		catch (...) { ThrowException(NewString("'InvocationCallbackProxy' caused an error - perhaps the GC collected the delegate?")); }
+		engine->_InCallbackScope--;
 
 		if (result != nullptr) {
 			if (result->IsError())

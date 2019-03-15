@@ -27,35 +27,43 @@ HandleProxy::~HandleProxy()
 	}
 }
 
+V8EngineProxy* HandleProxy::EngineProxy() { return _EngineID >= 0 && !V8EngineProxy::IsDisposed(_EngineID) ? _EngineProxy : nullptr; }
+
+
 // Sets the state if this instance to disposed (for safety, the handle is NOT deleted, only cached).
 // (registerDisposal is false when called within 'V8EngineProxy.DisposeHandleProxy()' (to prevent a cyclical loop), or by the engine's destructor)
 bool HandleProxy::_Dispose(bool registerDisposal)
 {
-	lock_guard<recursive_mutex>(_EngineProxy->_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
-
+	if (IsDisposed()) return true; // (already disposed)
 	if (V8EngineProxy::IsDisposed(_EngineID))
+	{
 		delete this; // (the engine is gone, so just destroy the memory [the managed side owns UNDISPOSED proxy handles - they are not deleted with the engine)
-	else
-		if (_Disposed == 1 || _Disposed == 2)
+		return false; // (already disposed, or engine is gone)
+	}
+	else {
+		lock_guard<recursive_mutex>(_EngineProxy->_HandleSystemMutex); // NO V8 HANDLE ACCESS HERE BECAUSE OF THE MANAGED GC
+
+		if (!IsDisposed() && IsDisposeReadyManagedSide())
 		{
 			if (registerDisposal)
 			{
-				_EngineProxy->DisposeHandleProxy(this); // (REQUIRES '_ID' and '_ObjectID', so don't clear before this)
+				_EngineProxy->DisposeHandleProxy(this); // (calls back with _Dispose(false); NOTE: REQUIRES '_ID' and '_ObjectID', so don't clear before this)
 				return true;
 			}
+
+			_Disposed = 3; // (just to be consistent)
 
 			_ClearHandleValue();
 
 			_ObjectID = -1;
 			_CLRTypeID = -1;
-			_Disposed = 3;
 			_ManagedReference = 0;
 			_Type = JSV_Uninitialized;
-
-			return true;
-		};;
-
-	return false; // (already disposed, or engine is gone)
+			_EngineID = -1;
+			_EngineProxy = nullptr;
+		};
+	}
+	return true;
 }
 
 bool HandleProxy::Dispose()
@@ -65,19 +73,19 @@ bool HandleProxy::Dispose()
 
 bool HandleProxy::TryDispose()
 {
-	if (_Disposed == 0 && _ManagedReference < 2)
+	if (IsDisposeReadyManagedSide())
 	{
-		_Disposed = 1;
 		return Dispose();
 	}
-	return false; // (already disposed, or the managed side has cloned it)
+	return false; // (already disposed, or if _ManagedReference == 2, the user called 'KeepAlive()' or 'Set()' on the handle [makes it tracked])
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 
 HandleProxy* HandleProxy::Initialize(v8::Handle<Value> handle)
 {
-	if (_Disposed > 0) _Dispose(false); // (just resets whatever is needed)
+	if (_Disposed != 0)
+		if (!_Dispose(false)) return nullptr; // (just resets whatever is needed)
 
 	_Disposed = 0; // (MUST do this FIRST in order for any associated managed object ID to be pulled, otherwise it will remain -1)
 
@@ -101,7 +109,7 @@ void HandleProxy::_ClearHandleValue()
 	_Value.Dispose();
 	_Type = JSV_Uninitialized;
 	if (_Handle.IsWeak())
-		throw exception("Still weak!");
+		throw exception("HandleProxy::_ClearHandleValue(): Assertion failed - tried to clear a handle that is still in a weak state.");
 }
 
 HandleProxy* HandleProxy::SetHandle(v8::Handle<v8::Script> handle)
@@ -268,7 +276,7 @@ int32_t HandleProxy::SetManagedObjectID(int32_t id)
 // To force a re-check, simply set the value back to -1.
 int32_t HandleProxy::GetManagedObjectID()
 {
-	if (_Disposed >= 3)
+	if (IsDisposed())
 		return -1; // (no longer in use!)
 	else if (_ObjectID < -1 || _ObjectID >= 0)
 		return _ObjectID;
@@ -316,46 +324,50 @@ int32_t HandleProxy::GetManagedObjectID(v8::Handle<Value> h)
 // This is called when the managed side is ready to destroy the V8 handle.
 void HandleProxy::MakeWeak()
 {
-	if (GetManagedObjectID() >= 0 && _Disposed == 1)
-	{
+	if (!_Handle.IsEmpty())
 		_Handle.Value.SetWeak<HandleProxy>(this, _RevivableCallback, WeakCallbackType::kFinalizer);
-		//?_Handle.Value.MarkIndependent();
-		_Disposed = 2;
-	}
 }
 
 // This is called when the managed side is no longer ready to destroy this V8 handle.
 void HandleProxy::MakeStrong()
 {
-	if (_Disposed == 2)
-	{
+	if (!_Handle.IsEmpty())
 		_Handle.Value.ClearWeak();
-		_Disposed = 1; // (roll back to managed-side "dispose ready" status; note: the managed side worker currently doesn't track this yet, so it's not supported)
-	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
+
 // When the managed side is ready to destroy a handle, it first marks it as weak.  When the V8 engine's garbage collector finally calls back, the managed side
 // object information is finally destroyed.
-
 void HandleProxy::_RevivableCallback(const WeakCallbackInfo<HandleProxy>& data)
 {
 	auto engineProxy = (V8EngineProxy*)data.GetIsolate()->GetData(0);
 	auto handleProxy = data.GetParameter();
 
-	auto dispose = true;
+	//auto dispose = true;
 
-	if (engineProxy->_ManagedV8GarbageCollectionRequestCallback != nullptr)
-	{
-		if (handleProxy->_ObjectID >= 0)
-			dispose = engineProxy->_ManagedV8GarbageCollectionRequestCallback(handleProxy);
-	}
+	engineProxy->_InCallbackScope++;
+	auto canDisposeNow = handleProxy->IsDisposeReadyManagedSide() || engineProxy->_ManagedV8GarbageCollectionRequestCallback != nullptr && engineProxy->_ManagedV8GarbageCollectionRequestCallback(handleProxy);
+	engineProxy->_InCallbackScope--;
 
-	if (dispose) // (Note: the managed callback may have already cached the handle, but the handle *value* will not be disposed yet)
+	if (canDisposeNow) // (if the managed side is ok with it, we will clear and dispose this handle now)
 	{
 		handleProxy->_ClearHandleValue();
-		// (V8 handle is no longer tracked on the managed side, so let it go within this GC request [better here while idle])
+		handleProxy->Dispose();
 	}
+	else handleProxy->MakeStrong();
+
+	//if (engineProxy->_ManagedV8GarbageCollectionRequestCallback != nullptr)
+	//{
+	//	if (handleProxy->_ObjectID >= 0)
+	//		dispose = engineProxy->_ManagedV8GarbageCollectionRequestCallback(handleProxy);
+	//}
+
+	//if (dispose) // (Note: the managed callback may have already cached the handle, but the handle *value* will not be disposed yet)
+	//{
+	//	handleProxy->_ClearHandleValue();
+	//	// (V8 handle is no longer tracked on the managed side, so let it go within this GC request [better here while idle])
+	//}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -369,6 +381,7 @@ void HandleProxy::UpdateValue()
 	switch (_Type)
 	{
 		// (note: if this doesn't indent properly in VS, then see 'Tools > Options > Text Editor > C/C++ > Formatting > Indentation > Indent case labels')
+		_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; // (note: string is not disposed by struct object and becomes owned by this proxy!)
 		case JSV_Null:
 		{
 			_Value.V8Number = 0;
@@ -399,6 +412,10 @@ void HandleProxy::UpdateValue()
 			_Value.V8Number = _Handle->NumberValue(_EngineProxy->Context()).FromJust();
 			break;
 		}
+		case JSV_ExecutionTerminated:
+		case JSV_ExecutionError:
+		case JSV_CompilerError:
+		case JSV_InternalError:
 		case JSV_String:
 		{
 			_Value.V8String = _StringItem(_EngineProxy, *_Handle.As<String>()).String; // (note: string is not disposed by struct object and becomes owned by this proxy!)

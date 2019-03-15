@@ -14,11 +14,19 @@ ContextProxy::~ContextProxy()
 		if (!V8EngineProxy::IsDisposed(_EngineID))
 		{
 			BEGIN_ISOLATE_SCOPE(_EngineProxy);
-			//BEGIN_CONTEXT_SCOPE(_EngineProxy);
+
+			_Context->Enter();
+
+			// ... need to also release the native proxy object attached to this ...
+
+			auto globalObject = _Context->Global()->GetPrototype()->ToObject(_EngineProxy->Isolate());
+			auto templateProxy = (ObjectTemplateProxy*)globalObject->GetAlignedPointerFromInternalField(0); // (proxy object reference)
+			if (templateProxy != nullptr) delete templateProxy;
+
+			_Context->Exit();
 
 			_Context.Reset();
 
-			//END_CONTEXT_SCOPE;
 			END_ISOLATE_SCOPE;
 		}
 
