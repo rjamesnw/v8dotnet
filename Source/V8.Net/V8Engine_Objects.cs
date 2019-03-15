@@ -14,6 +14,16 @@ namespace V8.Net
 {
     // ========================================================================================================================
 
+    /// <summary> Allows overriding the weak reference by rooting the target object to this entry. </summary>
+    public unsafe class RootableWeakReference : WeakReference
+    {
+        /// <summary> Allows overriding the weak reference by rooting the target object to this entry. </summary>
+        public object RootedReference;
+        public RootableWeakReference(IV8NativeObject target, bool trackResurrection = true) : base(target, trackResurrection)
+        {
+        }
+    }
+
     public unsafe partial class V8Engine
     {
         // --------------------------------------------------------------------------------------------------------------------
@@ -21,7 +31,7 @@ namespace V8.Net
         /// <summary>
         /// Holds an index of all the created objects.
         /// </summary>
-        internal readonly IndexedObjectList<WeakReference> _Objects = new IndexedObjectList<WeakReference>();
+        internal readonly IndexedObjectList<RootableWeakReference> _Objects = new IndexedObjectList<RootableWeakReference>();
         internal readonly ReaderWriterLock _ObjectsLocker = new ReaderWriterLock();
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -47,6 +57,16 @@ namespace V8.Net
         internal void _RemoveObjectWeakReference(Int32 objectID) // (performs the removal in a lock block)
         {
             using (_ObjectsLocker.WriteLock()) { _Objects.Remove(objectID); }
+        }
+
+        internal bool _MakeObjectRooted(Int32 objectID) // (looks up the object and attempts to make it rooted)
+        {
+            using (_ObjectsLocker.ReadLock()) { var weakRef = _Objects[objectID]; if (weakRef != null && weakRef.RootedReference == null) { weakRef.RootedReference = weakRef.Target; return true; } return false; }
+        }
+
+        internal bool _UnrootObject(Int32 objectID) // (looks up the object and attempts to make it unrooted)
+        {
+            using (_ObjectsLocker.ReadLock()) { var weakRef = _Objects[objectID]; if (weakRef != null && weakRef.RootedReference != null) { weakRef.RootedReference = null; return true; } return false; }
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -81,7 +101,7 @@ namespace V8.Net
                     throw new InvalidOperationException("The specified handle does not represent an native V8 object.");
                 else
                     if (connectNativeObject && handle.HasObject)
-                        throw new InvalidOperationException("Cannot create a managed object for this handle when one already exists. Existing objects will not be returned by 'Create???' methods to prevent initializing more than once.");
+                    throw new InvalidOperationException("Cannot create a managed object for this handle when one already exists. Existing objects will not be returned by 'Create???' methods to prevent initializing more than once.");
 
             handle._Object = newObject = new T();  // (set the object reference on handle now so the GC doesn't take it later)
             newObject._Engine = this;
@@ -90,7 +110,7 @@ namespace V8.Net
 
             using (_ObjectsLocker.WriteLock()) // (need a lock because of the worker thread)
             {
-                var objID = _Objects.Add(new WeakReference(newObject, true));
+                var objID = _Objects.Add(new RootableWeakReference(newObject));
                 newObject._ID = objID;
                 newObject._Handle.ObjectID = objID;
             }

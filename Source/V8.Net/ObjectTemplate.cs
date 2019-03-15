@@ -37,10 +37,10 @@ namespace V8.Net
         public V8Engine Engine { get { return _Engine; } }
         internal V8Engine _Engine;
 
-        /// <summary>
-        /// Returns true if this template object has been placed into the "abandoned" list due to a GC finalization attempt.
-        /// </summary>
-        internal bool _IsAbandoned { get { lock (_Engine._AbandondObjects) { return _Engine != null && _Engine._AbandondObjects.Contains(this); } } }
+        ///// <summary>
+        ///// Returns true if this template object has been placed into the "abandoned" list due to a GC finalization attempt.
+        ///// </summary>
+        //?internal bool _IsAbandoned { get { lock (_Engine._AbandondObjects) { return _Engine != null && _Engine._AbandondObjects.Contains(this); } } }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -512,7 +512,7 @@ namespace V8.Net
         /// <para>Note: This is template related, which means all objects created from this template will be affected by these special properties.</para>
         /// </summary>
         public void SetAccessor(string name,
-            V8NativeObjectPropertyGetter getter, V8NativeObjectPropertySetter setter,
+            GetterAccessor getter, SetterAccessor setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
@@ -520,7 +520,7 @@ namespace V8.Net
             var engine = Engine;
 
             V8NetProxy.SetObjectTemplateAccessor(_NativeObjectTemplateProxy, -1, name,
-                   _Engine._StoreAccessor<ManagedAccessorGetter>(_NativeObjectTemplateProxy->ObjectID, "get_" + name, (HandleProxy* _this, string propertyName) =>
+                   _Engine._StoreAccessor<NativeGetterAccessor>(_NativeObjectTemplateProxy->ObjectID, "get_" + name, (HandleProxy* _this, string propertyName) =>
                    {
                        try
                        {
@@ -531,7 +531,7 @@ namespace V8.Net
                            return engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
                        }
                    }),
-                   _Engine._StoreAccessor<ManagedAccessorSetter>(_NativeObjectTemplateProxy->ObjectID, "set_" + name, (HandleProxy* _this, string propertyName, HandleProxy* value) =>
+                   _Engine._StoreAccessor<NativeSetterAccessor>(_NativeObjectTemplateProxy->ObjectID, "set_" + name, (HandleProxy* _this, string propertyName, HandleProxy* value) =>
                    {
                        try
                        {

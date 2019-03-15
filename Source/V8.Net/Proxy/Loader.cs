@@ -191,7 +191,7 @@ namespace V8.Net
                 // ... check for a bin folder for ASP.NET sites ...
 
 #if !NETSTANDARD // (NETSTANDARD is set for assemblies targeting .Net Standard; which supports BOTH .Net Core and .Net Full)
-                _WebHostPath = HttpContext.Current.Server.MapPath("~/bin");
+                _WebHostPath = HttpContext.Current?.Server.MapPath("~/bin");
 #else
                 _WebHostPath = HostingEnvironment?.ContentRootPath;
 #endif

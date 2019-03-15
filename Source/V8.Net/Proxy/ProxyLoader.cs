@@ -180,13 +180,13 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectAccessor64(HandleProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectTemplateAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectTemplateAccessor64(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetObjectTemplateProperty", CharSet = CharSet.Unicode)]

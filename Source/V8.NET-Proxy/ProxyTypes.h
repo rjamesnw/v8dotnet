@@ -301,7 +301,7 @@ private:
 	// When a handle is created this is 0.  When the native side is ready to dispose the handle a callback is triggered.  If the handle does not have a managed side object
 	// then the handle is disposed, otherwise it survives the V8 GC process, and this field is set to 1.  If the managed side no longer has references to the handle then
 	// this is set to 2 and 'MakeWeak()' is called on the native handle. If this value is negative then it is queued for that stage.
-	int32_t _Disposed;  // (flags: 0 = handle is in use, 1 = native side is done with it, 2 = managed side is done with it, 3 - VIRTUALLY disposed [cached on native side for reuse]), 4 = queued for making weak (managed side call), 8 = 'weak' removal in progress.
+	int32_t _Disposed;  // (flags: 0 = handle is in use, 1 = disposed, 2 = managed side is done with it, 3 - VIRTUALLY disposed [cached on native side for reuse]), 4 = queued for making weak (managed side call), 8 = 'weak' removal in progress, 16 = queued for disposal.
 	//? Old Meaning: (0: handle is in use, 1: managed disposing in progress, 2: handle was made weak - managed side is done with it, 3: VIRTUALLY disposed [cached on native side for reuse])
 
 	int32_t _EngineID;
@@ -346,13 +346,13 @@ public:
 	bool Dispose();
 
 	// The handle is currently in use.
-	bool IsInUse() { return (_Disposed & 3) != 3; }
-	// The native side is done with the handle.
-	bool IsNativeDisposed() { return (_Disposed & 1) > 0; }
+	bool IsInUse() { return (_Disposed & 19) == 0; }
 	// The managed side is done with the handle.
-	bool IsDisposedManagedSide() { return (_Disposed & 2) > 0 || (_Disposed & 4) > 0 || _ManagedReference < 2; }
+	bool IsDisposeReadyManagedSide() { return (_Disposed & 2) > 0 || (_Disposed & 4) > 0 || _ManagedReference < 2; }
+	// The handle is queued for disposal.
+	bool IsDisposing() { return (_Disposed & 16) > 0; }
 	// The handle is disposed and cached.
-	bool IsDisposed() { return (_Disposed & 3) == 3; }
+	bool IsDisposed() { return (_Disposed & 1) > 0; }
 
 	// Attempts to dispose a handle passed in from the managed side.
 	// By default, handle proxies returned from callbacks to the managed side must be disposed, just like arguments.  The
@@ -366,7 +366,7 @@ public:
 	// Attempts to delete the handle, which will succeed only if the engine is gone, otherwise Dispose() is called)
 	//?void Delete();
 
-	V8EngineProxy* EngineProxy() { return _EngineProxy; }
+	V8EngineProxy* EngineProxy(); // Returns the associated engine, or null if the engine was disposed.
 	int32_t EngineID() { return _EngineID; }
 
 	Local<Value> Handle();
@@ -534,6 +534,7 @@ protected:
 	V8EngineProxy* _EngineProxy = nullptr;
 	int32_t _EngineID;
 	int32_t _ObjectID; // ObjectTemplate will have a "shared" object ID for use with associating accessors (see ObjecctTemplate.SetAccessor() in V8.Net).
+	bool _WasUsed = false;
 	CopyablePersistent<ObjectTemplate> _ObjectTemplate;
 
 	ManagedNamedPropertyGetter NamedPropertyGetter = nullptr;
@@ -548,7 +549,7 @@ protected:
 	ManagedIndexedPropertyDeleter IndexedPropertyDeleter = nullptr;
 	ManagedIndexedPropertyEnumerator IndexedPropertyEnumerator = nullptr;
 
-	ManagedJSFunctionCallback _ManagedCallback = nullptr;
+	ManagedJSFunctionCallback _ManagedCallback = nullptr; // (allows calling the objects created from this template like functions)
 
 public:
 
@@ -744,7 +745,7 @@ protected:
 	vector<HandleProxy*> _Objects; // An array of handle references by object ID. This allows pulling an already existing proxy handle for an object without having to allocate a new one.
 
 	bool _IsExecutingScript; // True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
-	int _InCallbackScope; // >0 if currently in a scope that is/will call back to the manage side. This helps to notify when a callback causes another call back into the engine.
+	int _InCallbackScope; // >0 if currently in a scope that is/will call back to the manage side. This helps to notify when a callback to the managed side causes another call back into the engine.
 	bool _IsTerminatingScript; // True if the engine was asked to terminate a script.  This is used to detect when a script is aborted.
 
 public:
@@ -775,7 +776,7 @@ public:
 	// Queue a handle for disposal later.  This is typically done when the engine is busy running a script and another call is made
 	// (possibly by the GC finalizer) to dispose a handle.
 	void QueueHandleDisposal(HandleProxy *handleProxy);
-		
+
 	// Registers the handle proxy as disposed for recycling.
 	void DisposeHandleProxy(HandleProxy *handleProxy);
 
@@ -784,7 +785,7 @@ public:
 	// Puts a handle proxy into a queue to be made strong via 'GetHandleProxy()' - which may be required during a long script execution.
 	void QueueMakeStrong(HandleProxy *handleProxy);
 
-	void ProcessHandleQueues(); // (must be called internally, NEVER externally [i.e. from managed side])
+	void ProcessHandleQueues(int loops = 1); // (must be called internally, NEVER externally [i.e. from managed side])
 
 	// Registers a request to dispose a handle proxy for recycling.
 	// WARNING: This is expected to be called by the GC to flag handles for disposal.
@@ -794,7 +795,7 @@ public:
 
 	static bool IsDisposed(int32_t engineID);
 
-	// True if the engine is executing a script.  This is used abort entering a locker on idle notifications while scripts are running.
+	// True if the engine is executing a script.  This is used abort entering a locker on idle notifications, or to single when to queue a request, such as disposing handles from the managed side while script execution is in progress.
 	bool IsExecutingScript();
 
 	ContextProxy* CreateContext(ObjectTemplateProxy* templateProxy);

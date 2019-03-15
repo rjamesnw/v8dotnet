@@ -17,49 +17,49 @@ namespace V8.Net
     using System.Linq;
     using V8.Net;
 
-//    namespace Test
-//    {
-//        class GlobalUtils
-//        {
-//            public static void WriteLine(string s) { Console.WriteLine(s); }
-//        }
+    //    namespace Test
+    //    {
+    //        class GlobalUtils
+    //        {
+    //            public static void WriteLine(string s) { Console.WriteLine(s); }
+    //        }
 
-//        public class BaseClass
-//        {
-//            public BaseClass() { }
-//            public void Foo(InternalHandle _this) { Console.WriteLine("BaseClass::Foo: " + _this.GetProperty("y")); }
-//            public void Bar() { Console.WriteLine("BaseClass::Bar"); }
-//        }
+    //        public class BaseClass
+    //        {
+    //            public BaseClass() { }
+    //            public void Foo(InternalHandle _this) { Console.WriteLine("BaseClass::Foo: " + _this.GetProperty("y")); }
+    //            public void Bar() { Console.WriteLine("BaseClass::Bar"); }
+    //        }
 
-//        class Program
-//        {
-//            public static void MainFunc(V8Engine js, string[] args)
-//            {
-//                js.RegisterType<GlobalUtils>("utils", false, ScriptMemberSecurity.Locked);
-//                js.GlobalObject.SetProperty(typeof(GlobalUtils));
+    //        class Program
+    //        {
+    //            public static void MainFunc(V8Engine js, string[] args)
+    //            {
+    //                js.RegisterType<GlobalUtils>("utils", false, ScriptMemberSecurity.Locked);
+    //                js.GlobalObject.SetProperty(typeof(GlobalUtils));
 
-//                js.RegisterType<BaseClass>(null, false, ScriptMemberSecurity.ReadWrite);
-//                js.GlobalObject.SetProperty(typeof(BaseClass));
+    //                js.RegisterType<BaseClass>(null, false, ScriptMemberSecurity.ReadWrite);
+    //                js.GlobalObject.SetProperty(typeof(BaseClass));
 
-//                js.ConsoleExecute(jssrc);
-//            }
+    //                js.ConsoleExecute(jssrc);
+    //            }
 
-//            private static string jssrc = @"
-//function Derived() { }
+    //            private static string jssrc = @"
+    //function Derived() { }
 
-//Derived.prototype = Object.create(new BaseClass());
-//Derived.prototype.constructor = Derived;
+    //Derived.prototype = Object.create(new BaseClass());
+    //Derived.prototype.constructor = Derived;
 
-//for (var p in Derived.prototype.__proto__)
-//    Derived.prototype[p] = new Function(""return Derived.prototype.__proto__['""+p+""'].call(Derived.prototype.__proto__, this, ...arguments);"");
+    //for (var p in Derived.prototype.__proto__)
+    //    Derived.prototype[p] = new Function(""return Derived.prototype.__proto__['""+p+""'].call(Derived.prototype.__proto__, this, ...arguments);"");
 
-//var x = new Derived();
-//x.y = 1;
-//x.Foo();
-//x.Bar();
-//";
-//        }
-//    }
+    //var x = new Derived();
+    //x.y = 1;
+    //x.Foo();
+    //x.Bar();
+    //";
+    //        }
+    //    }
 
     public class Program
     {
@@ -95,7 +95,6 @@ namespace V8.Net
                     if (!_JSServer.IsDisposed)
                         Console.Title = "V8.Net Console - " + (IntPtr.Size == 4 ? "32-bit" : "64-bit") + " mode (Handles: " + _JSServer.TotalHandles
                             + " / Pending Disposal: " + _JSServer.TotalHandlesPendingDisposal
-                            + " / Pending Native GC: " + _JSServer.TotalHandlesPendingV8GC
                             + " / Cached: " + _JSServer.TotalHandlesCached
                             + " / In Use: " + (_JSServer.TotalHandlesInUse) + ")";
                     else
@@ -139,7 +138,7 @@ namespace V8.Net
                     _JSServer.RegisterType(typeof(Enumerable), null, true, ScriptMemberSecurity.Locked);
                     _JSServer.RegisterType(typeof(System.IO.File), null, true, ScriptMemberSecurity.Locked);
 
-                    InternalHandle hSystem = _JSServer.CreateObject().KeepAlive();
+                    InternalHandle hSystem = _JSServer.CreateObject().KeepTrack();
                     _JSServer.DynamicGlobalObject.System = hSystem;
                     hSystem.SetProperty(typeof(Object)); // (Note: No optional parameters used, so this will simply lookup and apply the existing registered type details above.)
                     hSystem.SetProperty(typeof(String));
@@ -207,367 +206,369 @@ namespace V8.Net
 
                 while (true)
                 {
-                    try
+                    var ok = ((Func<bool>)(() => // (this forces a scope to close so the GC can collect objects while in debug mode)
                     {
-                        Console.Write(Environment.NewLine + "> ");
-
-                        input = Console.ReadLine();
-                        lcInput = input.Trim().ToLower();
-
-                        if (lcInput == @"\help" || lcInput == @"\")
+                        try
                         {
-                            Console.WriteLine(@"Special console commands (all commands are triggered via a preceding '\' character so as not to confuse it with script code):");
-                            Console.WriteLine(@"\cls - Clears the screen.");
-                            Console.WriteLine(@"\flags --flag1 --flag2 --etc... - Sets one or more flags (use '\flags --help' for more details).");
-                            Console.WriteLine(@"\test - Starts the test process.");
-                            Console.WriteLine(@"\gc - Triggers garbage collection (for testing purposes).");
-                            Console.WriteLine(@"\v8gc - Triggers garbage collection in V8 (for testing purposes).");
-                            Console.WriteLine(@"\gctest - Runs a simple GC test against V8.NET and the native V8 engine.");
-                            Console.WriteLine(@"\handles - Dumps the current list of known handles.");
-                            Console.WriteLine(@"\speedtest - Runs a simple test script to test V8.NET performance with the V8 engine.");
-                            Console.WriteLine(@"\mtest - Runs a simple test script to test V8.NET integration/marshalling compatibility with the V8 engine on your system.");
-                            Console.WriteLine(@"\newenginetest - Creates 3 new engines (each time) and runs simple expressions in each one (note: new engines are never removed once created).");
-                            Console.WriteLine(@"\exit - Exists the console.");
-                        }
-                        else if (lcInput == @"\cls")
-                            Console.Clear();
-                        else if (lcInput == @"\flags" || lcInput.StartsWith(@"\flags "))
-                        {
-                            string flags = lcInput.Substring(6).Trim();
-                            if (flags.Length > 0)
+                            Console.Write(Environment.NewLine + "> ");
+
+                            input = Console.ReadLine();
+                            lcInput = input.Trim().ToLower();
+
+                            if (lcInput == @"\help" || lcInput == @"\")
+                            {
+                                Console.WriteLine(@"Special console commands (all commands are triggered via a preceding '\' character so as not to confuse it with script code):");
+                                Console.WriteLine(@"\cls - Clears the screen.");
+                                Console.WriteLine(@"\flags --flag1 --flag2 --etc... - Sets one or more flags (use '\flags --help' for more details).");
+                                Console.WriteLine(@"\test - Starts the test process.");
+                                Console.WriteLine(@"\gc - Triggers garbage collection (for testing purposes).");
+                                Console.WriteLine(@"\v8gc - Triggers garbage collection in V8 (for testing purposes).");
+                                Console.WriteLine(@"\gctest - Runs a simple GC test against V8.NET and the native V8 engine.");
+                                Console.WriteLine(@"\handles - Dumps the current list of known handles.");
+                                Console.WriteLine(@"\speedtest - Runs a simple test script to test V8.NET performance with the V8 engine.");
+                                Console.WriteLine(@"\mtest - Runs a simple test script to test V8.NET integration/marshalling compatibility with the V8 engine on your system.");
+                                Console.WriteLine(@"\newenginetest - Creates 3 new engines (each time) and runs simple expressions in each one (note: new engines are never removed once created).");
+                                Console.WriteLine(@"\exit - Exists the console.");
+                            }
+                            else if (lcInput == @"\cls")
+                                Console.Clear();
+                            else if (lcInput == @"\flags" || lcInput.StartsWith(@"\flags "))
+                            {
+                                string flags = lcInput.Substring(6).Trim();
+                                if (flags.Length > 0)
+                                {
+                                    try
+                                    {
+                                        _JSServer.SetFlagsFromString(flags); // TODO: This seems to crash after listing for some reason ...?
+                                    }
+                                    catch { }
+                                    if (lcInput.Contains("--help"))
+                                    {
+                                        Console.WriteLine("Press any key to continue ..." + Environment.NewLine);
+                                        Console.ReadKey();
+                                    }
+                                }
+                                else
+                                    Console.WriteLine(@"You did not specify any options.");
+                            }
+                            else if (lcInput == @"\test")
                             {
                                 try
                                 {
-                                    _JSServer.SetFlagsFromString(flags); // TODO: This seems to crash after listing for some reason ...?
-                                }
-                                catch { }
-                                if (lcInput.Contains("--help"))
-                                {
-                                    Console.WriteLine("Press any key to continue ..." + Environment.NewLine);
-                                    Console.ReadKey();
-                                }
-                            }
-                            else
-                                Console.WriteLine(@"You did not specify any options.");
-                        }
-                        else if (lcInput == @"\test")
-                        {
-                            try
-                            {
-                                /* This command will serve as a means to run fast tests against various aspects of V8.NET from the JavaScript side.
-                                 * This is preferred over unit tests because 1. it takes a bit of time for the engine to initialize, 2. internal feedback
-                                 * can be sent to the console from the environment, and 3. serves as a nice implementation example.
-                                 * The unit testing project will serve to test basic engine instantiation and solo utility classes.
-                                 * In the future, the following testing process may be redesigned to be runnable in both unit tests and console apps.
-                                 */
-
-                                Console.WriteLine("\r\n===============================================================================");
-                                Console.WriteLine("Setting up the test environment ...\r\n");
-
-                                {
-                                    // ... create a function template in order to generate our object! ...
-                                    // (note: this is not using ObjectTemplate because the native V8 does not support class names for those objects [class names are object type names])
-
-                                    Console.Write("\r\nCreating a FunctionTemplate instance ...");
-                                    var funcTemplate = _JSServer.CreateFunctionTemplate(typeof(V8DotNetTesterWrapper).Name);
-                                    Console.WriteLine(" Ok.");
-
-                                    // ... use the template to generate our object ...
-
-                                    Console.Write("\r\nRegistering the custom V8DotNetTester function object ...");
-                                    var testerFunc = funcTemplate.GetFunctionObject<V8DotNetTesterFunction>();
-                                    _JSServer.DynamicGlobalObject.V8DotNetTesterWrapper = testerFunc;
-                                    Console.WriteLine(" Ok.  'V8DotNetTester' is now a type [Function] in the global scope.");
-
-                                    Console.Write("\r\nCreating a V8DotNetTester instance from within JavaScript ...");
-                                    // (note: Once 'V8DotNetTester' is constructed, the 'Initialize()' override will be called immediately before returning,
-                                    // but you can return "engine.GetObject<V8DotNetTester>(_this.Handle, true, false)" to prevent it.)
-                                    _JSServer.VerboseConsoleExecute("testWrapper = new V8DotNetTesterWrapper();");
-                                    _JSServer.VerboseConsoleExecute("tester = testWrapper.tester;");
-                                    Console.WriteLine(" Ok.");
-
-                                    // ... Ok, the object exists, BUT, it is STILL not yet part of the global object, so we add it next ...
-
-                                    Console.Write("\r\nRetrieving the 'tester' property on the global object for the V8DotNetTester instance ...");
-                                    var handle = _JSServer.GlobalObject.GetProperty("tester");
-                                    var tester = (V8DotNetTester)_JSServer.DynamicGlobalObject.tester;
-                                    Console.WriteLine(" Ok.");
+                                    /* This command will serve as a means to run fast tests against various aspects of V8.NET from the JavaScript side.
+                                     * This is preferred over unit tests because 1. it takes a bit of time for the engine to initialize, 2. internal feedback
+                                     * can be sent to the console from the environment, and 3. serves as a nice implementation example.
+                                     * The unit testing project will serve to test basic engine instantiation and solo utility classes.
+                                     * In the future, the following testing process may be redesigned to be runnable in both unit tests and console apps.
+                                     */
 
                                     Console.WriteLine("\r\n===============================================================================");
-                                    Console.WriteLine("Dumping global properties ...\r\n");
+                                    Console.WriteLine("Setting up the test environment ...\r\n");
 
-                                    _JSServer.VerboseConsoleExecute("dump(this)");
+                                    {
+                                        // ... create a function template in order to generate our object! ...
+                                        // (note: this is not using ObjectTemplate because the native V8 does not support class names for those objects [class names are object type names])
 
-                                    Console.WriteLine("\r\n===============================================================================");
-                                    Console.WriteLine("Dumping tester properties ...\r\n");
-
-                                    _JSServer.VerboseConsoleExecute("dump(tester)");
-
-                                    // ... example of adding a functions via script (note: V8Engine.GlobalObject.Properties will have 'Test' set) ...
-
-                                    Console.WriteLine("\r\n===============================================================================");
-                                    Console.WriteLine("Ready to run the tester, press any key to proceed ...\r\n");
-                                    Console.ReadKey();
-
-                                    tester.Execute();
-
-                                    Console.WriteLine("\r\nReleasing managed tester object ...\r\n");
-                                    (~tester).ReleaseManagedObject(); // (this is not the same as Dispose(), and just releases the underlying managed object from its handle, and thus, the underlying native handle as well)
-                                    if (tester.InternalHandle.IsEmpty)
+                                        Console.Write("\r\nCreating a FunctionTemplate instance ...");
+                                        var funcTemplate = _JSServer.CreateFunctionTemplate(typeof(V8DotNetTesterWrapper).Name);
                                         Console.WriteLine(" Ok.");
-                                    else
-                                        throw new Exception("Failed to release the managed object from its handle.");
 
+                                        // ... use the template to generate our object ...
+
+                                        Console.Write("\r\nRegistering the custom V8DotNetTester function object ...");
+                                        var testerFunc = funcTemplate.GetFunctionObject<V8DotNetTesterFunction>();
+                                        _JSServer.DynamicGlobalObject.V8DotNetTesterWrapper = testerFunc;
+                                        Console.WriteLine(" Ok.  'V8DotNetTester' is now a type [Function] in the global scope.");
+
+                                        Console.Write("\r\nCreating a V8DotNetTester instance from within JavaScript ...");
+                                        // (note: Once 'V8DotNetTester' is constructed, the 'Initialize()' override will be called immediately before returning,
+                                        // but you can return "engine.GetObject<V8DotNetTester>(_this.Handle, true, false)" to prevent it.)
+                                        _JSServer.VerboseConsoleExecute("testWrapper = new V8DotNetTesterWrapper();");
+                                        _JSServer.VerboseConsoleExecute("tester = testWrapper.tester;");
+                                        Console.WriteLine(" Ok.");
+
+                                        // ... Ok, the object exists, BUT, it is STILL not yet part of the global object, so we add it next ...
+
+                                        Console.Write("\r\nRetrieving the 'tester' property on the global object for the V8DotNetTester instance ...");
+                                        var handle = _JSServer.GlobalObject.GetProperty("tester");
+                                        var tester = (V8DotNetTester)_JSServer.DynamicGlobalObject.tester;
+                                        Console.WriteLine(" Ok.");
+
+                                        Console.WriteLine("\r\n===============================================================================");
+                                        Console.WriteLine("Dumping global properties ...\r\n");
+
+                                        _JSServer.VerboseConsoleExecute("dump(this)");
+
+                                        Console.WriteLine("\r\n===============================================================================");
+                                        Console.WriteLine("Dumping tester properties ...\r\n");
+
+                                        _JSServer.VerboseConsoleExecute("dump(tester)");
+
+                                        // ... example of adding a functions via script (note: V8Engine.GlobalObject.Properties will have 'Test' set) ...
+
+                                        Console.WriteLine("\r\n===============================================================================");
+                                        Console.WriteLine("Ready to run the tester, press any key to proceed ...\r\n");
+                                        Console.ReadKey();
+
+                                        tester.Execute();
+
+                                        Console.WriteLine("\r\nReleasing managed tester object ...\r\n");
+                                        (~tester).ReleaseManagedObject(); // (this is not the same as Dispose(), and just releases the underlying managed object from its handle, and thus, the underlying native handle as well)
+                                        if (tester.InternalHandle.IsEmpty)
+                                            Console.WriteLine(" Ok.");
+                                        else
+                                            throw new Exception("Failed to release the managed object from its handle.");
+
+                                    }
+
+                                    Console.WriteLine("\r\n===============================================================================\r\n");
+                                    Console.WriteLine("Test completed successfully! Any errors would have interrupted execution.");
+                                    Console.WriteLine("Note: The 'dump(obj)' function is available to use for manual inspection.");
+                                    Console.WriteLine("Press any key to dump the global properties ...");
+                                    Console.ReadKey();
+                                    _JSServer.VerboseConsoleExecute("dump(this);");
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("\r\nTest failed.\r\n");
+                                    throw;
+                                }
+                            }
+                            else if (lcInput == @"\gc")
+                            {
+                                Console.Write(Environment.NewLine + "Forcing garbage collection ... ");
+                                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                                GC.WaitForPendingFinalizers();
+                                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                                GC.WaitForPendingFinalizers();
+                                Console.WriteLine("Done.\r\n");
+                                Console.WriteLine("Currently Used Memory: " + GC.GetTotalMemory(true));
+                            }
+                            else if (lcInput == @"\v8gc")
+                            {
+                                Console.Write(Environment.NewLine + "Forcing V8 garbage collection ... ");
+                                _JSServer.ForceV8GarbageCollection();
+                                Console.WriteLine("Done.\r\n");
+                            }
+                            else if (lcInput == @"\handles")
+                            {
+                                Console.Write(Environment.NewLine + "Active handles list ... " + Environment.NewLine);
+
+                                foreach (var h in _JSServer.Handles_Active)
+                                {
+                                    Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
                                 }
 
-                                Console.WriteLine("\r\n===============================================================================\r\n");
-                                Console.WriteLine("Test completed successfully! Any errors would have interrupted execution.");
-                                Console.WriteLine("Note: The 'dump(obj)' function is available to use for manual inspection.");
-                                Console.WriteLine("Press any key to dump the global properties ...");
-                                Console.ReadKey();
-                                _JSServer.VerboseConsoleExecute("dump(this);");
+                                Console.Write(Environment.NewLine + "Managed side dispose-ready handles (usually due to a GC attempt) ... " + Environment.NewLine);
+
+                                foreach (var h in _JSServer.Handles_ManagedSideDisposed)
+                                {
+                                    Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                                }
+
+                                Console.Write(Environment.NewLine + "Native side V8 handles now marked as disposing (in the queue) ... " + Environment.NewLine);
+
+                                foreach (var h in _JSServer.Handles_Disposing)
+                                {
+                                    Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                                }
+
+                                Console.Write(Environment.NewLine + "Native side V8 handles that are now cached for reuse ... " + Environment.NewLine);
+
+                                foreach (var h in _JSServer.Handles_DisposedAndCached)
+                                {
+                                    Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
+                                }
+
+                                Console.WriteLine(Environment.NewLine + "Done." + Environment.NewLine);
                             }
-                            catch
+                            else if (lcInput == @"\gctest")
                             {
-                                Console.WriteLine("\r\nTest failed.\r\n");
-                                throw;
+                                Console.WriteLine("\r\nTesting garbage collection ... ");
+
+                                int objectId = -1;
+
+                                InternalHandle internalHandle = ((Func<V8Engine, InternalHandle>)((engine) =>
+                                {
+                                    V8NativeObject tempObj;
+
+                                    Console.WriteLine("Setting 'tempObj' to a new managed object ...");
+
+                                    engine.DynamicGlobalObject.tempObj = tempObj = engine.CreateObject<V8NativeObject>();
+                                    InternalHandle ih = InternalHandle.GetUntrackedHandleFromObject(tempObj);
+
+                                    objectId = tempObj.ID;
+
+                                    Console.WriteLine("Generation of test instance before collect: " + GC.GetGeneration(tempObj));
+
+                                    Console.WriteLine("Releasing the object on the managed side ...");
+                                    tempObj = null;
+
+                                    return ih;
+                                }))(_JSServer);
+
+                                // (we wait for the object to be sent for disposal by the worker)
+
+                                GC.Collect();
+                                GC.WaitForPendingFinalizers();
+
+                                var testobj = _JSServer.GetObjectByID(objectId);
+                                if (testobj != null)
+                                    Console.WriteLine("Generation of test instance after collect: " + GC.GetGeneration(testobj));
+                                else
+                                    Console.WriteLine("Generation of test instance after collect: Object null for ID: " + objectId);
+                                testobj = null;
+
+                                int i;
+
+                                for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
+                                    System.Threading.Thread.Sleep(1); // (just wait for the worker)
+
+                                if (!internalHandle.IsDisposed)
+                                    throw new Exception("The temp object's handle is still not disposed ... something is wrong.");
+
+                                Console.WriteLine("Success!");
+                                //Console.WriteLine("Success! The test object's handle is going through the disposal process.");
+                                ////Console.WriteLine("Clearing the handle object reference next ...");
+
+                                //// object handles will finally be disposed when the native V8 GC calls back regarding them ...
+
+                                //Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
+
+                                //for (i = 0; i < 6000 && !internalHandle.IsNativeDisposed; i++)
+                                //    System.Threading.Thread.Sleep(1);
+
+                                //if (!internalHandle.IsNativeDisposed)
+                                //    throw new Exception("Object is not weak yet ... something is wrong.");
+
+                                //Console.WriteLine("The native side object is now weak and ready to be collected by V8.");
+
+                                //Console.WriteLine("Forcing V8 garbage collection ... ");
+                                //_JSServer.DynamicGlobalObject.tempObj = null;
+                                //for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
+                                //{
+                                //    _JSServer.ForceV8GarbageCollection();
+                                //    System.Threading.Thread.Sleep(1);
+                                //}
+
+                                //Console.WriteLine("Looking for object ...");
+
+                                //if (!internalHandle.IsDisposed) throw new Exception("Managed object's handle did not dispose.");
+                                //// (note: this call is only valid as long as no more objects are created before this point)
+                                //Console.WriteLine("Success! The managed V8NativeObject native handle is now disposed.");
+                                //Console.WriteLine("\r\nDone.\r\n");
                             }
-                        }
-                        else if (lcInput == @"\gc")
-                        {
-                            Console.Write(Environment.NewLine + "Forcing garbage collection ... ");
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                            GC.WaitForPendingFinalizers();
-                            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                            GC.WaitForPendingFinalizers();
-                            Console.WriteLine("Done.\r\n");
-                            Console.WriteLine("Currently Used Memory: " + GC.GetTotalMemory(true));
-                        }
-                        else if (lcInput == @"\v8gc")
-                        {
-                            Console.Write(Environment.NewLine + "Forcing V8 garbage collection ... ");
-                            _JSServer.ForceV8GarbageCollection();
-                            Console.WriteLine("Done.\r\n");
-                        }
-                        else if (lcInput == @"\handles")
-                        {
-                            Console.Write(Environment.NewLine + "Active handles list ... " + Environment.NewLine);
-
-                            foreach (var h in _JSServer.Handles_Active)
+                            else if (lcInput == @"\speedtest")
                             {
-                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
-                            }
-
-                            Console.Write(Environment.NewLine + "Managed side dispose-ready handles (usually due to a GC attempt) ... " + Environment.NewLine);
-
-                            foreach (var h in _JSServer.Handles_ManagedSideDisposed)
-                            {
-                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
-                            }
-
-                            Console.Write(Environment.NewLine + "Native side V8 handles now marked 'weak' (though may still be in use) ... " + Environment.NewLine);
-
-                            foreach (var h in _JSServer.Handles_NativeSideWeak)
-                            {
-                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
-                            }
-
-                            Console.Write(Environment.NewLine + "Native side V8 handles that are now cached for reuse ... " + Environment.NewLine);
-
-                            foreach (var h in _JSServer.Handles_DisposedAndCached)
-                            {
-                                Console.WriteLine(" * " + h.Description.Replace(Environment.NewLine, "\\r\\n"));
-                            }
-
-                            Console.WriteLine(Environment.NewLine + "Done." + Environment.NewLine);
-                        }
-                        else if (lcInput == @"\gctest")
-                        {
-                            Console.WriteLine("\r\nTesting garbage collection ... ");
-
-                            int objectId = -1;
-
-                            InternalHandle internalHandle = ((Func<V8Engine, InternalHandle>)((engine) =>
-                            {
-                                V8NativeObject tempObj;
-
-                                Console.WriteLine("Setting 'tempObj' to a new managed object ...");
-
-                                engine.DynamicGlobalObject.tempObj = tempObj = engine.CreateObject<V8NativeObject>();
-                                InternalHandle ih = InternalHandle.GetUntrackedHandleFromObject(tempObj);
-
-                                objectId = tempObj.ID;
-
-                                Console.WriteLine("Generation of test instance before collect: " + GC.GetGeneration(tempObj));
-
-                                Console.WriteLine("Releasing the object on the managed side ...");
-                                tempObj = null;
-
-                                return ih;
-                            }))(_JSServer);
-
-                            // (we wait for the object to be sent for disposal by the worker)
-
-                            GC.Collect();
-                            GC.WaitForPendingFinalizers();
-
-                            var testobj = _JSServer.GetObjectByID(objectId);
-                            if (testobj != null)
-                                Console.WriteLine("Generation of test instance after collect: " + GC.GetGeneration(testobj));
-                            else
-                                Console.WriteLine("Generation of test instance after collect: Object null for ID: " + objectId);
-                            testobj = null;
-
-                            int i;
-
-                            for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
-                                System.Threading.Thread.Sleep(1); // (just wait for the worker)
-
-                            if (!internalHandle.IsDisposed)
-                                throw new Exception("The temp object's handle is still not disposed ... something is wrong.");
-
-                            Console.WriteLine("Success!");
-                            //Console.WriteLine("Success! The test object's handle is going through the disposal process.");
-                            ////Console.WriteLine("Clearing the handle object reference next ...");
-
-                            //// object handles will finally be disposed when the native V8 GC calls back regarding them ...
-
-                            //Console.WriteLine("Waiting on the worker to make the object weak on the native V8 side ... ");
-
-                            //for (i = 0; i < 6000 && !internalHandle.IsNativeDisposed; i++)
-                            //    System.Threading.Thread.Sleep(1);
-
-                            //if (!internalHandle.IsNativeDisposed)
-                            //    throw new Exception("Object is not weak yet ... something is wrong.");
-
-                            //Console.WriteLine("The native side object is now weak and ready to be collected by V8.");
-
-                            //Console.WriteLine("Forcing V8 garbage collection ... ");
-                            //_JSServer.DynamicGlobalObject.tempObj = null;
-                            //for (i = 0; i < 3000 && !internalHandle.IsDisposed; i++)
-                            //{
-                            //    _JSServer.ForceV8GarbageCollection();
-                            //    System.Threading.Thread.Sleep(1);
-                            //}
-
-                            //Console.WriteLine("Looking for object ...");
-
-                            //if (!internalHandle.IsDisposed) throw new Exception("Managed object's handle did not dispose.");
-                            //// (note: this call is only valid as long as no more objects are created before this point)
-                            //Console.WriteLine("Success! The managed V8NativeObject native handle is now disposed.");
-                            //Console.WriteLine("\r\nDone.\r\n");
-                        }
-                        else if (lcInput == @"\speedtest")
-                        {
-                            var timer = new Stopwatch();
-                            long startTime, elapsed;
-                            long count;
-                            double result1, result2, result3, result4;
+                                var timer = new Stopwatch();
+                                long startTime, elapsed;
+                                long count;
+                                double result1, result2, result3, result4;
 #if DEBUG
-                            Console.WriteLine(Environment.NewLine + "WARNING: You are running in debug mode, so the speed will be REALLY slow compared to release.");
+                                Console.WriteLine(Environment.NewLine + "WARNING: You are running in debug mode, so the speed will be REALLY slow compared to release.");
 #endif
-                            Console.WriteLine(Environment.NewLine + "Running the speed tests ... ");
+                                Console.WriteLine(Environment.NewLine + "Running the speed tests ... ");
 
-                            timer.Start();
+                                timer.Start();
 
-                            //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
-                            Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
+                                //??Console.WriteLine(Environment.NewLine + "Running the property access speed tests ... ");
+                                Console.WriteLine("(Note: 'V8NativeObject' objects are always faster than using the 'V8ManagedObject' objects because native objects store values within the V8 engine and managed objects store theirs on the .NET side.)");
 
 #if DEBUG
-                            count = 20000000;
+                                count = 20000000;
 #else
                             count = 200000000;
 #endif
 
-                            Console.WriteLine("\r\nTesting global property write speed ... ");
-                            startTime = timer.ElapsedMilliseconds;
-                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = i;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
-                            elapsed = timer.ElapsedMilliseconds - startTime;
-                            result1 = (double)elapsed / count;
-                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result1.ToString("0.0#########") + " ms each pass.");
+                                Console.WriteLine("\r\nTesting global property write speed ... ");
+                                startTime = timer.ElapsedMilliseconds;
+                                _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) n = i;"); // (o={i:0}; is used in case the global object is managed, which will greatly slow down the loop)
+                                elapsed = timer.ElapsedMilliseconds - startTime;
+                                result1 = (double)elapsed / count;
+                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result1.ToString("0.0#########") + " ms each pass.");
 
-                            Console.WriteLine("\r\nTesting global property read speed ... ");
-                            startTime = timer.ElapsedMilliseconds;
-                            _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) n;");
-                            elapsed = timer.ElapsedMilliseconds - startTime;
-                            result2 = (double)elapsed / count;
-                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
+                                Console.WriteLine("\r\nTesting global property read speed ... ");
+                                startTime = timer.ElapsedMilliseconds;
+                                _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) n;");
+                                elapsed = timer.ElapsedMilliseconds - startTime;
+                                result2 = (double)elapsed / count;
+                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result2.ToString("0.0#########") + " ms each pass.");
 
 #if DEBUG
-                            count = 10000;
+                                count = 10000;
 #else
                             count = 2000000;
 #endif
 
-                            Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
-                            var o = _JSServer.CreateObjectTemplate().CreateObject(); // (need to keep a reference to the object so the GC doesn't claim it)
-                            _JSServer.DynamicGlobalObject.mo = o;
-                            startTime = timer.ElapsedMilliseconds;
-                            _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = i;");
-                            elapsed = timer.ElapsedMilliseconds - startTime;
-                            result3 = (double)elapsed / count;
-                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result3.ToString("0.0#########") + " ms each pass.");
+                                Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");
+                                var o = _JSServer.CreateObjectTemplate().CreateObject(); // (need to keep a reference to the object so the GC doesn't claim it)
+                                _JSServer.DynamicGlobalObject.mo = o;
+                                startTime = timer.ElapsedMilliseconds;
+                                _JSServer.Execute("o={i:0}; for (o.i=0; o.i<" + count + "; o.i++) mo.n = i;");
+                                elapsed = timer.ElapsedMilliseconds - startTime;
+                                result3 = (double)elapsed / count;
+                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result3.ToString("0.0#########") + " ms each pass.");
 
-                            Console.WriteLine("\r\nTesting property read speed on a managed object (with interceptors) ... ");
-                            startTime = timer.ElapsedMilliseconds;
-                            _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) mo.n;");
-                            elapsed = timer.ElapsedMilliseconds - startTime;
-                            result4 = (double)elapsed / count;
-                            Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result4.ToString("0.0#########") + " ms each pass.");
+                                Console.WriteLine("\r\nTesting property read speed on a managed object (with interceptors) ... ");
+                                startTime = timer.ElapsedMilliseconds;
+                                _JSServer.Execute("for (o.i=0; o.i<" + count + "; o.i++) mo.n;");
+                                elapsed = timer.ElapsedMilliseconds - startTime;
+                                result4 = (double)elapsed / count;
+                                Console.WriteLine(count + " loops @ " + elapsed + "ms total = " + result4.ToString("0.0#########") + " ms each pass.");
 
-                            Console.WriteLine("\r\nUpdating native properties is {0:N2}x faster than managed ones.", result3 / result1);
-                            Console.WriteLine("\r\nReading native properties is {0:N2}x faster than managed ones.", result4 / result2);
+                                Console.WriteLine("\r\nUpdating native properties is {0:N2}x faster than managed ones.", result3 / result1);
+                                Console.WriteLine("\r\nReading native properties is {0:N2}x faster than managed ones.", result4 / result2);
 
-                            Console.WriteLine("\r\nDone.\r\n");
-                            o = null;
-                        }
-                        else if (lcInput == @"\exit")
-                        {
-                            Console.WriteLine("User requested exit, disposing the engine instance ...");
-                            _JSServer.Dispose();
-                            Console.WriteLine("Engine disposed successfully. Press any key to continue ...");
-                            Console.ReadKey();
-                            Console.WriteLine("Goodbye. :)");
-                            break;
-                        }
-                        else if (lcInput == @"\mtest")
-                        {
-                            Console.WriteLine("Loading and marshalling native structs with test data ...");
+                                Console.WriteLine("\r\nDone.\r\n");
+                                o = null;
+                            }
+                            else if (lcInput == @"\exit")
+                            {
+                                Console.WriteLine("User requested exit, disposing the engine instance ...");
+                                _JSServer.Dispose();
+                                Console.WriteLine("Engine disposed successfully. Press any key to continue ...");
+                                Console.ReadKey();
+                                Console.WriteLine("Goodbye. :)");
+                                return false;
+                            }
+                            else if (lcInput == @"\mtest")
+                            {
+                                Console.WriteLine("Loading and marshalling native structs with test data ...");
 
-                            _JSServer.RunMarshallingTests();
+                                _JSServer.RunMarshallingTests();
 
-                            Console.WriteLine("Success! The marshalling between native and managed side is working as expected.");
-                        }
-                        else if (lcInput == @"\newenginetest")
-                        {
-                            Console.WriteLine("Creating 3 more engines ...");
+                                Console.WriteLine("Success! The marshalling between native and managed side is working as expected.");
+                            }
+                            else if (lcInput == @"\newenginetest")
+                            {
+                                Console.WriteLine("Creating 3 more engines ...");
 
-                            var engine1 = new V8Engine();
-                            var engine2 = new V8Engine();
-                            var engine3 = new V8Engine();
+                                var engine1 = new V8Engine();
+                                var engine2 = new V8Engine();
+                                var engine3 = new V8Engine();
 
-                            Console.WriteLine("Running test expressions ...");
+                                Console.WriteLine("Running test expressions ...");
 
-                            var resultHandle = engine1.Execute("1 + 2");
-                            var result = resultHandle.AsInt32;
-                            Console.WriteLine("Engine 1: 1+2=" + result);
-                            resultHandle.Dispose();
+                                var resultHandle = engine1.Execute("1 + 2");
+                                var result = resultHandle.AsInt32;
+                                Console.WriteLine("Engine 1: 1+2=" + result);
+                                resultHandle.Dispose();
 
-                            resultHandle = engine2.Execute("2+3");
-                            result = resultHandle.AsInt32;
-                            Console.WriteLine("Engine 2: 2+3=" + result);
-                            resultHandle.Dispose();
+                                resultHandle = engine2.Execute("2+3");
+                                result = resultHandle.AsInt32;
+                                Console.WriteLine("Engine 2: 2+3=" + result);
+                                resultHandle.Dispose();
 
-                            resultHandle = engine3.Execute("3 + 4");
-                            result = resultHandle.AsInt32;
-                            Console.WriteLine("Engine 3: 3+4=" + result);
-                            resultHandle.Dispose();
+                                resultHandle = engine3.Execute("3 + 4");
+                                result = resultHandle.AsInt32;
+                                Console.WriteLine("Engine 3: 3+4=" + result);
+                                resultHandle.Dispose();
 
-                            Console.WriteLine("Done.");
-                        }
-                        else if (lcInput == @"\memleaktest")
-                        {
-                            string script = @"
+                                Console.WriteLine("Done.");
+                            }
+                            else if (lcInput == @"\memleaktest")
+                            {
+                                string script = @"
 for (var i=0; i < 1000; i++) {
 // if the loop is empty no memory leak occurs.
 // if any of the following 3 method calls are uncommented then a bad memory leak occurs.
@@ -576,81 +577,85 @@ for (var i=0; i < 1000; i++) {
 shared.InstanceDoNothing();
 }
 ";
-                            _JSServer.GlobalObject.SetProperty(typeof(SomeMethods), recursive: true, memberSecurity: ScriptMemberSecurity.ReadWrite);
-                            var sm = new SomeMethods();
-                            _JSServer.GlobalObject.SetProperty("shared", sm, recursive: true);
-                            var hScript = _JSServer.Compile(script, null, true);
-                            int i = 0;
-                            try
-                            {
-                                while (true)
+                                _JSServer.GlobalObject.SetProperty(typeof(SomeMethods), recursive: true, memberSecurity: ScriptMemberSecurity.ReadWrite);
+                                var sm = new SomeMethods();
+                                _JSServer.GlobalObject.SetProperty("shared", sm, recursive: true);
+                                var hScript = _JSServer.Compile(script, null, true);
+                                int i = 0;
+                                try
                                 {
-                                    // putting a using statement on the returned handle stops the memory leak when running just the for loop.
-                                    // using a compiled script seems to reduce garbage collection, but does not affect the memory leak
-                                    using (var h = _JSServer.Execute(hScript, true))
+                                    while (true)
                                     {
-                                    } // end using handle returned by execute
-                                    _JSServer.DoIdleNotification();
-                                    Thread.Sleep(1);
-                                    i++;
-                                    if (i % 1000 == 0)
-                                    {
-                                        GC.Collect();
-                                        GC.WaitForPendingFinalizers();
-                                        _JSServer.ForceV8GarbageCollection();
-                                        i = 0;
-                                    }
-                                } // end infinite loop
+                                        // putting a using statement on the returned handle stops the memory leak when running just the for loop.
+                                        // using a compiled script seems to reduce garbage collection, but does not affect the memory leak
+                                        using (var h = _JSServer.Execute(hScript, true))
+                                        {
+                                        } // end using handle returned by execute
+                                        _JSServer.DoIdleNotification();
+                                        Thread.Sleep(1);
+                                        i++;
+                                        if (i % 1000 == 0)
+                                        {
+                                            GC.Collect();
+                                            GC.WaitForPendingFinalizers();
+                                            _JSServer.ForceV8GarbageCollection();
+                                            i = 0;
+                                        }
+                                    } // end infinite loop
+                                }
+                                catch (OutOfMemoryException ex)
+                                {
+                                    Console.WriteLine(ex);
+                                    Console.ReadKey();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex);
+                                    Console.ReadKey();
+                                }
+                                //?catch
+                                //{
+                                //    Console.WriteLine("We caught something");
+                                //    Console.ReadKey();
+                                //}
                             }
-                            catch (OutOfMemoryException ex)
+                            else if (lcInput.StartsWith(@"\"))
                             {
-                                Console.WriteLine(ex);
-                                Console.ReadKey();
+                                Console.WriteLine(@"Invalid console command. Type '\help' to see available commands.");
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                Console.WriteLine(ex);
-                                Console.ReadKey();
+                                Console.WriteLine();
+
+                                try
+                                {
+                                    var result = _JSServer.Execute(input, "V8.NET Console");
+                                    Console.WriteLine(result.AsString);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine();
+                                    Console.WriteLine();
+                                    Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
+                                    Console.WriteLine();
+                                    Console.WriteLine("Error!  Press any key to continue ...");
+                                    Console.ReadKey();
+                                }
                             }
-                            //?catch
-                            //{
-                            //    Console.WriteLine("We caught something");
-                            //    Console.ReadKey();
-                            //}
                         }
-                        else if (lcInput.StartsWith(@"\"))
-                        {
-                            Console.WriteLine(@"Invalid console command. Type '\help' to see available commands.");
-                        }
-                        else
+                        catch (Exception ex)
                         {
                             Console.WriteLine();
-
-                            try
-                            {
-                                var result = _JSServer.Execute(input, "V8.NET Console");
-                                Console.WriteLine(result.AsString);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine();
-                                Console.WriteLine();
-                                Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
-                                Console.WriteLine();
-                                Console.WriteLine("Error!  Press any key to continue ...");
-                                Console.ReadKey();
-                            }
+                            Console.WriteLine();
+                            Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
+                            Console.WriteLine();
+                            Console.WriteLine("Error!  Press any key to continue ...");
+                            Console.ReadKey();
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine();
-                        Console.WriteLine(Exceptions.GetFullErrorMessage(ex));
-                        Console.WriteLine();
-                        Console.WriteLine("Error!  Press any key to continue ...");
-                        Console.ReadKey();
-                    }
+
+                        return true;
+                    }))();
+                    if (!ok) break;
                 }
             }
             catch (Exception ex)
@@ -721,7 +726,7 @@ public sealed class SealedObject : IV8NativeObject
 
     public SealedObject(InternalHandle h1, InternalHandle h2)
     {
-        H1 = h1.KeepAlive();
+        H1 = h1.KeepTrack();
         H2 = h2;
     }
 

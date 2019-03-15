@@ -212,9 +212,9 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-#if DEBUG && TRACE
+#if TRACE
         /// <summary>
-        /// Holds the call stack responsible for creating this object (available in debugging only with DEBUG and TRACE defined).
+        /// Holds the call stack responsible for creating this object (available only with TRACE defined).
         /// </summary>
         string _CreationStack;
 #endif
@@ -222,7 +222,7 @@ namespace V8.Net
 
         public V8NativeObject()
         {
-#if DEBUG && TRACE
+#if  TRACE
             _CreationStack = Environment.StackTrace;
 #endif
             _Proxy = this;
@@ -230,7 +230,7 @@ namespace V8.Net
 
         public V8NativeObject(IV8NativeObject proxy)
         {
-#if DEBUG && TRACE
+#if TRACE
             _CreationStack = Environment.StackTrace;
 #endif
             _Proxy = proxy ?? this;
@@ -354,7 +354,7 @@ namespace V8.Net
         // --------------------------------------------------------------------------------------------------------------------
 
         public static implicit operator InternalHandle(V8NativeObject obj) { return obj != null ? obj._Handle : InternalHandle.Empty; }
-        public static implicit operator HandleProxy*(V8NativeObject obj) { return obj != null ? obj._Handle._HandleProxy : null; }
+        public static implicit operator HandleProxy* (V8NativeObject obj) { return obj != null ? obj._Handle._HandleProxy : null; }
 
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -483,7 +483,7 @@ namespace V8.Net
         /// Calls the V8 'SetAccessor()' function on the underlying native object to create a property that is controlled by "getter" and "setter" callbacks.
         /// </summary>
         public virtual void SetAccessor(string name,
-            V8NativeObjectPropertyGetter getter, V8NativeObjectPropertySetter setter,
+            GetterAccessor getter, SetterAccessor setter,
             V8PropertyAttributes attributes = V8PropertyAttributes.None, V8AccessControl access = V8AccessControl.Default)
         {
             _Handle.SetAccessor(name, getter, setter, attributes, access);

@@ -266,7 +266,7 @@ namespace V8.Net
 
             _Initialize_Handles();
             _Initialize_ObjectTemplate();
-            _Initialize_Worker(); // (DO THIS LAST!!! - the worker expects everything to be ready)
+            //?_Initialize_Worker(); // (DO THIS LAST!!! - the worker expects everything to be ready)
         }
 
         ~V8Engine()
@@ -278,7 +278,7 @@ namespace V8.Net
         {
             if (_NativeV8EngineProxy != null)
             {
-                _TerminateWorker(); // (will return only when it has successfully terminated)
+                //?_TerminateWorker(); // (will return only when it has successfully terminated)
 
                 // ... clear all handles of object IDs for disposal ...
 
@@ -382,18 +382,14 @@ namespace V8.Net
             return V8NetProxy.DoIdleNotification(_NativeV8EngineProxy, delay);
         }
 
-        bool _V8GarbageCollectionRequestCallback(HandleProxy* persistedObjectHandle)
+        bool _V8GarbageCollectionRequestCallback(HandleProxy* handleProxy)
         {
-            //if (persistedObjectHandle->_ObjectID >= 0)
-            //{
-            //    var obj = _GetExistingObject(persistedObjectHandle->_ObjectID);
-            //    if (obj != null)
-            //        lock (obj)
-            //        {
-            //            return obj._OnNativeGCRequested(); // (notify the object that a V8 GC is requested; the worker thread should pick it up later)
-            //        }
-            //}
-            return true; // (the managed handle doesn't exist, so go ahead and dispose of the native one [the proxy handle])
+            if (handleProxy->_ObjectID >= 0)
+            {
+                if (_UnrootObject(handleProxy->_ObjectID))
+                    return false; // (prevent the V8 GC from disposing the handle; the managed object will now dispose of this handle when the MANAGED GC is ready)
+            }
+            return true; // (don't know what this is now, so allow the handle to be disposed)
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -409,8 +405,13 @@ namespace V8.Net
         /// <param name="timeout">
         ///     (Optional) The amount of time, in milliseconds, to delay before 'TerminateExecution()' is invoked.
         /// </param>
+        /// <param name="trackReturn">
+        ///     (Optional) True to add a tracking object to the handle so the GC disposes of the native side automatically. Setting
+        ///     this to false means you take full responsibility to dispose this manually. This also adds a very small speed boost
+        ///     since no tracking is required.
+        /// </param>
         /// <returns> An InternalHandle. </returns>
-        public InternalHandle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0)
+        public InternalHandle Execute(string script, string sourceName = "V8.NET", bool throwExceptionOnError = false, int timeout = 0, bool trackReturn = true)
         {
             Timer timer = null;
 
@@ -426,7 +427,7 @@ namespace V8.Net
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result.KeepAlive();
+            return trackReturn ? result.KeepTrack() : result;
         }
 
         /// <summary> Executes JavaScript on the V8 engine and returns the result. </summary>
@@ -458,7 +459,7 @@ namespace V8.Net
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result.KeepAlive();
+            return result.KeepTrack();
         }
 
         /// <summary>
@@ -481,7 +482,7 @@ namespace V8.Net
         {
             InternalHandle result = Execute(script, sourceName, throwExceptionOnError, timeout);
             Console.WriteLine(result.AsString);
-            return result.KeepAlive();
+            return result.KeepTrack();
         }
 
         /// <summary>
@@ -506,7 +507,7 @@ namespace V8.Net
             Console.WriteLine(script);
             InternalHandle result = Execute(script, sourceName, throwExceptionOnError, timeout);
             Console.WriteLine(result.AsString);
-            return result.KeepAlive();
+            return result.KeepTrack();
         }
 
         /// <summary>
@@ -529,7 +530,7 @@ namespace V8.Net
             if (throwExceptionOnError)
                 result.ThrowOnError();
 
-            return result.KeepAlive();
+            return result.KeepTrack();
         }
 
         /// <summary>
@@ -564,7 +565,7 @@ namespace V8.Net
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
                 result._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
-            return result.KeepAlive();
+            return result.KeepTrack();
         }
 
         /// <summary>
@@ -591,7 +592,7 @@ namespace V8.Net
                 result = CreateValue(Exceptions.GetFullErrorMessage(ex));
                 result._HandleProxy->_Type = JSValueType.InternalError; // (required to flag that an error has occurred)
             }
-            return result.KeepAlive();
+            return result.KeepTrack();
         }
         // --------------------------------------------------------------------------------------------------------------------
 

@@ -187,22 +187,22 @@ namespace V8.Net
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetObjectAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectAccessor32(HandleProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public delegate void SetObjectAccessor_ImportFuncType(HandleProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public static SetObjectAccessor_ImportFuncType SetObjectAccessor = (Environment.Is64BitProcess ? (SetObjectAccessor_ImportFuncType)SetObjectAccessor64 : SetObjectAccessor32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetObjectTemplateAccessor", CharSet = CharSet.Unicode)]
         public static unsafe extern void SetObjectTemplateAccessor32(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public delegate void SetObjectTemplateAccessor_ImportFuncType(NativeObjectTemplateProxy* proxy, Int32 managedObjectID, string name,
 
-            ManagedAccessorGetter getter, ManagedAccessorSetter setter,
+            NativeGetterAccessor getter, NativeSetterAccessor setter,
             V8AccessControl access, V8PropertyAttributes attributes);
         public static SetObjectTemplateAccessor_ImportFuncType SetObjectTemplateAccessor = (Environment.Is64BitProcess ? (SetObjectTemplateAccessor_ImportFuncType)SetObjectTemplateAccessor64 : SetObjectTemplateAccessor32);
 
