@@ -15,6 +15,8 @@ FunctionTemplateProxy::FunctionTemplateProxy(V8EngineProxy* engineProxy, uint16_
 	SetManagedCallback(managedCallback);
 }
 
+V8EngineProxy* FunctionTemplateProxy::EngineProxy() { return _EngineID >= 0 && !V8EngineProxy::IsDisposed(_EngineID) ? _EngineProxy : nullptr; }
+
 FunctionTemplateProxy::~FunctionTemplateProxy()
 {
 	if (Type != 0) // (type is 0 if this class was wiped with 0's {if used in a marshalling test})

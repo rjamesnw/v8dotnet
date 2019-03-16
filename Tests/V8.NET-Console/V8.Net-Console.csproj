@@ -76,9 +76,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Source\V8.Net\V8.Net.csproj">
       <Project>{8d612c41-7d95-499c-a82d-c5c3c82225b3}</Project>
       <Name>V8.Net</Name>

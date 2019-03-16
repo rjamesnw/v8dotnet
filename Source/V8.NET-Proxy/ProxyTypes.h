@@ -561,7 +561,7 @@ public:
 
 	~ObjectTemplateProxy();
 
-	V8EngineProxy* EngineProxy() { return _EngineProxy; }
+	V8EngineProxy* EngineProxy(); // Returns the associated engine, or null if the engine was disposed.
 	int32_t EngineID() { return _EngineID; }
 
 	void RegisterNamedPropertyHandlers(
@@ -634,7 +634,7 @@ public:
 	FunctionTemplateProxy(V8EngineProxy* engineProxy, uint16_t* className, ManagedJSFunctionCallback managedCallback = nullptr);
 	~FunctionTemplateProxy();
 
-	V8EngineProxy* EngineProxy() { return _EngineProxy; }
+	V8EngineProxy* EngineProxy(); // Returns the associated engine, or null if the engine was disposed.
 	int32_t EngineID() { return _EngineID; }
 
 	void SetManagedCallback(ManagedJSFunctionCallback managedCallback);
