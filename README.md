@@ -17,7 +17,7 @@ The documentation can be found here: https://github.com/rjamesnw/v8dotnet/wiki
 
 Now on NugGet! Support for Net Standard targeting .Net 4.6.1+ and Net Standard 2.0+
 
-https://www.nuget.org/packages/V8.Net/ ![nuget](https://img.shields.io/nuget/v/V8.Net.svg)
+[https://www.nuget.org/packages/V8.Net/ ![nuget](https://img.shields.io/nuget/v/V8.Net.svg)](https://www.nuget.org/packages/V8.Net/)
 
 *Building The Source*
 
