@@ -223,6 +223,7 @@ namespace V8.Net
                     setupEnv = () => Console.WriteLine("Already setup!");
                 };
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
+                Console.WriteLine(@"Type \init for some examples.");
 
                 string input, lcInput;
 
@@ -502,7 +503,7 @@ namespace V8.Net
 #if DEBUG
                                 count = 20000000;
 #else
-                            count = 200000000;
+                                count = 200000000;
 #endif
 
                                 Console.WriteLine("\r\nTesting global property write speed ... ");
@@ -522,7 +523,7 @@ namespace V8.Net
 #if DEBUG
                                 count = 10000;
 #else
-                            count = 2000000;
+                                count = 2000000;
 #endif
 
                                 Console.WriteLine("\r\nTesting property write speed on a managed object (with interceptors) ... ");

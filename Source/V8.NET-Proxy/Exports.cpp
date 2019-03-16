@@ -18,12 +18,12 @@ extern "C"
 	{
 		return new V8EngineProxy(enableDebugging, debugMessageDispatcher, debugPort);
 	}
-	EXPORT void STDCALL DestroyV8EngineProxy(V8EngineProxy *engine)
+	EXPORT void STDCALL DestroyV8EngineProxy(V8EngineProxy *engine) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		delete engine;
 	}
 
-	EXPORT ContextProxy* STDCALL CreateContext(V8EngineProxy *engine, ObjectTemplateProxy *templatePoxy)
+	EXPORT ContextProxy* STDCALL CreateContext(V8EngineProxy *engine, ObjectTemplateProxy *templatePoxy) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		return engine->CreateContext(templatePoxy);
@@ -49,7 +49,7 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT void STDCALL SetFlagsFromString(V8EngineProxy *engine, const char *flags)
+	EXPORT void STDCALL SetFlagsFromString(V8EngineProxy *engine, const char *flags) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -59,14 +59,14 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT void STDCALL RegisterGCCallback(V8EngineProxy* engine, ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback)
+	EXPORT void STDCALL RegisterGCCallback(V8EngineProxy* engine, ManagedV8GarbageCollectionRequestCallback managedV8GarbageCollectionRequestCallback) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		engine->RegisterGCCallback(managedV8GarbageCollectionRequestCallback);
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT void STDCALL ForceGC(V8EngineProxy* engine)
+	EXPORT void STDCALL ForceGC(V8EngineProxy* engine) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -77,7 +77,7 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1)
+	EXPORT bool STDCALL DoIdleNotification(V8EngineProxy* engine, int hint = 1) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		if (engine->IsExecutingScript()) return false;
 		BEGIN_ISOLATE_SCOPE(engine);
@@ -88,7 +88,7 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT HandleProxy* STDCALL V8Execute(V8EngineProxy *engine, uint16_t *script, uint16_t *sourceName)
+	EXPORT HandleProxy* STDCALL V8Execute(V8EngineProxy *engine, uint16_t *script, uint16_t *sourceName) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -96,7 +96,7 @@ extern "C"
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
-	EXPORT HandleProxy* STDCALL V8Compile(V8EngineProxy *engine, uint16_t *script, uint16_t *sourceName)
+	EXPORT HandleProxy* STDCALL V8Compile(V8EngineProxy *engine, uint16_t *script, uint16_t *sourceName) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -104,7 +104,7 @@ extern "C"
 		END_CONTEXT_SCOPE;
 		END_ISOLATE_SCOPE;
 	}
-	EXPORT HandleProxy* STDCALL V8ExecuteCompiledScript(V8EngineProxy *engine, HandleProxy* script)
+	EXPORT HandleProxy* STDCALL V8ExecuteCompiledScript(V8EngineProxy *engine, HandleProxy* script) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -117,7 +117,7 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
-	EXPORT void STDCALL TerminateExecution(V8EngineProxy *engine)
+	EXPORT void STDCALL TerminateExecution(V8EngineProxy *engine) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		engine->TerminateExecution();
 	}
@@ -125,7 +125,7 @@ extern "C"
 	// ------------------------------------------------------------------------------------------------------------------------
 	// Object Template Related
 
-	EXPORT ObjectTemplateProxy* STDCALL CreateObjectTemplateProxy(V8EngineProxy *engine)
+	EXPORT ObjectTemplateProxy* STDCALL CreateObjectTemplateProxy(V8EngineProxy *engine) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
 		return engine->CreateObjectTemplate();
@@ -151,6 +151,7 @@ extern "C"
 		ManagedNamedPropertyEnumerator enumerator)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		proxy->RegisterNamedPropertyHandlers(getter, setter, query, deleter, enumerator);
 		END_ISOLATE_SCOPE;
@@ -164,6 +165,7 @@ extern "C"
 		ManagedIndexedPropertyEnumerator enumerator)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		proxy->RegisterIndexedPropertyHandlers(getter, setter, query, deleter, enumerator);
 		END_ISOLATE_SCOPE;
@@ -172,6 +174,7 @@ extern "C"
 	EXPORT void STDCALL UnregisterNamedPropertyHandlers(ObjectTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		proxy->UnregisterNamedPropertyHandlers();
 		END_ISOLATE_SCOPE;
@@ -180,6 +183,7 @@ extern "C"
 	EXPORT void STDCALL UnregisterIndexedPropertyHandlers(ObjectTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		proxy->UnregisterIndexedPropertyHandlers();
 		END_ISOLATE_SCOPE;
@@ -188,6 +192,7 @@ extern "C"
 	EXPORT void STDCALL SetCallAsFunctionHandler(ObjectTemplateProxy *proxy, ManagedJSFunctionCallback callback)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		proxy->SetCallAsFunctionHandler(callback);
 		END_ISOLATE_SCOPE;
@@ -196,6 +201,8 @@ extern "C"
 	EXPORT HandleProxy* STDCALL CreateObjectFromTemplate(ObjectTemplateProxy *proxy, int32_t managedObjectID)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
+
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		return proxy->CreateObject(managedObjectID);
@@ -209,6 +216,8 @@ extern "C"
 	EXPORT void STDCALL ConnectObject(HandleProxy *handleProxy, int32_t managedObjectID, void* templateProxy)
 	{
 		auto engine = handleProxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
+
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -236,6 +245,8 @@ extern "C"
 	EXPORT HandleProxy* STDCALL GetObjectPrototype(HandleProxy *handleProxy)
 	{
 		auto engine = handleProxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
+
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -251,6 +262,8 @@ extern "C"
 	EXPORT HandleProxy* STDCALL Call(HandleProxy *subject, const uint16_t *functionName, HandleProxy *_this, uint16_t argCount, HandleProxy** args)
 	{
 		auto engine = subject->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
+	
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -272,6 +285,7 @@ extern "C"
 	EXPORT bool STDCALL SetObjectPropertyByName(HandleProxy *proxy, const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attribs = v8::None)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return false; // (might have been destroyed)
 
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
@@ -298,6 +312,8 @@ extern "C"
 	EXPORT bool STDCALL SetObjectPropertyByIndex(HandleProxy *proxy, const uint16_t index, HandleProxy *value, v8::PropertyAttribute attribs = v8::None)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return false; // (might have been destroyed)
+
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -326,6 +342,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL GetObjectPropertyByName(HandleProxy *proxy, const uint16_t *name)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -342,6 +359,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL GetObjectPropertyByIndex(HandleProxy *proxy, const uint16_t index)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -358,6 +376,7 @@ extern "C"
 	EXPORT bool STDCALL DeleteObjectPropertyByName(HandleProxy *proxy, const uint16_t *name)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return false; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -374,6 +393,7 @@ extern "C"
 	EXPORT bool STDCALL DeleteObjectPropertyByIndex(HandleProxy *proxy, const uint16_t index)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return false; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -395,6 +415,7 @@ extern "C"
 			attributes = (PropertyAttribute)(ReadOnly | DontEnum);
 
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -423,6 +444,7 @@ extern "C"
 		v8::AccessControl access, v8::PropertyAttribute attributes)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -435,6 +457,7 @@ extern "C"
 	EXPORT void STDCALL SetObjectTemplateProperty(ObjectTemplateProxy *proxy, const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -450,6 +473,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL GetPropertyNames(HandleProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -467,6 +491,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL GetOwnPropertyNames(HandleProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -484,6 +509,7 @@ extern "C"
 	EXPORT PropertyAttribute STDCALL GetPropertyAttributes(HandleProxy *proxy, const uint16_t * name)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return (PropertyAttribute)0; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -500,6 +526,7 @@ extern "C"
 	EXPORT int32_t STDCALL GetArrayLength(HandleProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return 0; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 
@@ -534,6 +561,7 @@ extern "C"
 	EXPORT ObjectTemplateProxy* STDCALL GetFunctionInstanceTemplateProxy(FunctionTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		return proxy->GetInstanceTemplateProxy();
@@ -554,6 +582,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL GetFunction(FunctionTemplateProxy *proxy)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		return proxy->GetFunction();
@@ -565,6 +594,7 @@ extern "C"
 	EXPORT HandleProxy* STDCALL CreateInstanceFromFunctionTemplate(FunctionTemplateProxy *proxy, int32_t managedObjectID, int32_t argCount = 0, HandleProxy** args = nullptr)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return nullptr; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		auto result = proxy->CreateInstance(managedObjectID, argCount, args);
@@ -583,6 +613,7 @@ extern "C"
 	EXPORT void STDCALL SetFunctionTemplateProperty(FunctionTemplateProxy *proxy, const uint16_t *name, HandleProxy *value, v8::PropertyAttribute attributes)
 	{
 		auto engine = proxy->EngineProxy();
+		if (engine == nullptr) return; // (might have been destroyed)
 		BEGIN_ISOLATE_SCOPE(engine);
 		BEGIN_CONTEXT_SCOPE(engine);
 		proxy->Set(name, value, attributes);  // TODO: Check how this affects objects created from templates!
@@ -630,6 +661,7 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
+			if (engine == nullptr) return; // (might have been destroyed)
 
 			//if (engine->IsExecutingScript()) // TODO: Better to use thread detection perhaps...?
 			//{
@@ -651,6 +683,7 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
+			if (engine == nullptr) return; // (might have been destroyed)
 
 			//if (engine->IsExecutingScript())
 			//{
@@ -695,6 +728,7 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
+			if (engine == nullptr) return; // (might have been destroyed)
 			BEGIN_ISOLATE_SCOPE(engine);
 			BEGIN_CONTEXT_SCOPE(engine);
 			handleProxy->UpdateValue();
@@ -707,6 +741,7 @@ extern "C"
 		if (handleProxy != nullptr)
 		{
 			auto engine = handleProxy->EngineProxy();
+			if (engine == nullptr) return -1; // (might have been destroyed)
 			BEGIN_ISOLATE_SCOPE(engine);
 			BEGIN_CONTEXT_SCOPE(engine);
 			return handleProxy->GetManagedObjectID();
