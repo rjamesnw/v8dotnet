@@ -89,8 +89,10 @@ namespace V8.Net
                 _V8Engine.RunMarshallingTests();
                 Console.WriteLine(" Pass!");
 
-                _TitleUpdateTimer = new System.Timers.Timer(500);
-                _TitleUpdateTimer.AutoReset = true;
+                _TitleUpdateTimer = new System.Timers.Timer(500)
+                {
+                    AutoReset = true
+                };
                 _TitleUpdateTimer.Elapsed += (_o, _e) =>
                 {
                     if (!_V8Engine.IsDisposed)
@@ -104,7 +106,7 @@ namespace V8.Net
                 _TitleUpdateTimer.Start();
 
                 Console.WriteLine(Environment.NewLine + "Creating a global 'dump(obj)' function to dump properties of objects (one level only) ...");
-                _V8Engine.ConsoleExecute(@"dump = function(o) { var s=''; "
+                _V8Engine.ConsoleExecute(@"var dump = function(o) { var s=''; "
                     + "if (typeof(o)=='undefined') return 'undefined';"
                     + "if (typeof(o)=='string') return o;"
                     + "if (typeof(o)=='number') return ''+o;"
@@ -115,6 +117,8 @@ namespace V8.Net
                     + @" else for (var p in o) {var ov='', pv=''; try{ov=o.valueOf();}catch(e){ov='{error: '+e.message+': '+dump(o)+'}';} try{pv=o[p];}catch(e){pv=e.message;} s+='* '+ov+'.'+p+' = ('+pv+')\r\n'; }"
                     + " return s; }");
 
+                //var res = _V8Engine.GlobalObject.StaticCall("dump", _V8Engine.GlobalObject);
+                //Console.WriteLine(res.AsString);
 
                 //_JSServer.RegisterType<Test>(null, null, ScriptMemberSecurity.ReadOnly);
                 //_JSServer.GlobalObject.SetProperty(typeof(Test));
@@ -291,6 +295,9 @@ namespace V8.Net
                                     Console.WriteLine("\r\n===============================================================================");
                                     Console.WriteLine("Setting up the test environment ...\r\n");
 
+                                    if (((Handle)_V8Engine.DynamicGlobalObject.System).InternalHandle.IsUndefined)
+                                        setupEnv();
+
                                     {
                                         // ... create a function template in order to generate our object! ...
                                         // (note: this is not using ObjectTemplate because the native V8 does not support class names for those objects [class names are object type names])
@@ -345,6 +352,24 @@ namespace V8.Net
                                         else
                                             throw new Exception("Failed to release the managed object from its handle.");
 
+                                        Console.WriteLine("Dynamic Tests: ");
+
+                                        _V8Engine.Execute("var a = [1,2,3];");
+
+                                        var res = _V8Engine.DynamicGlobalObject.dump("* Dynamic Test 1"); // (test dynamic member invoke)
+                                        Console.WriteLine((string)res);
+
+                                        var func = _V8Engine.DynamicGlobalObject.dump;
+                                        Console.WriteLine((string)func("* Dynamic Test 2")); // (test dynamic non-member invoke)
+
+                                        var a_ = _V8Engine.DynamicGlobalObject.a[0];
+
+                                        Debug.Assert((int)a_ == 1, "_V8Engine.DynamicGlobalObject.a[0] != 1");
+                                        Console.WriteLine("* Dynamic test 3: " + (int)a_); // (test dynamic non-member invoke)
+
+                                        a_ = _V8Engine.DynamicGlobalObject.a[2];
+                                        Debug.Assert(((InternalHandle)a_).AsString == "3", "((InternalHandle)_V8Engine.DynamicGlobalObject.a[2]).AsString != \"3\"");
+                                        Console.WriteLine("* Dynamic test 4: " + ((InternalHandle)a_).AsString); // (test dynamic non-member invoke)
                                     }
 
                                     Console.WriteLine("\r\n===============================================================================\r\n");
