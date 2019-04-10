@@ -3,6 +3,8 @@ V8.NET
 
 News (March 4, 2019): I'm resurrecting this project to use it as a server for my .Net Core project FlowScript (https://github.com/rjamesnw/FlowScript), which is a Visual-Text hybrid VPL IDE for building web sites and services without having to write lots of code. The server end will be powered by this wrapper to V8.  At the moment V8.Net only supports .Net 4.0+, but I will soon add a Net Standard one and try to integrate it there also.
 
+I may also use it for this project, as a server alternative to NodeJS: https://github.com/rjamesnw/DreamSpaceStudio
+
 *Project Description*
 
 A fairly non-abstracted wrapper for Google's V8 JavaScript engine.
