@@ -117,6 +117,10 @@ namespace V8.Net
                     + @" else for (var p in o) {var ov='', pv=''; try{ov=o.valueOf();}catch(e){ov='{error: '+e.message+': '+dump(o)+'}';} try{pv=o[p];}catch(e){pv=e.message;} s+='* '+ov+'.'+p+' = ('+pv+')\r\n'; }"
                     + " return s; }");
 
+                Console.WriteLine(Environment.NewLine + "Creating a global 'Console' object ...");
+                _V8Engine.GlobalObject.SetProperty(typeof(Console), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
+                //??_JSServer.CreateObject<JS_Console>();
+
                 //var res = _V8Engine.GlobalObject.StaticCall("dump", _V8Engine.GlobalObject);
                 //Console.WriteLine(res.AsString);
 
@@ -187,10 +191,6 @@ namespace V8.Net
                     Console.WriteLine(Environment.NewLine + "Creating a global 'assert(msg, a,b)' function for property value assertion ...");
                     _V8Engine.ConsoleExecute(@"assert = function(msg,a,b) { msg += ' ('+a+'==='+b+'?)'; if (a === b) return msg+' ... Ok.'; else throw msg+' ... Failed!'; }");
 
-                    Console.WriteLine(Environment.NewLine + "Creating a global 'Console' object ...");
-                    _V8Engine.GlobalObject.SetProperty(typeof(Console), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
-                    //??_JSServer.CreateObject<JS_Console>();
-
                     Console.WriteLine(Environment.NewLine + "Creating a new global type 'TestEnum' ...");
                     _V8Engine.GlobalObject.SetProperty(typeof(TestEnum), V8PropertyAttributes.Locked, null, true, ScriptMemberSecurity.Locked);
 
@@ -228,6 +228,8 @@ namespace V8.Net
                 };
                 Console.WriteLine(Environment.NewLine + @"Ready - just enter script to execute. Type '\' or '\help' for a list of console specific commands.");
                 Console.WriteLine(@"Type \init for some examples.");
+
+                UserSupportTesting.Main(_V8Engine);
 
                 string input, lcInput;
 

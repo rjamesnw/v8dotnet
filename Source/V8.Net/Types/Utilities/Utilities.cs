@@ -311,14 +311,16 @@ namespace V8.Net
         }
         public static bool IsNumeric(string text)
         {
-            return Regex.IsMatch(text, @"^[+|-]?\d+\.?\d*$");
+            return ToDecimal(text, null) != null;
+            //return Regex.IsMatch(text, @"^[+|-]?\d+\.?\d*$");
             //decimal d; return decimal.TryParse(text, out d);
         }
-        public static bool IsSimpleNumeric(string text)
-        {
-            // http://derekslager.com/blog/posts/2007/09/a-better-dotnet-regular-expression-tester.ashx
-            return Regex.IsMatch(text, @"^(?:\+|\-)?\d+\.?\d*$");
-        }
+
+        //public static bool IsSimpleNumeric(string text)
+        //{
+        //    // http://derekslager.com/blog/posts/2007/09/a-better-dotnet-regular-expression-tester.ashx
+        //    return Regex.IsMatch(text, @"^(?:\+|\-)?\d+\.?\d*$");
+        //}
 
         public static bool IsString(Type t)
         {

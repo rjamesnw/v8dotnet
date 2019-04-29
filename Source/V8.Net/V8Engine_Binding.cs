@@ -594,7 +594,8 @@ namespace V8.Net
             TypeTemplate = Engine.CreateFunctionTemplate<FunctionTemplate>(ClassName);
 
             InstanceTemplate = TypeTemplate.InstanceTemplate;
-            InstanceTemplate.RegisterNamedPropertyInterceptors(); // (only the named interceptors for named members are needed at this point)
+            InstanceTemplate.RegisterNamedPropertyInterceptors(); // (hookup the named accessor interceptors on the function object)
+            InstanceTemplate.RegisterIndexedPropertyInterceptors(); // (hookup the indexed accessor interceptors on the function object, just in case; though rarely if ever used)
 
             // ... extract the members and apply to the templates ...
 
@@ -808,14 +809,11 @@ namespace V8.Net
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Binds a getter and setter to read and/or write to the specified data member (field or property only).
-        /// </summary>
-        /// <param name="memberName">The name of a member on '{ObjectBinder}.Object', or a new in-script name if 'fieldInfo' is supplied.</param>
-        /// <param name="getter">Returns the getter delegate to use for a native callback.</param>
-        /// <param name="setter">Returns the setter delegate to use for a native callback.</param>
-        /// <param name="fieldInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the field name.</param>
-        /// <returns>An exception on error, or null on success.</returns>
+        /// <summary> Binds a getter and setter to read and/or write to the specified data member (field or property only). </summary>
+        /// <param name="memberDetails"> Member details which to get getter and setter binding for. </param>
+        /// <param name="getter"> [out] Returns the getter delegate to use for a native callback. </param>
+        /// <param name="setter"> [out] Returns the setter delegate to use for a native callback. </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
         internal bool _GetBindingForDataMember(_MemberDetails memberDetails, out NativeGetterAccessor getter, out NativeSetterAccessor setter)
         {
             if (memberDetails.MemberType == MemberTypes.Field)
@@ -890,43 +888,47 @@ namespace V8.Net
             else if (fieldInfo.FieldType.IsEnum)
                 getter = _CreateGetAccessor<Int32>(memberDetails, fieldInfo);
 
-            else if (_Recursive ?? false)
+            else if (fieldInfo.FieldType.IsClass || fieldInfo.FieldType.IsValueType && !fieldInfo.FieldType.IsEnum)
             {
                 // ... this type is unknown, but recursive is set, so register the type implicitly and continue ...
-                Engine.RegisterType(fieldInfo.FieldType);
-                getter = _CreateObjectGetAccessor(memberDetails, fieldInfo);
+                if (_Recursive == true)
+                    Engine.RegisterType(fieldInfo.FieldType);
+                getter = _CreateObjectGetAccessor(memberDetails, fieldInfo, _Recursive == true);
             }
             else return false;
 
-            setter = _CreateSetAccessor(memberDetails, fieldInfo);
+            setter = _CreateSetAccessor(memberDetails, fieldInfo, _Recursive == true);
 
             return true;
         }
 
-        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo, bool accessibleMembers)
         {
             bool isInternalHandleTypeExpected = fieldInfo.FieldType == typeof(InternalHandle);
 
-            return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
-            {
-                InternalHandle _this = __this, value = __value;
-                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
+            if (!accessibleMembers)
+                return (HandleProxy* __this, string propertyName, HandleProxy* value) => InternalHandle.Empty;
+            else
+                return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
                 {
-                    if (_this.IsBinder)
+                    InternalHandle _this = __this, value = __value;
+                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                    if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                     {
-                        object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
+                        if (_this.IsBinder)
+                        {
+                            object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
 
-                        if (isInternalHandleTypeExpected && _value is InternalHandle)
-                            _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                            if (isInternalHandleTypeExpected && _value is InternalHandle)
+                                _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
-                        fieldInfo.SetValue(_this.BoundObject, _value);
+                            fieldInfo.SetValue(_this.BoundObject, _value);
+                        }
+                        else
+                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                     }
-                    else
-                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
-                }
-                return value;
-            };
+                    return value;
+                };
         }
 
         NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, FieldInfo fieldInfo)
@@ -960,11 +962,20 @@ namespace V8.Net
                 };
         }
 
-        NativeGetterAccessor _CreateObjectGetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
+        NativeGetterAccessor _CreateObjectGetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo, bool accessibleMembers)
         {
             var isSystemType = BoundType.Namespace == "System";
 
-            if (isSystemType)
+            if (!accessibleMembers)
+                return (HandleProxy* __this, string propertyName) =>
+                {
+                    var obj = Engine.CreateObject();
+                    var msg = Engine.CreateValue($"('Recursive' was not enabled when registering type '{ClassName}', which is required to access nested classes and structs)");
+                    var valueOf = Engine.CreateFunctionTemplate("ACCESS_NOT_ALLOWED").GetFunctionObject((engine, isConstructCall, _this, args) => msg);
+                    obj.SetProperty("valueOf", valueOf, V8PropertyAttributes.Locked);
+                    return obj;
+                };
+            else if (isSystemType)
                 return (HandleProxy* __this, string propertyName) =>
                 {
                     InternalHandle _this = __this;
@@ -996,11 +1007,9 @@ namespace V8.Net
         /// <summary>
         /// Binds a getter and setter to read and/or write to the specified data member.
         /// </summary>
-        /// <param name="memberName">The name of a member on '{ObjectBinder}.Object', or a new in-script name if 'propInfo' is supplied.</param>
+        /// <param name="memberDetails">Member details which to get getter and setter binding for.</param>
         /// <param name="getter">Returns the getter delegate to use for a native callback.</param>
         /// <param name="setter">Returns the setter delegate to use for a native callback.</param>
-        /// <param name="propInfo">If null, this will be pulled using 'memberName'.  If specified, then 'memberName' can be used to rename the property name.</param>
-        /// <returns>An exception on error, or null on success.</returns>
         internal bool _GetBindingForProperty(_MemberDetails memberDetails, out NativeGetterAccessor getter, out NativeSetterAccessor setter)
         {
             string memberName = memberDetails.MemberName;
@@ -1061,45 +1070,49 @@ namespace V8.Net
             else if (propInfo.PropertyType.IsEnum)
                 getter = _CreateGetAccessor<Int32>(memberDetails, propInfo);
 
-            else if (_Recursive ?? false)
+            else if (propInfo.PropertyType.IsClass || propInfo.PropertyType.IsValueType && !propInfo.PropertyType.IsEnum)
             {
                 // ... this type is unknown, but recursive is set, so register the type implicitly and continue ...
-                Engine.RegisterType(propInfo.PropertyType);
-                getter = _CreateObjectGetAccessor(memberDetails, propInfo);
+                if (_Recursive == true)
+                    Engine.RegisterType(propInfo.PropertyType);
+                getter = _CreateObjectGetAccessor(memberDetails, propInfo, _Recursive == true);
             }
             else return false;
 
-            setter = _CreateSetAccessor(memberDetails, propInfo);
+            setter = _CreateSetAccessor(memberDetails, propInfo, _Recursive == true);
 
             return true;
         }
 
-        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo, bool accessibleMembers)
         {
             bool isInternalHandleTypeExpected = propertyInfo.PropertyType == typeof(InternalHandle);
             bool canRead = propertyInfo.CanRead;
             bool canWrite = propertyInfo.CanWrite;
 
-            return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
-            {
-                InternalHandle _this = __this;
-                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
+            if (!accessibleMembers)
+                return (HandleProxy* __this, string propertyName, HandleProxy* value) => InternalHandle.Empty;
+            else
+                return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
                 {
-                    if (_this.IsBinder)
+                    InternalHandle _this = __this;
+                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                    if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                     {
-                        object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
+                        if (_this.IsBinder)
+                        {
+                            object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
 
-                        if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
-                            _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                            if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
+                                _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
-                        propertyInfo.SetValue(_this.BoundObject, _value, null);
+                            propertyInfo.SetValue(_this.BoundObject, _value, null);
+                        }
+                        else
+                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
                     }
-                    else
-                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
-                }
-                return value;
-            };
+                    return value;
+                };
         }
 
         NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, PropertyInfo propertyInfo)
@@ -1142,12 +1155,21 @@ namespace V8.Net
                 };
         }
 
-        NativeGetterAccessor _CreateObjectGetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
+        NativeGetterAccessor _CreateObjectGetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo, bool accessibleMembers)
         {
             var isSystemType = BoundType.Namespace == "System";
             //??var getMethod = propertyInfo.GetGetMethod();
 
-            if (isSystemType)
+            if (!accessibleMembers)
+                return (HandleProxy* __this, string propertyName) =>
+                {
+                    var obj = Engine.CreateObject();
+                    var msg = Engine.CreateValue($"('Recursive' was not enabled when registering type '{ClassName}', which is required to access nested classes and structs)");
+                    var valueOf = Engine.CreateFunctionTemplate("ACCESS_NOT_ALLOWED").GetFunctionObject((engine, isConstructCall, _this, args) => msg);
+                    obj.SetProperty("valueOf", valueOf, V8PropertyAttributes.Locked);
+                    return obj;
+                };
+            else if (isSystemType)
                 return (HandleProxy* __this, string propertyName) =>
                 {
                     InternalHandle _this = __this;
@@ -1768,14 +1790,28 @@ namespace V8.Net
 
         public override InternalHandle IndexedPropertyGetter(int index)
         {
-            if (TypeBinder.Indexer != null && TypeBinder.Indexer.CanRead)
+            if (TypeBinder.Indexer == null)
+            {
+                // ... there is no indexer, but there might be a property with the index name, so look for that when no indexers (i.e. 'this[]') exist ...
+                var strIndex = index.ToString();
+                return NamedPropertyGetter(ref strIndex);
+            }
+            else if (TypeBinder.Indexer.CanRead)
                 return Engine.CreateValue(TypeBinder.Indexer.GetValue(Object, new object[] { index }), TypeBinder._Recursive);
-            return InternalHandle.Empty;
+            else
+                return InternalHandle.Empty;
         }
         public override InternalHandle IndexedPropertySetter(int index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.Undefined)
         {
-            if (TypeBinder.Indexer != null && TypeBinder.Indexer.CanWrite)
+            if (TypeBinder.Indexer == null)
+            {
+                // ... there is no indexer, but there might be a property with the index name, so look for that when no indexers (i.e. 'this[]') exist ...
+                var strIndex = index.ToString();
+                return NamedPropertySetter(ref strIndex, value, attributes);
+            }
+            else if (TypeBinder.Indexer.CanWrite)
                 TypeBinder.Indexer.SetValue(_Object, new ArgInfo(value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
+
             return IndexedPropertyGetter(index);
         }
         public override bool? IndexedPropertyDeleter(int index)
@@ -1784,11 +1820,17 @@ namespace V8.Net
         }
         public override V8PropertyAttributes? IndexedPropertyQuery(int index)
         {
-            return null;
+            var strIndex = index.ToString();
+            return NamedPropertyQuery(ref strIndex);
         }
         public override InternalHandle IndexedPropertyEnumerator()
         {
-            return InternalHandle.Empty;
+            var indexes = from m in TypeBinder._Members.Values
+                          where m.BindingMode == BindingMode.Instance && !m.HasSecurityFlags(ScriptMemberSecurity.Hidden)
+                          select Utilities.ToInt32(m.MemberName, null);
+            return Engine.CreateValue(from i in indexes
+                                      where i != null // (make sure to only enumerate instance members)
+                                      select i.Value);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1813,7 +1855,7 @@ namespace V8.Net
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
-                            return getter.Invoke(_Handle, propertyName);
+                            return getter != null ? (InternalHandle)getter.Invoke(_Handle, propertyName) : InternalHandle.Empty;
                         }
                     case MemberTypes.Property:
                         {
@@ -1827,7 +1869,7 @@ namespace V8.Net
                                 memberDetails.Getter = getter;
                                 memberDetails.Setter = setter;
                             }
-                            return getter.Invoke(_Handle, propertyName);
+                            return getter != null ? (InternalHandle)getter.Invoke(_Handle, propertyName) : InternalHandle.Empty;
                         }
                     case MemberTypes.Method:
                         {
@@ -1942,7 +1984,7 @@ namespace V8.Net
         public override InternalHandle NamedPropertyEnumerator()
         {
             return Engine.CreateValue(from m in TypeBinder._Members.Values
-                                      where m.BindingMode == BindingMode.Instance && !m.HasSecurityFlags(ScriptMemberSecurity.Hidden) // (make sure to only enumerate instance members)
+                                      where m.BindingMode == BindingMode.Instance && !m.HasSecurityFlags(ScriptMemberSecurity.Hidden) && !Utilities.IsInt(m.MemberName) // (make sure to only enumerate instance members)
                                       select m.MemberName);
         }
 
