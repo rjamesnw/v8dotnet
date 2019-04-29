@@ -2,7 +2,8 @@
 
 cd "%0\..\"
 echo Current Folder: %CD%
-echo This script will update the release binaries with the latest successful release build.
+echo This script will update the release binaries for .NET 4.0+ with the latest successful release build.
+echo THIS DOES NOT COPY THE .NET STANDARD ASSEMBLIES. A separate script is used to deploy to NuGet.
 pause
 
 set /P version=Enter version (press enter on empy line to abort):
