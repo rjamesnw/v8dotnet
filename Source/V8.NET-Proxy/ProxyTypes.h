@@ -135,20 +135,20 @@ template <class T> struct CopyablePersistent {
 #define NewExternal(ptr) External::New(Isolate::GetCurrent(), ptr)
 #define ThrowException(value) Isolate::GetCurrent()->ThrowException(value)
 
-#define BEGIN_HANDLE_SCOPE(_this) \
-{ \
-    v8::Locker __lockScope(_this->_Isolate); \
-    v8::HandleScope __handleScope(_this->_Isolate);
+//#define BEGIN_HANDLE_SCOPE(_this) \
+//{ \
+//    v8::Locker __lockScope(_this->_Isolate); \
+//    v8::HandleScope __handleScope(_this->_Isolate);
+//
+//#define END_HANDLE_SCOPE \
+//    __handleScope; /* (prevent non-usage warnings) */ \
+//    __lockScope; \
+//}
 
-#define END_HANDLE_SCOPE \
-    __handleScope; /* (prevent non-usage warnings) */ \
-    __lockScope; \
-}
-
-#define BEGIN_ISOLATE_SCOPE(_this) \
+#define BEGIN_ISOLATE_SCOPE(engine) \
 { \
-    v8::Locker __lockScope(_this->Isolate()); \
-    v8::Isolate::Scope __isolateScope(_this->Isolate()); \
+    v8::Locker __lockScope(engine->Isolate()); \
+    v8::Isolate::Scope __isolateScope(engine->Isolate()); \
     v8::HandleScope __handleScope(Isolate::GetCurrent());
 
 #define END_ISOLATE_SCOPE \
@@ -157,9 +157,9 @@ template <class T> struct CopyablePersistent {
     __lockScope; \
 }
 
-#define BEGIN_CONTEXT_SCOPE(_this) \
+#define BEGIN_CONTEXT_SCOPE(engine) \
 { \
-    v8::Context::Scope __contextScope(_this->Context());
+    v8::Context::Scope __contextScope(engine->Context());
 
 #define END_CONTEXT_SCOPE \
     __contextScope; \

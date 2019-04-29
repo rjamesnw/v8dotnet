@@ -890,12 +890,13 @@ namespace V8.Net
                     var weakRef = Engine._GetObjectWeakReference(ObjectID);
                     if (weakRef != null)
                     {
-                        var obj = weakRef.Target as V8NativeObject;
-                        if (obj != null)
+                        if (weakRef.Target is V8NativeObject obj)
                         {
-                            var placeHolder = new V8NativeObject();
-                            placeHolder._Engine = obj._Engine;
-                            placeHolder.Template = obj.Template;
+                            var placeHolder = new V8NativeObject
+                            {
+                                _Engine = obj._Engine,
+                                Template = obj.Template
+                            };
                             weakRef.Target = placeHolder; // (this must be done first before moving the handle to the new object!)
                             placeHolder._Handle = obj._Handle;
                             placeHolder._Handle._Object = placeHolder;
@@ -1267,11 +1268,16 @@ namespace V8.Net
         internal const string _NOT_AN_OBJECT_ERRORMSG = "The handle does not represent a JavaScript object.";
         internal const string _VALUE_NOT_AN_OBJECT_ERRORMSG = "The handle {0} does not represent a JavaScript object.";
 
-        /// <summary>
-        /// Calls the V8 'Set()' function on the underlying native object.
-        /// Returns true if successful.
-        /// </summary>
-        /// <param name="attributes">Flags that describe the property behavior.  They must be 'OR'd together as needed.</param>
+        /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
+        /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
+        /// <exception cref="InvalidOperationException"> Thrown when the requested operation is invalid. </exception>
+        /// <param name="name"> The name. </param>
+        /// <param name="value"> The value. </param>
+        /// <param name="attributes">
+        ///     (Optional) Flags that describe the property behavior.  They must be 'OR'd together as needed.
+        /// </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        /// <seealso cref="M:V8.Net.IV8Object.SetProperty(string,InternalHandle,V8PropertyAttributes)"/>
         public bool SetProperty(string name, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name (cannot be null, empty, or only whitespace)");
@@ -1282,10 +1288,8 @@ namespace V8.Net
             return V8NetProxy.SetObjectPropertyByName(this, name, value, attributes);
         }
 
-        /// <summary>
-        /// Calls the V8 'Set()' function on the underlying native object.
-        /// Returns true if successful.
-        /// </summary>
+        /// <summary> Calls the V8 'Set()' function on the underlying native object. Returns true if successful. </summary>
+        /// <exception cref="InvalidOperationException"> Thrown when the requested operation is invalid. </exception>
         /// <param name="index"> Zero-based index to set. </param>
         /// <param name="value"> The value to set. </param>
         /// <param name="attributes">
@@ -1293,6 +1297,8 @@ namespace V8.Net
         ///     <para>Warning: V8 does not support setting attributes using numerical indexes.  If you set an attribute, the given
         ///     value is converted to a string, and a named property setter will be used instead. </para>
         /// </param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        /// <seealso cref="M:V8.Net.IV8Object.SetProperty(Int32,InternalHandle,V8PropertyAttributes)"/>
         public bool SetProperty(Int32 index, InternalHandle value, V8PropertyAttributes attributes = V8PropertyAttributes.None)
         {
             // ... can only set properties on objects ...
@@ -1338,6 +1344,38 @@ namespace V8.Net
                 return SetProperty(name, nObj, (V8PropertyAttributes)memberSecurity);
             else
                 return SetProperty(name, nObj);
+        }
+
+        /// <summary>
+        /// Sets a property to a given object. If the object is not V8.NET related, then the system will attempt to bind the instance and all public members to
+        /// the specified property name.
+        /// Returns true if successful.
+        /// </summary>
+        /// <param name="index"> Zero-based index to set. </param>
+        /// <param name="obj">Some value or object instance. 'Engine.CreateValue()' will be used to convert value types, unless the object is already a handle, in which case it is set directly.</param>
+        /// <param name="className">A custom in-script function name for the specified object type, or 'null' to use either the type name as is (the default) or any existing 'ScriptObject' attribute name.</param>
+        /// <param name="recursive">For object instances, if true, then object reference members are included, otherwise only the object itself is bound and returned.
+        /// For security reasons, public members that point to object instances will be ignored. This must be true to included those as well, effectively allowing
+        /// in-script traversal of the object reference tree (so make sure this doesn't expose sensitive methods/properties/fields).</param>
+        /// <param name="memberSecurity">For object instances, these are default flags that describe JavaScript properties for all object instance members that
+        /// don't have any 'ScriptMember' attribute.  The flags should be 'OR'd together as needed.</param>
+        public bool SetProperty(int index, object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null)
+        {
+            if (!IsObjectType)
+                throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
+
+            if (obj is IHandleBased)
+                return SetProperty(index, ((IHandleBased)obj).InternalHandle, (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+
+            if (obj == null || obj is string || obj.GetType().IsValueType) // TODO: Check enum support.
+                return SetProperty(index, Engine.CreateValue(obj), (V8PropertyAttributes)(memberSecurity ?? ScriptMemberSecurity.ReadWrite));
+
+            var nObj = Engine.CreateBinding(obj, className, recursive, memberSecurity);
+
+            if (memberSecurity != null)
+                return SetProperty(index, nObj, (V8PropertyAttributes)memberSecurity);
+            else
+                return SetProperty(index, nObj);
         }
 
         /// <summary>
@@ -1561,7 +1599,7 @@ namespace V8.Net
         {
             if (functionName.IsNullOrWhiteSpace())
                 throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
-
+            
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 

@@ -1,0 +1,15 @@
+﻿// summary:	Just scratch space to dump user code for testing and debugging. 
+// The file "temp.ignore.cs" should NOT be checked in - in fact, the .gitignore should ignore this file.
+
+using System;
+using V8.Net;
+
+// ... PUT USER CODE HERE ...
+
+partial class UserSupportTesting
+{
+    partial void RunTest(V8Engine engine)
+    {
+        // ... RUN TESTS HERE ...
+    }
+}

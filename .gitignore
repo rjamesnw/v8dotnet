@@ -5,6 +5,7 @@
 *.suo
 *.user
 *.sln.docstates
+temp.ignore.cs
 
 # Build results
 
