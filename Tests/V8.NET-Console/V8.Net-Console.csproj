@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="temp.ignore.cs.example.txt" />
     <Compile Include="User Support Testing.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -81,6 +82,9 @@
       <Project>{8d612c41-7d95-499c-a82d-c5c3c82225b3}</Project>
       <Name>V8.Net</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="temp.ignore.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
