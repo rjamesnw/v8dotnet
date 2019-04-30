@@ -897,38 +897,35 @@ namespace V8.Net
             }
             else return false;
 
-            setter = _CreateSetAccessor(memberDetails, fieldInfo, _Recursive == true);
+            setter = _CreateSetAccessor(memberDetails, fieldInfo);
 
             return true;
         }
 
-        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo, bool accessibleMembers)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             bool isInternalHandleTypeExpected = fieldInfo.FieldType == typeof(InternalHandle);
 
-            if (!accessibleMembers)
-                return (HandleProxy* __this, string propertyName, HandleProxy* value) => InternalHandle.Empty;
-            else
-                return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
+            return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
+            {
+                InternalHandle _this = __this, value = __value;
+                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
-                    InternalHandle _this = __this, value = __value;
-                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                    if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
+                    if (_this.IsBinder)
                     {
-                        if (_this.IsBinder)
-                        {
-                            object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
+                        object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
 
-                            if (isInternalHandleTypeExpected && _value is InternalHandle)
-                                _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                        if (isInternalHandleTypeExpected && _value is InternalHandle)
+                            _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
                             fieldInfo.SetValue(_this.BoundObject, _value);
-                        }
-                        else
-                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
                     }
-                    return value;
-                };
+                    else
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
+                }
+                return value;
+            };
         }
 
         NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, FieldInfo fieldInfo)
@@ -1079,40 +1076,37 @@ namespace V8.Net
             }
             else return false;
 
-            setter = _CreateSetAccessor(memberDetails, propInfo, _Recursive == true);
+            setter = _CreateSetAccessor(memberDetails, propInfo);
 
             return true;
         }
 
-        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo, bool accessibleMembers)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             bool isInternalHandleTypeExpected = propertyInfo.PropertyType == typeof(InternalHandle);
             bool canRead = propertyInfo.CanRead;
             bool canWrite = propertyInfo.CanWrite;
 
-            if (!accessibleMembers)
-                return (HandleProxy* __this, string propertyName, HandleProxy* value) => InternalHandle.Empty;
-            else
-                return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
+            return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
+            {
+                InternalHandle _this = __this;
+                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
-                    InternalHandle _this = __this;
-                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                    if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
+                    if (_this.IsBinder)
                     {
-                        if (_this.IsBinder)
-                        {
-                            object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
+                        object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
 
-                            if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
-                                _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                        if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
+                            _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
-                            propertyInfo.SetValue(_this.BoundObject, _value, null);
-                        }
-                        else
-                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
+                        propertyInfo.SetValue(_this.BoundObject, _value, null);
                     }
-                    return value;
-                };
+                    else
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
+                }
+                return value;
+            };
         }
 
         NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, PropertyInfo propertyInfo)
