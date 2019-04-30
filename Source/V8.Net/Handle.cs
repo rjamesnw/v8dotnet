@@ -810,7 +810,7 @@ namespace V8.Net
 
                     if (CLRTypeID >= 0)
                     {
-                        var argInfo = new ArgInfo(this);
+                        var argInfo = new ArgInfo(Engine, this);
                         return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
                     }
 
@@ -841,7 +841,7 @@ namespace V8.Net
 
                     if (CLRTypeID >= 0)
                     {
-                        var argInfo = new ArgInfo(this);
+                        var argInfo = new ArgInfo(Engine, this);
                         return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
                     }
 

@@ -24,12 +24,12 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo support .Net 4
     <PackageReleaseNotes>1.1.1: Added better support for numerical indexes in the type binder.
 1.1.2: Fix a bug where tight security on a class prevented member updates.
 </PackageReleaseNotes>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <Product>V8.Net</Product>
     <PackageId>V8.Net</PackageId>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
-    <AssemblyVersion>1.1.2.1</AssemblyVersion>
-    <FileVersion>1.1.2.1</FileVersion>
+    <AssemblyVersion>1.1.3.2</AssemblyVersion>
+    <FileVersion>1.1.3.2</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

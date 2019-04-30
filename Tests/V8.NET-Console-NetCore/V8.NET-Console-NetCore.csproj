@@ -4,8 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.2;net461</TargetFrameworks>
     <RootNamespace>V8.NET_Console_NetCore</RootNamespace>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
-    <FileVersion>1.0.0.1</FileVersion>
+    <AssemblyVersion>1.0.0.2</AssemblyVersion>
+    <FileVersion>1.0.0.2</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
