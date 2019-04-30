@@ -153,6 +153,8 @@ namespace V8.Net
         public readonly object Value;
         public readonly Type OriginalValueType;
 
+        public readonly V8Engine Engine;
+
         /// <summary>
         /// Returns true if this ArgInfo value has valid type information.  This will be false for empty instances.
         /// </summary>
@@ -192,8 +194,9 @@ namespace V8.Net
             }
         }
 
-        public ArgInfo(InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
+        public ArgInfo(V8Engine engine, InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
         {
+            Engine = engine;
             ArgInfoSource = handle;
             ExpectedParameter = paramInfo;
             ExpectedType = expectedType ?? (paramInfo != null ? paramInfo.ParameterType : null);
@@ -244,7 +247,7 @@ namespace V8.Net
             }
             else if (ExpectedType == typeof(V8Engine))
             {
-                Value = ArgInfoSource.Engine;
+                Value = Engine;
                 Type = typeof(V8Engine);
             }
             else
@@ -272,7 +275,7 @@ namespace V8.Net
         /// <summary>
         /// Returns an array of ArgInfo values for the given handles.
         /// </summary>
-        public static ArgInfo[] GetArguments(InternalHandle[] handles, uint handlesOffset = 0, ParameterInfo[] expectedParameters = null)
+        public static ArgInfo[] GetArguments(V8Engine engine, InternalHandle[] handles, uint handlesOffset = 0, ParameterInfo[] expectedParameters = null)
         {
             var handlesLength = handles.Length - handlesOffset;
             var length = expectedParameters != null ? expectedParameters.Length : handlesLength;
@@ -280,7 +283,7 @@ namespace V8.Net
             ArgInfo[] argInfoItems = new ArgInfo[length];
 
             for (var i = 0; i < length; i++)
-                argInfoItems[i] = new ArgInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters != null ? expectedParameters[i] : null);
+                argInfoItems[i] = new ArgInfo(engine, i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters?[i]);
 
             return argInfoItems;
         }
@@ -288,7 +291,7 @@ namespace V8.Net
         /// <summary>
         /// Returns an array of ArgInfo values for the expected types.
         /// </summary>
-        public static ArgInfo[] GetTypes(InternalHandle[] handles, uint handlesOffset = 0, Type[] expectedTypes = null)
+        public static ArgInfo[] GetTypes(V8Engine engine, InternalHandle[] handles, uint handlesOffset = 0, Type[] expectedTypes = null)
         {
             var handlesLength = handles.Length - handlesOffset;
             var length = expectedTypes != null ? expectedTypes.Length : handlesLength;
@@ -296,7 +299,7 @@ namespace V8.Net
             ArgInfo[] argInfoItems = new ArgInfo[length];
 
             for (var i = 0; i < length; i++)
-                argInfoItems[i] = new ArgInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
+                argInfoItems[i] = new ArgInfo(engine, i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
 
             return argInfoItems;
         }
@@ -914,7 +917,7 @@ namespace V8.Net
                 {
                     if (_this.IsBinder)
                     {
-                        object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
+                        object _value = new ArgInfo(Engine, value, null, fieldInfo.FieldType).ValueOrDefault;
 
                         if (isInternalHandleTypeExpected && _value is InternalHandle)
                             _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
@@ -1095,7 +1098,7 @@ namespace V8.Net
                 {
                     if (_this.IsBinder)
                     {
-                        object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
+                        object _value = new ArgInfo(Engine, value, null, propertyInfo.PropertyType).ValueOrDefault;
 
                         if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
                             _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
@@ -1257,7 +1260,7 @@ namespace V8.Net
 
                 // ... with the array of types, convert to an 'ArgInfo' array with the extracted argument type information and values...
 
-                genericArgInfos = ArgInfo.GetTypes(typeArgs, 0, expectedGenericTypes); // ('expectedGenericTypes' is a fixed array of types that are ALWAYS expected if only 1 member exists [no overloads])
+                genericArgInfos = ArgInfo.GetTypes(Engine, typeArgs, 0, expectedGenericTypes); // ('expectedGenericTypes' is a fixed array of types that are ALWAYS expected if only 1 member exists [no overloads])
                 var genericSystemTypes = ArgInfo.GetSystemTypes(genericArgInfos);
 
                 if (memberDetails.ConstructedMemberGroups == null)
@@ -1306,9 +1309,9 @@ namespace V8.Net
         {
             convertedArguments = null;
 
-            argInfos = ArgInfo.GetArguments(args, argOffset, expectedParameters);
+            argInfos = ArgInfo.GetArguments(Engine, args, argOffset, expectedParameters);
 
-            // ... create/grow the converted arguments array if necessary ...
+            // ... create/grow the converted arguments array if necessary (this is designed to prevent having to reallocate a new array every time we need space to deal with the given arguments) ...
             if (!convertedArgumentArrayCache.TryGetValue(argInfos.Length, out convertedArguments) || convertedArguments.Length < argInfos.Length)
                 convertedArgumentArrayCache[argInfos.Length] = convertedArguments = new object[argInfos.Length]; // (array is too small, so discard
 
@@ -1804,7 +1807,7 @@ namespace V8.Net
                 return NamedPropertySetter(ref strIndex, value, attributes);
             }
             else if (TypeBinder.Indexer.CanWrite)
-                TypeBinder.Indexer.SetValue(_Object, new ArgInfo(value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
+                TypeBinder.Indexer.SetValue(_Object, new ArgInfo(Engine, value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
 
             return IndexedPropertyGetter(index);
         }
