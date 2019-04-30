@@ -130,6 +130,16 @@ namespace V8.Net
             }
             catch (Exception ex)
             {
+                if (ex.InnerException == V8ValueException.Null)
+                {
+                    return Engine.CreateNullValue();
+                }
+
+                if (ex.InnerException == V8ValueException.Undefined)
+                {
+                    return InternalHandle.Empty;
+                }
+
                 return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
             }
         }
@@ -148,6 +158,16 @@ namespace V8.Net
             }
             catch (Exception ex)
             {
+                if (ex.InnerException == V8ValueException.Null)
+                {
+                    return Engine.CreateNullValue();
+                }
+
+                if (ex.InnerException == V8ValueException.Undefined)
+                {
+                    return InternalHandle.Empty;
+                }
+
                 return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
             }
         }
@@ -219,6 +239,16 @@ namespace V8.Net
             }
             catch (Exception ex)
             {
+                if (ex.InnerException == V8ValueException.Null)
+                {
+                    return Engine.CreateNullValue();
+                }
+
+                if (ex.InnerException == V8ValueException.Undefined)
+                {
+                    return InternalHandle.Empty;
+                }
+
                 return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
             }
         }
@@ -237,6 +267,16 @@ namespace V8.Net
             }
             catch (Exception ex)
             {
+                if (ex.InnerException == V8ValueException.Null)
+                {
+                    return Engine.CreateNullValue();
+                }
+
+                if (ex.InnerException == V8ValueException.Undefined)
+                {
+                    return InternalHandle.Empty;
+                }
+
                 return _Engine.CreateError(Exceptions.GetFullErrorMessage(ex), JSValueType.ExecutionError);
             }
         }
