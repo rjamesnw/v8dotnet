@@ -45,5 +45,13 @@ namespace V8.Net
         public V8ExecutionErrorException(InternalHandle handle, Exception innerException) : base(handle) { }
     }
 
+    public class V8ValueException : Exception
+    {
+        public static readonly V8ValueException Null = new V8ValueException();
+        public static readonly V8ValueException Undefined = new V8ValueException();
+
+        private V8ValueException() { }
+    }
+
     // ========================================================================================================================
 }

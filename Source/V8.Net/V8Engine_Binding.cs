@@ -1424,6 +1424,16 @@ namespace V8.Net
                 }
                 catch (Exception ex)
                 {
+                    if (ex.InnerException == V8ValueException.Null)
+                    {
+                        return engine.CreateNullValue();
+                    }
+
+                    if (ex.InnerException == V8ValueException.Undefined)
+                    {
+                        return InternalHandle.Empty;
+                    }
+
                     var msg = "Failed to invoke method ";
                     if (expectedParameters != null)
                     {
