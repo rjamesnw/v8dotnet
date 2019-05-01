@@ -531,7 +531,7 @@ namespace V8.Net
             V8NetProxy.SetObjectAccessor(this, ID, name, _Getter, _Setter, access, attributes);
         }
 
-        static internal V8PropertyAttributes _CreateAccessorProxies(V8Engine engine, string name, GetterAccessor getter, SetterAccessor setter, V8PropertyAttributes attributes, V8AccessControl access, 
+        static internal V8PropertyAttributes _CreateAccessorProxies(V8Engine engine, string name, GetterAccessor getter, SetterAccessor setter, V8PropertyAttributes attributes, V8AccessControl access,
             ref NativeGetterAccessor _Getter, ref NativeSetterAccessor _Setter)
         {
             if (name.IsNullOrWhiteSpace())
