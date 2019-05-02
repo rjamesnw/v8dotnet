@@ -2085,7 +2085,7 @@
                 The object binder that was created. The object instance is a property of the binding wrapper.
             </param>
         </member>
-        <member name="E:V8.Net.TypeBinder.OnGetObjectBinder">
+        <member name="F:V8.Net.TypeBinder.OnGetObjectBinder">
             <summary>
                 An optional custom handler to return an object binder for instances of the underlying type. Typically you don't have
                 to do anything with the instance, you only need to return a binder.  Returning null will trigger the default binding
