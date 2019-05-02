@@ -580,7 +580,7 @@ namespace V8.Net
         ///      <para>Example: OnGetObjectBinder += (tb, obj, initializeBinder)
         ///      =&gt; tb.CreateObjectBinder&lt;CustomBinderType, object&gt;(obj, initializeBinder);</para>
         /// </summary>
-        public event OnGetObjectBinderHandler OnGetObjectBinder;
+        public OnGetObjectBinderHandler OnGetObjectBinder;
 
         /// <summary>
         ///     Called after an instance is bound to an object binding wrapper (<see cref="ObjectBinder"/>), and any injectable
