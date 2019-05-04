@@ -1558,7 +1558,7 @@ namespace V8.Net
                             // ... invoke the constructor ...
 
                             handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, convertedArguments), null, _Recursive, _DefaultMemberSecurity, false);
-                            handle.Object.Initialize(true, args);
+                            handle.Object?.Initialize(true, args);
 
                             // ... set the prototype of the new instance (created from an object template) to maintain the prototype chain ...
 
@@ -1698,8 +1698,13 @@ namespace V8.Net
                 binder.Object = obj; // (this updates the object type and type binder references automatically as well)
                 binder.InternalHandle.KeepAlive();
 
-                foreach (var injectable in _Injectables)
-                    binder.OnInjection(injectable.FirstMember);
+                var typeBinder = this;
+                while (typeBinder != null)
+                {
+                    foreach (var injectable in typeBinder._Injectables)
+                        binder.OnInjection(injectable.FirstMember);
+                    typeBinder = typeBinder.BaseTypeBinder;
+                }
 
                 OnObjectBound?.Invoke(this, binder);
             }
@@ -2238,24 +2243,35 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are not bound however).
-        /// If the object given is actually a boxed primitive type, then a non-object handle can be returned.
-        /// If the given object is not a boxed value, then the handle returned is a handle to an object binder with internal property
-        /// accessors for the encapsulated object's public fields, properties, and methods.
-        /// <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however, 
-        /// bound types are cached and not created each time for the best efficiency.</para>
+        ///     Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are
+        ///     not bound however). If the object given is actually a boxed primitive type, then a non-object handle can be
+        ///     returned. If the given object is not a boxed value, then the handle returned is a handle to an object binder with
+        ///     internal property accessors for the encapsulated object's public fields, properties, and methods. If the object
+        ///     passed in already implements <see cref="IHandleBased"/>, then the handle is returned instead of creating a binding.
+        ///     <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however,
+        ///     bound types are cached and not created each time for the best efficiency.</para>
         /// </summary>
-        /// <param name="obj">The object to create a binder for.</param>
-        /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
-        /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
-        /// If true, then nested object references are included.</param>
-        /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        /// <param name="initializeBinder">If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        /// <param name="obj"> The object to create a binder for. </param>
+        /// <param name="className">
+        ///     (Optional) A custom type name, or 'null' to use either the type name as is (the default), or any existing
+        ///     'ScriptObject' attribute name.
+        /// </param>
+        /// <param name="recursive">
+        ///     (Optional) When an object type is instantiate within JavaScript, only the object instance itself is bound (and not
+        ///     any reference members). If true, then nested object references are included.
+        /// </param>
+        /// <param name="memberSecurity">
+        ///     (Optional) Default member attributes for members that don't have the 'ScriptMember' attribute.
+        /// </param>
+        /// <param name="initializeBinder">
+        ///     (Optional) If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.
+        /// </param>
+        /// <returns> The new binding. </returns>
         public InternalHandle CreateBinding(object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null, bool initializeBinder = true)
         {
-            var objType = obj != null ? obj.GetType() : null;
+            var objType = obj?.GetType();
 
-            if (objType == null || obj is IHandleBased)
+            if ((objType == null || obj is IHandleBased) && !(obj is ObjectBinder))
                 return CreateValue(obj, recursive, memberSecurity);
 
             var typeBinder = RegisterType(objType, className, recursive, memberSecurity);
