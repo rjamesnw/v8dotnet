@@ -21,15 +21,13 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
     <RepositoryUrl>https://github.com/rjamesnw/v8dotnet</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>V8.NET, V8, JavaScript, ClearScript, JScript, Chromium</PackageTags>
-    <PackageReleaseNotes>1. Update to allow attributes on private type members.
-2. Added 'InjectAttribute' to allow injecting values when the type binder associates an ObjectBinder with an object instance.
-3. Added OnGetObjectBinder and OnObjectBound events to TypeBinder to allow hooking into the instance binding process.</PackageReleaseNotes>
-    <Version>1.1.5</Version>
+    <PackageReleaseNotes>Fixed: The new "Inject" attribute did not work when placed on base types.</PackageReleaseNotes>
+    <Version>1.1.6</Version>
     <Product>V8.Net</Product>
     <PackageId>V8.Net</PackageId>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
-    <AssemblyVersion>1.1.5.1</AssemblyVersion>
-    <FileVersion>1.1.5.1</FileVersion>
+    <AssemblyVersion>1.1.6.0</AssemblyVersion>
+    <FileVersion>1.1.6.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

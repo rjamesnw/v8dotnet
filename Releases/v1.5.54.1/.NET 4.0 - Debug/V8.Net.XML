@@ -757,19 +757,30 @@
         <!-- Badly formed XML comment ignored for member "M:V8.Net.V8Engine.CreateBinding``1(System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity})" -->
         <member name="M:V8.Net.V8Engine.CreateBinding(System.Object,System.String,System.Nullable{System.Boolean},System.Nullable{V8.Net.ScriptMemberSecurity},System.Boolean)">
             <summary>
-            Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are not bound however).
-            If the object given is actually a boxed primitive type, then a non-object handle can be returned.
-            If the given object is not a boxed value, then the handle returned is a handle to an object binder with internal property
-            accessors for the encapsulated object's public fields, properties, and methods.
-            <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however, 
-            bound types are cached and not created each time for the best efficiency.</para>
+                Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are
+                not bound however). If the object given is actually a boxed primitive type, then a non-object handle can be
+                returned. If the given object is not a boxed value, then the handle returned is a handle to an object binder with
+                internal property accessors for the encapsulated object's public fields, properties, and methods. If the object
+                passed in already implements <see cref="T:V8.Net.IHandleBased"/>, then the handle is returned instead of creating a binding.
+                <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however,
+                bound types are cached and not created each time for the best efficiency.</para>
             </summary>
-            <param name="obj">The object to create a binder for.</param>
-            <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
-            <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
-            If true, then nested object references are included.</param>
-            <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-            <param name="initializeBinder">If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+            <param name="obj"> The object to create a binder for. </param>
+            <param name="className">
+                (Optional) A custom type name, or 'null' to use either the type name as is (the default), or any existing
+                'ScriptObject' attribute name.
+            </param>
+            <param name="recursive">
+                (Optional) When an object type is instantiate within JavaScript, only the object instance itself is bound (and not
+                any reference members). If true, then nested object references are included.
+            </param>
+            <param name="memberSecurity">
+                (Optional) Default member attributes for members that don't have the 'ScriptMember' attribute.
+            </param>
+            <param name="initializeBinder">
+                (Optional) If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.
+            </param>
+            <returns> The new binding. </returns>
         </member>
         <member name="F:V8.Net.V8Engine._HandleProxies">
             <summary>
@@ -2085,7 +2096,7 @@
                 The object binder that was created. The object instance is a property of the binding wrapper.
             </param>
         </member>
-        <member name="E:V8.Net.TypeBinder.OnGetObjectBinder">
+        <member name="F:V8.Net.TypeBinder.OnGetObjectBinder">
             <summary>
                 An optional custom handler to return an object binder for instances of the underlying type. Typically you don't have
                 to do anything with the instance, you only need to return a binder.  Returning null will trigger the default binding
