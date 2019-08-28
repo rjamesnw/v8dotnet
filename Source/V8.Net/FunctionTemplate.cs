@@ -202,7 +202,7 @@ namespace V8.Net
         /// <summary>
         /// Returns the specified V8Function object type associated with this function template.
         /// There can only ever be one native V8 function object per native V8 function template in a single native V8 JavaScript context;
-        /// however, V8.NET (the managed side) does allow one function type per template. In this case, a single call triggers all derived types at once.
+        /// however, V8.NET (the managed side) does allow multiple function types per template. In this case, a single call triggers all derived types at once.
         /// The first callback to return a value terminates the cycle and any following callbacks are ignored.
         /// <para>WARNING: The returned function object will be garbage collected if you don't store the reference anywhere. If this happens, then calling 
         /// the function object in JavaScript will return "undefined".</para>
