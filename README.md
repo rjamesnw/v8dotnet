@@ -1,7 +1,7 @@
 V8.NET
 ======
 
-*Project Description*
+**Project Description**
 
 A fairly non-abstracted wrapper for Google's V8 JavaScript engine.
 
@@ -11,19 +11,19 @@ I've carefully crafted a C++ proxy wrapper to help marshal fast data transfers b
 
 The documentation can be found here: https://github.com/rjamesnw/v8dotnet/wiki
 
-*Installation*
+**Installation**
 
 Now on NugGet! Support for Net Standard targeting .Net 4.6.1+ and Net Standard 2.0+
 
 [https://www.nuget.org/packages/V8.Net/ ![nuget](https://img.shields.io/nuget/v/V8.Net.svg)](https://www.nuget.org/packages/V8.Net/)
 
-*Building The Source*
+**Building The Source**
 
 To build you need the V8 Source ([follow these steps](https://github.com/rjamesnw/v8dotnet/tree/master/Source/V8.NET-Proxy/V8)) and Visual Studio 2017.
 Tip: As of recent, there is a NuGet package where you can get the V8 binaries here: https://github.com/pmed/v8-nuget - this is only helpful in case you wish to modify the project to reference those DLLs when statically linking the V8.Net C++ wrapper DLLs.
 
 Note: V8.Net was created years before that project, so the project is configured against native DLLs being compiled by source (which also gives us more control over the process).
 
-*License Clarification*
+**License Clarification**
 
 The license is LGPL.  In a nutshell, this means that you can link to the libraries from your own proprietary code (including code for commercial use), but if you modify the source files for anything in this project, the modified source and executables from it must also be made freely available as well (and you must clearly state you modified the code).
