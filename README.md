@@ -20,6 +20,9 @@ Now on NugGet! Support for Net Standard targeting .Net 4.6.1+ and Net Standard 2
 *Building The Source*
 
 To build you need the V8 Source ([follow these steps](https://github.com/rjamesnw/v8dotnet/tree/master/Source/V8.NET-Proxy/V8)) and Visual Studio 2017.
+Tip: As of recent, there is a NuGet package where you can get the V8 binaries here: https://github.com/pmed/v8-nuget - this is only helpful in case you wish to modify the project to reference those DLLs when statically linking the V8.Net C++ wrapper DLLs.
+
+Note: V8.Net was created years before that project, so the project is configured against native DLLs being compiled by source (which also gives us more control over the process).
 
 *License Clarification*
 
