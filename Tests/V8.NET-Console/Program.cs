@@ -327,6 +327,7 @@ namespace V8.Net
                                         Console.Write("\r\nRetrieving the 'tester' property on the global object for the V8DotNetTester instance ...");
                                         var handle = _V8Engine.GlobalObject.GetProperty("tester");
                                         var tester = (V8DotNetTester)_V8Engine.DynamicGlobalObject.tester;
+                                        if (tester == null) throw new InvalidOperationException("'tester' was not found on the global object");
                                         Console.WriteLine(" Ok.");
 
                                         Console.WriteLine("\r\n===============================================================================");

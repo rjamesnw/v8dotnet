@@ -31,6 +31,11 @@ namespace V8.Net
         public delegate HandleProxy* SetContext_ImportFuncType(NativeV8EngineProxy* engine, NativeContext* context);
         public static SetContext_ImportFuncType SetContext = (Environment.Is64BitProcess ? (SetContext_ImportFuncType)SetContext64 : SetContext32);
 
+        [DllImport("V8_Net_Proxy_x86", EntryPoint = "GetContext")]
+        public extern static NativeContext* GetContext32(NativeV8EngineProxy* engine);
+        public delegate NativeContext* GetContext_ImportFuncType(NativeV8EngineProxy* engine);
+        public static GetContext_ImportFuncType GetContext = (Environment.Is64BitProcess ? (GetContext_ImportFuncType)GetContext64 : GetContext32);
+
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "SetFlagsFromString")]
         public static unsafe extern void SetFlagsFromString32(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
         public delegate void SetFlagsFromString_ImportFuncType(NativeV8EngineProxy* engine, [MarshalAs(UnmanagedType.AnsiBStr)]string name);
@@ -237,6 +242,7 @@ namespace V8.Net
         public static CreateFunctionTemplateProxy_ImportFuncType CreateFunctionTemplateProxy = (Environment.Is64BitProcess ? (CreateFunctionTemplateProxy_ImportFuncType)CreateFunctionTemplateProxy64 : CreateFunctionTemplateProxy32);
 
         [DllImport("V8_Net_Proxy_x86", EntryPoint = "DeleteFunctionTemplateProxy")]
+
         public static extern unsafe bool DeleteFunctionTemplateProxy32(NativeFunctionTemplateProxy* functionTemplateProxy);
         public delegate bool DeleteFunctionTemplateProxy_ImportFuncType(NativeFunctionTemplateProxy* functionTemplateProxy);
         public static DeleteFunctionTemplateProxy_ImportFuncType DeleteFunctionTemplateProxy = (Environment.Is64BitProcess ? (DeleteFunctionTemplateProxy_ImportFuncType)DeleteFunctionTemplateProxy64 : DeleteFunctionTemplateProxy32);

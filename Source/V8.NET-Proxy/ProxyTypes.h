@@ -800,6 +800,7 @@ public:
 
 	ContextProxy* CreateContext(ObjectTemplateProxy* templateProxy);
 	HandleProxy* SetContext(ContextProxy *context); // (returns the global object after setting the context)
+	ContextProxy* GetContext(); // (returns the current context as a proxy object for the CLR side)
 
 	ObjectTemplateProxy* CreateObjectTemplate();
 

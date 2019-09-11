@@ -426,7 +426,7 @@ ContextProxy* V8EngineProxy::CreateContext(ObjectTemplateProxy* templateProxy)
 	return contextProxy;
 }
 
-// Sets the context and returns a handle to the global object.
+// Sets the context and returns a handle to the new global object.
 HandleProxy* V8EngineProxy::SetContext(ContextProxy* contextProxy)
 {
 	//?if (_GlobalObjectTemplateProxy != nullptr)
@@ -435,16 +435,22 @@ HandleProxy* V8EngineProxy::SetContext(ContextProxy* contextProxy)
 	//?_GlobalObjectTemplateProxy = proxy;
 
 	if (!_Context.IsEmpty())
-		_Context.Reset();
+		_Context.Reset(); // (release the handle first)
 
 	if (!_GlobalObject.IsEmpty())
-		_GlobalObject.Reset();
+		_GlobalObject.Reset(); // (release the handle first)
 
-	_Context = contextProxy->_Context;
+	_Context = contextProxy->_Context; // (set the new context)
 	auto global = _Context->Global()->GetPrototype()->ToObject(_Isolate); // (keep a reference to the global object for faster reference)
-	_GlobalObject = global;
+	_GlobalObject = global; // (set the new global object)
 
 	return GetHandleProxy(global);
+}
+
+// Sets the context and returns a handle to the new global object.
+ContextProxy* V8EngineProxy::GetContext()
+{
+	return new ContextProxy(this, _Context); // (the native side will own this, and is responsible to free it when done)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

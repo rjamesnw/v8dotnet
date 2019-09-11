@@ -49,6 +49,13 @@ extern "C"
 		END_ISOLATE_SCOPE;
 	}
 
+	EXPORT ContextProxy* STDCALL GetContext(V8EngineProxy *engine) // (returns the global object handle)
+	{
+		BEGIN_ISOLATE_SCOPE(engine);
+		return engine->GetContext();
+		END_ISOLATE_SCOPE;
+	}
+
 	EXPORT void STDCALL SetFlagsFromString(V8EngineProxy *engine, const char *flags) // TODO: Consider NOT using pointers here - instead, use the ID of the engine!
 	{
 		BEGIN_ISOLATE_SCOPE(engine);
