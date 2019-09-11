@@ -51,6 +51,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "User", "User", "{D222B695-D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET Standard", ".NET Standard", "{C23849EB-8154-4226-BAF4-74215035CA31}"
 	ProjectSection(SolutionItems) = preProject
+		Source\push_readme.txt = Source\push_readme.txt
 		Source\PushPackage.cmd = Source\PushPackage.cmd
 	EndProjectSection
 EndProject

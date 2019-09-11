@@ -4,6 +4,8 @@
 //   1. Put all user code into a file called "temp.ignore.cs" specifically. '.gitignore' will ignore that file so it does not get checked in.
 //   2. In that same file, create "partial class UserSupportTesting { partial void RunTest() { ... } }", where "..." is the test code.
 //   Since "temp.ignore.cs" is ignored (never checked in) any calls to "RunTest()" when missing will be stripped out by the compiler.
+//
+//  There is boilerplate code in 'temp.ignore.cs.example.txt' - just copy and rename it.
 
 using V8.Net;
 

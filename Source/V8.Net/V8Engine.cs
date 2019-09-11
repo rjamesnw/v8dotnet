@@ -657,6 +657,15 @@ namespace V8.Net
         }
 
         /// <summary>
+        ///     Returns the current context.
+        /// </summary>
+        /// <returns> The current V8 context. </returns>
+        public Context GetContext()
+        {
+            return V8NetProxy.GetContext(_NativeV8EngineProxy);
+        }
+
+        /// <summary>
         ///     Changes the V8 proxy engine context to a new execution context. Each context can be used as a "sandbox" to isolate
         ///     executions from one another. This method also returns the global object handle associated with the context.
         ///     <para>In the normal "V8" way, you enter a context before executing JavaScript, then exit a context when done.  To
@@ -670,7 +679,8 @@ namespace V8.Net
         {
             var hglobal = V8NetProxy.SetContext(_NativeV8EngineProxy, context); // (returns the global object handle)
             _NativeContext = context;
-            _GlobalObject.Set(hglobal);
+            _GlobalObject.KeepTrack(); // (not sure if the user will keep track of the internal handle, so we will let the GC track it just in case)
+            _GlobalObject = hglobal; // (just replace it)
             return _GlobalObject;
         }
 

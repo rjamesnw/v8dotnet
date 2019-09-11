@@ -153,6 +153,8 @@ namespace V8.Net
         public readonly object Value;
         public readonly Type OriginalValueType;
 
+        public readonly V8Engine Engine;
+
         /// <summary>
         /// Returns true if this ArgInfo value has valid type information.  This will be false for empty instances.
         /// </summary>
@@ -192,8 +194,9 @@ namespace V8.Net
             }
         }
 
-        public ArgInfo(InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
+        public ArgInfo(V8Engine engine, InternalHandle handle, ParameterInfo paramInfo = null, Type expectedType = null)
         {
+            Engine = engine;
             ArgInfoSource = handle;
             ExpectedParameter = paramInfo;
             ExpectedType = expectedType ?? (paramInfo != null ? paramInfo.ParameterType : null);
@@ -244,7 +247,7 @@ namespace V8.Net
             }
             else if (ExpectedType == typeof(V8Engine))
             {
-                Value = ArgInfoSource.Engine;
+                Value = Engine;
                 Type = typeof(V8Engine);
             }
             else
@@ -272,7 +275,7 @@ namespace V8.Net
         /// <summary>
         /// Returns an array of ArgInfo values for the given handles.
         /// </summary>
-        public static ArgInfo[] GetArguments(InternalHandle[] handles, uint handlesOffset = 0, ParameterInfo[] expectedParameters = null)
+        public static ArgInfo[] GetArguments(V8Engine engine, InternalHandle[] handles, uint handlesOffset = 0, ParameterInfo[] expectedParameters = null)
         {
             var handlesLength = handles.Length - handlesOffset;
             var length = expectedParameters != null ? expectedParameters.Length : handlesLength;
@@ -280,7 +283,7 @@ namespace V8.Net
             ArgInfo[] argInfoItems = new ArgInfo[length];
 
             for (var i = 0; i < length; i++)
-                argInfoItems[i] = new ArgInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters != null ? expectedParameters[i] : null);
+                argInfoItems[i] = new ArgInfo(engine, i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, expectedParameters?[i]);
 
             return argInfoItems;
         }
@@ -288,7 +291,7 @@ namespace V8.Net
         /// <summary>
         /// Returns an array of ArgInfo values for the expected types.
         /// </summary>
-        public static ArgInfo[] GetTypes(InternalHandle[] handles, uint handlesOffset = 0, Type[] expectedTypes = null)
+        public static ArgInfo[] GetTypes(V8Engine engine, InternalHandle[] handles, uint handlesOffset = 0, Type[] expectedTypes = null)
         {
             var handlesLength = handles.Length - handlesOffset;
             var length = expectedTypes != null ? expectedTypes.Length : handlesLength;
@@ -296,7 +299,7 @@ namespace V8.Net
             ArgInfo[] argInfoItems = new ArgInfo[length];
 
             for (var i = 0; i < length; i++)
-                argInfoItems[i] = new ArgInfo(i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
+                argInfoItems[i] = new ArgInfo(engine, i < handlesLength ? handles[handlesOffset + i] : InternalHandle.Empty, null, expectedTypes != null ? expectedTypes[i] : null);
 
             return argInfoItems;
         }
@@ -334,7 +337,21 @@ namespace V8.Net
     // ========================================================================================================================
 
     /// <summary>
-    /// A V8.NET binder for CLR types.
+    ///     An attribute for injecting supported references when creating bindings for object instances. A field or property
+    ///     with this attribute is only set when the binding system creates and associates object binders automatically. Only
+    ///     certain types are supported at the moment: <see cref="V8Engine"/>, <see cref="TypeBinder"/>, <see cref="Type"/>, and
+    ///     <see cref="ObjectBinder"/>
+    /// </summary>
+    /// <seealso cref="T:System.Attribute"/>
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class InjectAttribute : Attribute
+    {
+    }
+
+    /// <summary>
+    ///     A V8.NET binder for CLR types.  The purpose is to analyze given types and extract all information needed to quickly
+    ///     process requests about the type using a cache of <see cref="TypeBinder"/> instances. It also holds security about
+    ///     the types, as specified using attributes.
     /// </summary>
     public sealed unsafe class TypeBinder
     {
@@ -406,8 +423,7 @@ namespace V8.Net
         /// <summary>
         /// The ScriptObject attribute if one exists for the underlying type, otherwise this is null.
         /// </summary>
-        public ScriptObject ScriptObjectAttribute { get { return _ScriptObjectAttribute; } }
-        ScriptObject _ScriptObjectAttribute;
+        public ScriptObject ScriptObjectAttribute { get; private set; }
 
         /// <summary>
         /// Holds details for each member on a type when binding objects.
@@ -420,9 +436,9 @@ namespace V8.Net
             public readonly TypeBinder TypeBinder;
             public _MemberDetails(TypeBinder owner) { TypeBinder = owner; }
 
-            public _MemberDetails BaseDetails; // (if set, this is these are the inherited members of the same name represented by this member).
+            public _MemberDetails BaseDetails; // (to support inheritance).
 
-            public MemberInfo FirstMember; // (this is a quick cached reference to the first member in 'Members', which is faster for fields and properties)
+            public MemberInfo FirstMember; // (for overloaded members; this is a quick cached reference to the first member in 'Members', which is faster for fields and properties)
             public readonly TypeLibrary<MemberInfo> ImmediateMembers = new TypeLibrary<MemberInfo>(); // (if the count is > 1, then this member detail instance represents a method or property (indexer) overload)
             public uint TotalImmediateMembers = 1; // (if > 1 then this member is overloaded)
 
@@ -494,6 +510,8 @@ namespace V8.Net
             //??public TypeLibrary<V8Function> Methods; // (overloads ['SingleMethod' should be null])
             public InternalHandle ValueOverride; // (the value override is a user value that, if exists, overrides the bindings)
 
+            public bool InjectionRequested; // (true if 'InjectEngineAttribute' was found on this member [properties or fields only]; a reference is also placed into a separate array directly on the type binder)
+
             public bool Accessible // (returns true if this member is allowed to be accessed)
             {
                 get
@@ -528,6 +546,48 @@ namespace V8.Net
         /// </summary>
         public IEnumerable<TypeBinder> BaseBinders { get { var b = BaseTypeBinder; while (b != null) { yield return b; b = b.BaseTypeBinder; } } }
 
+        List<_MemberDetails> _Injectables = new List<_MemberDetails>(); // (a list of members requesting injection of references)
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        ///     Executes the get object binder handler action when an object binder is needed for an instance.
+        /// </summary>
+        /// <param name="typeBinder"> The underlying type binder. </param>
+        /// <param name="obj"> The object to get a binding wrapper for. </param>
+        /// <param name="initializeObjectBinder">
+        ///     (Optional) If this is true (the default) then the object binder should have
+        ///     <see cref="IV8NativeObject.Initialize(V8NativeObject, bool, InternalHandle[])"/> called BEFORE returning. Typically
+        ///     you can pass this value to <see cref="CreateObjectBinder{T, TInstance}(TInstance, bool)"/> so you don't have to deal
+        ///     with it. This exists because initialization must be deferred a bit while other operations are performed.
+        /// </param>
+        /// <returns> An ObjectBinder. </returns>
+        public delegate ObjectBinder OnGetObjectBinderHandler(TypeBinder typeBinder, object obj, bool initializeObjectBinder = true);
+
+        /// <summary>
+        ///     Executes the object bound handler action once a binder is created and associated with an object instance.
+        /// </summary>
+        /// <param name="typeBinder"> The underlying type binder. </param>
+        /// <param name="objectBinder">
+        ///     The object binder that was created. The object instance is a property of the binding wrapper.
+        /// </param>
+        public delegate void OnObjectBoundHandler(TypeBinder typeBinder, ObjectBinder objectBinder);
+
+        /// <summary>
+        ///     An optional custom handler to return an object binder for instances of the underlying type. Typically you don't have
+        ///     to do anything with the instance, you only need to return a binder.  Returning null will trigger the default binding
+        ///     process.
+        ///      <para>Example: OnGetObjectBinder += (tb, obj, initializeBinder)
+        ///      =&gt; tb.CreateObjectBinder&lt;CustomBinderType, object&gt;(obj, initializeBinder);</para>
+        /// </summary>
+        public OnGetObjectBinderHandler OnGetObjectBinder;
+
+        /// <summary>
+        ///     Called after an instance is bound to an object binding wrapper (<see cref="ObjectBinder"/>), and any injectable
+        ///     fields or properties are updated.
+        /// </summary>
+        public event OnObjectBoundHandler OnObjectBound;
+
         // --------------------------------------------------------------------------------------------------------------------
 
         //? internal List<Delegate> _Delegates; // (delegates to prevent getting garbage collected; this is not null only when a delegate is added)
@@ -553,15 +613,15 @@ namespace V8.Net
             TypeID = Engine._RegisteredTypes.Add(type); // (this is done here to make sure the type is created and accessible to prevent cyclical calls)
             _Recursive = recursive;
             _DefaultMemberSecurity = defaultMemberSecurity;
-            _ScriptObjectAttribute = (from a in type.GetCustomAttributes(true) where a is ScriptObject select (ScriptObject)a).FirstOrDefault();
+            ScriptObjectAttribute = (from a in type.GetCustomAttributes(true) where a is ScriptObject select (ScriptObject)a).FirstOrDefault();
 
-            if (_DefaultMemberSecurity == null && _ScriptObjectAttribute != null)
-                _DefaultMemberSecurity = _ScriptObjectAttribute.Security;
+            if (_DefaultMemberSecurity == null && ScriptObjectAttribute != null)
+                _DefaultMemberSecurity = ScriptObjectAttribute.Security;
 
             if (className.IsNullOrWhiteSpace())
             {
-                if (_ScriptObjectAttribute != null)
-                    ClassName = _ScriptObjectAttribute.TypeName;
+                if (ScriptObjectAttribute != null)
+                    ClassName = ScriptObjectAttribute.TypeName;
 
                 if (string.IsNullOrEmpty(ClassName))
                 {
@@ -612,7 +672,11 @@ namespace V8.Net
         {
             if (BoundType == null) throw new InvalidOperationException("'BoundType' is null.");
 
-            var members = BoundType.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly); //| BindingFlags.FlattenHierarchy
+            var publicMembers = BoundType.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly); //| BindingFlags.FlattenHierarchy
+            var privateMembers = BoundType.GetMembers(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly); //| BindingFlags.FlattenHierarchy
+            var members = publicMembers.Select(m => new { Info = m, IsPublic = true })
+                .Concat(privateMembers.Select(m => new { Info = m, IsPublic = false })).ToArray();
+            // (this change was implemented to support attributes on private members as well)
 
             int mi;
             string memberName;
@@ -624,16 +688,16 @@ namespace V8.Net
             {
                 var member = members[mi]; // (need to use 'var' for the lambda closures in 'SetAccessor()' below)
 
-                if (member.DeclaringType != BoundType)
+                if (member.Info.DeclaringType != BoundType)
                 {
                     // ... this member does not belong to this type binder ...
                     continue;
                 }
 
-                memberName = member.Name;
-                memberSecurity = DefaultMemberSecurity;
+                memberName = member.Info.Name;
+                memberSecurity = member.IsPublic ? DefaultMemberSecurity : ScriptMemberSecurity.NoAcccess; // (private members have no access as the default)
 
-                scriptMemberAttrib = (from a in member.GetCustomAttributes(true) where a is ScriptMember select (ScriptMember)a).LastOrDefault();
+                scriptMemberAttrib = (from a in member.Info.GetCustomAttributes(true) where a is ScriptMember select (ScriptMember)a).LastOrDefault();
 
                 if (scriptMemberAttrib != null)
                 {
@@ -643,9 +707,13 @@ namespace V8.Net
                         memberName = scriptMemberAttrib.InScriptName;
                 }
 
-                memberDetails = _CreateMemberDetails(memberName, memberSecurity, member,
+                memberDetails = _CreateMemberDetails(memberName, memberSecurity, member.Info,
                     s => _Members.GetValueOrDefault(s),
                     md => _Members[md.MemberName] = md);
+
+                // (Warning: memberDetails will be null for some types of members - such when '((MethodInfo)member).IsSpecialName' is true)
+                if (memberDetails?.InjectionRequested == true)
+                    _Injectables.Add(memberDetails);
             }
 
             // ... resolve the members that belong to the base types ...
@@ -702,7 +770,8 @@ namespace V8.Net
                     MemberName = memberName,
                     MemberType = MemberTypes.Field,
                     MemberSecurity = memberSecurity,
-                    BindingMode = fieldInfo.IsStatic ? BindingMode.Static : BindingMode.Instance
+                    BindingMode = fieldInfo.IsStatic ? BindingMode.Static : BindingMode.Instance,
+                    InjectionRequested = fieldInfo.GetCustomAttributes(true).Any(a => a.GetType() == typeof(InjectAttribute))
                 };
 
                 memberDetails.ImmediateMembers.Set(fieldInfo, fieldInfo.FieldType);
@@ -731,7 +800,8 @@ namespace V8.Net
                     MemberName = memberName,
                     MemberType = MemberTypes.Property,
                     MemberSecurity = memberSecurity,
-                    BindingMode = isStatic ? BindingMode.Static : BindingMode.Instance
+                    BindingMode = isStatic ? BindingMode.Static : BindingMode.Instance,
+                    InjectionRequested = propertyInfo.GetCustomAttributes(true).Any(a => a.GetType() == typeof(InjectAttribute))
                 };
 
                 memberDetails.ImmediateMembers.Set(propertyInfo, propertyInfo.PropertyType);
@@ -897,38 +967,35 @@ namespace V8.Net
             }
             else return false;
 
-            setter = _CreateSetAccessor(memberDetails, fieldInfo, _Recursive == true);
+            setter = _CreateSetAccessor(memberDetails, fieldInfo);
 
             return true;
         }
 
-        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo, bool accessibleMembers)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, FieldInfo fieldInfo)
         {
             bool isInternalHandleTypeExpected = fieldInfo.FieldType == typeof(InternalHandle);
 
-            if (!accessibleMembers)
-                return (HandleProxy* __this, string propertyName, HandleProxy* value) => InternalHandle.Empty;
-            else
-                return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
+            return (HandleProxy* __this, string propertyName, HandleProxy* __value) =>
+            {
+                InternalHandle _this = __this, value = __value;
+                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
-                    InternalHandle _this = __this, value = __value;
-                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                    if (!memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
+                    if (_this.IsBinder)
                     {
-                        if (_this.IsBinder)
-                        {
-                            object _value = new ArgInfo(value, null, fieldInfo.FieldType).ValueOrDefault;
+                        object _value = new ArgInfo(Engine, value, null, fieldInfo.FieldType).ValueOrDefault;
 
-                            if (isInternalHandleTypeExpected && _value is InternalHandle)
-                                _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                        if (isInternalHandleTypeExpected && _value is InternalHandle)
+                            _value = ((IHandle)fieldInfo.GetValue(_this.BoundObject)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
-                            fieldInfo.SetValue(_this.BoundObject, _value);
-                        }
-                        else
-                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
+                        fieldInfo.SetValue(_this.BoundObject, _value);
                     }
-                    return value;
-                };
+                    else
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, fieldInfo.Name), JSValueType.ExecutionError);
+                }
+                return value;
+            };
         }
 
         NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, FieldInfo fieldInfo)
@@ -1079,40 +1146,37 @@ namespace V8.Net
             }
             else return false;
 
-            setter = _CreateSetAccessor(memberDetails, propInfo, _Recursive == true);
+            setter = _CreateSetAccessor(memberDetails, propInfo);
 
             return true;
         }
 
-        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo, bool accessibleMembers)
+        NativeSetterAccessor _CreateSetAccessor(_MemberDetails memberDetails, PropertyInfo propertyInfo)
         {
             bool isInternalHandleTypeExpected = propertyInfo.PropertyType == typeof(InternalHandle);
             bool canRead = propertyInfo.CanRead;
             bool canWrite = propertyInfo.CanWrite;
 
-            if (!accessibleMembers)
-                return (HandleProxy* __this, string propertyName, HandleProxy* value) => InternalHandle.Empty;
-            else
-                return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
+            return (HandleProxy* __this, string propertyName, HandleProxy* value) =>
+            {
+                InternalHandle _this = __this;
+                if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
+                if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
                 {
-                    InternalHandle _this = __this;
-                    if (memberDetails.MemberSecurity < 0) return Engine.CreateError("Access denied.", JSValueType.ExecutionError);
-                    if (canWrite && !memberDetails.HasSecurityFlags(ScriptMemberSecurity.ReadOnly))
+                    if (_this.IsBinder)
                     {
-                        if (_this.IsBinder)
-                        {
-                            object _value = new ArgInfo(value, null, propertyInfo.PropertyType).ValueOrDefault;
+                        object _value = new ArgInfo(Engine, value, null, propertyInfo.PropertyType).ValueOrDefault;
 
-                            if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
-                                _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
+                        if (isInternalHandleTypeExpected && canRead && _value is InternalHandle)
+                            _value = ((IHandle)propertyInfo.GetValue(_this.BoundObject, null)).Set((InternalHandle)_value); // (the current handle *value* must be set properly so it can be disposed before setting if need be)
 
-                            propertyInfo.SetValue(_this.BoundObject, _value, null);
-                        }
-                        else
-                            return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
+                        propertyInfo.SetValue(_this.BoundObject, _value, null);
                     }
-                    return value;
-                };
+                    else
+                        return Engine.CreateError(string.Format(TYPE_BINDER_MISSING_MSG, "property", propertyName, propertyInfo.Name), JSValueType.ExecutionError);
+                }
+                return value;
+            };
         }
 
         NativeGetterAccessor _CreateGetAccessor<T>(_MemberDetails memberDetails, PropertyInfo propertyInfo)
@@ -1263,7 +1327,7 @@ namespace V8.Net
 
                 // ... with the array of types, convert to an 'ArgInfo' array with the extracted argument type information and values...
 
-                genericArgInfos = ArgInfo.GetTypes(typeArgs, 0, expectedGenericTypes); // ('expectedGenericTypes' is a fixed array of types that are ALWAYS expected if only 1 member exists [no overloads])
+                genericArgInfos = ArgInfo.GetTypes(Engine, typeArgs, 0, expectedGenericTypes); // ('expectedGenericTypes' is a fixed array of types that are ALWAYS expected if only 1 member exists [no overloads])
                 var genericSystemTypes = ArgInfo.GetSystemTypes(genericArgInfos);
 
                 if (memberDetails.ConstructedMemberGroups == null)
@@ -1312,9 +1376,9 @@ namespace V8.Net
         {
             convertedArguments = null;
 
-            argInfos = ArgInfo.GetArguments(args, argOffset, expectedParameters);
+            argInfos = ArgInfo.GetArguments(Engine, args, argOffset, expectedParameters);
 
-            // ... create/grow the converted arguments array if necessary ...
+            // ... create/grow the converted arguments array if necessary (this is designed to prevent having to reallocate a new array every time we need space to deal with the given arguments) ...
             if (!convertedArgumentArrayCache.TryGetValue(argInfos.Length, out convertedArguments) || convertedArguments.Length < argInfos.Length)
                 convertedArgumentArrayCache[argInfos.Length] = convertedArguments = new object[argInfos.Length]; // (array is too small, so discard
 
@@ -1494,7 +1558,7 @@ namespace V8.Net
                             // ... invoke the constructor ...
 
                             handle = Engine.CreateBinding(Activator.CreateInstance(BoundType, convertedArguments), null, _Recursive, _DefaultMemberSecurity, false);
-                            handle.Object.Initialize(true, args);
+                            handle.Object?.Initialize(true, args);
 
                             // ... set the prototype of the new instance (created from an object template) to maintain the prototype chain ...
 
@@ -1615,40 +1679,80 @@ namespace V8.Net
         //??readonly Dictionary<int, object> _Instances = new Dictionary<int, object>();
         //??"THIS DOESN'T SOLVE THE TYPE BIND GC ISSUE YET"
 
-        /// <summary>
-        /// Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
-        /// It's an error to pass an object instance that is not of the same underlying type as this type binder.
-        /// </summary>
-        /// <param name="obj">An object instance for the object binder (required).</param>
-        /// <param name="initializeBinder">If true (default) then then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
-        /// <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
-        public T CreateObject<T, InstanceType>(InstanceType obj, bool initializeBinder = true)
-            where T : ObjectBinder, new()
-            where InstanceType : class
+        /// <summary> Associates an object binding wrapper with an object instance. </summary>
+        /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
+        /// <exception cref="InvalidOperationException"> Thrown when the requested operation is invalid. </exception>
+        /// <param name="binder"> The binder. </param>
+        /// <param name="obj"> An object instance for the object binder (required). </param>
+        /// <returns> An ObjectBinder. </returns>
+        public ObjectBinder AssociatedBinder(ObjectBinder binder, object obj)
         {
             if (obj == null) throw new ArgumentNullException("obj");
 
-            var objType = obj.GetType();
-            if (objType != BoundType)
-                throw new InvalidOperationException("'obj' instance of type '" + objType.Name + "' is not compatible with type '" + BoundType.Name + "' as represented by this type binder.");
+            if (binder.Object != obj)
+            {
+                var objType = obj.GetType();
+                if (objType != BoundType)
+                    throw new InvalidOperationException("'obj' instance of type '" + objType.Name + "' is not compatible with type '" + BoundType.Name + "' as represented by this type binder.");
 
-            var binder = InstanceTemplate.CreateObject<T>(initializeBinder);
+                binder.Object = obj; // (this updates the object type and type binder references automatically as well)
+                binder.InternalHandle.KeepAlive();
 
-            binder.Object = obj;
-            binder.InternalHandle.KeepAlive();
+                var typeBinder = this;
+                while (typeBinder != null)
+                {
+                    foreach (var injectable in typeBinder._Injectables)
+                        binder.OnInjection(injectable.FirstMember);
+                    typeBinder = typeBinder.BaseTypeBinder;
+                }
+
+                OnObjectBound?.Invoke(this, binder);
+            }
 
             return binder;
         }
 
         /// <summary>
-        /// Returns a new 'ObjectBinder' based instance that is associated with the specified object instance.
-        /// It's an error to pass an object instance that is not of the same underlying type as this type binder.
+        ///     Returns a new 'ObjectBinder' based instance that is associated with the specified object instance. It's an error to
+        ///     pass an object instance that is not of the same underlying type as this type binder.
         /// </summary>
-        /// <param name="initializeBinder">If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
-        /// <returns>A new 'ObjectBinder' instance you can use when setting properties to the specified object instance.</returns>
-        public ObjectBinder CreateObject(object obj, bool initializeBinder = true)
+        /// <typeparam name="T"> Generic type parameter. </typeparam>
+        /// <typeparam name="TInstance">
+        ///     The expected instance type. This is only here to help provide type checking for the parameter. If you don't care
+        ///     about that, then just use the <see cref="object"/> type.
+        /// </typeparam>
+        /// <param name="obj"> An object instance for the object binder (required). </param>
+        /// <param name="initializeBinder">
+        ///     (Optional) If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.
+        /// </param>
+        /// <returns> A new 'ObjectBinder' instance you can use when setting properties to the specified object instance. </returns>
+        public T CreateObjectBinder<T, TInstance>(TInstance obj, bool initializeBinder = true)
+            where T : ObjectBinder, new()
+            where TInstance : class
         {
-            return CreateObject<ObjectBinder, object>(obj, initializeBinder);
+            return (T)AssociatedBinder(InstanceTemplate.CreateObject<T>(initializeBinder), obj);
+        }
+
+        /// <summary>
+        ///     Returns a new 'ObjectBinder' based instance that is associated with the specified object instance. It's an error to
+        ///     pass an object instance that is not of the same underlying type as this type binder.
+        /// </summary>
+        /// <param name="obj"> An object instance for the object binder (required). </param>
+        /// <returns> A new 'ObjectBinder' instance you can use when setting properties to the specified object instance. </returns>
+        public ObjectBinder CreateObjectBinder(object obj) // (made this internal to prevent user handlers from calling it)
+        {
+            return CreateObjectBinder<ObjectBinder, object>(obj, true);
+        }
+
+        // (made this internal to prevent user handlers from calling it - which could cause a stack overflow [cyclical calling])
+        /// <param name="initializeBinder">If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        internal ObjectBinder _CreateObjectBinderForInstance(object obj, bool initializeBinder = true)
+        {
+            var binder = OnGetObjectBinder?.Invoke(this, obj);
+            if (binder != null)
+                return AssociatedBinder(binder, obj);
+            else
+                return CreateObjectBinder<ObjectBinder, object>(obj, initializeBinder);
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1713,7 +1817,7 @@ namespace V8.Net
         ///     Thrown if the object is set again with an instance of a different type.
         /// </exception>
         /// <value> The object associated with this binding. </value>
-        new public object Object
+        new public virtual object Object
         {
             get { return _Object; }
             set
@@ -1786,6 +1890,38 @@ namespace V8.Net
             return base.Initialize(isConstructCall, args);
         }
 
+        public virtual bool GetInjectedValueforType(Type type, out object value)
+        {
+            if (type.IsAssignableFrom(typeof(V8Engine)))
+            { value = Engine; return true; }
+            else if (type.IsAssignableFrom(typeof(TypeBinder)))
+            { value = TypeBinder; return true; }
+            else if (type.IsAssignableFrom(typeof(ObjectBinder)))
+            { value = this; return true; }
+            else if (type.IsAssignableFrom(typeof(Type)))
+            { value = ObjectType; return true; }
+            value = null;
+            return false;
+        }
+
+        public virtual void OnInjection(MemberInfo memberInfo)
+        {
+            if (memberInfo.MemberType == MemberTypes.Field)
+            {
+                var fi = (FieldInfo)memberInfo;
+                var type = fi.FieldType;
+                if (GetInjectedValueforType(type, out var value))
+                    fi.SetValue(_Object, value);
+            }
+            else if (memberInfo.MemberType == MemberTypes.Property)
+            {
+                var pi = (PropertyInfo)memberInfo;
+                var type = pi.PropertyType;
+                if (GetInjectedValueforType(type, out var value))
+                    pi.SetValue(_Object, value, null);
+            }
+        }
+
         // --------------------------------------------------------------------------------------------------------------------
 
         public override InternalHandle IndexedPropertyGetter(int index)
@@ -1810,7 +1946,7 @@ namespace V8.Net
                 return NamedPropertySetter(ref strIndex, value, attributes);
             }
             else if (TypeBinder.Indexer.CanWrite)
-                TypeBinder.Indexer.SetValue(_Object, new ArgInfo(value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
+                TypeBinder.Indexer.SetValue(_Object, new ArgInfo(Engine, value, null, TypeBinder.Indexer.PropertyType).ValueOrDefault, new object[] { index });
 
             return IndexedPropertyGetter(index);
         }
@@ -1993,7 +2129,7 @@ namespace V8.Net
 
     public class ObjectBinder<T> : ObjectBinder where T : class, new()
     {
-        public ObjectBinder() { Object = new T(); }
+        public ObjectBinder() { }
     }
 
     // ========================================================================================================================
@@ -2107,29 +2243,40 @@ namespace V8.Net
         }
 
         /// <summary>
-        /// Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are not bound however).
-        /// If the object given is actually a boxed primitive type, then a non-object handle can be returned.
-        /// If the given object is not a boxed value, then the handle returned is a handle to an object binder with internal property
-        /// accessors for the encapsulated object's public fields, properties, and methods.
-        /// <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however, 
-        /// bound types are cached and not created each time for the best efficiency.</para>
+        ///     Creates a binding for a given CLR object instance to expose it in the JavaScript environment (sub-object members are
+        ///     not bound however). If the object given is actually a boxed primitive type, then a non-object handle can be
+        ///     returned. If the given object is not a boxed value, then the handle returned is a handle to an object binder with
+        ///     internal property accessors for the encapsulated object's public fields, properties, and methods. If the object
+        ///     passed in already implements <see cref="IHandleBased"/>, then the handle is returned instead of creating a binding.
+        ///     <para>Note: Creating bindings can be a much slower process than creating your own 'V8NativeObject' types; however,
+        ///     bound types are cached and not created each time for the best efficiency.</para>
         /// </summary>
-        /// <param name="obj">The object to create a binder for.</param>
-        /// <param name="className">A custom type name, or 'null' to use either the type name as is (the default), or any existing 'ScriptObject' attribute name.</param>
-        /// <param name="recursive">When an object type is instantiate within JavaScript, only the object instance itself is bound (and not any reference members).
-        /// If true, then nested object references are included.</param>
-        /// <param name="memberSecurity">Default member attributes for members that don't have the 'ScriptMember' attribute.</param>
-        /// <param name="initializeBinder">If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.</param>
+        /// <param name="obj"> The object to create a binder for. </param>
+        /// <param name="className">
+        ///     (Optional) A custom type name, or 'null' to use either the type name as is (the default), or any existing
+        ///     'ScriptObject' attribute name.
+        /// </param>
+        /// <param name="recursive">
+        ///     (Optional) When an object type is instantiate within JavaScript, only the object instance itself is bound (and not
+        ///     any reference members). If true, then nested object references are included.
+        /// </param>
+        /// <param name="memberSecurity">
+        ///     (Optional) Default member attributes for members that don't have the 'ScriptMember' attribute.
+        /// </param>
+        /// <param name="initializeBinder">
+        ///     (Optional) If true (default) then 'IV8NativeObject.Initialize()' is called on the created object before returning.
+        /// </param>
+        /// <returns> The new binding. </returns>
         public InternalHandle CreateBinding(object obj, string className = null, bool? recursive = null, ScriptMemberSecurity? memberSecurity = null, bool initializeBinder = true)
         {
-            var objType = obj != null ? obj.GetType() : null;
+            var objType = obj?.GetType();
 
-            if (objType == null || obj is IHandleBased)
+            if ((objType == null || obj is IHandleBased) && !(obj is ObjectBinder))
                 return CreateValue(obj, recursive, memberSecurity);
 
             var typeBinder = RegisterType(objType, className, recursive, memberSecurity);
 
-            return typeBinder.CreateObject(obj, initializeBinder);
+            return typeBinder._CreateObjectBinderForInstance(obj, initializeBinder);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

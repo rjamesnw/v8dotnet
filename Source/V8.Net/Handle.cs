@@ -140,8 +140,8 @@ namespace V8.Net
             get { return _Handle.Object; }
         }
 
-        public static implicit operator InternalHandle(Handle h) { return h._Handle; }
-        public static implicit operator Handle(HandleProxy* hp) { return ((InternalHandle)hp).GetTrackableHandle(); }
+        public static implicit operator InternalHandle(Handle h) { return h?._Handle ?? InternalHandle.Empty; }
+        public static implicit operator Handle(HandleProxy* hp) { return hp != null ? ((InternalHandle)hp).GetTrackableHandle() : Empty; }
         public static InternalHandle operator ~(Handle h) { return h._Handle; }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -810,7 +810,7 @@ namespace V8.Net
 
                     if (CLRTypeID >= 0)
                     {
-                        var argInfo = new ArgInfo(this);
+                        var argInfo = new ArgInfo(Engine, this);
                         return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
                     }
 
@@ -841,7 +841,7 @@ namespace V8.Net
 
                     if (CLRTypeID >= 0)
                     {
-                        var argInfo = new ArgInfo(this);
+                        var argInfo = new ArgInfo(Engine, this);
                         return argInfo.ValueOrDefault; // (this object represents a ArgInfo object, so return its value)
                     }
 
@@ -1599,7 +1599,7 @@ namespace V8.Net
         {
             if (functionName.IsNullOrWhiteSpace())
                 throw new ArgumentNullException("functionName (cannot be null, empty, or only whitespace)");
-            
+
             if (!IsObjectType)
                 throw new InvalidOperationException(_NOT_AN_OBJECT_ERRORMSG);
 

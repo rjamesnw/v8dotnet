@@ -1,6 +1,6 @@
-﻿#if NETSTANDARD
-using Microsoft.Extensions.Hosting;
-#endif
+﻿//#if NETSTANDARD
+//using Microsoft.Extensions.Hosting;
+//#endif
 using System;
 using System.IO;
 using System.Reflection;
@@ -55,6 +55,9 @@ namespace V8.Net
 
         [DllImport("V8_Net_Proxy_x64", EntryPoint = "SetContext")]
         public extern static HandleProxy* SetContext64(NativeV8EngineProxy* engine, NativeContext* context);
+
+        [DllImport("V8_Net_Proxy_x64", EntryPoint = "GetContext")]
+        public extern static NativeContext* GetContext64(NativeV8EngineProxy* engine);
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 
 

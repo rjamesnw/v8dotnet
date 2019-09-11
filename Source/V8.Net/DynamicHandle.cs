@@ -314,7 +314,7 @@ namespace V8.Net
         {
             Expression convertExpression;
 
-            if (LimitType.IsAssignableFrom(binder.Type))
+            if (binder.Type.IsAssignableFrom(LimitType))
             {
                 convertExpression = Expression.Convert(Expression, binder.Type);
             }
@@ -328,7 +328,7 @@ namespace V8.Net
                 Func<object, Handle> toInertnalHandleConversionDelegate = _GetHandleFromObject;
                 convertExpression = Expression.Convert(Expression, typeof(Handle), toInertnalHandleConversionDelegate.Method);
             }
-            else if (typeof(V8NativeObject).IsAssignableFrom(binder.Type))
+            else if (typeof(V8NativeObject).IsAssignableFrom(binder.Type) && Value is IHandleBased)
             {
                 Func<object, V8NativeObject> getUnderlyingObject = _GetUnderlyingObject;
 
