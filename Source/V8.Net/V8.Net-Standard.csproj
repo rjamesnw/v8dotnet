@@ -21,13 +21,15 @@ Supports .Net Standard 2.0+ and .Net 461+.  A project in the repo also supports 
     <RepositoryUrl>https://github.com/rjamesnw/v8dotnet</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>V8.NET, V8, JavaScript, ClearScript, JScript, Chromium</PackageTags>
-    <PackageReleaseNotes>Fixed: The new "Inject" attribute did not work when placed on base types.</PackageReleaseNotes>
-    <Version>1.1.6</Version>
+    <PackageReleaseNotes>Bugs fixed:
+1. Dynamic case from dynamic handle to managed object type.
+2. Switching contexts fails due to locked global handle (because global objects cannot be disposed, as they are part of the context itself).  Instead the global handle in the engine is replaced instead of being 'set' (which is what caused the system to try to dispose it).</PackageReleaseNotes>
+    <Version>1.1.8</Version>
     <Product>V8.Net</Product>
     <PackageId>V8.Net</PackageId>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
-    <AssemblyVersion>1.1.6.0</AssemblyVersion>
-    <FileVersion>1.1.6.0</FileVersion>
+    <AssemblyVersion>1.1.8.0</AssemblyVersion>
+    <FileVersion>1.1.8.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
